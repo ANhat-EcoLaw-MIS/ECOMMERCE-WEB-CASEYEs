@@ -1,0 +1,40 @@
+<div class="flex flex-col gap-1.5">
+  <!-- Visible label for UX and accessibility -->
+  @if (label()) {
+    <label [for]="inputId()" class="text-sm font-body font-medium text-ink">
+      {{ label() }}
+    </label>
+  }
+
+  <div class="relative">
+    <input
+      [id]="inputId()"
+      [type]="type()"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [class]="'w-full bg-surface-alt border rounded-xl px-4 py-3 font-body text-ink placeholder:text-ink-soft focus:outline-none transition-all duration-200 min-h-[44px]' +
+      (error() ? ' border-red-500 focus:ring-2 focus:ring-red-500 pr-10' : ' border-line focus:ring-2 focus:border-brand-400 focus:ring-brand-400') +
+      (disabled() ? ' opacity-50 cursor-not-allowed bg-surface' : '')"
+    />
+
+    <!-- Error Icon prevents relying on color alone -->
+    @if (error()) {
+      <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+        <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+    }
+  </div>
+
+  <!-- Helper / Error Text positioned immediately below the field -->
+  @if (error()) {
+    <p class="text-sm font-body text-red-500 flex items-center gap-1 mt-0.5">
+      {{ error() }}
+    </p>
+  } @else if (helperText()) {
+    <p class="text-sm font-body text-ink-soft mt-0.5">
+      {{ helperText() }}
+    </p>
+  }
+</div>

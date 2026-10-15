@@ -1,0 +1,38 @@
+@theme {
+  /* Brand core */
+  --color-brand-900: #2a1d4d;   /* deepest, for dark sections */
+  --color-brand-800: #433075;   /* PRIMARY */
+  --color-brand-600: #6a53b0;
+  --color-brand-400: #A58CF4;   /* ACCENT */
+  --color-brand-200: #d4c8fa;
+  --color-brand-100: #ece6fd;
+  --color-brand-50:  #f6f3fe;
+
+  /* Neutrals */
+  --color-surface:     #FAFAFA; /* page background */
+  --color-surface-alt: #FFFFFF; /* cards */
+  --color-ink:         #0A0A0A; /* Jet black, main text */
+  --color-ink-soft:    #52525b; /* secondary text */
+  --color-line:        #e8e6ef; /* borders, dividers */
+
+  /* Typography */
+  --font-display: "Plus Jakarta Sans", "Sora", system-ui, sans-serif;
+  --font-body:    "Inter", system-ui, sans-serif;
+
+  /* Shape */
+  --radius-card:  1.25rem;
+  --radius-pill:  999px;
+
+  /* Purple-tinted shadows (never grey or black) */
+  --shadow-soft: 0 8px 30px rgb(67 48 117 / 0.08);
+  --shadow-lift: 0 16px 48px rgb(67 48 117 / 0.16);
+  --shadow-glow: 0 0 40px rgb(165 140 244 / 0.45);
+}
+
+:root {
+  /* Signature gradients */
+  --grad-primary: linear-gradient(135deg, #433075 0%, #A58CF4 100%);
+  --grad-soft:    linear-gradient(180deg, #FAFAFA 0%, #ece6fd 100%);
+  --grad-glow:    radial-gradient(60% 60% at 50% 40%, rgb(165 140 244 / 0.35), transparent 70%);
+  --grad-dark:    linear-gradient(160deg, #0A0A0A 0%, #2a1d4d 100%);
+}
