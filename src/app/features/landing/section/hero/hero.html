@@ -1,0 +1,55 @@
+<section aria-labelledby="hero-title" class="relative isolate flex min-h-[80vh] items-center overflow-hidden bg-brand-900">
+  <!-- Ảnh chuyển thành Background phủ toàn màn hình -->
+  <img
+    src="/brand_signature/header_banner.webp"
+    alt="Caseye's design studio background"
+    fetchpriority="high"
+    decoding="async"
+    class="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-70 mix-blend-normal"
+  />
+
+  <!-- Background blobs: giữ lại để tạo hiệu ứng glow mờ ảo -->
+  <div aria-hidden="true" class="hero-blob pointer-events-none absolute -right-24 -top-16 -z-10 size-[28rem] rounded-full bg-brand-400/30 blur-3xl"></div>
+  <div aria-hidden="true" class="hero-blob hero-blob--slow pointer-events-none absolute -bottom-32 -left-32 -z-10 size-[24rem] rounded-full bg-brand-600/30 blur-3xl"></div>
+
+  <!-- Content Container: bỏ grid, canh giữa nội dung theo chiều dọc và giới hạn chiều rộng -->
+  <div class="mx-auto w-full max-w-[1280px] px-4 py-12 lg:px-6 lg:py-20">
+    <div class="flex max-w-2xl flex-col items-start gap-6">
+      <span class="hero-rise inline-flex rounded-pill bg-brand-100 px-3 py-1 text-sm font-bold text-brand-800" style="--i: 0">
+        Mới
+      </span>
+
+      <h1
+        id="hero-title"
+        class="hero-rise font-display text-[clamp(2.5rem,5vw,4.25rem)] font-extrabold leading-[1.1] tracking-[-0.02em] text-balance text-white"
+        style="--i: 1"
+      >
+        Biến ý tưởng của bạn thành chiếc ốp lưng
+        <span class="inline-block bg-linear-90 from-brand-200 to-brand-400 bg-clip-text text-transparent">độc bản</span>
+      </h1>
+
+      <p class="hero-rise max-w-xl text-lg leading-relaxed text-white/80" style="--i: 2">
+        Design ốp lưng theo phong cách riêng của bạn, dễ dàng, nhanh chóng và chất lượng cao. Mọi thiết kế đều trở nên đặc biệt!
+      </p>
+
+      <div class="hero-rise flex flex-wrap items-center gap-3" style="--i: 3">
+        <a
+          routerLink="/design-studio"
+          class="inline-flex h-12 items-center gap-2 rounded-pill bg-brand-400 px-6 text-base font-bold text-ink transition duration-200 hover:-translate-y-0.5 hover:bg-brand-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+        >
+          Bắt đầu thiết kế ngay
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="size-4">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+
+        <a
+          routerLink="/shop"
+          class="inline-flex h-12 items-center rounded-pill border-[1.5px] border-white/40 px-6 text-base font-semibold text-white transition-colors duration-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+        >
+          Khám phá mẫu
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

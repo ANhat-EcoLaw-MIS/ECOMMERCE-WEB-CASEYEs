@@ -1,15 +1,19 @@
-<div class="p-10 min-h-screen bg-surface flex items-center justify-center">
-  <app-card [interactive]="true" class="w-full max-w-sm block">
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-display font-bold text-ink">Lunar Phone Case</h2>
-      <app-badge variant="hero">New</app-badge>
-    </div>
-    <p class="text-ink-soft font-body mb-6">Deep purple matte finish with drop protection.</p>
-    <div class="flex items-center justify-between gap-3 mb-6">
-      <app-button variant="primary">Add to Cart</app-button>
-      <app-button variant="secondary">Cancel</app-button>
-    </div>
-  </app-card>
-  <app-card class="w-full max-w-sm block">
-  </app-card>
-</div>
+<a
+  href="#main"
+  class="sr-only rounded-pill bg-brand-400 px-4 py-2 font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]"
+>
+  Bỏ qua điều hướng
+</a>
+
+<app-header [cartCount]="cartCount()" (searchRequested)="onSearchRequested()" />
+
+<main id="main">
+  <router-outlet />
+</main>
+
+<!-- Footer: mockup, to be built by the team -->
+<footer class="bg-brand-900 py-12">
+  <div class="mx-auto max-w-[1280px] px-4 lg:px-6">
+    <app-placeholder label="Footer" hint="Support links, about, newsletter sign-up, socials" minHeight="10rem" />
+  </div>
+</footer>

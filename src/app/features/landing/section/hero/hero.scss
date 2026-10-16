@@ -1,0 +1,40 @@
+// Hero-only motion. Everything is wrapped so users who prefer reduced motion get a static hero.
+
+@keyframes hero-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(4%, -6%, 0) scale(1.08); }
+}
+
+// Uses the individual `translate` property so it composes with Tailwind's `rotate-*` utilities.
+@keyframes hero-float {
+  from { translate: 0 0; }
+  to   { translate: 0 -12px; }
+}
+
+@keyframes hero-rise {
+  from { opacity: 0; translate: 0 20px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-blob {
+    animation: hero-drift 18s ease-in-out infinite alternate;
+  }
+  .hero-blob--slow {
+    animation-duration: 24s;
+    animation-delay: -6s;
+  }
+
+  .hero-float {
+    animation: hero-float 7s ease-in-out infinite alternate;
+  }
+  .hero-float--delay {
+    animation-delay: -3.5s;
+  }
+
+  // Staggered fade-up on load; set the order with style="--i: N"
+  .hero-rise {
+    animation: hero-rise 500ms ease-out both;
+    animation-delay: calc(var(--i, 0) * 80ms);
+  }
+}

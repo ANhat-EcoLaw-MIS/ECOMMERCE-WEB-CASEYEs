@@ -1,7 +1,7 @@
 @theme {
   /* Brand core */
   --color-brand-900: #2a1d4d;   /* deepest, for dark sections */
-  --color-brand-800: #433075;   /* PRIMARY */
+    --color-brand-800: #433075;   /* PRIMARY */
   --color-brand-600: #6a53b0;
   --color-brand-400: #A58CF4;   /* ACCENT */
   --color-brand-200: #d4c8fa;
