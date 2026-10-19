@@ -1,0 +1,99 @@
+<footer class="w-full bg-brand-900 border-t border-white/10 text-white font-sans pt-12 md:pt-16 pb-8" role="contentinfo">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Grid 3 cột -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 pb-10 md:pb-14">
+
+      <div class="sm:col-span-2 flex flex-col items-start space-y-4">
+        <a [routerLink]="['#']" class="group inline-flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded-lg">
+          <span class="font-display font-extrabold text-2xl tracking-tight text-white">
+            CaseEYE's
+          </span>
+        </a>
+
+        <p class="text-sm md:text-base text-white/70 max-w-sm">
+          Your style. Your case.
+        </p>
+
+        <!-- Social Icons (Thêm brightness-0 invert để đổi icon đen thành trắng) -->
+        <div class="flex items-center gap-2 pt-2" aria-label="Mạng xã hội CaseEYE's">
+          @for (social of socialLinks; track social.name) {
+            <a
+              [href]="social.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="social-btn-hover flex items-center justify-center w-11 h-11 rounded-full text-white bg-white/5 hover:bg-white/15 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+              [attr.aria-label]="social.ariaLabel">
+              <img
+                [src]="social.iconUrl"
+                [alt]="social.name"
+                width="20"
+                height="20"
+                class="w-5 h-5 object-contain brightness-0 invert"
+                loading="lazy"
+              />
+            </a>
+          }
+        </div>
+      </div>
+
+      <!-- Cột 2: Menu nhanh -->
+      <nav class="flex flex-col space-y-3" aria-label="Menu nhanh">
+        <h2 class="font-display font-bold text-base text-white tracking-tight mb-1">
+          Menu nhanh
+        </h2>
+        <ul class="space-y-2.5">
+          @for (link of quickLinks; track link.label) {
+            <li>
+              <a
+                [routerLink]="link.url"
+                class="inline-block text-sm text-white/70 hover:text-white hover:translate-x-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
+                {{ link.label }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+
+      <!-- Cột 3: Hỗ trợ -->
+      <nav class="flex flex-col space-y-3" aria-label="Hỗ trợ khách hàng">
+        <h2 class="font-display font-bold text-base text-white tracking-tight mb-1">
+          Hỗ trợ
+        </h2>
+        <ul class="space-y-2.5">
+          @for (link of supportLinks; track link.label) {
+            <li>
+              <a
+                [routerLink]="link.url"
+                class="inline-block text-sm text-white/70 hover:text-white hover:translate-x-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
+                {{ link.label }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+
+    </div>
+
+    <!-- Dòng phân cách & Sub-footer bản quyền -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10 text-xs sm:text-sm text-white/60">
+      <p class="m-0">
+        &copy; {{ currentYear }} CaseEYE's. All rights reserved.
+      </p>
+
+      <p class="m-0 inline-flex items-center gap-1.5">
+        <span>Made with</span>
+        <img
+          src="https://api.iconify.design/ri:heart-fill.svg?color=%23A58CF4"
+          alt="Love"
+          width="16"
+          height="16"
+          class="heart-pulse w-4 h-4 inline-block align-middle"
+          loading="lazy"
+        />
+        <span>for creative people.</span>
+      </p>
+    </div>
+
+  </div>
+</footer>

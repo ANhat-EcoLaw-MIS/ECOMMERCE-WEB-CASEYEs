@@ -3,10 +3,11 @@ import { RouterOutlet } from '@angular/router';
 
 import { Header } from './core/layout/header/header';
 import { Placeholder } from './shared/ui/placeholder/placeholder';
+import {Footer} from './core/layout/footer/footer';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Placeholder],
+  imports: [RouterOutlet, Header, Placeholder, Footer],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
