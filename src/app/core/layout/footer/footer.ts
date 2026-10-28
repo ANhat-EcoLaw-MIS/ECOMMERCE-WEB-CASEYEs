@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, resource } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import {TestRepository} from '../../supabase/supabase-repository';
 
 interface FooterLink {
   label: string;
@@ -21,8 +22,8 @@ interface SocialLink {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Footer {
+  private readonly test=inject(TestRepository)
   readonly currentYear = new Date().getFullYear();
-
   // Menu điều hướng nhanh (Dùng placeholder '#' theo yêu cầu)
   readonly quickLinks: readonly FooterLink[] = [
     { label: 'Trang chủ', url: '#' },
@@ -71,4 +72,26 @@ export class Footer {
       ariaLabel: 'Trang Pinterest CaseEYEs',
     },
   ];
+
+  async insertRandomTestData(){
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const insertPayload={
+      title: "Test Case 1"
+    };
+    const result=await this.test.create(insertPayload);
+    if (!result.error){
+      console.log('✅ Successfully inserted random test data:', result.data);
+    } else{
+      console.error('❌ Failed to insert test data:', result.error.message);
+    }
+  }
+
+  async fetchAllTestData(){
+    const result= await this.test.list();
+    if(!result.error){
+      console.table(result.data);
+    } else {
+      console.error('❌ Failed to fetch test data:', result.error.message);
+    }
+  }
 }

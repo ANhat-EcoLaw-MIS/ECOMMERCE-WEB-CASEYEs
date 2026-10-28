@@ -33,6 +33,11 @@ export const routes: Routes = [
     loadChildren:()=>import("./features/customer-support/customer-support.routes").then((m) => m.SUPPORT_ROUTES),
   },
   {
+    path:'test',
+    pathMatch: 'full',
+    loadComponent:()=>import("./core/demo/demo").then(m => m.Demo)
+  },
+  {
     path:'**',
     title:"Not found T~T",
     loadComponent:()=>import("./core/not-found/not-found").then(m => m.NotFound)

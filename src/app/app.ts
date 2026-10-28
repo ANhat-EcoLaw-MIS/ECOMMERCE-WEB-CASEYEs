@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, inject, resource } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { Header } from './core/layout/header/header';
@@ -14,7 +14,6 @@ import {Footer} from './core/layout/footer/footer';
 export class App {
   // TODO(cart team): replace with a computed() from the CartService
   protected readonly cartCount = signal(0);
-
   protected onSearchRequested(): void {
     // TODO(search): open the search overlay
   }
