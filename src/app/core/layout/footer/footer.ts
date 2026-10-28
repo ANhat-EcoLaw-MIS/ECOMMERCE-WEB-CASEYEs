@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, resource } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {TestRepository} from '../../supabase/supabase-repository';
 
@@ -72,26 +72,4 @@ export class Footer {
       ariaLabel: 'Trang Pinterest CaseEYEs',
     },
   ];
-
-  async insertRandomTestData(){
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const insertPayload={
-      title: "Test Case 1"
-    };
-    const result=await this.test.create(insertPayload);
-    if (!result.error){
-      console.log('✅ Successfully inserted random test data:', result.data);
-    } else{
-      console.error('❌ Failed to insert test data:', result.error.message);
-    }
-  }
-
-  async fetchAllTestData(){
-    const result= await this.test.list();
-    if(!result.error){
-      console.table(result.data);
-    } else {
-      console.error('❌ Failed to fetch test data:', result.error.message);
-    }
-  }
 }
