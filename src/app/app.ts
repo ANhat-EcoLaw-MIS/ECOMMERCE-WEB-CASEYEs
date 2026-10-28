@@ -4,10 +4,11 @@ import { RouterOutlet } from '@angular/router';
 import { Header } from './core/layout/header/header';
 import { Placeholder } from './shared/ui/placeholder/placeholder';
 import {Footer} from './core/layout/footer/footer';
+import {SupabaseDemo} from './demo/supabase-demo';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Placeholder, Footer],
+  imports: [RouterOutlet, Header, Placeholder, Footer, SupabaseDemo],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
