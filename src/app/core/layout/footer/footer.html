@@ -14,7 +14,6 @@
         <p class="text-sm md:text-base text-white/70 max-w-sm">
           Your style. Your case.
         </p>
-
         <!-- Social Icons (Thêm brightness-0 invert để đổi icon đen thành trắng) -->
         <div class="flex items-center gap-2 pt-2" aria-label="Mạng xã hội CaseEYE's">
           @for (social of socialLinks; track social.name) {
@@ -80,17 +79,17 @@
       <p class="m-0">
         &copy; {{ currentYear }} CaseEYE's. All rights reserved.
       </p>
-
       <p class="m-0 inline-flex items-center gap-1.5">
         <span>Made with</span>
-        <img
-          src="https://api.iconify.design/ri:heart-fill.svg?color=%23A58CF4"
-          alt="Love"
-          width="16"
-          height="16"
-          class="heart-pulse w-4 h-4 inline-block align-middle"
-          loading="lazy"
-        />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="heart-pulse w-4 h-4 inline-block align-middle text-brand-100"
+        >
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+
         <span>for creative people.</span>
       </p>
     </div>
