@@ -1,9 +1,24 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ModelSelector } from './components/model-selector/model-selector';
+import { StudioState } from './services/studio-state';
 
 @Component({
-  imports: [],
   selector: 'app-design-studio',
-  styleUrl: './design-studio.scss',
+  standalone: true,
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ModelSelector],
   templateUrl: './design-studio.html',
+  styleUrl: './design-studio.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DesignStudio {}
+export class DesignStudio {
+  protected readonly state = inject(StudioState);
+
+  protected onConfirmModelChange(): void {
+    this.state.confirmModelChange();
+  }
+
+  protected onCancelModelChange(): void {
+    this.state.cancelModelChange();
+  }
+}

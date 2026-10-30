@@ -1,1 +1,96 @@
-<p>design-studio works!</p>
+<div class="min-h-screen bg-surface">
+  <!-- Top Navigation & Model Bar -->
+  <header class="sticky top-0 z-40 border-b border-line bg-surface-alt/90 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
+      <!-- Title & Branding -->
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[image:var(--grad-primary)] text-white shadow-soft">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-display text-base font-extrabold tracking-tight text-ink sm:text-lg">
+            CasEYE's <span class="bg-[image:var(--grad-primary)] bg-clip-text text-transparent">Design Studio</span>
+          </h1>
+          <p class="text-[11px] text-ink-soft">Tùy biến ốp lưng theo chất riêng</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Kho Mẫu ⟷ Tự Thiết Kế) -->
+      <nav class="flex items-center rounded-pill border border-line bg-surface p-1 shadow-xs">
+        <a
+          routerLink="templates"
+          routerLinkActive="bg-brand-800 text-white shadow-soft"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-2 rounded-pill px-4 py-1.5 text-xs font-bold text-ink-soft transition-all hover:text-ink"
+        >
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span>Kho mẫu</span>
+        </a>
+
+        <a
+          routerLink="editor"
+          routerLinkActive="bg-brand-800 text-white shadow-soft"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-2 rounded-pill px-4 py-1.5 text-xs font-bold text-ink-soft transition-all hover:text-ink"
+        >
+          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          <span>Tự vẽ Canvas</span>
+        </a>
+      </nav>
+
+      <!-- Model Selector Component -->
+      <app-model-selector />
+    </div>
+  </header>
+
+  <!-- Main Sub-route Content -->
+  <main class="studio-content">
+    <router-outlet />
+  </main>
+
+  <!-- Model Change Confirmation Dialog (FR-DES-02 / US-DES-08) -->
+  @if (state.isModelChangeModalOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+      <div class="w-full max-w-md rounded-card border border-line bg-surface-alt p-6 shadow-lift">
+        <div class="mb-4 flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-display text-base font-bold text-ink">Xác nhận đổi dòng máy?</h3>
+            <p class="text-xs text-ink-soft">Dòng máy mới có kích thước và cụm camera khác nhau.</p>
+          </div>
+        </div>
+
+        <p class="text-sm text-ink-soft leading-relaxed mb-6">
+          Đổi dòng máy có thể làm xê dịch vị trí các phần tử đồ họa đang có trên Canvas. Bạn có muốn hệ thống tự động co dãn bài vẽ để tiếp tục không?
+        </p>
+
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            (click)="onCancelModelChange()"
+            class="rounded-pill border border-line px-5 py-2.5 text-xs font-semibold text-ink transition-colors hover:bg-surface"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="button"
+            (click)="onConfirmModelChange()"
+            class="rounded-pill bg-brand-800 px-5 py-2.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 hover:shadow-glow"
+          >
+            Xác nhận đổi
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

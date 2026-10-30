@@ -1,0 +1,110 @@
+<div class="relative flex flex-col items-center justify-center py-6 px-4 min-h-[calc(100vh-180px)]">
+  <!-- Canvas Mockup Stage -->
+  <div class="relative flex items-center justify-center w-full max-w-sm sm:max-w-md py-4">
+    <!-- Phone Mockup Container with Shadow Lift -->
+    <div class="relative w-64 sm:w-72 shadow-lift rounded-[2.5rem] transition-all">
+      <app-phone-case-mock
+        [tone]="
+          state.selectedSku().colorHex === '#0A0A0A'
+            ? 'dark'
+            : state.selectedSku().colorHex === '#A58CF4'
+            ? 'lilac'
+            : 'light'
+        "
+      />
+
+      <!-- Safe Zone Boundary Overlay (Technical visualization) -->
+      <div
+        class="pointer-events-none absolute inset-[5%] rounded-[2rem] border border-dashed border-brand-400/50"
+        title="Vùng in an toàn (Safe Zone)"
+      >
+        <span class="absolute top-2 right-3 text-[9px] font-mono text-brand-600/70 font-bold uppercase">
+          Safe Zone
+        </span>
+      </div>
+
+      <!-- Rendered Layers (Preview in Phase 1) -->
+      @for (layer of state.layers(); track layer.id) {
+        @if (layer.type === 'text') {
+          <div
+            class="absolute cursor-move select-none rounded p-1 transition-transform"
+            [style.left.%]="layer.x"
+            [style.top.%]="layer.y"
+            [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
+            [style.color]="layer.textColor"
+            [style.fontFamily]="layer.fontFamily"
+            [style.fontSize.px]="layer.fontSize"
+            [style.fontWeight]="layer.fontWeight ?? 'bold'"
+            [class.ring-2]="state.selectedLayerId() === layer.id"
+            [class.ring-brand-400]="state.selectedLayerId() === layer.id"
+            (click)="state.selectLayer(layer.id)"
+          >
+            {{ layer.content }}
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Floating Glassmorphic Quick Toolbar -->
+  <div class="sticky bottom-6 z-30 mt-4 flex items-center gap-2 rounded-full border border-line bg-surface-alt/80 p-2 shadow-lift backdrop-blur-xl">
+    <button
+      type="button"
+      (click)="onAddSampleText()"
+      class="flex h-10 items-center gap-1.5 rounded-full bg-brand-800 px-4 text-xs font-bold text-white transition-all hover:bg-brand-600 hover:shadow-glow"
+    >
+      <span>+</span>
+      <span>Thêm chữ</span>
+    </button>
+
+    <div class="h-5 w-px bg-line"></div>
+
+    <button
+      type="button"
+      (click)="onUndo()"
+      [disabled]="!state.canUndo()"
+      class="flex h-10 w-10 items-center justify-center rounded-full text-ink transition-colors disabled:opacity-40 hover:bg-brand-50"
+      title="Hoàn tác (Undo)"
+    >
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+      </svg>
+    </button>
+
+    <button
+      type="button"
+      (click)="onRedo()"
+      [disabled]="!state.canRedo()"
+      class="flex h-10 w-10 items-center justify-center rounded-full text-ink transition-colors disabled:opacity-40 hover:bg-brand-50"
+      title="Làm lại (Redo)"
+    >
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+      </svg>
+    </button>
+
+    <button
+      type="button"
+      (click)="onClear()"
+      [disabled]="!state.hasLayers()"
+      class="flex h-10 w-10 items-center justify-center rounded-full text-red-500 transition-colors disabled:opacity-40 hover:bg-red-50"
+      title="Xóa tất cả (Clear)"
+    >
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </button>
+
+    <div class="h-5 w-px bg-line"></div>
+
+    <!-- Add to Cart CTA -->
+    <button
+      type="button"
+      class="flex h-10 items-center gap-2 rounded-full bg-[image:var(--grad-primary)] px-5 text-xs font-bold text-white shadow-soft transition-all hover:scale-105 hover:shadow-glow"
+    >
+      <span>Thêm vào giỏ</span>
+      <span>•</span>
+      <span>{{ state.totalPrice().toLocaleString('vi-VN') }}đ</span>
+    </button>
+  </div>
+</div>
