@@ -21,4 +21,35 @@ export class DesignStudio {
   protected onCancelModelChange(): void {
     this.state.cancelModelChange();
   }
+
+  protected onUndo(): void {
+    this.state.undo();
+  }
+
+  protected onRedo(): void {
+    this.state.redo();
+  }
+
+  protected onSaveDesign(): void {
+    if (!this.state.hasLayers()) {
+      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi lưu.');
+      return;
+    }
+    this.state.designStatus.set('SAVED');
+    alert('Bản thiết kế đã được lưu an toàn vào mục My Designs của bạn!');
+  }
+
+  protected onAddToCart(): void {
+    if (this.state.designStatus() === 'REJECTED') {
+      alert(
+        'Bản thiết kế này từng bị từ chối kiểm duyệt do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa lại các chi tiết vi phạm trước khi tiến hành đặt mua.'
+      );
+      return;
+    }
+    if (!this.state.hasLayers()) {
+      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi thêm vào giỏ.');
+      return;
+    }
+    this.state.isCartDrawerOpen.set(true);
+  }
 }

@@ -1,110 +1,911 @@
-<div class="relative flex flex-col items-center justify-center py-6 px-4 min-h-[calc(100vh-180px)]">
-  <!-- Canvas Mockup Stage -->
-  <div class="relative flex items-center justify-center w-full max-w-sm sm:max-w-md py-4">
-    <!-- Phone Mockup Container with Shadow Lift -->
-    <div class="relative w-64 sm:w-72 shadow-lift rounded-[2.5rem] transition-all">
-      <app-phone-case-mock
-        [tone]="
-          state.selectedSku().colorHex === '#0A0A0A'
-            ? 'dark'
-            : state.selectedSku().colorHex === '#A58CF4'
-            ? 'lilac'
-            : 'light'
-        "
-      />
+<!-- Rejection Alert Banner (FR-DES-28 / US-DES-18) -->
+@if (state.designStatus() === 'REJECTED') {
+  <div class="flex items-center gap-3 border-b border-red-200 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-700">
+    <svg class="h-4 w-4 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <span class="flex-1">{{ state.rejectionMessage() }}</span>
+  </div>
+}
 
-      <!-- Safe Zone Boundary Overlay (Technical visualization) -->
-      <div
-        class="pointer-events-none absolute inset-[5%] rounded-[2rem] border border-dashed border-brand-400/50"
-        title="Vùng in an toàn (Safe Zone)"
-      >
-        <span class="absolute top-2 right-3 text-[9px] font-mono text-brand-600/70 font-bold uppercase">
-          Safe Zone
-        </span>
-      </div>
+<!-- Main 4-Column Studio Grid -->
+<div class="studio-app-grid bg-surface">
+  <!-- COLUMN 1: Tool Rail (Left vertical bar) -->
+  <aside class="flex flex-row md:flex-col items-center gap-1.5 border-r border-line bg-surface-alt p-2 overflow-x-auto md:overflow-visible">
+    <button
+      type="button"
+      (click)="selectTool('txt')"
+      class="flex flex-col items-center justify-center gap-1 rounded-xl p-2.5 text-xs font-medium transition-all w-16 h-16"
+      [class]="state.activeTool() === 'txt' ? 'bg-brand-100 font-bold text-brand-800' : 'text-ink-soft hover:bg-brand-50 hover:text-ink'"
+    >
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 6V4h14v2M12 4v16M9 20h6" />
+      </svg>
+      <span>Chữ</span>
+    </button>
 
-      <!-- Rendered Layers (Preview in Phase 1) -->
-      @for (layer of state.layers(); track layer.id) {
-        @if (layer.type === 'text') {
-          <div
-            class="absolute cursor-move select-none rounded p-1 transition-transform"
-            [style.left.%]="layer.x"
-            [style.top.%]="layer.y"
-            [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
-            [style.color]="layer.textColor"
-            [style.fontFamily]="layer.fontFamily"
-            [style.fontSize.px]="layer.fontSize"
-            [style.fontWeight]="layer.fontWeight ?? 'bold'"
-            [class.ring-2]="state.selectedLayerId() === layer.id"
-            [class.ring-brand-400]="state.selectedLayerId() === layer.id"
-            (click)="state.selectLayer(layer.id)"
-          >
-            {{ layer.content }}
+    <button
+      type="button"
+      (click)="selectTool('stk')"
+      class="flex flex-col items-center justify-center gap-1 rounded-xl p-2.5 text-xs font-medium transition-all w-16 h-16"
+      [class]="state.activeTool() === 'stk' ? 'bg-brand-100 font-bold text-brand-800' : 'text-ink-soft hover:bg-brand-50 hover:text-ink'"
+    >
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>Sticker</span>
+    </button>
+
+    <button
+      type="button"
+      (click)="selectTool('img')"
+      class="flex flex-col items-center justify-center gap-1 rounded-xl p-2.5 text-xs font-medium transition-all w-16 h-16"
+      [class]="state.activeTool() === 'img' ? 'bg-brand-100 font-bold text-brand-800' : 'text-ink-soft hover:bg-brand-50 hover:text-ink'"
+    >
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <span>Tải ảnh</span>
+    </button>
+
+    <button
+      type="button"
+      (click)="selectTool('bg')"
+      class="flex flex-col items-center justify-center gap-1 rounded-xl p-2.5 text-xs font-medium transition-all w-16 h-16"
+      [class]="state.activeTool() === 'bg' ? 'bg-brand-100 font-bold text-brand-800' : 'text-ink-soft hover:bg-brand-50 hover:text-ink'"
+    >
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 5 5 0 013-4.582V5a2 2 0 012-2h4a2 2 0 012 2v7.418c2 .89 3 2.65 3 4.582a4 4 0 01-4 4H7z" />
+      </svg>
+      <span>Màu nền</span>
+    </button>
+
+    <button
+      type="button"
+      (click)="selectTool('tpl')"
+      class="flex flex-col items-center justify-center gap-1 rounded-xl p-2.5 text-xs font-medium transition-all w-16 h-16"
+      [class]="state.activeTool() === 'tpl' ? 'bg-brand-100 font-bold text-brand-800' : 'text-ink-soft hover:bg-brand-50 hover:text-ink'"
+    >
+      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+      </svg>
+      <span>Kho mẫu</span>
+    </button>
+  </aside>
+
+  <!-- COLUMN 2: Tool Drawer Panel (Active tool sub-controls) -->
+  <aside class="border-r border-line bg-surface-alt p-5 overflow-y-auto max-h-[calc(100vh-140px)]">
+    <!-- PANEL: Text Tool -->
+    @if (state.activeTool() === 'txt') {
+      <div class="space-y-4">
+        <h4 class="font-display text-sm font-bold text-ink">Chỉnh sửa chữ</h4>
+        
+        <div>
+          <label class="mb-1 block text-xs font-semibold text-ink-soft">Nội dung chữ</label>
+          <textarea
+            [value]="textInput()"
+            (input)="textInput.set($any($event.target).value)"
+            rows="3"
+            placeholder="Nhập nội dung chữ..."
+            class="w-full rounded-xl border border-line bg-surface p-3 text-sm text-ink outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20"
+          ></textarea>
+        </div>
+
+        <!-- Banned Keyword Error Notice (EF3) -->
+        @if (state.bannedKeywordError()) {
+          <div class="flex items-start gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-600">
+            <svg class="h-4 w-4 shrink-0 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>{{ state.bannedKeywordError() }}</span>
           </div>
         }
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-ink-soft">Phông chữ</label>
+            <select
+              [value]="selectedFont()"
+              (change)="selectedFont.set($any($event.target).value)"
+              class="w-full rounded-xl border border-line bg-surface p-2 text-xs text-ink outline-none"
+            >
+              @for (f of fonts; track f) {
+                <option [value]="f">{{ f }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-semibold text-ink-soft">Màu chữ</label>
+            <div class="flex items-center gap-2">
+              <input
+                type="color"
+                [value]="selectedColor()"
+                (input)="selectedColor.set($any($event.target).value)"
+                class="h-8 w-10 cursor-pointer rounded-lg border border-line p-0.5"
+              />
+              <span class="text-xs font-mono text-ink-soft">{{ selectedColor() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          (click)="onApplyText()"
+          class="w-full rounded-pill bg-brand-800 py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 hover:shadow-glow"
+        >
+          Áp dụng lên Canvas
+        </button>
+
+        <div class="border-t border-line pt-4">
+          <h5 class="mb-2 text-xs font-bold uppercase tracking-wider text-ink-soft">Kiểu chữ gợi ý</h5>
+          <div class="space-y-1.5">
+            <button
+              type="button"
+              (click)="applyPresetText('TIÊU ĐỀ NỔI BẬT', 30, true)"
+              class="w-full rounded-lg border border-line p-2 text-left font-display text-base font-extrabold text-ink transition hover:border-brand-400 hover:bg-brand-50"
+            >
+              TIÊU ĐỀ NỔI BẬT
+            </button>
+            <button
+              type="button"
+              (click)="applyPresetText('Phụ đề thanh lịch', 20, false)"
+              class="w-full rounded-lg border border-line p-2 text-left font-body text-sm font-semibold text-ink transition hover:border-brand-400 hover:bg-brand-50"
+            >
+              Phụ đề thanh lịch
+            </button>
+            <button
+              type="button"
+              (click)="applyPresetText('Nội dung văn bản nhỏ xinh', 16, false)"
+              class="w-full rounded-lg border border-line p-2 text-left font-body text-xs text-ink-soft transition hover:border-brand-400 hover:bg-brand-50"
+            >
+              Nội dung văn bản nhỏ xinh
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- PANEL: Sticker Tool -->
+    @if (state.activeTool() === 'stk') {
+      <div>
+        <h4 class="mb-3 font-display text-sm font-bold text-ink">Thư viện Sticker Gen-Z</h4>
+        <div class="grid grid-cols-4 gap-2">
+          @for (s of stickers; track s) {
+            <button
+              type="button"
+              (click)="onAddSticker(s)"
+              class="flex aspect-square items-center justify-center rounded-xl border border-line bg-surface text-2xl transition-all hover:scale-110 hover:border-brand-400 hover:bg-brand-100"
+            >
+              {{ s }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- PANEL: Upload Image Tool -->
+    @if (state.activeTool() === 'img') {
+      <div class="space-y-4">
+        <h4 class="font-display text-sm font-bold text-ink">Tải ảnh cá nhân</h4>
+        
+        <input
+          #fileInput
+          type="file"
+          accept="image/png,image/jpeg"
+          (change)="onFileSelected($event)"
+          class="hidden"
+        />
+
+        <div
+          (click)="triggerFileUpload()"
+          (drop)="onFileDrop($event)"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave()"
+          class="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-all"
+          [class]="
+            isFileDragging()
+              ? 'border-brand-800 bg-brand-100'
+              : 'border-line bg-surface hover:border-brand-400 hover:bg-brand-50'
+          "
+        >
+          <div class="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-800">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          <p class="text-xs font-bold text-brand-800">Bấm hoặc kéo thả ảnh vào đây</p>
+          <p class="mt-1 text-[11px] text-ink-soft">Hỗ trợ PNG, JPG (Tối đa 10MB)</p>
+        </div>
+
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          💡 Ảnh tải lên cần cam kết bản quyền và có thể được kiểm duyệt trước khi sản xuất.
+        </div>
+
+        @if (state.uploads().length > 0) {
+          <div class="border-t border-line pt-4">
+            <h5 class="mb-2 text-xs font-bold text-ink">Ảnh đã tải lên</h5>
+            <div class="space-y-2">
+              @for (item of state.uploads(); track item.id) {
+                <div class="flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
+                  <img [src]="item.url" [alt]="item.name" class="h-10 w-10 rounded-lg object-cover" />
+                  <div class="min-w-0 flex-1">
+                    <p class="truncate text-xs font-bold text-ink">{{ item.name }}</p>
+                    <p class="text-[10px] text-ink-soft">~{{ item.dpi }} DPI</p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="reuseImage(item.url, item.name, item.dpi)"
+                    class="rounded-pill border border-line px-2.5 py-1 text-[11px] font-bold text-brand-800 hover:bg-brand-100"
+                  >
+                    Dùng lại
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- PANEL: Background Colors -->
+    @if (state.activeTool() === 'bg') {
+      <div class="space-y-4">
+        <h4 class="font-display text-sm font-bold text-ink">Màu nền ốp lưng</h4>
+        <div class="grid grid-cols-4 gap-2">
+          @for (bg of bgPresets; track bg) {
+            <button
+              type="button"
+              (click)="onSelectBg(bg)"
+              class="aspect-square rounded-xl border border-line shadow-xs transition-transform hover:scale-105 hover:ring-2 hover:ring-brand-400"
+              [style.background]="bg"
+            ></button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- PANEL: Template Quick Picker -->
+    @if (state.activeTool() === 'tpl') {
+      <div class="space-y-3">
+        <h4 class="font-display text-sm font-bold text-ink">Mẫu thiết kế nhanh</h4>
+        <p class="text-xs text-ink-soft">Chọn mẫu để nạp các layer đồ họa sẵn có lên phôi ốp.</p>
+        <a
+          routerLink="/design-studio/templates"
+          class="block rounded-xl border border-brand-400 bg-brand-50 p-3 text-center text-xs font-bold text-brand-800 hover:bg-brand-100"
+        >
+          Duyệt kho mẫu đầy đủ (AI & Phong cách) →
+        </a>
+      </div>
+    }
+  </aside>
+
+  <!-- COLUMN 3: Center Stage (The interactive Canvas & Mockup) -->
+  <main
+    (click)="onStageClick()"
+    (pointermove)="onCanvasPointerMove($event)"
+    (pointerup)="onCanvasPointerUp()"
+    class="relative flex flex-col items-center justify-center p-6 min-h-[calc(100vh-140px)] select-none overflow-hidden"
+  >
+    <!-- Top Contextual Toolbar (Shows when element is selected) -->
+    @if (state.selectedLayer(); as sel) {
+      <div
+        (click)="$event.stopPropagation()"
+        class="absolute top-4 z-30 flex items-center gap-2 rounded-full border border-line bg-surface-alt/90 px-4 py-2 shadow-lift backdrop-blur-xl animate-fade-in"
+      >
+        @if (sel.type === 'text') {
+          <select
+            [value]="sel.fontFamily"
+            (change)="updateProperty('fontFamily', $event)"
+            class="rounded-lg border border-line bg-surface px-2 py-1 text-xs text-ink outline-none"
+          >
+            @for (f of fonts; track f) {
+              <option [value]="f">{{ f }}</option>
+            }
+          </select>
+          <input
+            type="number"
+            min="12"
+            max="120"
+            [value]="sel.fontSize"
+            (input)="updateProperty('fontSize', $event)"
+            class="w-14 rounded-lg border border-line bg-surface px-2 py-1 text-xs text-ink text-center"
+            title="Cỡ chữ"
+          />
+          <input
+            type="color"
+            [value]="sel.textColor"
+            (input)="updateProperty('textColor', $event)"
+            class="h-7 w-8 cursor-pointer rounded-lg border border-line p-0.5"
+            title="Màu chữ"
+          />
+          <div class="h-4 w-px bg-line"></div>
+        }
+
+        <!-- Opacity Slider -->
+        <label class="flex items-center gap-1.5 text-xs text-ink-soft">
+          <span>Độ mờ:</span>
+          <input
+            type="range"
+            min="10"
+            max="100"
+            [value]="sel.opacity * 100"
+            (input)="updateProperty('opacity', $event)"
+            class="w-16 accent-brand-800"
+          />
+        </label>
+
+        <div class="h-4 w-px bg-line"></div>
+
+        <!-- Duplicate & Delete -->
+        <button
+          type="button"
+          (click)="state.duplicateLayer(sel.id)"
+          class="rounded-lg p-1.5 text-ink-soft hover:bg-brand-50 hover:text-brand-800"
+          title="Nhân đôi"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          (click)="state.removeLayer(sel.id)"
+          class="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
+          title="Xóa"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+    }
+
+    <!-- The Phone Mockup Canvas Area -->
+    <div
+      class="relative transition-transform duration-200"
+      [style.transform]="'scale(' + state.zoom() / 100 + ')'"
+    >
+      <!-- Physical Phone Case Shell (300px x 620px) -->
+      <div
+        id="case-viewport"
+        class="relative h-[620px] w-[300px] overflow-hidden rounded-[46px] shadow-lift ring-4 ring-[#1f2230]"
+        [style.background]="state.caseBg()"
+      >
+        <!-- Real Camera Bump Simulation -->
+        <div
+          class="pointer-events-none absolute z-20 rounded-[28px] bg-[#10121a] p-2 shadow-inner ring-1 ring-white/20 backdrop-blur-md"
+          [style.left.%]="cameraCutout().xPercent"
+          [style.top.%]="cameraCutout().yPercent"
+          [style.width.%]="cameraCutout().widthPercent"
+          [style.height.%]="cameraCutout().heightPercent"
+        >
+          <div class="grid h-full w-full grid-cols-2 gap-2 place-items-center">
+            <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+            <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+            <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+          </div>
+        </div>
+
+        <!-- Safe Zone Overlay (FR-DES-13 / EF2) -->
+        <div
+          class="pointer-events-none absolute inset-[5%] z-10 rounded-[34px] border-2 border-dashed transition-colors"
+          [class]="state.safeZoneAlert() ? 'border-red-500 animate-pulse bg-red-500/10' : 'border-emerald-500/60'"
+        ></div>
+
+        <!-- Canvas Dynamic Layers -->
+        @for (layer of state.layers(); track layer.id) {
+          @if (!layer.isLocked) {
+            <div
+              (pointerdown)="onElementPointerDown($event, layer.id)"
+              class="absolute cursor-move select-none transition-transform"
+              [style.left.%]="layer.x"
+              [style.top.%]="layer.y"
+              [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
+              [style.opacity]="layer.opacity"
+              [class.ring-2]="state.selectedLayerId() === layer.id"
+              [class.ring-brand-400]="state.selectedLayerId() === layer.id"
+              [class.ring-red-500]="state.designStatus() === 'REJECTED' && layer.type === 'image'"
+            >
+              @if (layer.type === 'text') {
+                <span
+                  class="block whitespace-nowrap px-2 py-1 leading-tight"
+                  [style.fontFamily]="layer.fontFamily"
+                  [style.fontSize.px]="layer.fontSize"
+                  [style.color]="layer.textColor"
+                  [style.fontWeight]="layer.fontWeight ?? 'bold'"
+                >
+                  {{ layer.content }}
+                </span>
+              }
+
+              @if (layer.type === 'sticker') {
+                <span class="block text-4xl leading-none">
+                  {{ layer.name }}
+                </span>
+              }
+
+              @if (layer.type === 'image') {
+                <img
+                  [src]="layer.storageUrl"
+                  [alt]="layer.type"
+                  class="max-h-56 max-w-56 rounded-lg object-contain pointer-events-none"
+                />
+              }
+
+              <!-- Transform Handles (Rotate & Resize) when selected -->
+              @if (state.selectedLayerId() === layer.id) {
+                <!-- Resize Handle (bottom-right) -->
+                <div
+                  (pointerdown)="onResizeHandlePointerDown($event, layer.id)"
+                  class="absolute -bottom-2 -right-2 h-4 w-4 cursor-nwse-resize rounded-full border-2 border-brand-800 bg-white shadow-xs"
+                ></div>
+
+                <!-- Rotate Handle (top-center) -->
+                <div
+                  (pointerdown)="onRotateHandlePointerDown($event, layer.id)"
+                  class="absolute -top-6 left-1/2 -translate-x-1/2 h-4 w-4 cursor-grab rounded-full border-2 border-brand-800 bg-white shadow-xs"
+                ></div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Bottom Zoom & Safe Zone Legend -->
+    <div class="absolute bottom-4 left-6 flex items-center gap-4 text-[11px] text-ink-soft">
+      <div class="flex items-center gap-1.5">
+        <span class="h-0 w-4 border-t-2 border-dashed border-emerald-500"></span>
+        <span>Vùng in an toàn</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="h-2.5 w-2.5 rounded-sm bg-[#10121a]"></span>
+        <span>Cụm camera</span>
+      </div>
+    </div>
+
+    <!-- Zoom Pill -->
+    <div class="absolute bottom-4 z-30 flex items-center rounded-full border border-line bg-surface-alt px-2 py-1 shadow-soft">
+      <button
+        type="button"
+        (click)="state.zoomOut()"
+        class="h-7 w-7 rounded-full text-ink hover:bg-brand-50"
+        title="Thu nhỏ"
+      >
+        −
+      </button>
+      <span class="min-w-10 text-center font-mono text-xs font-bold text-ink">{{ state.zoom() }}%</span>
+      <button
+        type="button"
+        (click)="state.zoomIn()"
+        class="h-7 w-7 rounded-full text-ink hover:bg-brand-50"
+        title="Phóng to"
+      >
+        +
+      </button>
+    </div>
+  </main>
+
+  <!-- COLUMN 4: Right Inspector (Preview, Properties, Layers) -->
+  <aside class="border-l border-line bg-surface-alt p-4 space-y-4 overflow-y-auto max-h-[calc(100vh-140px)]">
+    <!-- CARD 1: 2D & 3D Preview -->
+    <div class="rounded-2xl border border-line bg-surface p-4">
+      <div class="mb-3 flex items-center justify-between">
+        <h5 class="font-display text-xs font-bold text-ink">Xem trước phôi thật</h5>
+        <div class="flex rounded-lg border border-line bg-surface-alt p-0.5">
+          <span class="rounded-md bg-brand-800 px-2.5 py-0.5 text-[11px] font-bold text-white">2D</span>
+          <button
+            type="button"
+            (click)="open3dPreview()"
+            class="rounded-md px-2.5 py-0.5 text-[11px] font-medium text-ink-soft hover:text-ink"
+          >
+            3D ↗
+          </button>
+        </div>
+      </div>
+
+      <!-- Mini Preview Mockup -->
+      <div class="flex items-center justify-center py-2">
+        <div
+          class="relative h-44 w-20 overflow-hidden rounded-[16px] shadow-soft ring-2 ring-[#1f2230]"
+          [style.background]="state.caseBg()"
+        >
+          <!-- Mini Camera Bump -->
+          <div
+            class="absolute rounded-[8px] bg-[#10121a]"
+            [style.left.%]="cameraCutout().xPercent"
+            [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent"
+            [style.height.%]="cameraCutout().heightPercent"
+          ></div>
+
+          <!-- Mini Layer Render -->
+          @for (layer of state.layers(); track layer.id) {
+            @if (layer.type === 'text') {
+              <div
+                class="absolute -translate-x-1/2 -translate-y-1/2 truncate text-[5px] font-bold"
+                [style.left.%]="layer.x"
+                [style.top.%]="layer.y"
+                [style.color]="layer.textColor"
+              >
+                {{ layer.content }}
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 2: Thuộc tính (Properties) -->
+    <div class="rounded-2xl border border-line bg-surface p-4">
+      <h5 class="mb-3 font-display text-xs font-bold text-ink">Thuộc tính phần tử</h5>
+      @if (state.selectedLayer(); as sel) {
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-ink-soft">Vị trí X (%)</label>
+              <input
+                type="number"
+                [value]="sel.x"
+                (input)="updateProperty('x', $event)"
+                class="w-full rounded-lg border border-line bg-surface-alt px-2 py-1 text-xs text-ink"
+              />
+            </div>
+            <div>
+              <label class="text-[10px] text-ink-soft">Vị trí Y (%)</label>
+              <input
+                type="number"
+                [value]="sel.y"
+                (input)="updateProperty('y', $event)"
+                class="w-full rounded-lg border border-line bg-surface-alt px-2 py-1 text-xs text-ink"
+              />
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              type="button"
+              (click)="state.duplicateLayer(sel.id)"
+              class="flex-1 rounded-lg border border-line bg-surface-alt py-1.5 text-xs font-bold text-ink hover:bg-brand-50"
+            >
+              Nhân đôi
+            </button>
+            <button
+              type="button"
+              (click)="state.removeLayer(sel.id)"
+              class="flex-1 rounded-lg border border-red-200 bg-red-50 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      } @else {
+        <p class="text-xs text-ink-soft">Chọn một phần tử trên Canvas để chỉnh tọa độ và kích thước.</p>
       }
     </div>
-  </div>
 
-  <!-- Floating Glassmorphic Quick Toolbar -->
-  <div class="sticky bottom-6 z-30 mt-4 flex items-center gap-2 rounded-full border border-line bg-surface-alt/80 p-2 shadow-lift backdrop-blur-xl">
-    <button
-      type="button"
-      (click)="onAddSampleText()"
-      class="flex h-10 items-center gap-1.5 rounded-full bg-brand-800 px-4 text-xs font-bold text-white transition-all hover:bg-brand-600 hover:shadow-glow"
-    >
-      <span>+</span>
-      <span>Thêm chữ</span>
-    </button>
+    <!-- CARD 3: Quản lý Layers -->
+    <div class="rounded-2xl border border-line bg-surface p-4">
+      <div class="mb-3 flex items-center justify-between">
+        <h5 class="font-display text-xs font-bold text-ink">Danh sách lớp (Layers)</h5>
+        <span class="text-[11px] text-ink-soft">{{ state.layers().length }} lớp</span>
+      </div>
 
-    <div class="h-5 w-px bg-line"></div>
+      <div class="space-y-1.5 max-h-48 overflow-y-auto">
+        @for (layer of state.layers(); track layer.id) {
+          <div
+            (click)="state.selectLayer(layer.id)"
+            class="flex items-center justify-between rounded-xl border p-2 text-xs transition-all cursor-pointer"
+            [class]="
+              state.selectedLayerId() === layer.id
+                ? 'border-brand-800 bg-brand-100 font-bold text-brand-900'
+                : 'border-line bg-surface-alt text-ink hover:bg-brand-50'
+            "
+          >
+            <span class="truncate">
+              {{ layer.type === 'text' ? 'Chữ: ' + layer.content : layer.type === 'sticker' ? 'Sticker: ' + layer.name : 'Ảnh tải lên' }}
+            </span>
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                (click)="$event.stopPropagation(); state.toggleLayerLock(layer.id)"
+                class="p-1 text-ink-soft hover:text-ink"
+                [title]="layer.isLocked ? 'Mở khóa' : 'Khóa lớp'"
+              >
+                {{ layer.isLocked ? '🔒' : '🔓' }}
+              </button>
+            </div>
+          </div>
+        }
 
-    <button
-      type="button"
-      (click)="onUndo()"
-      [disabled]="!state.canUndo()"
-      class="flex h-10 w-10 items-center justify-center rounded-full text-ink transition-colors disabled:opacity-40 hover:bg-brand-50"
-      title="Hoàn tác (Undo)"
-    >
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-      </svg>
-    </button>
+        <div class="flex items-center justify-between rounded-xl border border-line bg-surface-alt/50 p-2 text-xs text-ink-soft">
+          <span>Phôi ốp (Nền)</span>
+          <span class="text-[10px]">Cố định</span>
+        </div>
+      </div>
+    </div>
 
-    <button
-      type="button"
-      (click)="onRedo()"
-      [disabled]="!state.canRedo()"
-      class="flex h-10 w-10 items-center justify-center rounded-full text-ink transition-colors disabled:opacity-40 hover:bg-brand-50"
-      title="Làm lại (Redo)"
-    >
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
-      </svg>
-    </button>
+    <!-- Actions & Pricing Bar -->
+    <div class="border-t border-line pt-3 space-y-2">
+      <div class="flex items-center justify-between text-xs">
+        <span class="text-ink-soft">Tổng thanh toán:</span>
+        <strong class="font-display text-base font-bold text-brand-800">
+          {{ state.totalPrice().toLocaleString('vi-VN') }}đ
+        </strong>
+      </div>
 
-    <button
-      type="button"
-      (click)="onClear()"
-      [disabled]="!state.hasLayers()"
-      class="flex h-10 w-10 items-center justify-center rounded-full text-red-500 transition-colors disabled:opacity-40 hover:bg-red-50"
-      title="Xóa tất cả (Clear)"
-    >
-      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-    </button>
-
-    <div class="h-5 w-px bg-line"></div>
-
-    <!-- Add to Cart CTA -->
-    <button
-      type="button"
-      class="flex h-10 items-center gap-2 rounded-full bg-[image:var(--grad-primary)] px-5 text-xs font-bold text-white shadow-soft transition-all hover:scale-105 hover:shadow-glow"
-    >
-      <span>Thêm vào giỏ</span>
-      <span>•</span>
-      <span>{{ state.totalPrice().toLocaleString('vi-VN') }}đ</span>
-    </button>
-  </div>
+      <button
+        type="button"
+        (click)="openCart()"
+        class="w-full flex items-center justify-center gap-2 rounded-pill bg-[image:var(--grad-primary)] py-3 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow"
+      >
+        <span>Thêm vào giỏ hàng</span>
+      </button>
+    </div>
+  </aside>
 </div>
+
+<!-- MODAL: Low-Res DPI Warning (<150 DPI) -->
+@if (state.isLowResModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div class="w-full max-w-sm rounded-card border border-line bg-surface-alt p-6 shadow-lift text-center">
+      <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h3 class="font-display text-base font-bold text-ink">Ảnh có thể in mờ</h3>
+      <p class="mt-2 text-xs text-ink-soft">
+        Mật độ điểm ảnh chỉ đạt ~{{ state.pendingUpload()?.dpi }} DPI (dưới ngưỡng in chuẩn 150 DPI). Sản phẩm in thực tế có thể bị vỡ hạt.
+      </p>
+
+      <div class="mt-6 flex gap-3">
+        <button
+          type="button"
+          (click)="cancelUpload()"
+          class="flex-1 rounded-pill border border-line py-2.5 text-xs font-semibold text-ink hover:bg-surface"
+        >
+          Thay ảnh khác
+        </button>
+        <button
+          type="button"
+          (click)="continueLowRes()"
+          class="flex-1 rounded-pill bg-brand-800 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-600"
+        >
+          Tiếp tục dùng
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL: Content Policy Consent (FR-DES-24, 25) -->
+@if (state.isConsentModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div class="w-full max-w-md rounded-card border border-line bg-surface-alt p-6 shadow-lift">
+      <div class="mb-4 flex items-center gap-3">
+        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-brand-100 text-brand-800">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-display text-base font-bold text-ink">Chính sách nội dung in ấn</h3>
+          <p class="text-xs text-ink-soft">Cam kết bản quyền điện tử (Phiên bản v1.0)</p>
+        </div>
+      </div>
+
+      <ul class="mb-4 space-y-2 rounded-xl bg-surface p-3 text-xs text-ink-soft">
+        <li class="flex items-center gap-2">✓ Ảnh không xâm phạm quyền sở hữu trí tuệ hoặc hình ảnh bên thứ ba.</li>
+        <li class="flex items-center gap-2">✓ Không chứa nội dung đồi trụy, thù địch hoặc bị pháp luật cấm.</li>
+        <li class="flex items-center gap-2">✓ Bạn hoàn toàn chịu trách nhiệm trước pháp luật về nội dung ảnh.</li>
+      </ul>
+
+      <label
+        class="flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors"
+        [class]="consentError() ? 'border-red-400 bg-red-50/50' : 'border-line hover:bg-surface'"
+      >
+        <input
+          type="checkbox"
+          [checked]="consentChecked()"
+          (change)="consentChecked.set($any($event.target).checked); consentError.set(false)"
+          class="mt-0.5 h-4 w-4 rounded border-line accent-brand-800"
+        />
+        <span class="text-xs font-semibold text-ink">
+          Tôi cam kết sở hữu bản quyền hoặc có quyền hợp pháp sử dụng bức ảnh này
+        </span>
+      </label>
+
+      @if (consentError()) {
+        <p class="mt-2 text-[11px] font-bold text-red-600">
+          ⚠️ Bạn cần tích chọn xác nhận cam kết để tiếp tục sử dụng ảnh.
+        </p>
+      }
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button
+          type="button"
+          (click)="cancelUpload()"
+          class="rounded-pill border border-line px-5 py-2 text-xs font-semibold text-ink hover:bg-surface"
+        >
+          Hủy bỏ
+        </button>
+        <button
+          type="button"
+          (click)="confirmConsent()"
+          class="rounded-pill bg-brand-800 px-5 py-2 text-xs font-bold text-white shadow-soft hover:bg-brand-600"
+        >
+          Đồng ý & Nạp lên Canvas
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- MODAL: 3D Interactive Viewer (FR-DES-17) -->
+@if (state.is3dPreviewOpen()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+    <div class="relative flex flex-col w-full max-w-2xl h-[560px] rounded-card border border-line bg-surface-alt p-6 shadow-lift">
+      <div class="flex items-center justify-between border-b border-line pb-3">
+        <div>
+          <h3 class="font-display text-base font-bold text-ink">Xem trước 3D tương tác (360°)</h3>
+          <p class="text-xs text-ink-soft">{{ state.selectedModel().name }} • Phôi thật</p>
+        </div>
+        <button
+          type="button"
+          (click)="close3dPreview()"
+          class="rounded-full p-1.5 text-ink-soft hover:bg-surface hover:text-ink"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- 3D Orbit Stage -->
+      <div
+        (pointerdown)="onOrbitPointerDown($event)"
+        (pointermove)="onOrbitPointerMove($event)"
+        (pointerup)="onOrbitPointerUp()"
+        class="relative flex-1 flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden rounded-2xl bg-radial from-surface to-brand-100/30 select-none"
+        style="perspective: 1000px"
+      >
+        <!-- 3D Transform Object -->
+        <div
+          class="relative h-[380px] w-[190px] rounded-[32px] shadow-2xl transition-transform"
+          [style.transform]="
+            'scale(' + orbitZoom() + ') rotateX(' + orbitRx() + 'deg) rotateY(' + orbitRy() + 'deg)'
+          "
+          [style.background]="state.caseBg()"
+          style="transform-style: preserve-3d"
+        >
+          <!-- Surface shine highlight -->
+          <div class="pointer-events-none absolute inset-0 rounded-[32px] bg-linear-115 from-white/35 via-transparent to-white/10"></div>
+
+          <!-- Camera bump on 3D face -->
+          <div
+            class="absolute rounded-[18px] bg-[#10121a] p-1.5 shadow-lg"
+            [style.left.%]="cameraCutout().xPercent"
+            [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent"
+            [style.height.%]="cameraCutout().heightPercent"
+            style="transform: translateZ(5px)"
+          >
+            <div class="grid h-full w-full grid-cols-2 gap-1 place-items-center">
+              <span class="h-4 w-4 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
+              <span class="h-4 w-4 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
+              <span class="h-4 w-4 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
+            </div>
+          </div>
+
+          <!-- Rendered layers on 3D front face -->
+          @for (layer of state.layers(); track layer.id) {
+            @if (layer.type === 'text') {
+              <div
+                class="absolute -translate-x-1/2 -translate-y-1/2 truncate font-bold text-center"
+                [style.left.%]="layer.x"
+                [style.top.%]="layer.y"
+                [style.color]="layer.textColor"
+                [style.fontFamily]="layer.fontFamily"
+                style="transform: translateZ(2px); font-size: 14px"
+              >
+                {{ layer.content }}
+              </div>
+            }
+          }
+        </div>
+
+        <div class="absolute bottom-4 flex items-center gap-2 rounded-full border border-line bg-surface-alt/80 px-3 py-1 text-xs text-ink-soft backdrop-blur-sm">
+          <span>Kéo chuột để xoay 360°</span>
+          <button
+            type="button"
+            (click)="reset3dView()"
+            class="text-brand-800 font-bold hover:underline"
+          >
+            Đặt lại
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- SLIDE-OVER: Cart Drawer (FR-DES-21 / UC-DES-04) -->
+@if (state.isCartDrawerOpen()) {
+  <div class="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs animate-fade-in">
+    <div class="flex h-full w-full max-w-md flex-col bg-surface-alt p-6 shadow-2xl">
+      <div class="mb-4 flex items-center justify-between border-b border-line pb-3">
+        <h3 class="font-display text-base font-bold text-ink">Giỏ hàng của bạn (1)</h3>
+        <button
+          type="button"
+          (click)="closeCart()"
+          class="rounded-full p-1 text-ink-soft hover:bg-surface hover:text-ink"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="mb-4 rounded-xl bg-emerald-50 p-3 text-xs font-semibold text-emerald-800">
+        ✓ Đã thêm thiết kế vào giỏ hàng thành công!
+      </div>
+
+      <!-- Item Card -->
+      <div class="flex gap-4 rounded-2xl border border-line bg-surface p-4">
+        <!-- Thumbnail -->
+        <div
+          class="relative h-28 w-14 shrink-0 overflow-hidden rounded-xl shadow-xs"
+          [style.background]="state.caseBg()"
+        >
+          <div
+            class="absolute rounded-[4px] bg-[#10121a]"
+            [style.left.%]="cameraCutout().xPercent"
+            [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent"
+            [style.height.%]="cameraCutout().heightPercent"
+          ></div>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <h4 class="font-display text-sm font-bold text-ink truncate">{{ state.designName() }}</h4>
+          <p class="text-xs text-ink-soft">{{ state.selectedModel().name }} • Phôi {{ state.selectedSku().colorName }}</p>
+          <p class="mt-1 text-[11px] text-brand-600 font-mono">ID: {{ state.selectedSku().skuCode }}</p>
+
+          @if (state.requiresModeration()) {
+            <span class="mt-2 inline-flex items-center gap-1 rounded-pill bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">
+              ⚠️ Cần kiểm duyệt in ấn
+            </span>
+          }
+
+          <div class="mt-3 flex items-center justify-between">
+            <span class="font-display text-sm font-bold text-brand-800">
+              {{ state.totalPrice().toLocaleString('vi-VN') }}đ
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-auto border-t border-line pt-4 space-y-3">
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-ink-soft">Tạm tính:</span>
+          <strong class="font-display font-bold text-ink">
+            {{ state.totalPrice().toLocaleString('vi-VN') }}đ
+          </strong>
+        </div>
+
+        <div class="flex gap-2">
+          <a
+            routerLink="/cart"
+            class="flex-1 rounded-pill border border-line py-3 text-center text-xs font-bold text-ink hover:bg-surface"
+          >
+            Xem giỏ hàng
+          </a>
+          <a
+            routerLink="/checkout"
+            class="flex-1 rounded-pill bg-brand-800 py-3 text-center text-xs font-bold text-white shadow-soft hover:bg-brand-600 hover:shadow-glow"
+          >
+            Thanh toán
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+}
