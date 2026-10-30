@@ -8,9 +8,8 @@ export const routes: Routes = [
     loadComponent: () => import("./features/landing/landing").then((m) => m.Landing),
   },
   {
-    path:'design-studio',
-    pathMatch:'full',
-    loadChildren: ()=>import("./features/design-studio/design-studio.routes").then(m => m.DESIGN_STUDIO_ROUTES)
+    path: 'design-studio',
+    loadChildren: () => import('./features/design-studio/design-studio.routes').then((m) => m.DESIGN_STUDIO_ROUTES),
   },
   {
     path:'cart',
