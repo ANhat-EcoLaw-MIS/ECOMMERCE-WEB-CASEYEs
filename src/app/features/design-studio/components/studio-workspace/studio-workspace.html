@@ -8,6 +8,37 @@
   </div>
 }
 
+<!-- Draft Restore Banner (US-DES-15 / US-DES-16) – guest session recovery -->
+@if (draft.hasDraftToRestore()) {
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-800">
+    <div class="flex items-center gap-2">
+      <svg class="h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="font-semibold">Phát hiện bản nháp chưa lưu</span>
+      @if (draft.draftSavedAt()) {
+        <span class="text-amber-600">· {{ draft.draftSavedAt()! | date: 'HH:mm, dd/MM' }}</span>
+      }
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        (click)="draft.restoreDraft()"
+        class="rounded-pill bg-amber-600 px-4 py-1.5 font-bold text-white transition-colors hover:bg-amber-700"
+      >
+        Khôi phục bản nháp
+      </button>
+      <button
+        type="button"
+        (click)="draft.dismissDraft()"
+        class="rounded-pill border border-amber-300 px-4 py-1.5 font-medium text-amber-700 transition-colors hover:bg-amber-100"
+      >
+        Bỏ qua
+      </button>
+    </div>
+  </div>
+}
+
 <!-- Main 4-Column Studio Grid -->
 <div class="studio-app-grid bg-surface">
   <!-- COLUMN 1: Tool Rail (Left vertical bar) -->

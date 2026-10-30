@@ -8,19 +8,22 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { CanvasLayer } from '../../models/canvas-element.model';
 import { BG_PRESETS, STICKERS_LIST, StudioState } from '../../services/studio-state';
+import { StudioDraft } from '../../services/studio-draft';
 
 @Component({
   selector: 'app-studio-workspace',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   templateUrl: './studio-workspace.html',
   styleUrl: './studio-workspace.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudioWorkspace {
   protected readonly state = inject(StudioState);
+  protected readonly draft = inject(StudioDraft);
   protected readonly stickers = STICKERS_LIST;
   protected readonly bgPresets = BG_PRESETS;
 
@@ -95,7 +98,12 @@ export class StudioWorkspace {
   }
 
   protected applyPresetText(content: string, size: number, bold: boolean): void {
+    this.isTextBold.set(bold);
     this.state.addText(content, this.selectedFont(), this.selectedColor(), size);
+  }
+
+  protected onManualSave(): void {
+    this.draft.saveDraft();
   }
 
   // --- Sticker & Background ---
