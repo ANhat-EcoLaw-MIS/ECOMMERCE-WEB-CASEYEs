@@ -3,6 +3,7 @@ import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NAV_ITEMS} from './nav-items';
 import {NotificationManager} from '../../../shared/ui/notification/notification.manager';
 import {SupabaseAuthService} from '../../supabase/supabase-auth.service';
+import {AuthModal} from '../../auth/auth-modal';
 
 @Component({
   selector: 'app-header',
@@ -13,14 +14,14 @@ import {SupabaseAuthService} from '../../supabase/supabase-auth.service';
 })
 export class Header {
   private router=inject(Router);
-  protected auth=inject(SupabaseAuthService);
+  protected readonly auth =inject(SupabaseAuthService);
   private notifications=inject(NotificationManager);
+  private readonly authModal=inject(AuthModal);
   /** Number of items in the cart. Provided by the parent. */
   readonly cartCount = input(0);
 
   /** Fires when the user wants to search (click or Ctrl/Cmd + K). */
   readonly searchRequested = output<void>();
-  isLoggedIn = this.auth.isAuthenticated(); // to replace with actual auth service
 
   protected readonly navItems = NAV_ITEMS;
   protected readonly menuOpen = signal(false);
@@ -53,9 +54,17 @@ export class Header {
     }
   }
 
+  onAccountClick(){
+    if(!this.auth.isAuthenticated()){
+      this.authModal.open('login');
+      return;
+    } else {
+      this.router.navigate(['/account']);
+    }
+  }
 
   onCartClick():void {
-    if (this.isLoggedIn) {
+    if (this.auth.isAuthenticated()) {
       this.router.navigate(['/cart']);
     } else{
       this.showLoginRequireNotif();

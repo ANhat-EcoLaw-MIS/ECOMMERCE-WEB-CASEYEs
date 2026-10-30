@@ -1,18 +1,34 @@
 // acc: duc - mk: ducduc!1234
 
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked
+} from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import type { Result } from '../../core/supabase/supabase.types';
-
-type Mode = 'login' | 'register' | 'forgot' | 'reset';
+import type {AuthMode as Mode} from "../../core/auth/auth-modal"
 
 const TEXT: Record<Mode, { title: string; submit: string }> = {
   login: { title: 'Đăng nhập', submit: 'Đăng nhập' },
   register: { title: 'Đăng ký', submit: 'Đăng ký' },
   forgot: { title: 'Quên mật khẩu', submit: 'Gửi liên kết' },
   reset: { title: 'Đặt lại mật khẩu', submit: 'Lưu mật khẩu mới' },
+};
+
+const PATHS: Record<Mode, string> = {
+  login: 'login',
+  register: 'register',
+  forgot: 'forgot-password',
+  reset: 'reset-password',
 };
 
 /** Supabase returns English messages; map the ones from the spec to Vietnamese. */
@@ -44,9 +60,13 @@ const UI = {
   selector: 'app-auth',
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './auth.html',
+  styleUrl:'./auth.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Auth {
+  readonly embedded = input(false); // true when shown inside the modal
+  readonly success = output<void>(); // login or register finished
+  readonly modeChange = output<Mode>(); // user clicked "Đăng ký", "Quên mật khẩu"...
   private readonly auth = inject(SupabaseAuthService);
   private readonly router = inject(Router);
 
@@ -65,6 +85,28 @@ export class Auth {
   protected readonly needsConfirm = computed(() => ['register', 'reset'].includes(this.mode()));
   protected readonly showGoogle = computed(() => ['login', 'register'].includes(this.mode()));
   /** The reset link signs the user in; no session means the link is expired or invalid. */
+
+  constructor() {
+    effect(() => {
+      this.mode();
+      untracked(() => {
+        this.form.reset();
+        this.error.set(null);
+        this.notice.set(null);
+      });
+    });
+  }
+
+  protected go(mode: Mode): void {
+    if (this.embedded()) this.modeChange.emit(mode);
+    else void this.router.navigate(['/auth', PATHS[mode]]);
+  }
+
+  private async leave(url: string): Promise<void> {
+    if (this.embedded()) this.success.emit();
+    else await this.router.navigateByUrl(url);
+  }
+
   protected readonly linkInvalid = computed(
     () => this.mode() === 'reset' && !this.auth.isAuthenticated(),
   );
@@ -118,7 +160,7 @@ export class Auth {
         break;
       case 'register': {
         const signedIn = 'session' in res.data && res.data.session !== null;
-        if (signedIn) await this.router.navigateByUrl('/'); // '/onboarding' once you build it
+        if (signedIn) await this.leave('/'); // '/onboarding' once you build it
         else this.notice.set('Vui lòng kiểm tra email và nhấn vào liên kết để kích hoạt tài khoản.');
         break;
       }

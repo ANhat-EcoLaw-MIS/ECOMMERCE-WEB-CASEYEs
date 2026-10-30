@@ -6,10 +6,11 @@ import { Placeholder } from './shared/ui/placeholder/placeholder';
 import {Footer} from './core/layout/footer/footer';
 import {Notification} from './shared/ui/notification/notification';
 import {NotificationManager} from './shared/ui/notification/notification.manager';
+import {AuthDialog} from './features/auth/auth-dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Placeholder, Footer, Notification],
+  imports: [RouterOutlet, Header, Placeholder, Footer, Notification, AuthDialog],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

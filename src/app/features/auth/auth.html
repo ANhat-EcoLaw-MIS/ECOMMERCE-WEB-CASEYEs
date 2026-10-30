@@ -1,5 +1,5 @@
-<div class="mx-auto flex min-h-[80vh] max-w-md items-center px-4 py-16">
-  <section class="w-full rounded-card border border-line bg-surface-alt p-6 shadow-soft sm:p-8">
+<div [class]="embedded() ? '' : 'mx-auto flex min-h-[80vh] max-w-md items-center px-4 py-16'">
+  <section [class]="embedded() ? 'w-full' : 'w-full rounded-card border border-line bg-surface-alt p-6 shadow-soft sm:p-8'">
     <h1 class="mb-6 font-display text-2xl font-extrabold tracking-tight text-ink">
       {{ text().title }}
     </h1>
@@ -22,7 +22,7 @@
         @if (needsEmail()) {
           <div>
             <label for="email" [class]="ui.label">Email</label>
-            <input id="email" type="email" formControlName="email" autocomplete="email" [class]="ui.input" />
+            <input placeholder="xxxxx@gmail.com" id="email" type="email" formControlName="email" autocomplete="email" [class]="ui.input" />
           </div>
         }
         @if (needsPassword()) {
@@ -36,6 +36,7 @@
               formControlName="password"
               [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
               [class]="ui.input"
+              placeholder="******"
             />
           </div>
         }
@@ -46,7 +47,9 @@
           </div>
         }
         @if (mode() === 'login') {
-          <p class="text-right"><a routerLink="/auth/forgot-password" [class]="ui.link">Quên mật khẩu?</a></p>
+          <p class="text-right">
+            <button type="button" [class]="ui.link" (click)="go('forgot')">Quên mật khẩu?</button>
+          </p>
         }
 
         <button type="submit" [class]="ui.primary" [disabled]="loading()">
@@ -65,13 +68,13 @@
     <p class="mt-6 text-center text-sm text-ink-soft">
       @switch (mode()) {
         @case ('login') {
-          Chưa có tài khoản? <a routerLink="/auth/register" [class]="ui.link">Đăng ký</a>
+          Chưa có tài khoản? <button type="button" [class]="ui.link" (click)="go('register')">Đăng ký</button>
         }
         @case ('register') {
-          Đã có tài khoản? <a routerLink="/auth/login" [class]="ui.link">Đăng nhập</a>
+          Đã có tài khoản? <button type="button" [class]="ui.link" (click)="go('login')">Đăng nhập</button>
         }
         @default {
-          <a routerLink="/auth/login" [class]="ui.link">Quay lại đăng nhập</a>
+          <button type="button" [class]="ui.link" (click)="go('login')">Quay lại đăng nhập</button>
         }
       }
     </p>
