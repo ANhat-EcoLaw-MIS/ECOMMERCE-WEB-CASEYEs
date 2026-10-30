@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import {ChangeDetectionStrategy, Component, computed, inject, input, output, signal} from '@angular/core';
+import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NAV_ITEMS} from './nav-items';
+import {NotificationManager} from '../../../shared/ui/notification/notification.manager';
+import {SupabaseAuthService} from '../../supabase/supabase-auth.service';
 
 @Component({
   selector: 'app-header',
@@ -10,11 +12,15 @@ import {NAV_ITEMS} from './nav-items';
   host: { '(window:keydown)': 'onKeydown($event)' },
 })
 export class Header {
+  private router=inject(Router);
+  protected auth=inject(SupabaseAuthService);
+  private notifications=inject(NotificationManager);
   /** Number of items in the cart. Provided by the parent. */
   readonly cartCount = input(0);
 
   /** Fires when the user wants to search (click or Ctrl/Cmd + K). */
   readonly searchRequested = output<void>();
+  isLoggedIn = this.auth.isAuthenticated(); // to replace with actual auth service
 
   protected readonly navItems = NAV_ITEMS;
   protected readonly menuOpen = signal(false);
@@ -45,5 +51,26 @@ export class Header {
     } else if (event.key === 'Escape' && this.menuOpen()) {
       this.closeMenu();
     }
+  }
+
+
+  onCartClick():void {
+    if (this.isLoggedIn) {
+      this.router.navigate(['/cart']);
+    } else{
+      this.showLoginRequireNotif();
+    }
+  }
+
+  showLoginRequireNotif(): void {
+    this.notifications.show({
+      variant:"functional",
+      title:"Cần xác thực!",
+      message: "Bạn đăng nhập vào hệ thống nhaaa",
+      actionLabel: "Đăng nhập",
+      onAction: () => {
+        this.router.navigate(['/auth']);
+      }
+    })
   }
 }

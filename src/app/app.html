@@ -11,4 +11,13 @@
   <router-outlet />
 </main>
 
+<div class="fixed bottom-4 right-4 z-50 flex flex-col gap-4 pointer-events-none">
+  @for (notification of notificationManager.notifications(); track notification.id) {
+    <app-notification
+      [payload]="notification"
+      (actionClicked)="notificationManager.triggerAction($event)"
+      (dismissed)="notificationManager.remove($event)" />
+  }
+</div>
+
 <app-footer></app-footer>

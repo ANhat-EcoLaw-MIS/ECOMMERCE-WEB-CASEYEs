@@ -68,7 +68,7 @@
 
       <!-- Cart -->
       <a
-        routerLink="/cart"
+        (click)="onCartClick()"
         [attr.aria-label]="cartLabel()"
         class="relative grid size-11 place-items-center rounded-full text-white/80 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
       >
@@ -88,16 +88,48 @@
       </a>
 
       <!-- Account -->
-      <a
-        routerLink="/account"
-        aria-label="Tài khoản"
-        class="grid size-11 place-items-center rounded-full text-white/80 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-5">
-          <circle cx="12" cy="8" r="4" />
-          <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
-        </svg>
-      </a>
+      <div class="group relative inline-block justify-center">
+        <a
+          routerLink="/account"
+          aria-label="Tài khoản"
+          class="grid size-11 place-items-center rounded-full text-white/80 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-5">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+          </svg>
+        </a>
+
+        <div class="pointer-events-none absolute top-full left-1/2 z-50 pt-2 opacity-0 -translate-x-1/2 translate-y-4 transition-all duration-300 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transition-none">
+          <div class="absolute -top-1 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-line bg-white/60 backdrop-blur-xl"></div>
+          <div class="relative flex w-48 flex-col overflow-hidden rounded-2xl border border-line bg-white/60 p-1.5 shadow-soft backdrop-blur-xl">
+            @if (auth.isAuthenticated()) {
+              <a
+                routerLink="/account"
+                class="flex min-h-[40px] items-center rounded-xl px-3 text-sm font-medium text-ink transition-all hover:bg-brand-800/5 hover:text-brand-800 focus-visible:bg-brand-800/5 focus-visible:text-brand-800"
+              >
+                My Homepage
+              </a>
+              <hr class="my-1 border-line/50" />
+              <button
+                type="button"
+                (click)="auth.signOut()"
+                class="flex min-h-[40px] w-full items-center rounded-xl px-3 text-left text-sm font-medium text-ink transition-all hover:bg-brand-800/5 hover:text-brand-800 focus-visible:bg-brand-800/5 focus-visible:text-brand-800"
+              >
+                Log out
+              </button>
+            } @else {
+              <p
+                class="flex min-h-[40px] items-center rounded-xl px-3 text-sm font-medium text-ink transition-all hover:bg-brand-800/5 hover:text-brand-800 focus-visible:bg-brand-800/5 focus-visible:text-brand-800"
+              >
+                Please log in
+              </p>
+            }
+
+          </div>
+        </div>
+      </div>
+
 
       <!-- Mobile menu toggle -->
       <button

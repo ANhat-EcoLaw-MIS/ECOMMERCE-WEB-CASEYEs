@@ -1,0 +1,79 @@
+<div class="mx-auto flex min-h-[80vh] max-w-md items-center px-4 py-16">
+  <section class="w-full rounded-card border border-line bg-surface-alt p-6 shadow-soft sm:p-8">
+    <h1 class="mb-6 font-display text-2xl font-extrabold tracking-tight text-ink">
+      {{ text().title }}
+    </h1>
+
+    @if (done()) {
+      <p role="status" [class]="ui.notice">✓ Đặt lại mật khẩu thành công. Vui lòng đăng nhập.</p>
+    }
+    @if (error(); as message) {
+      <p role="alert" [class]="ui.error">⚠ {{ message }}</p>
+    }
+    @if (notice(); as message) {
+      <p role="status" [class]="ui.notice">✓ {{ message }}</p>
+    }
+
+    @if (linkInvalid()) {
+      <p role="alert" [class]="ui.error">⚠ Đường dẫn khôi phục đã hết hạn hoặc không hợp lệ.</p>
+      <a routerLink="/auth/forgot-password" [class]="ui.primary">Yêu cầu gửi lại liên kết mới</a>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4" novalidate>
+        @if (needsEmail()) {
+          <div>
+            <label for="email" [class]="ui.label">Email</label>
+            <input id="email" type="email" formControlName="email" autocomplete="email" [class]="ui.input" />
+          </div>
+        }
+        @if (needsPassword()) {
+          <div>
+            <label for="password" [class]="ui.label">
+              {{ mode() === 'reset' ? 'Mật khẩu mới' : 'Mật khẩu' }}
+            </label>
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+              [class]="ui.input"
+            />
+          </div>
+        }
+        @if (needsConfirm()) {
+          <div>
+            <label for="confirmPassword" [class]="ui.label">Nhập lại mật khẩu</label>
+            <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" [class]="ui.input" />
+          </div>
+        }
+        @if (mode() === 'login') {
+          <p class="text-right"><a routerLink="/auth/forgot-password" [class]="ui.link">Quên mật khẩu?</a></p>
+        }
+
+        <button type="submit" [class]="ui.primary" [disabled]="loading()">
+          {{ loading() ? 'Đang xử lý…' : text().submit }}
+        </button>
+      </form>
+
+      @if (showGoogle()) {
+        <p class="my-4 text-center text-sm text-ink-soft">hoặc</p>
+        <button type="button" [class]="ui.secondary" [disabled]="loading()" (click)="google()">
+          Tiếp tục với Google
+        </button>
+      }
+    }
+
+    <p class="mt-6 text-center text-sm text-ink-soft">
+      @switch (mode()) {
+        @case ('login') {
+          Chưa có tài khoản? <a routerLink="/auth/register" [class]="ui.link">Đăng ký</a>
+        }
+        @case ('register') {
+          Đã có tài khoản? <a routerLink="/auth/login" [class]="ui.link">Đăng nhập</a>
+        }
+        @default {
+          <a routerLink="/auth/login" [class]="ui.link">Quay lại đăng nhập</a>
+        }
+      }
+    </p>
+  </section>
+</div>
