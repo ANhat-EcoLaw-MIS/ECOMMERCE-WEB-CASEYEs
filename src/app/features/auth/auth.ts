@@ -1,5 +1,4 @@
 // acc: duc - mk: ducduc!1234
-
 import {
   ChangeDetectionStrategy,
   Component,

@@ -2,6 +2,9 @@ import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, viewChi
 import { AuthModal } from '../../core/auth/auth-modal';
 import { Auth } from './auth';
 import {SupabaseAuthService} from '../../core/supabase/supabase-auth.service';
+import {NavigationEnd, Router} from '@angular/router';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {filter} from 'rxjs';
 
 @Component({
   selector: 'app-auth-dialog',
@@ -46,6 +49,12 @@ export class AuthDialog {
         untracked(() => this.modal.close());
       }
     });
+
+    inject(Router).events //edge case: the user has opened the modal but navigate to "/url"
+      .pipe(filter((e) => e instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe((e)=>{
+        if (e.urlAfterRedirects.startsWith('/auth')) this.modal.close();
+      });
   }
 
   /** Padding sits on the inner div, so a click that targets the dialog itself is the backdrop. */
