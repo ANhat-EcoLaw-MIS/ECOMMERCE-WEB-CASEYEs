@@ -16,6 +16,7 @@ import { Router, RouterLink } from '@angular/router';
 import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import type { Result } from '../../core/supabase/supabase.types';
 import type {AuthMode as Mode} from "../../core/auth/auth-modal"
+import { toSignal } from '@angular/core/rxjs-interop';
 
 const TEXT: Record<Mode, { title: string; submit: string }> = {
   login: { title: 'Đăng nhập', submit: 'Đăng nhập' },
@@ -54,7 +55,16 @@ const UI = {
   error: 'mb-4 rounded-xl bg-brand-50 p-3 text-sm text-ink',
   notice: 'mb-4 rounded-xl bg-brand-100 p-3 text-sm text-brand-800',
   link: 'font-medium text-brand-800 underline underline-offset-2',
+  hint: 'mt-1 text-sm font-medium text-brand-800/80',
+  helper: 'mt-1 text-sm text-brand-800/80',
 } as const;
+
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const PASSWORD_RE = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
+type Field = 'email' | 'password' | 'confirmPassword';
+const UNTOUCHED: Record<Field, boolean> = { email: false, password: false, confirmPassword: false };
+const ALL_TOUCHED: Record<Field, boolean> = { email: true, password: true, confirmPassword: true };
 
 @Component({
   selector: 'app-auth',
@@ -95,6 +105,12 @@ export class Auth {
         this.notice.set(null);
       });
     });
+    untracked(() => {
+      this.form.reset();
+      this.touched.set(UNTOUCHED);
+      this.error.set(null);
+      this.notice.set(null);
+    });
   }
 
   protected go(mode: Mode): void {
@@ -116,14 +132,35 @@ export class Auth {
     password: '',
     confirmPassword: '',
   });
+  protected readonly touched = signal(UNTOUCHED);
+  private readonly values = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+  protected readonly hints = computed(() => {
+    const { email = '', password = '', confirmPassword = '' } = this.values();
+    const t = this.touched();
+    const strong = this.needsConfirm(); // register or reset
+    return {
+      email:
+        t.email && this.needsEmail() && !EMAIL_RE.test(email) ? 'Vui lòng nhập email hợp lệ.' : null,
+      password:
+        t.password && this.mode() === 'login' && !password
+          ? 'Vui lòng nhập mật khẩu.'
+          : t.password && strong && !PASSWORD_RE.test(password)
+            ? 'Mật khẩu cần ít nhất 8 ký tự, gồm cả chữ và số.'
+            : null,
+      confirmPassword:
+        t.confirmPassword && strong && confirmPassword !== password
+          ? 'Mật khẩu nhập lại không khớp.'
+          : null,
+    };
+  });
+  protected touch(field: Field): void {
+    this.touched.update((t) => ({ ...t, [field]: true }));
+  }
 
   protected async submit(): Promise<void> {
-    const { email, password, confirmPassword } = this.form.getRawValue();
-    const problem = this.validate(email, password, confirmPassword);
-    if (problem) {
-      this.error.set(problem);
-      return;
-    }
+    this.touched.set(ALL_TOUCHED); // reveal every problem at once
+    if (Object.values(this.hints()).some(Boolean)) return;
+    const { email, password } = this.form.getRawValue();
     this.start();
     await this.finish(await this.request(email, password));
   }
@@ -156,7 +193,7 @@ export class Auth {
     }
     switch (this.mode()) {
       case 'login':
-        await this.router.navigateByUrl(this.safeReturnUrl());
+        await this.leave(this.safeReturnUrl());
         break;
       case 'register': {
         const signedIn = 'session' in res.data && res.data.session !== null;
@@ -172,18 +209,6 @@ export class Auth {
         await this.router.navigate(['/login'], { queryParams: { done: '1' } });
         break;
     }
-  }
-
-  private validate(email: string, password: string, confirm: string): string | null {
-    const mode = this.mode();
-    if (this.needsEmail() && !/^\S+@\S+\.\S+$/.test(email)) return 'Vui lòng nhập email hợp lệ.';
-    if (mode === 'login' && !password) return 'Vui lòng nhập mật khẩu.';
-    if (this.needsConfirm()) {
-      if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password))
-        return 'Mật khẩu cần ít nhất 8 ký tự, gồm cả chữ và số.';
-      if (password !== confirm) return 'Mật khẩu nhập lại không khớp.';
-    }
-    return null;
   }
 
   private start(): void {
