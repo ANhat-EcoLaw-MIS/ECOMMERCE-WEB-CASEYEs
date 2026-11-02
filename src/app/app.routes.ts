@@ -33,6 +33,10 @@ export const routes: Routes = [
     loadChildren:()=>import("./features/customer-support/customer-support.routes").then((m) => m.SUPPORT_ROUTES),
   },
   {
+    path:'order-tracking',
+    loadChildren:()=>import("./features/order-tracking/order-tracking.routes").then((m) => m.ORDER_TRACKING_ROUTES),
+  },
+  {
     path:'**',
     title:"Not found T~T",
     loadComponent:()=>import("./core/not-found/not-found").then(m => m.NotFound)

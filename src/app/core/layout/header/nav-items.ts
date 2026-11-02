@@ -13,6 +13,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Trang chủ', path: '/', icon: 'home', iconOnly: true, exact: true },
   { label: 'Thiết kế', path: '/design-studio' },
   { label: 'Cửa hàng', path: '/shop' },
+  { label: 'Đơn hàng', path: '/order-tracking' },
   { label: 'Hỗ trợ', path: '/customer-support' },
 ];
 
