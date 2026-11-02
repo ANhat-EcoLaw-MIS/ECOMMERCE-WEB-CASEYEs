@@ -1,7 +1,9 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AuthModal } from '../../core/auth/auth-modal';
 import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
+import { NotificationManager } from '../../shared/ui/notification/notification.manager';
 import { CancellationReason, ComplaintType, Order, OrderStatus } from './models/order-tracking.model';
 import { OrderTrackingService } from './services/order-tracking.service';
 
@@ -16,6 +18,11 @@ import { OrderTrackingService } from './services/order-tracking.service';
 export class OrderTracking {
   protected readonly trackingService = inject(OrderTrackingService);
   protected readonly auth = inject(SupabaseAuthService, { optional: true });
+  private readonly notifications = inject(NotificationManager);
+  private readonly authModal = inject(AuthModal, { optional: true });
+
+  // Real user authentication state from team's auth module
+  readonly isAuthenticated = computed(() => this.auth?.isAuthenticated() ?? false);
 
   // User display info (real user if logged in, fallback to demo profile)
   readonly userDisplayName = computed(() => {
@@ -199,6 +206,13 @@ export class OrderTracking {
     return 0;
   });
 
+  // Open Auth modal from team's auth system
+  openAuthLogin(): void {
+    if (this.authModal) {
+      this.authModal.open('login');
+    }
+  }
+
   // Switch Views
   viewOrderDetail(orderId: string): void {
     this.trackingService.selectOrder(orderId);
@@ -224,8 +238,17 @@ export class OrderTracking {
     if (success) {
       this.activeView.set('detail');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.notifications.show({
+        variant: 'functional',
+        title: 'Tra cứu thành công',
+        message: `Đã tìm thấy đơn hàng ${query}.`,
+      });
     } else {
-      alert(`Không tìm thấy đơn hàng "${query}". Vui lòng thử lại với mã đơn #CASEYE-8892.`);
+      this.notifications.show({
+        variant: 'warning',
+        title: 'Không tìm thấy đơn hàng',
+        message: `Không tìm thấy đơn "${query}". Bạn có thể thử với mã mẫu #CASEYE-8892.`,
+      });
     }
   }
 
@@ -237,6 +260,11 @@ export class OrderTracking {
     }
     this.activeView.set('detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.notifications.show({
+      variant: 'information',
+      title: 'Đã chuyển kịch bản',
+      message: `Đang xem kịch bản đơn: ${ord?.orderCode}`,
+    });
   }
 
   toggleSimulator(): void {
@@ -254,7 +282,11 @@ export class OrderTracking {
     const order = this.currentOrder();
     if (!order) return;
     const result = this.trackingService.cancelOrder(order.id, this.selectedCancelReason, this.cancelNoteText);
-    alert(result.message);
+    this.notifications.show({
+      variant: result.success ? 'functional' : 'error',
+      title: result.success ? 'Hủy đơn thành công' : 'Không thể hủy đơn',
+      message: result.message,
+    });
     this.closeCancelModal();
   }
 
@@ -271,7 +303,11 @@ export class OrderTracking {
     const order = this.currentOrder();
     if (!order) return;
     this.trackingService.submitReview(order.id, this.selectedRatingStars(), this.reviewCommentText);
-    alert('Cảm ơn bạn đã đánh giá! 50 Điểm thưởng Loyalty đã được cộng vào tài khoản của bạn.');
+    this.notifications.show({
+      variant: 'functional',
+      title: 'Đánh giá thành công',
+      message: 'Cảm ơn bạn! 50 Điểm thưởng Loyalty đã được cộng vào tài khoản.',
+    });
     this.closeReviewModal();
   }
 
@@ -287,7 +323,11 @@ export class OrderTracking {
     this.trackingService.submitIssue(order.id, this.selectedIssueType, this.issueDescText, [
       'https://placeholder.com/evidence1.jpg',
     ]);
-    alert('Yêu cầu khiếu nại đã được ghi nhận và gửi sang phòng CSKH! Mã Ticket #TK-8892.');
+    this.notifications.show({
+      variant: 'functional',
+      title: 'Đã tiếp nhận khiếu nại',
+      message: 'Yêu cầu bảo hành đã được gửi tới CSKH (Ticket #TK-8892).',
+    });
     this.closeIssueModal();
   }
 
@@ -302,7 +342,11 @@ export class OrderTracking {
     const order = this.currentOrder();
     if (!order) return;
     this.trackingService.requestRedelivery(order.id);
-    alert('Yêu cầu giao lại thành công! Đơn hàng được cập nhật về trạng thái Đang vận chuyển (In_Transit).');
+    this.notifications.show({
+      variant: 'functional',
+      title: 'Yêu cầu giao lại thành công',
+      message: 'Đơn hàng được chuyển lại trạng thái Đang vận chuyển (GHN).',
+    });
   }
 
   // Simulators for demo
@@ -310,13 +354,21 @@ export class OrderTracking {
     const order = this.currentOrder();
     if (!order) return;
     this.trackingService.mockWebhook(order.id, event);
-    alert(`🔔 [3PL Webhook Simulator]: Đã kích hoạt sự kiện ${event} cho đơn ${order.orderCode}!`);
+    this.notifications.show({
+      variant: 'information',
+      title: '3PL Webhook Simulator',
+      message: `Đã kích hoạt sự kiện "${event}" cho đơn ${order.orderCode}!`,
+    });
   }
 
   mockQcDefect(): void {
     const order = this.currentOrder();
     if (!order) return;
     this.trackingService.markQcDefect(order.id);
-    alert(`🛠️ [Admin QC Simulator]: Đã đánh dấu in lại lỗi QC cho đơn ${order.orderCode}. Tự động gia hạn +2 ngày vào EDD!`);
+    this.notifications.show({
+      variant: 'warning',
+      title: 'Admin QC Simulator',
+      message: `Đã đánh dấu in lại lỗi QC cho đơn ${order.orderCode} (+2 ngày EDD).`,
+    });
   }
 }

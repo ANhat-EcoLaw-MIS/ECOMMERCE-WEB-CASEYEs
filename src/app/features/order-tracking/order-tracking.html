@@ -18,9 +18,15 @@
           {{ userAvatarText() }}
         </span>
         <span class="font-semibold text-ink">{{ userDisplayName() }}</span>
-        <span class="text-brand-800 font-bold bg-brand-200/60 px-2 py-0.5 rounded-full text-[11px]">
-          👑 VIP Crown (420đ)
-        </span>
+        @if (isAuthenticated()) {
+          <span class="text-brand-800 font-bold bg-brand-200/60 px-2 py-0.5 rounded-full text-[11px]">
+            👑 VIP Crown (420đ)
+          </span>
+        } @else {
+          <button type="button" (click)="openAuthLogin()" class="text-brand-800 hover:text-brand-900 font-bold text-[11px] underline">
+            Đăng nhập
+          </button>
+        }
       </div>
     </div>
   </div>
@@ -41,9 +47,20 @@
             </div>
             <div class="min-w-0">
               <h2 class="font-display font-bold text-sm text-ink truncate">{{ userDisplayName() }}</h2>
-              <p class="text-xs text-brand-800 font-medium">Hạng thành viên VIP</p>
+              <p class="text-xs text-brand-800 font-medium">
+                {{ isAuthenticated() ? 'Thành viên CasEYE\'s' : 'Khách vãng lai (Demo VIP)' }}
+              </p>
             </div>
           </div>
+
+          @if (!isAuthenticated()) {
+            <div class="mt-3 p-2.5 rounded-xl bg-brand-50 border border-brand-200/60 text-[11px] text-brand-900 flex items-center justify-between">
+              <span>Đăng nhập để đồng bộ đơn</span>
+              <button type="button" (click)="openAuthLogin()" class="px-2.5 py-1 rounded-pill bg-brand-800 hover:bg-brand-900 text-white font-bold text-[10px] transition-colors">
+                Đăng nhập
+              </button>
+            </div>
+          }
 
           <!-- Navigation Links -->
           <nav aria-label="Menu cá nhân" class="mt-4 space-y-1">
