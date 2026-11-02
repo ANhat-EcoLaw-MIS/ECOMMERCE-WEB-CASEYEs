@@ -15,5 +15,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Cửa hàng', path: '/shop' },
   { label: 'Đơn hàng', path: '/order-tracking' },
   { label: 'Hỗ trợ', path: '/customer-support' },
+  { label: 'Test', path: '/test' },
 ];
 

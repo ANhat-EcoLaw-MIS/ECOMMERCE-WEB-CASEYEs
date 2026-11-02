@@ -1,0 +1,54 @@
+html {
+  scrollbar-gutter: stable;
+}
+
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+dialog {
+  /* 1. Trạng thái biến mất (Exit) */
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+
+  /* Cần allow-discrete để delay việc 'display: none' cho đến khi animation kết thúc */
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out,
+    overlay 300ms ease-out,
+    display 300ms ease-out allow-discrete;
+
+  &::backdrop {
+    opacity: 0;
+    transition:
+      opacity 300ms ease-out,
+      overlay 300ms ease-out,
+      display 300ms ease-out allow-discrete;
+  }
+
+  /* 2. Trạng thái hiển thị (Active) */
+  &[open] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+
+    &::backdrop {
+      opacity: 1;
+    }
+  }
+}
+
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog, dialog::backdrop {
+    transition: none !important;
+  }
+}

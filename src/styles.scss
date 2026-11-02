@@ -1,3 +1,39 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
 @import "./styles/tokens.css";
+@import "./styles/mixins.scss";
+@import "./styles/effects.scss";
+@media print {
+  // 1. Hide interactive and layout elements
+  button, .sidebar, .no-print {
+    display: none !important;
+  }
+
+  // 2. Reset the canvas for paper
+  body, html {
+    background-color: white !important;
+    color: black !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  // 3. Expand content areas and strip shadows
+  .container, .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  // 4. Smart page breaking rules
+  h1, h2, h3, img, table, .card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}

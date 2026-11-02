@@ -9,27 +9,22 @@ export const routes: Routes = [
   },
   {
     path:'design-studio',
-    pathMatch:'full',
     loadChildren: ()=>import("./features/design-studio/design-studio.routes").then(m => m.DESIGN_STUDIO_ROUTES)
   },
   {
     path:'cart',
-    pathMatch: 'full',
     loadChildren: ()=>import("./features/cart/cart.routes").then((m) => m.CART_ROUTES),
   },
   {
     path:'shop',
-    pathMatch: 'full',
     loadChildren: ()=>import("./features/shop/shop.routes").then((m) => m.SHOP_ROUTES),
   },
   {
     path:'account',
-    pathMatch: 'full',
     loadChildren:()=>import("./features/account/account.routes").then((m) => m.ACCOUNT_ROUTES),
   },
   {
     path:'customer-support',
-    pathMatch: 'full',
     loadChildren:()=>import("./features/customer-support/customer-support.routes").then((m) => m.SUPPORT_ROUTES),
   },
   {
@@ -37,8 +32,16 @@ export const routes: Routes = [
     loadChildren:()=>import("./features/order-tracking/order-tracking.routes").then((m) => m.ORDER_TRACKING_ROUTES),
   },
   {
+    path:'test',
+    loadComponent:()=>import("./core/demo/demo").then(m => m.Demo)
+  },
+  {
+    path: 'auth', // /auth/login, /auth/register, /auth/forgot-password, /auth/reset-password
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  },
+  {
     path:'**',
     title:"Not found T~T",
     loadComponent:()=>import("./core/not-found/not-found").then(m => m.NotFound)
-  }
+  },
 ];
