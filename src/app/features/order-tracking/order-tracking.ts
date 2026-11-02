@@ -1,6 +1,7 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import { CancellationReason, ComplaintType, Order, OrderStatus } from './models/order-tracking.model';
 import { OrderTrackingService } from './services/order-tracking.service';
 
@@ -14,6 +15,21 @@ import { OrderTrackingService } from './services/order-tracking.service';
 })
 export class OrderTracking {
   protected readonly trackingService = inject(OrderTrackingService);
+  protected readonly auth = inject(SupabaseAuthService, { optional: true });
+
+  // User display info (real user if logged in, fallback to demo profile)
+  readonly userDisplayName = computed(() => {
+    const u = this.auth?.user();
+    return u?.user_metadata?.['full_name'] || u?.email?.split('@')[0] || 'Nguyễn Nhật Anh';
+  });
+
+  readonly userAvatarText = computed(() => {
+    const name = this.userDisplayName();
+    const parts = name.trim().split(' ');
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : name.slice(0, 2).toUpperCase();
+  });
 
   // View state: 'list' (Shopee-style "Đơn Mua Của Tôi") hoặc 'detail' (Chi tiết tiến độ đơn hàng)
   readonly activeView = signal<'list' | 'detail'>('list');
