@@ -1,7 +1,7 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { SupabaseAuthService } from '../../../core/supabase/supabase-auth.service';
 import { Result, fail, ok } from '../../../core/supabase/supabase.types';
-import { DELIVERY_CONFIG, FAILURE_CAUSES } from '../config/delivery-config';
+import { CANCEL_REASON_LABELS, DELIVERY_CONFIG, FAILURE_CAUSES } from '../config/delivery-config';
 import { addHours, diffMs, formatShortDate, isWorkingDay, toDateKey } from '../domain/calendar';
 import { computeEdd, shiftEdd } from '../domain/edd';
 import {
@@ -231,7 +231,7 @@ export class OrderTrackingService {
       this.assertRefundChoice(o, input.refund);
       const nowIso = now.toISOString();
       const cause = o.status === 'Pending_Review' ? 'Customer_Pending_Review' : 'Customer_In_Window';
-      let next = withCancellation(o, this.customerActor(o), cause, false, `Khách hủy đơn: ${input.reason}`, nowIso, {
+      let next = withCancellation(o, this.customerActor(o), cause, false, `Khách hủy đơn: ${CANCEL_REASON_LABELS[input.reason]}`, nowIso, {
         reason: input.reason,
         note: input.note,
       });

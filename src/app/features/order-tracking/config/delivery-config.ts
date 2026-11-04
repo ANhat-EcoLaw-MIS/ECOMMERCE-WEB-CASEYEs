@@ -1,4 +1,4 @@
-import { FailureCause, FaultParty, ShippingTier, Zone } from '../models/order-tracking.model';
+import { CancelReason, FailureCause, FaultParty, ShippingTier, Zone } from '../models/order-tracking.model';
 
 /** Day range in working days (processing) or shipping days (Mon–Sat). */
 export interface DayRange {
@@ -76,6 +76,14 @@ export const FAILURE_CAUSES: Record<FailureCause, { label: string; party: FaultP
   Lost_In_Transit: { label: 'Thất lạc', party: 'Carrier' },
   Wrong_Packing_By_Shop: { label: 'Đóng gói sai hoặc thiếu hàng', party: 'Shop' },
   Wrong_Shipping_Info_By_Shop: { label: 'Sai thông tin giao từ shop', party: 'Shop' },
+};
+
+export const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
+  High_Shipping_Fee: 'Phí ship cao',
+  Changed_Mind: 'Đổi ý',
+  Wrong_Phone_Model: 'Đặt nhầm dòng máy',
+  Wrong_Address: 'Sai địa chỉ',
+  Other: 'Khác',
 };
 
 export const FAULT_PARTY_LABELS: Record<FaultParty, string> = {

@@ -143,6 +143,9 @@ export class DemoConsole {
   protected readonly refundRejectReason = signal('');
 
   protected readonly simTime = computed(() => this.clock.nowSignal());
+  protected readonly weekday = computed(
+    () => ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][this.simTime().getDay()],
+  );
   protected readonly offsetLabel = computed(() => {
     const ms = this.clock.offsetMs();
     if (Math.abs(ms) < 60_000) return 'Giờ thật';
@@ -154,7 +157,7 @@ export class DemoConsole {
   protected cancelWindowLeft(o: Order): string | null {
     if (o.status !== 'Pending_Confirmation') return null;
     const ms = new Date(o.createdAt).getTime() + DELIVERY_CONFIG.cancelWindowMinutes * 60_000 - this.simTime().getTime();
-    return ms > 0 ? `${Math.ceil(ms / 60_000)} phút` : null;
+    return ms > 0 ? `${Math.min(DELIVERY_CONFIG.cancelWindowMinutes, Math.ceil(ms / 60_000))} phút` : null;
   }
 
   protected reviewOverdue(o: Order): boolean {

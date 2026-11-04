@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, input, ou
 import { TONE_CLASSES } from '../../config/status-style';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NotificationManager } from '../../../../shared/ui/notification/notification.manager';
-import { FAILURE_CAUSES, FAULT_PARTY_LABELS } from '../../config/delivery-config';
+import { CANCEL_REASON_LABELS, FAILURE_CAUSES, FAULT_PARTY_LABELS } from '../../config/delivery-config';
 import { RefundChoice } from '../../domain/order-mutations';
 import { failedDeliveryRefundSituation, faultParty, isPrepaid, refundAmountFor } from '../../domain/order-rules';
 import { formatVnd } from '../../domain/shipping-fee';
@@ -15,13 +15,10 @@ import { BTN_GHOST, BTN_PRIMARY, FIELD, LABEL, simulateLatency } from '../ui';
 /** 'cancel' = UC-OT-02 main flow, 'rejected' = AF 1.2 (situation 2), 'failed' = UC-OT-05 (3a/3b). */
 export type CancelMode = 'cancel' | 'rejected' | 'failed';
 
-export const CANCEL_REASONS: readonly { key: CancelReason; label: string }[] = [
-  { key: 'High_Shipping_Fee', label: 'Phí ship cao' },
-  { key: 'Changed_Mind', label: 'Đổi ý' },
-  { key: 'Wrong_Phone_Model', label: 'Đặt nhầm dòng máy' },
-  { key: 'Wrong_Address', label: 'Sai địa chỉ' },
-  { key: 'Other', label: 'Khác' },
-];
+export const CANCEL_REASONS = (Object.keys(CANCEL_REASON_LABELS) as CancelReason[]).map((key) => ({
+  key,
+  label: CANCEL_REASON_LABELS[key],
+}));
 
 @Component({
   selector: 'app-cancel-dialog',
