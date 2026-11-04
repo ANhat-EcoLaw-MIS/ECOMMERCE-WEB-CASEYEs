@@ -1,50 +1,101 @@
-import { Injectable, inject } from '@angular/core';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { SUPABASE_CLIENT } from '../../../core/supabase/supabase.client';
-import { fail, ok, Result } from '../../../core/supabase/supabase.types';
-import { Order } from '../models/order-tracking.model';
+import { Injectable, Signal, inject, signal } from '@angular/core';
+import {
+  InboxMessage,
+  Order,
+  OutboundEvent,
+  PolicyConsent,
+  RetryQueueItem,
+  WebhookEvent,
+} from '../models/order-tracking.model';
+import { SyncChannel } from './sync-channel';
+
+/** Everything Epic 5 persists. Mirrors docs/epic5-order-tracking-migration.sql. */
+export interface OrderTrackingDb {
+  readonly version: 1;
+  orders: Order[];
+  consents: PolicyConsent[];
+  webhookEvents: WebhookEvent[];
+  retryQueue: RetryQueueItem[];
+  inbox: InboxMessage[];
+  outbound: OutboundEvent[];
+  /** Processed operation keys (FR-OT-EX-06 idempotency). */
+  idempotencyKeys: string[];
+  orderSeq: number;
+}
+
+export function emptyDb(): OrderTrackingDb {
+  return {
+    version: 1,
+    orders: [],
+    consents: [],
+    webhookEvents: [],
+    retryQueue: [],
+    inbox: [],
+    outbound: [],
+    idempotencyKeys: [],
+    orderSeq: 0,
+  };
+}
 
 /**
- * Feature Repository Layer for Order Tracking (Convention 6.1 & 6.4)
- * Manages order queries and audit logs according to Supabase architecture.
+ * Repository boundary (decision A). The service only talks to this abstract class, so the
+ * localStorage mock can later be replaced by a Supabase implementation where `transact`
+ * becomes a Postgres function (RPC) running in one transaction.
  */
-@Injectable({ providedIn: 'root' })
-export class OrderRepository {
-  private readonly client = inject(SUPABASE_CLIENT) as unknown as SupabaseClient;
-  protected readonly tableName = 'orders';
-
+@Injectable({ providedIn: 'root', useFactory: () => new LocalStorageOrderRepository() })
+export abstract class OrderRepository {
+  abstract readonly state: Signal<OrderTrackingDb>;
   /**
-   * Fetch customer orders by customer_id or phone
+   * Runs `fn` on a fresh draft read from storage and persists it when `fn` returns.
+   * Throwing inside `fn` aborts without writing (all-or-nothing).
    */
-  async getOrdersByCustomerId(customerId: string): Promise<Result<Order[]>> {
-    try {
-      const { data, error } = await this.client
-        .from(this.tableName)
-        .select('*')
-        .eq('customer_id', customerId);
+  abstract transact<T>(fn: (db: OrderTrackingDb) => T): T;
+  abstract reload(): void;
+  abstract reset(): void;
+}
 
-      if (error) return fail(error);
-      return ok((data ?? []) as unknown as Order[]);
-    } catch (e) {
-      return fail({ message: e instanceof Error ? e.message : 'Database query error' });
-    }
+const STORAGE_KEY = 'casecraft.ot.db.v1';
+const MAX_KEYS = 500;
+
+export class LocalStorageOrderRepository extends OrderRepository {
+  private readonly sync = inject(SyncChannel);
+  private readonly _state = signal<OrderTrackingDb>(this.read());
+  override readonly state = this._state.asReadonly();
+
+  constructor() {
+    super();
+    this.sync.on('db', () => this.reload());
   }
 
-  /**
-   * Search order by tracking code (e.g. #CASEYE-8892)
-   */
-  async getOrderByCode(orderCode: string): Promise<Result<Order | null>> {
-    try {
-      const { data, error } = await this.client
-        .from(this.tableName)
-        .select('*')
-        .eq('order_code', orderCode)
-        .maybeSingle();
+  override transact<T>(fn: (db: OrderTrackingDb) => T): T {
+    // Re-read first so a change made by another tab is seen (optimistic concurrency).
+    const draft = structuredClone(this.read());
+    const result = fn(draft);
+    draft.idempotencyKeys = draft.idempotencyKeys.slice(-MAX_KEYS);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    this._state.set(draft);
+    this.sync.post('db');
+    return result;
+  }
 
-      if (error) return fail(error);
-      return ok(data as unknown as Order | null);
-    } catch (e) {
-      return fail({ message: e instanceof Error ? e.message : 'Database query error' });
+  override reload(): void {
+    this._state.set(this.read());
+  }
+
+  override reset(): void {
+    localStorage.removeItem(STORAGE_KEY);
+    this._state.set(emptyDb());
+    this.sync.post('db');
+  }
+
+  private read(): OrderTrackingDb {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return emptyDb();
+      const parsed = JSON.parse(raw) as OrderTrackingDb;
+      return parsed.version === 1 ? { ...emptyDb(), ...parsed } : emptyDb();
+    } catch {
+      return emptyDb();
     }
   }
 }

@@ -1,0 +1,329 @@
+<section class="min-h-[70vh] bg-surface pb-20">
+  <div class="mx-auto max-w-[1280px] px-4 pt-6 lg:px-6">
+    <a routerLink="/order-tracking" class="inline-flex min-h-11 items-center gap-2 rounded-pill pr-3 text-sm font-semibold text-brand-800 hover:underline focus-visible:outline-2 focus-visible:outline-brand-400">
+      <span aria-hidden="true">‹</span> Quay lại danh sách đơn hàng
+    </a>
+
+    @if (order(); as o) {
+      <div class="mt-3 grid items-start gap-6 lg:grid-cols-12">
+        <!-- ============ LEFT: status, timeline, items, history ============ -->
+        <div class="flex flex-col gap-6 lg:col-span-8">
+          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft sm:p-6">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h1 class="font-display text-2xl font-extrabold tracking-tight text-ink">Đơn {{ o.orderCode }}</h1>
+                <p class="mt-1 text-sm text-ink-soft">Đặt lúc {{ o.createdAt | date: 'HH:mm, dd/MM/yyyy' }}</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                @if (mixed()) {
+                  <span class="rounded-pill border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">Giao chung một kiện</span>
+                }
+                <app-status-badge [status]="o.status" />
+              </div>
+            </div>
+
+            <div class="mt-6">
+              @if (o.status === 'Action_Required') {
+                <div [class]="infoBox()">
+                  <p class="font-display font-bold">Thiết kế cần chỉnh sửa</p>
+                  @if (lastRejection(); as r) {
+                    <p class="mt-1 text-sm">Nhóm vi phạm: <b>{{ r.violationGroup }}</b> · {{ r.reason }}</p>
+                  }
+                  <p class="mt-1 text-sm">
+                    @if (canResubmit()) {
+                      Bạn còn {{ resubmitsLeft() }} lượt gửi lại. Hạn chỉnh sửa {{ fixDays }} ngày kể từ khi nhận thông báo; quá hạn đơn sẽ tự hủy và hoàn 100%.
+                    } @else {
+                      Bạn đã dùng hết lượt gửi lại, đơn chỉ còn lựa chọn hủy và nhận hoàn 100%.
+                    }
+                  </p>
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    @if (canResubmit()) {
+                      <button type="button" [class]="btnPrimary" [disabled]="busy()" (click)="resubmit()">Chỉnh sửa thiết kế</button>
+                    }
+                    <button type="button" [class]="btnSecondary" (click)="cancelMode.set('rejected')">Hủy đơn & nhận hoàn tiền</button>
+                  </div>
+                </div>
+              } @else if (o.status === 'Delivery_Failed') {
+                <div [class]="infoBox()">
+                  <p class="font-display font-bold">Giao hàng không thành công</p>
+                  @if (failureText(); as f) {
+                    <p class="mt-1 text-sm">Nguyên nhân: <b>{{ f.cause }}</b> (bên chịu lỗi: {{ f.party }})</p>
+                  }
+                  @if (o.warehouseHold; as h) {
+                    @if (h.disputed) {
+                      <p class="mt-1 text-sm">Shop đang đối soát nguyên nhân với đơn vị vận chuyển; hạn lưu kho tạm dừng trong thời gian này.</p>
+                    } @else {
+                      <p class="mt-1 text-sm">Hàng được lưu tại kho đến <b>{{ h.expiresAt | date: 'dd/MM/yyyy' }}</b>. Quá hạn, đơn sẽ tự đóng theo chính sách.</p>
+                    }
+                  } @else {
+                    <p class="mt-1 text-sm">Hàng đang được hoàn về kho của shop. Bạn sẽ được chọn cách xử lý khi hàng về kho.</p>
+                  }
+                  @if (o.warehouseHold && !o.warehouseHold.disputed) {
+                    @if (failedSituation() === 'S3c' && canRedeliver()) {
+                      <p class="mt-2 text-sm">Hàng thiết kế riêng không bán lại được nên không hoàn tiền khi lỗi giao thuộc về bạn. Bạn có thể yêu cầu giao lại (bạn trả cước).</p>
+                    }
+                    @if (o.redeliveryUsed) {
+                      <p class="mt-2 text-sm">Đơn đã dùng lượt giao lại.</p>
+                    }
+                    <div class="mt-4 flex flex-wrap gap-2">
+                      @if (canRedeliver()) {
+                        <button type="button" [class]="btnPrimary" (click)="redeliveryOpen.set(true)">Yêu cầu giao lại</button>
+                      }
+                      @if (canCancelFailed()) {
+                        <button type="button" [class]="btnSecondary" (click)="cancelMode.set('failed')">
+                          {{ failedSituation() === 'S3a' ? 'Hủy đơn & hoàn 100%' : 'Hủy đơn & hoàn tiền' }}
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else if (o.status === 'Return_Requested') {
+                <div [class]="infoBox()">
+                  <p class="font-display font-bold">Yêu cầu hỗ trợ đang được xử lý</p>
+                  @if (openTicket(); as t) {
+                    <p class="mt-1 text-sm">Mã yêu cầu <b>{{ t.ticketCode }}</b> · {{ issueLabel(t.issueType) }} · gửi lúc {{ t.createdAt | date: 'HH:mm dd/MM' }}</p>
+                  }
+                  <p class="mt-1 text-sm">Bộ phận chăm sóc khách hàng sẽ phản hồi kết quả trong chi tiết đơn và qua email.</p>
+                </div>
+              } @else if (o.status === 'Cancelled') {
+                <div [class]="infoBox()">
+                  <p class="font-display font-bold">Đơn hàng đã hủy</p>
+                  <p class="mt-1 text-sm">Lý do: {{ cancelReasonLabel() }}@if (o.cancellation?.note) { – “{{ o.cancellation?.note }}” }</p>
+                  @if (o.destruction) {
+                    <p class="mt-1 text-sm">Hàng thiết kế riêng đã được tiêu hủy có biên bản để bảo mật thông tin của bạn.</p>
+                  }
+                </div>
+              } @else if (o.status === 'Refunded') {
+                <div [class]="infoBox()">
+                  <p class="font-display font-bold">Đơn hàng được hoàn tiền</p>
+                  <p class="mt-1 text-sm">Yêu cầu hỗ trợ được chấp nhận hoàn tiền 100%. Xem trạng thái chuyển khoản bên phải.</p>
+                </div>
+              } @else {
+                <app-order-timeline [order]="o" />
+              }
+            </div>
+
+            @if (showEdd()) {
+              <div class="mt-5 grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-3">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-ink-soft">Ngày giao dự kiến</p>
+                  <p class="font-display text-lg font-bold text-brand-800">{{ edd().range }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-ink-soft">Xử lý & in</p>
+                  <p class="text-sm font-semibold text-ink">{{ edd().handling }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wide text-ink-soft">Vận chuyển</p>
+                  <p class="text-sm font-semibold text-ink">{{ edd().shipping }}</p>
+                </div>
+                @if (edd().adjusted) {
+                  <p class="text-xs text-ink-soft sm:col-span-3">Ngày giao đã được cập nhật theo tiến độ mới của đơn.</p>
+                }
+              </div>
+            }
+
+            @for (v of o.vouchers; track v.code) {
+              <div class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-brand-400 bg-brand-50 px-4 py-3">
+                <div>
+                  <p class="text-sm font-semibold text-brand-900">{{ voucherLabel(v.kind) }} · {{ formatVnd(v.value) }}</p>
+                  <p class="text-xs text-ink-soft">Hạn dùng đến {{ v.expiresAt | date: 'dd/MM/yyyy' }}</p>
+                </div>
+                <code class="rounded-lg bg-surface-alt px-3 py-1.5 font-mono text-sm font-bold text-brand-800">{{ v.code }}</code>
+              </div>
+            }
+          </article>
+
+          <!-- Items -->
+          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft sm:p-6">
+            <h2 class="font-display text-lg font-bold text-ink">Sản phẩm trong kiện hàng</h2>
+            <ul class="mt-3 divide-y divide-line">
+              @for (item of o.items; track item.id) {
+                <li class="flex items-center gap-4 py-4">
+                  <div class="w-16 shrink-0">
+                    @if (item.isCustom) {
+                      <app-phone-case-mock tone="lilac" [imageSrc]="item.design?.previewUrl" [alt]="'Thiết kế ' + item.productName" />
+                    } @else {
+                      <div class="grid aspect-9/19 w-full place-items-center rounded-xl bg-brand-50 text-[10px] font-semibold text-brand-800">Có sẵn</div>
+                    }
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-ink">{{ item.productName }}</p>
+                    <p class="text-sm text-ink-soft">{{ item.phoneModel }} · x{{ item.quantity }}</p>
+                    @if (item.design; as d) {
+                      <p class="mt-1 text-xs text-ink-soft">
+                        Thiết kế riêng · phiên bản {{ d.version }}{{ d.hasUploadedImage ? ' · có ảnh tải lên' : '' }}
+                      </p>
+                    }
+                  </div>
+                  <p class="shrink-0 font-semibold text-ink">{{ formatVnd(item.unitPrice * item.quantity) }}</p>
+                </li>
+              }
+            </ul>
+          </article>
+
+          <!-- History -->
+          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft sm:p-6">
+            <h2 class="font-display text-lg font-bold text-ink">Lịch sử đơn hàng</h2>
+            <ol class="mt-4 flex flex-col gap-4 border-l-2 border-brand-100 pl-5">
+              @for (log of logs(); track log.id) {
+                <li class="relative">
+                  <span aria-hidden="true" class="absolute -left-[27px] top-1.5 size-3 rounded-full border-2 border-surface-alt" [class.bg-brand-800]="$first" [class.bg-brand-200]="!$first"></span>
+                  <p class="text-sm font-semibold text-ink">{{ log.reason }}</p>
+                  <p class="text-xs text-ink-soft">{{ log.createdAt | date: 'HH:mm dd/MM/yyyy' }} · {{ actorLabels[log.actorType] }}</p>
+                </li>
+              }
+            </ol>
+          </article>
+        </div>
+
+        <!-- ============ RIGHT: actions, refund, delivery, payment ============ -->
+        <aside class="flex flex-col gap-6 lg:sticky lg:top-24 lg:col-span-4">
+          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
+            <h2 class="font-display text-lg font-bold text-ink">Thao tác</h2>
+            <div class="mt-3 flex flex-col gap-2">
+              @if (canCancel()) {
+                <button type="button" [class]="btnSecondary" (click)="cancelMode.set('cancel')">Hủy đơn</button>
+              } @else if (showDisabledCancel()) {
+                <button type="button" [class]="btnSecondary" disabled aria-describedby="cancel-hint">Hủy đơn</button>
+                <p id="cancel-hint" class="text-center text-xs text-ink-soft">Đơn đang được xử lý, không thể hủy</p>
+              }
+
+              @if (canConfirm()) {
+                <button type="button" [class]="btnPrimary" (click)="confirmOpen.set(true)">Đã nhận được hàng</button>
+              }
+
+              @if (canReport()) {
+                <button type="button" [class]="btnSecondary" (click)="issueOpen.set(true)">Báo sự cố</button>
+              } @else if (reportExpired()) {
+                <button type="button" [class]="btnSecondary" disabled aria-describedby="report-hint">Báo sự cố</button>
+                <p id="report-hint" class="text-center text-xs text-ink-soft">
+                  Đơn hàng đã quá thời hạn tiếp nhận sự cố trực tuyến (7 ngày). Vui lòng liên hệ trực tiếp hotline để được hỗ trợ
+                </p>
+              } @else if (openTicket(); as t) {
+                <p class="rounded-xl bg-surface px-3 py-2 text-center text-xs text-ink-soft">Đang có yêu cầu hỗ trợ {{ t.ticketCode }}</p>
+              }
+
+              @if (o.status === 'Completed' && !o.review) {
+                <button type="button" [class]="btnGhost" (click)="reviewOpen.set(true)">Đánh giá sản phẩm</button>
+              }
+              @if (o.review; as rv) {
+                <p class="text-center text-sm text-ink-soft">Bạn đã đánh giá <span class="text-brand-400">{{ starsText(rv.stars) }}</span></p>
+              }
+
+              <a routerLink="/order-tracking/chinh-sach" class="mt-1 text-center text-xs font-semibold text-brand-800 underline-offset-4 hover:underline">Xem chính sách đơn hàng</a>
+            </div>
+          </article>
+
+          <!-- Refund status (FR-OT-13) -->
+          @for (r of o.refunds; track r.id) {
+            <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
+              <div class="flex items-center justify-between gap-2">
+                <h2 class="font-display text-lg font-bold text-ink">Hoàn tiền</h2>
+                <span class="rounded-pill px-2.5 py-1 text-xs font-semibold" [class]="refundBadge(r)">{{ refundLabel(r) }}</span>
+              </div>
+              <dl class="mt-3 grid grid-cols-2 gap-y-1.5 text-sm">
+                <dt class="text-ink-soft">Số tiền hoàn</dt>
+                <dd class="text-right font-semibold text-ink">{{ formatVnd(r.amount) }}</dd>
+                @if (r.deductedFee > 0) {
+                  <dt class="text-ink-soft">Đã trừ cước 2 chiều</dt>
+                  <dd class="text-right text-ink">{{ formatVnd(r.deductedFee) }}</dd>
+                }
+                <dt class="text-ink-soft">Căn cứ</dt>
+                <dd class="text-right text-ink">{{ situationLabels[r.situation] }}</dd>
+                @if (r.refundMethod === 'Bank') {
+                  <dt class="text-ink-soft">Tài khoản</dt>
+                  <dd class="text-right text-ink">{{ r.refundBank }} · ••••{{ r.refundAccountNo?.slice(-4) }}</dd>
+                }
+                @if (r.bankRef) {
+                  <dt class="text-ink-soft">Mã giao dịch</dt>
+                  <dd class="text-right font-mono text-ink">{{ r.bankRef }}</dd>
+                }
+                @if (r.voucherCode) {
+                  <dt class="text-ink-soft">Voucher</dt>
+                  <dd class="text-right font-mono text-ink">{{ r.voucherCode }}</dd>
+                }
+                @if (r.rejectReason) {
+                  <dt class="text-ink-soft">Lý do từ chối</dt>
+                  <dd class="text-right text-ink">{{ r.rejectReason }}</dd>
+                }
+              </dl>
+
+              @if ((r.status === 'Pending_Approval' && !r.refundMethod) || r.status === 'Refund_Pending_Retry') {
+                <p class="mt-3 text-sm text-ink">
+                  {{ r.status === 'Refund_Pending_Retry' ? 'Chuyển khoản chưa thành công. Vui lòng kiểm tra lại tài khoản hoặc chọn nhận voucher.' : 'Chờ bạn cung cấp tài khoản nhận hoàn.' }}
+                </p>
+                <div class="mt-3">
+                  <app-refund-choice-form [payerName]="o.payerName" [amountLabel]="formatVnd(r.amount)" [allowLater]="false" (choiceChange)="pendingChoice.set($event)" />
+                </div>
+                <button type="button" [class]="btnPrimary" class="mt-3 w-full" [disabled]="!pendingChoice()" (click)="submitAccount(r)">Lưu thông tin nhận hoàn</button>
+              }
+            </article>
+          }
+
+          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
+            <h2 class="font-display text-lg font-bold text-ink">Giao nhận</h2>
+            <p class="mt-3 text-sm font-semibold text-ink">{{ o.customerName }} · {{ o.customerPhone }}</p>
+            <p class="text-sm text-ink-soft">{{ o.shippingAddress }}</p>
+            <p class="mt-2 text-sm text-ink-soft">{{ zoneLabels[o.zone] }} · {{ o.shippingTier === 'Fast' ? 'Giao nhanh' : 'Standard' }}</p>
+            @if (o.shipment; as s) {
+              <p class="mt-2 text-sm text-ink-soft">{{ s.carrier }} · Mã vận đơn <span class="font-mono text-ink">{{ s.trackingCode }}</span></p>
+            }
+          </article>
+
+          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
+            <h2 class="font-display text-lg font-bold text-ink">Thanh toán</h2>
+            <dl class="mt-3 grid grid-cols-2 gap-y-1.5 text-sm">
+              <dt class="text-ink-soft">Tiền hàng</dt>
+              <dd class="text-right text-ink">{{ formatVnd(o.goodsTotal) }}</dd>
+              <dt class="text-ink-soft">Phí vận chuyển</dt>
+              <dd class="text-right text-ink">{{ o.shippingFee === 0 ? 'Miễn phí' : formatVnd(o.shippingFee) }}</dd>
+              <dt class="border-t border-line pt-2 font-semibold text-ink">Tổng cộng</dt>
+              <dd class="border-t border-line pt-2 text-right font-display text-lg font-bold text-brand-800">{{ formatVnd(total()) }}</dd>
+              <dt class="text-ink-soft">Phương thức</dt>
+              <dd class="text-right text-ink">{{ o.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản QR (đã thanh toán)' }}</dd>
+              @if (o.paymentTxnRef) {
+                <dt class="text-ink-soft">Mã giao dịch</dt>
+                <dd class="text-right font-mono text-ink">{{ o.paymentTxnRef }}</dd>
+              }
+            </dl>
+          </article>
+
+          @if (closedTickets().length) {
+            <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
+              <h2 class="font-display text-lg font-bold text-ink">Yêu cầu hỗ trợ đã xử lý</h2>
+              <ul class="mt-3 flex flex-col gap-3 text-sm">
+                @for (t of closedTickets(); track t.ticketCode) {
+                  <li>
+                    <p class="font-semibold text-ink">{{ t.ticketCode }} · {{ issueLabel(t.issueType) }}</p>
+                    <p class="text-ink-soft">Kết quả: {{ resolutionLabel(t.resolution) }}{{ t.resolutionNote ? ' – ' + t.resolutionNote : '' }}</p>
+                  </li>
+                }
+              </ul>
+            </article>
+          }
+        </aside>
+      </div>
+
+      <!-- Dialogs -->
+      <app-cancel-dialog [order]="o" [mode]="cancelMode() ?? 'cancel'" [open]="cancelMode() !== null" (closed)="cancelMode.set(null)" />
+      <app-report-issue-dialog [order]="o" [open]="issueOpen()" (closed)="issueOpen.set(false)" />
+      <app-redelivery-dialog [order]="o" [open]="redeliveryOpen()" (closed)="redeliveryOpen.set(false)" />
+      <app-review-dialog [order]="o" [open]="reviewOpen()" (closed)="reviewOpen.set(false)" />
+      <app-ot-modal [open]="confirmOpen()" title="Xác nhận đã nhận hàng" (closed)="confirmOpen.set(false)">
+        <p class="text-sm text-ink">Bạn đã kiểm tra kiện hàng và hài lòng với sản phẩm?</p>
+        <p class="mt-1 text-xs text-ink-soft">Sau khi xác nhận, đơn hàng chuyển sang Hoàn thành. Bạn vẫn có thể báo sự cố trong 7 ngày kể từ ngày giao.</p>
+        <div class="mt-5 flex justify-end gap-2">
+          <button type="button" [class]="btnGhost" (click)="confirmOpen.set(false)">Chưa</button>
+          <button type="button" [class]="btnPrimary" [disabled]="busy()" (click)="confirmReceived()">{{ busy() ? 'Đang xử lý…' : 'Xác nhận' }}</button>
+        </div>
+      </app-ot-modal>
+    } @else {
+      <div class="mt-6 flex flex-col items-center gap-4 rounded-card border border-line bg-surface-alt px-6 py-16 text-center shadow-soft">
+        <p class="font-display text-xl font-bold text-ink">Không tìm thấy đơn hàng</p>
+        <p class="text-ink-soft">Đơn {{ orderCode() }} không tồn tại hoặc không thuộc tài khoản của bạn.</p>
+        <a routerLink="/order-tracking" [class]="btnPrimary">Về danh sách đơn hàng</a>
+      </div>
+    }
+  </div>
+</section>

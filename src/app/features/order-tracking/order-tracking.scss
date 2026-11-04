@@ -2,18 +2,11 @@
   display: block;
 }
 
-/* Micro-animations and effects according to CaseEYE's brand */
-@keyframes softPulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.85;
-    transform: scale(0.98);
-  }
-}
+/* Horizontal tab strip scrolls on small screens without showing a scrollbar. */
+.tab-strip {
+  scrollbar-width: none;
 
-.step-node.active .step-circle {
-  animation: softPulse 3s infinite ease-in-out;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

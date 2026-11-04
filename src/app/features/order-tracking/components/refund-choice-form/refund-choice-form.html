@@ -1,0 +1,57 @@
+@let method = form.controls.method.value;
+<fieldset [formGroup]="form" class="rounded-xl border border-line bg-surface p-4">
+  <legend class="px-1 text-sm font-semibold text-ink">Cách nhận hoàn {{ amountLabel() }}</legend>
+
+  <div role="radiogroup" class="mt-1 grid gap-2 sm:grid-cols-3">
+    @for (opt of [
+      { key: 'Bank', label: 'Chuyển khoản' },
+      { key: 'Voucher', label: 'Voucher 100%' },
+      { key: 'Later', label: 'Cung cấp sau' }
+    ]; track opt.key) {
+      @if (opt.key !== 'Later' || allowLater()) {
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="method === opt.key"
+          (click)="setMethod($any(opt.key))"
+          class="min-h-11 rounded-xl border px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-400"
+          [class.border-brand-800]="method === opt.key"
+          [class.bg-brand-50]="method === opt.key"
+          [class.text-brand-800]="method === opt.key"
+          [class.border-line]="method !== opt.key"
+          [class.text-ink-soft]="method !== opt.key"
+        >
+          {{ opt.label }}
+        </button>
+      }
+    }
+  </div>
+
+  @switch (method) {
+    @case ('Bank') {
+      <div class="mt-4 grid gap-3">
+        <label>
+          <span [class]="label">Ngân hàng</span>
+          <input formControlName="bank" [class]="field" placeholder="Ví dụ: Vietcombank" autocomplete="off" />
+        </label>
+        <label>
+          <span [class]="label">Số tài khoản</span>
+          <input formControlName="accountNo" [class]="field" inputmode="numeric" placeholder="Chỉ gồm chữ số" autocomplete="off" />
+        </label>
+        <label>
+          <span [class]="label">Tên chủ tài khoản</span>
+          <input formControlName="holder" [class]="field" class="uppercase" autocomplete="off" />
+          <span class="mt-1 block text-xs text-ink-soft">Phải trùng tên người thanh toán: <b class="text-ink">{{ payerName() }}</b></span>
+        </label>
+      </div>
+    }
+    @case ('Voucher') {
+      <p class="mt-3 text-sm text-ink-soft">Bạn nhận voucher/store-credit bằng 100% số tiền hoàn, dùng cho đơn sau.</p>
+    }
+    @case ('Later') {
+      <p class="mt-3 text-sm text-ink-soft">
+        Bạn có thể nhập tài khoản trong chi tiết đơn. Sau 7 ngày chưa cung cấp, hệ thống tự cấp voucher bằng 100% số tiền hoàn.
+      </p>
+    }
+  }
+</fieldset>

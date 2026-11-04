@@ -1,0 +1,37 @@
+@let v = view();
+<div>
+  <ol class="relative grid gap-2" [style.grid-template-columns]="'repeat(' + v.steps.length + ', minmax(0, 1fr))'" aria-label="Tiến độ đơn hàng">
+    <!-- connector line behind the nodes -->
+    <div aria-hidden="true" class="absolute left-[calc(100%/var(--n)/2)] right-[calc(100%/var(--n)/2)] top-5 h-1 rounded-full bg-line" [style.--n]="v.steps.length">
+      <div class="h-full rounded-full bg-(image:--grad-primary) transition-[width] duration-500 motion-reduce:transition-none" [style.width.%]="progress()"></div>
+    </div>
+
+    @for (step of v.steps; track step.key) {
+      <li class="relative flex flex-col items-center gap-2 text-center" [attr.aria-current]="step.state === 'current' ? 'step' : null">
+        <span
+          class="grid size-10 place-items-center rounded-full border-2 text-sm font-bold transition-colors"
+          [class.border-brand-800]="step.state !== 'upcoming'"
+          [class.bg-brand-800]="step.state === 'done'"
+          [class.text-white]="step.state === 'done'"
+          [class.bg-surface-alt]="step.state !== 'done'"
+          [class.text-brand-800]="step.state === 'current'"
+          [class.shadow-glow]="step.state === 'current'"
+          [class.border-line]="step.state === 'upcoming'"
+          [class.text-ink-soft]="step.state === 'upcoming'"
+        >
+          @if (step.state === 'done') {
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="m5 12 5 5L20 7" /></svg>
+          } @else {
+            {{ $index + 1 }}
+          }
+        </span>
+        <span class="text-xs font-semibold sm:text-sm" [class.text-ink]="step.state !== 'upcoming'" [class.text-ink-soft]="step.state === 'upcoming'">
+          {{ step.label }}
+        </span>
+      </li>
+    }
+  </ol>
+  <p class="mt-5 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
+    <span class="font-semibold">Hiện tại:</span> {{ v.caption }}
+  </p>
+</div>

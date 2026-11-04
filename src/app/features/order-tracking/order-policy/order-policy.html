@@ -1,0 +1,49 @@
+<section class="bg-surface pb-20">
+  <div class="bg-(image:--grad-dark)">
+    <div class="mx-auto max-w-[1280px] px-4 py-12 lg:px-6">
+      <nav aria-label="Breadcrumb" class="mb-3 flex items-center gap-2 text-sm text-white/60">
+        <a routerLink="/" class="hover:text-white">Trang chủ</a>
+        <span aria-hidden="true">/</span>
+        <span class="text-white">Chính sách đơn hàng</span>
+      </nav>
+      <h1 class="font-display text-[clamp(2rem,4vw,3rem)] font-extrabold leading-tight tracking-tight text-white">Chính sách đơn hàng</h1>
+      <p class="mt-2 max-w-2xl text-white/75">Quy định hủy đơn, kiểm duyệt thiết kế, giao hàng và hoàn tiền áp dụng cho mọi đơn tại CasEYE's.</p>
+      <p class="mt-3 text-xs text-white/50">Phiên bản {{ version }}</p>
+    </div>
+  </div>
+
+  <div class="mx-auto grid max-w-[1280px] gap-8 px-4 pt-10 lg:grid-cols-12 lg:px-6">
+    <aside class="lg:col-span-4">
+      <div class="rounded-card border border-brand-200 bg-brand-50 p-5 lg:sticky lg:top-24">
+        <h2 class="font-display text-lg font-bold text-brand-900">Điểm chính cần biết</h2>
+        <ul class="mt-3 flex list-disc flex-col gap-2 pl-5 text-sm text-brand-900">
+          @for (h of highlights; track h) {
+            <li>{{ h }}</li>
+          }
+        </ul>
+        <nav aria-label="Mục lục" class="mt-5 border-t border-brand-200 pt-4">
+          <ul class="flex flex-col gap-1 text-sm">
+            @for (s of sections; track s.id) {
+              <li>
+                <button type="button" (click)="scrollTo(s.id)" class="min-h-9 text-left text-brand-800 hover:underline focus-visible:outline-2 focus-visible:outline-brand-400">{{ s.title }}</button>
+              </li>
+            }
+          </ul>
+        </nav>
+      </div>
+    </aside>
+
+    <div class="flex flex-col gap-6 lg:col-span-8">
+      @for (s of sections; track s.id) {
+        <article [id]="s.id" class="scroll-mt-24 rounded-card border border-line bg-surface-alt p-6 shadow-soft">
+          <h2 class="font-display text-xl font-bold text-ink">{{ s.title }}</h2>
+          <ul class="mt-3 flex list-disc flex-col gap-2 pl-5 leading-relaxed text-ink">
+            @for (p of s.points; track p) {
+              <li>{{ p }}</li>
+            }
+          </ul>
+        </article>
+      }
+    </div>
+  </div>
+</section>
