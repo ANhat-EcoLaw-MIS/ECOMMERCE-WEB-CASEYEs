@@ -1,17 +1,13 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '../../core/auth/auth-guard';
+import {authGuard} from '../../core/auth/auth-guard';
 
 export const ACCOUNT_ROUTES: Routes = [
   {
     path: '',
-    title: "Tài khoản & Đơn mua | CasEYE's",
+    title: "Hồ sơ | CasEYE's",
     canActivate: [authGuard],
-    loadComponent: () => import('../order-tracking/order-tracking').then((m) => m.OrderTracking),
+    loadComponent: () => import('./account').then((m) => m.Account),
   },
-  {
-    path: 'orders',
-    title: "Đơn mua | CasEYE's",
-    canActivate: [authGuard],
-    loadComponent: () => import('../order-tracking/order-tracking').then((m) => m.OrderTracking),
-  },
+  // Teammates: add this module's child routes below, e.g.
+  // { path: ':id', loadComponent: () => import('./detail/detail').then((m) => m.Detail) },
 ];
