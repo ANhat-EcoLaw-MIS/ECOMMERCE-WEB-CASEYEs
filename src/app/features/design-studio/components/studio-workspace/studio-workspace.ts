@@ -390,7 +390,19 @@ export class StudioWorkspace implements OnDestroy {
     }
   }
 
-  // --- Layer Reordering (Bug 6) ---
+  // Layer list ordered from top to bottom (Figma/Canva/Photoshop visual stack)
+  // Top item in list = topmost layer on canvas (drawn on top of all others)
+  // Bottom item in list = lowest layer on canvas (closest to case background)
+  protected readonly displayLayers = computed(() => {
+    const layers = this.state.layers();
+    return layers.map((layer, originalIdx) => ({ layer, originalIdx })).reverse();
+  });
+
+  // Drag and drop layer reordering state
+  protected readonly draggingLayerVisualIdx = signal<number | null>(null);
+  protected readonly dragOverLayerVisualIdx = signal<number | null>(null);
+
+  // --- Layer Reordering (Bug 6 & Drag and Drop) ---
   protected onMoveLayerUp(id: string, event: MouseEvent): void {
     event.stopPropagation();
     this.state.moveLayerUp(id);
@@ -399,6 +411,52 @@ export class StudioWorkspace implements OnDestroy {
   protected onMoveLayerDown(id: string, event: MouseEvent): void {
     event.stopPropagation();
     this.state.moveLayerDown(id);
+  }
+
+  protected onLayerDragStart(event: DragEvent, visualIdx: number): void {
+    this.draggingLayerVisualIdx.set(visualIdx);
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', visualIdx.toString());
+    }
+  }
+
+  protected onLayerDragOver(event: DragEvent, visualIdx: number): void {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+    if (this.dragOverLayerVisualIdx() !== visualIdx) {
+      this.dragOverLayerVisualIdx.set(visualIdx);
+    }
+  }
+
+  protected onLayerDragLeave(event: DragEvent, visualIdx: number): void {
+    if (this.dragOverLayerVisualIdx() === visualIdx) {
+      this.dragOverLayerVisualIdx.set(null);
+    }
+  }
+
+  protected onLayerDrop(event: DragEvent, targetVisualIdx: number): void {
+    event.preventDefault();
+    const fromVisualIdx = this.draggingLayerVisualIdx();
+    this.draggingLayerVisualIdx.set(null);
+    this.dragOverLayerVisualIdx.set(null);
+
+    if (fromVisualIdx === null || fromVisualIdx === targetVisualIdx) return;
+
+    const display = this.displayLayers();
+    if (!display[fromVisualIdx] || !display[targetVisualIdx]) return;
+
+    const originalFromIdx = display[fromVisualIdx].originalIdx;
+    const originalToIdx = display[targetVisualIdx].originalIdx;
+
+    this.state.reorderLayers(originalFromIdx, originalToIdx);
+  }
+
+  protected onLayerDragEnd(): void {
+    this.draggingLayerVisualIdx.set(null);
+    this.dragOverLayerVisualIdx.set(null);
   }
 
   // --- Sticker & Background ---

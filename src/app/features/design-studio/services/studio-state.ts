@@ -351,6 +351,26 @@ export class StudioState {
     this._layers.set(reindexed);
   }
 
+  reorderLayers(fromIndex: number, toIndex: number): void {
+    const layers = this._layers();
+    if (
+      fromIndex < 0 ||
+      fromIndex >= layers.length ||
+      toIndex < 0 ||
+      toIndex >= layers.length ||
+      fromIndex === toIndex
+    ) {
+      return;
+    }
+
+    this.recordHistory();
+    const nextLayers = [...layers];
+    const [moved] = nextLayers.splice(fromIndex, 1);
+    nextLayers.splice(toIndex, 0, moved);
+    const reindexed = nextLayers.map((l, idx) => ({ ...l, zIndex: idx + 1 } as CanvasLayer));
+    this._layers.set(reindexed);
+  }
+
   removeLayer(id: string): void {
     this.recordHistory();
     this._layers.update((layers) => layers.filter((l) => l.id !== id));

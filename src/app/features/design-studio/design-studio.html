@@ -1,48 +1,48 @@
 <div class="min-h-screen bg-surface flex flex-col" [class.h-screen]="isEditor()" [class.overflow-hidden]="isEditor()">
-  <!-- Top Navigation Bar (Clean Header, No Clunky 4-Step Bar - Bug 3 & Issue 1 Resolved) -->
-  <header class="shrink-0 sticky top-0 z-40 border-b border-line bg-surface-alt/95 px-4 py-2.5 backdrop-blur-xl sm:px-6 lg:px-8">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
+  @if (isEditor()) {
+    <!-- Studio Header Toolbar (Styled consistently with CasEYE brand identity & web navbar) -->
+    <header class="shrink-0 sticky top-0 z-40 border-b border-white/10 bg-brand-900 px-4 py-2 backdrop-blur-xl sm:px-6 lg:px-8">
+      <div class="mx-auto flex h-12 max-w-[1280px] items-center justify-between gap-4">
 
-      <!-- Left: Title & Branding -->
-      <a routerLink="/design-studio/templates" class="flex items-center gap-3 transition-opacity hover:opacity-90">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[image:var(--grad-primary)] text-white shadow-soft">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
+        <!-- Left: Real Logo & Studio Breadcrumb -->
+        <div class="flex items-center gap-3">
+          <a routerLink="/" aria-label="CasEYE's, về trang chủ" class="flex shrink-0 items-center">
+            <img
+              src="/logo.png"
+              alt="CasEYE's"
+              class="h-9 w-auto rounded-lg object-contain transition-transform hover:scale-105"
+            />
+          </a>
+          <span class="text-white/20 text-sm hidden sm:inline">|</span>
+          <div class="hidden sm:block">
+            <h1 class="font-display text-sm font-bold text-white tracking-tight">
+              Design Studio
+            </h1>
+          </div>
         </div>
-        <div>
-          <h1 class="font-display text-sm font-extrabold tracking-tight text-ink sm:text-base">
-            CasEYE's <span class="bg-[image:var(--grad-primary)] bg-clip-text text-transparent">Design Studio</span>
-          </h1>
-          <p class="text-[10px] text-ink-soft">Tùy biến ốp lưng theo chất riêng</p>
-        </div>
-      </a>
 
-      <!-- Center: Active Model & Material Badge (Visible on templates & editor) -->
-      @if (!isSelectModelPage()) {
-        <div class="hidden md:flex items-center gap-2 rounded-pill border border-line bg-surface px-3 py-1.5 shadow-xs">
-          <span class="text-xs text-ink-soft">Dòng máy:</span>
-          <span class="font-display text-xs font-bold text-ink">{{ state.selectedModel().name }}</span>
-          <span class="text-line text-xs font-bold">•</span>
+        <!-- Center: Active Model & Material Badge -->
+        <div class="hidden md:flex items-center gap-2 rounded-pill border border-white/15 bg-white/5 px-3.5 py-1 text-xs text-white/80 backdrop-blur-sm">
+          <span class="text-white/60">Dòng máy:</span>
+          <span class="font-display font-bold text-white">{{ state.selectedModel().name }}</span>
+          <span class="text-white/30">•</span>
           <a
             routerLink="select-model"
-            class="text-xs font-bold text-brand-800 hover:text-brand-600 transition-colors cursor-pointer"
+            class="font-bold text-brand-300 hover:text-white transition-colors cursor-pointer"
             title="Đổi sang dòng điện thoại khác"
           >
             Đổi dòng máy ↺
           </a>
         </div>
-      }
 
-      <!-- Right Action Items -->
-      <div class="flex items-center gap-2">
-        <!-- Editor Specific Controls (Only show when on editor) -->
-        @if (currentStep() === 3) {
+        <!-- Right Action Items -->
+        <div class="flex items-center gap-2">
+          <!-- Editor Controls: Undo & Redo -->
           <button
             type="button"
             (click)="onUndo()"
             [disabled]="!state.canUndo()"
-            class="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink transition-colors disabled:opacity-40 hover:bg-surface cursor-pointer"
+            class="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition-colors disabled:opacity-30 hover:bg-white/15 cursor-pointer"
             title="Hoàn tác (Undo)"
           >
             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -54,30 +54,30 @@
             type="button"
             (click)="onRedo()"
             [disabled]="!state.canRedo()"
-            class="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink transition-colors disabled:opacity-40 hover:bg-surface cursor-pointer"
+            class="flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition-colors disabled:opacity-30 hover:bg-white/15 cursor-pointer"
             title="Làm lại (Redo)"
           >
             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
             </svg>
           </button>
-        }
 
-        <!-- Thoát Button -->
-        <a
-          routerLink="/"
-          class="inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink-soft transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 cursor-pointer"
-          title="Thoát khỏi Studio"
-        >
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-          <span>Thoát</span>
-        </a>
+          <!-- Thoát Button (Exit from editor returns to template catalog) -->
+          <a
+            routerLink="/design-studio/templates"
+            class="inline-flex items-center gap-1.5 rounded-pill border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white/90 transition-all hover:border-red-400/60 hover:bg-red-500/20 hover:text-red-200 cursor-pointer shadow-xs ml-1"
+            title="Thoát về kho mẫu"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Thoát</span>
+          </a>
+        </div>
+
       </div>
-
-    </div>
-  </header>
+    </header>
+  }
 
   <!-- Main Sub-route Content -->
   <main class="studio-content flex-1 min-h-0" [class.overflow-hidden]="isEditor()">
