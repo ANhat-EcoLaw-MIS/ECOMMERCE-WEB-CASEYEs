@@ -55,16 +55,31 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly consentChecked = signal<boolean>(false);
   protected readonly consentError = signal<boolean>(false);
   protected readonly dontRemindConsent = signal<boolean>(false);
+  protected readonly dontRemindResize = signal<boolean>(
+    typeof window !== 'undefined' ? localStorage.getItem('caseyes_dont_remind_resize') === 'true' : false
+  );
+
+  protected toggleDontRemindResize(): void {
+    const newVal = !this.dontRemindResize();
+    this.dontRemindResize.set(newVal);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('caseyes_dont_remind_resize', newVal ? 'true' : 'false');
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }
 
   // Toast Notification for Cart, Save and Warnings (Bug 7)
-  protected readonly cartToast = signal<string | null>(null);
+  protected readonly cartToast = signal<{ message: string; showCartLink?: boolean } | null>(null);
   private toastTimer: ReturnType<typeof setTimeout> | null = null;
 
-  protected showToast(message: string, duration = 4000): void {
+  protected showToast(message: string, duration = 4000, showCartLink = false): void {
     if (this.toastTimer) {
       clearTimeout(this.toastTimer);
     }
-    this.cartToast.set(message);
+    this.cartToast.set({ message, showCartLink });
     this.toastTimer = setTimeout(() => {
       this.cartToast.set(null);
       this.toastTimer = null;
@@ -309,8 +324,7 @@ export class StudioWorkspace implements OnDestroy {
       this.state.savedDesigns.update((list) => [newDesign, ...list]);
     }
 
-    this.cartToast.set(`✓ Đã lưu thiết kế "${currentName}" thành công!`);
-    setTimeout(() => this.cartToast.set(null), 3500);
+    this.showToast(`✓ Đã lưu thiết kế "${currentName}" thành công!`, 3500, false);
   }
 
   private startAutoSaveTimer(): void {
@@ -364,7 +378,7 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    this.showToast('✓ Đã thêm thiết kế vào giỏ hàng thành công!');
+    this.showToast('✓ Đã thêm thiết kế vào giỏ hàng thành công!', 4000, true);
   }
 
   protected dismissToast(): void {
@@ -543,7 +557,11 @@ export class StudioWorkspace implements OnDestroy {
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          const MAX_DIM = 3600;
+          const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
+          const isWebp = file.type === 'image/webp' || file.name.toLowerCase().endsWith('.webp');
+
+          // Keep natural dimensions unless extreme (> 6000px)
+          const MAX_DIM = 6000;
           let w = img.naturalWidth;
           let h = img.naturalHeight;
 
@@ -566,37 +584,93 @@ export class StudioWorkspace implements OnDestroy {
             return;
           }
 
+          // Ensure transparent canvas background is cleared before drawing (preserves PNG/WebP alpha)
+          ctx.clearRect(0, 0, w, h);
           ctx.drawImage(img, 0, 0, w, h);
 
-          const isPng = file.type === 'image/png';
-          const format = isPng ? 'image/png' : 'image/jpeg';
-          const quality = isPng ? undefined : 0.88;
+          // Strictly aim for near-10MB ceiling (~9.5MB - 9.85MB), never over-compressing
+          const MAX_TARGET_BYTES = 9.85 * 1024 * 1024;
 
-          canvas.toBlob(
-            (blob) => {
-              if (blob && blob.size > 9.5 * 1024 * 1024) {
-                // Compress further to ensure strictly <= 9.5MB
-                canvas.toBlob(
-                  (smallerBlob) => {
-                    const finalBlob = smallerBlob || blob;
-                    const r = new FileReader();
-                    r.onload = () => resolve({ dataUrl: r.result as string, optimizedSize: finalBlob.size });
-                    r.readAsDataURL(finalBlob);
-                  },
-                  'image/jpeg',
-                  0.78
-                );
-              } else if (blob) {
+          const getBlob = (format: string, q?: number): Promise<Blob | null> => {
+            return new Promise((res) => canvas.toBlob((b) => res(b), format, q));
+          };
+
+          const attemptCompression = async (): Promise<Blob | null> => {
+            // Case 1: PNG files - STRICTLY keep as image/png to retain 100% transparent backgrounds
+            if (isPng) {
+              const pngBlob = await getBlob('image/png');
+              if (pngBlob && pngBlob.size <= MAX_TARGET_BYTES) {
+                return pngBlob; // Full original lossless quality & transparency
+              }
+
+              // If PNG > 9.85MB, gently scale canvas dimensions while staying 100% pure image/png
+              if (pngBlob) {
+                const scale = Math.sqrt((MAX_TARGET_BYTES * 0.96) / pngBlob.size);
+                const downW = Math.max(1, Math.round(w * scale));
+                const downH = Math.max(1, Math.round(h * scale));
+                canvas.width = downW;
+                canvas.height = downH;
+                ctx.clearRect(0, 0, downW, downH);
+                ctx.drawImage(img, 0, 0, downW, downH);
+                const finalPngBlob = await getBlob('image/png');
+                return finalPngBlob || pngBlob;
+              }
+              return pngBlob;
+            }
+
+            // Case 2: WebP files (supports alpha transparency as well)
+            if (isWebp) {
+              const webpBlob = await getBlob('image/webp', 0.98);
+              if (webpBlob && webpBlob.size <= MAX_TARGET_BYTES) {
+                return webpBlob;
+              }
+              for (const q of [0.96, 0.94, 0.92, 0.90, 0.88, 0.85]) {
+                const b = await getBlob('image/webp', q);
+                if (b && b.size <= MAX_TARGET_BYTES) return b;
+              }
+              return webpBlob;
+            }
+
+            // Case 3: JPEG / JPG (no transparency, use fine-grained quality ladder)
+            const qualitySteps = [0.98, 0.96, 0.94, 0.92, 0.90, 0.88, 0.85, 0.82];
+            let bestBlob: Blob | null = null;
+
+            for (const q of qualitySteps) {
+              const blob = await getBlob('image/jpeg', q);
+              if (blob) {
+                bestBlob = blob;
+                if (blob.size <= MAX_TARGET_BYTES) {
+                  return blob; // Highest quality that fits right under 10MB
+                }
+              }
+            }
+
+            // Fallback for extreme 40MB+ JPEGs: scale dimensions slightly
+            if (bestBlob && bestBlob.size > MAX_TARGET_BYTES) {
+              const scaleDownRatio = Math.sqrt(MAX_TARGET_BYTES / bestBlob.size);
+              const downW = Math.round(w * scaleDownRatio);
+              const downH = Math.round(h * scaleDownRatio);
+              canvas.width = downW;
+              canvas.height = downH;
+              ctx.drawImage(img, 0, 0, downW, downH);
+              const finalBlob = await getBlob('image/jpeg', 0.94);
+              return finalBlob || bestBlob;
+            }
+
+            return bestBlob;
+          };
+
+          attemptCompression()
+            .then((finalBlob) => {
+              if (finalBlob) {
                 const r = new FileReader();
-                r.onload = () => resolve({ dataUrl: r.result as string, optimizedSize: blob.size });
-                r.readAsDataURL(blob);
+                r.onload = () => resolve({ dataUrl: r.result as string, optimizedSize: finalBlob.size });
+                r.readAsDataURL(finalBlob);
               } else {
                 resolve({ dataUrl: reader.result as string, optimizedSize: file.size });
               }
-            },
-            format,
-            quality
-          );
+            })
+            .catch(reject);
         };
         img.onerror = reject;
         img.src = reader.result as string;
@@ -632,6 +706,18 @@ export class StudioWorkspace implements OnDestroy {
               dpi,
               size: optimizedSize,
             };
+
+            // Smoothen UX: if user opted not to be reminded, upload directly without modal popup
+            if (this.dontRemindResize()) {
+              if (dpi < 150) {
+                this.state.pendingUpload.set(uploadObj);
+                this.state.isLowResModalOpen.set(true);
+              } else {
+                this.proceedWithUpload(uploadObj);
+                this.showToast(`✓ Đã tối ưu ảnh "${file.name}" (~${optimizedSizeMb} MB) chuẩn in.`);
+              }
+              return;
+            }
 
             this.pendingResizedUpload = uploadObj;
             this.resizeNoticeInfo.set({
