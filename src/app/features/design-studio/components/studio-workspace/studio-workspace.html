@@ -308,13 +308,48 @@
     (pointerup)="onCanvasPointerUp()"
   >
 
-    <!-- Canvas top toolbar: design name + zoom -->
-    <div class="absolute top-3 left-4 right-4 z-30 flex items-center justify-between">
+    <!-- Canvas top toolbar: design name + view mode toggle + zoom -->
+    <div class="absolute top-3 left-4 right-4 z-30 flex items-center justify-between gap-2">
       <!-- Design name editable -->
       <div class="flex items-center gap-1.5 rounded-xl bg-white/80 px-3 py-1.5 shadow-soft backdrop-blur-sm border border-line">
         <span class="text-xs font-bold text-ink">{{ state.designName() }}</span>
         <button type="button" (click)="onSaveDesign()" class="text-ink-soft hover:text-brand-800 transition-colors cursor-pointer" title="Đổi tên">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        </button>
+      </div>
+
+      <!-- View mode toggle (Radio buttons: Hiện tràn viền mờ 50% vs Chỉ hiện vùng in) -->
+      <div class="flex items-center rounded-full border border-line bg-white/90 p-1 shadow-soft backdrop-blur-sm text-[11px] font-semibold">
+        <button
+          type="button"
+          (click)="viewMode.set('bleed')"
+          class="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all cursor-pointer"
+          [class]="viewMode() === 'bleed' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:text-ink'"
+          title="Xem toàn bộ phần tử (phần tràn ra ngoài ốp hiển thị mờ 50%)"
+        >
+          <span class="flex h-3 w-3 items-center justify-center rounded-full border"
+            [class]="viewMode() === 'bleed' ? 'border-white' : 'border-ink-soft/60'">
+            @if (viewMode() === 'bleed') {
+              <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+            }
+          </span>
+          <span>Tràn viền (Mờ 50%)</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="viewMode.set('clipped')"
+          class="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all cursor-pointer"
+          [class]="viewMode() === 'clipped' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:text-ink'"
+          title="Chỉ hiển thị phần nằm trong vùng in của ốp"
+        >
+          <span class="flex h-3 w-3 items-center justify-center rounded-full border"
+            [class]="viewMode() === 'clipped' ? 'border-white' : 'border-ink-soft/60'">
+            @if (viewMode() === 'clipped') {
+              <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+            }
+          </span>
+          <span>Chỉ vùng in</span>
         </button>
       </div>
 
@@ -355,9 +390,55 @@
       </div>
     }
 
-    <!-- Phone Mockup Canvas -->
+    <!-- Phone Mockup Canvas (Supports Bleed Overflow View) -->
     <div class="relative transition-transform duration-200" [style.transform]="'scale(' + state.zoom() / 100 + ')'">
-      <div id="case-viewport" class="relative h-[632px] w-[300px] overflow-hidden rounded-[50px] shadow-lift ring-[6px] ring-[#18181b]"
+      
+      <!-- Outer Bleed Ghost Layer (50% opacity overflow when viewMode === 'bleed') -->
+      @if (viewMode() === 'bleed') {
+        <div class="pointer-events-none absolute inset-0 z-10 h-[632px] w-[300px] overflow-visible">
+          @for (layer of state.layers(); track layer.id) {
+            @if (!layer.isLocked) {
+              <div
+                (pointerdown)="onElementPointerDown($event, layer.id)"
+                (click)="$event.stopPropagation()"
+                class="pointer-events-auto absolute cursor-move select-none transition-transform"
+                [style.left.%]="layer.x" [style.top.%]="layer.y"
+                [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
+                [style.opacity]="layer.opacity * 0.5"
+                [class.ring-1]="state.selectedLayerId() === layer.id"
+                [class.ring-dashed]="state.selectedLayerId() === layer.id"
+                [class.ring-brand-400]="state.selectedLayerId() === layer.id"
+              >
+                @if (layer.type === 'text') {
+                  <span class="block whitespace-nowrap px-2 py-1 leading-tight"
+                    [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
+                    [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'">{{ layer.content }}</span>
+                }
+                @if (layer.type === 'sticker') {
+                  <span class="block select-none leading-none" [style.fontSize.px]="(layer.width / 100) * 120">{{ layer.name }}</span>
+                }
+                @if (layer.type === 'image') {
+                  <img
+                    [src]="layer.storageUrl"
+                    [alt]="layer.type"
+                    [style.width.px]="(layer.width / 100) * 300"
+                    class="rounded-lg object-contain pointer-events-none select-none block max-w-none"
+                  />
+                }
+                @if (state.selectedLayerId() === layer.id) {
+                  <div (pointerdown)="onResizeHandlePointerDown($event, layer.id)"
+                    class="absolute -bottom-2 -right-2 h-4 w-4 cursor-nwse-resize rounded-full border-2 border-brand-800 bg-white shadow-xs z-30"></div>
+                  <div (pointerdown)="onRotateHandlePointerDown($event, layer.id)"
+                    class="absolute -top-6 left-1/2 -translate-x-1/2 h-4 w-4 cursor-grab rounded-full border-2 border-brand-800 bg-white shadow-xs z-30"></div>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- Case Viewport (Inner elements at 100% normal opacity, strictly clipped to phone frame) -->
+      <div id="case-viewport" class="relative z-20 h-[632px] w-[300px] overflow-hidden rounded-[50px] shadow-lift ring-[6px] ring-[#18181b]"
         [style.background]="state.caseBg()">
 
         <!-- ── Dynamic Camera Cutout per Model (Aligned with 3D GLB Models) ── -->

@@ -77,6 +77,9 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly showAuthModal = signal<boolean>(false);
   protected readonly guestActionType = signal<'save' | 'cart'>('save');
 
+  // Bleed View Mode: 'bleed' (shows overflow at 50% opacity) | 'clipped' (strictly hides overflow)
+  protected readonly viewMode = signal<'bleed' | 'clipped'>('bleed');
+
   // 3D Texture sync & Loading state
   protected readonly is3dSyncing = signal<boolean>(false);
   private textureSyncTimer: any = null;
@@ -655,8 +658,8 @@ export class StudioWorkspace implements OnDestroy {
     const deltaY = ((event.clientY - startY) / 632) * 100;
 
     if (mode === 'move') {
-      const newX = Math.max(10, Math.min(90, initialX + deltaX));
-      const newY = Math.max(10, Math.min(90, initialY + deltaY));
+      const newX = Math.max(-30, Math.min(130, initialX + deltaX));
+      const newY = Math.max(-25, Math.min(125, initialY + deltaY));
 
       const cam = this.cameraCutout();
       const inCameraArea =
@@ -807,6 +810,7 @@ export class StudioWorkspace implements OnDestroy {
       ctx.rect(0, 0, W, H);
     }
     ctx.fill();
+    ctx.clip(); // Strictly clip all bleeding graphics to case silhouette for 3D & print
 
     // Draw Layers (Text, Stickers, Images)
     const layers = this.state.layers();
