@@ -195,15 +195,45 @@
 
     <!-- Section header + filter pills -->
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <span class="text-base">🎨</span>
-        <h2 class="font-display text-base font-bold text-ink">
-          Kho mẫu cho {{ state.selectedModel().name }}
-          <span class="ml-1 rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">F13s</span>
-        </h2>
-        <a routerLink="/design-studio/select-model" class="text-xs font-bold text-brand-600 hover:underline">
-          (Đổi dòng máy)
-        </a>
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🎨</span>
+          <h2 class="font-display text-base font-bold text-ink">
+            Kho mẫu thiết kế
+            <span class="ml-1 rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">F13s</span>
+          </h2>
+        </div>
+
+        <!-- Sleek Model Selector Pill matching Canvas Design -->
+        <div class="inline-flex items-center gap-2 rounded-pill border border-line bg-surface-alt px-3.5 py-1 text-xs text-ink shadow-xs transition-all hover:border-brand-300">
+          <span class="inline-block h-2 w-2 rounded-full" [class]="state.selectedModel().has3dModel ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+          <span class="text-ink-soft">Dòng máy:</span>
+          
+          <select
+            [value]="state.selectedModel().id"
+            (change)="onQuickChangeModel($event)"
+            class="font-display font-bold text-ink bg-transparent outline-none cursor-pointer hover:text-brand-800 text-xs pr-1"
+            title="Nhấn để đổi dòng máy nhanh"
+          >
+            @for (m of state.allModels(); track m.id) {
+              <option [value]="m.id">{{ m.name }}{{ !m.has3dModel ? ' (Chưa có 3D)' : '' }}</option>
+            }
+          </select>
+
+          @if (!state.selectedModel().has3dModel) {
+            <span class="rounded bg-amber-100 border border-amber-200 px-1.5 py-0.2 text-[9px] font-bold text-amber-800">Chưa hỗ trợ 3D</span>
+          }
+
+          <span class="text-line">•</span>
+          <a
+            routerLink="/design-studio/select-model"
+            class="font-semibold text-brand-800 hover:text-brand-950 transition-colors cursor-pointer flex items-center gap-1 hover:underline"
+            title="Đổi sang dòng điện thoại khác"
+          >
+            <span>Đổi dòng máy</span>
+            <span class="text-[11px]">↺</span>
+          </a>
+        </div>
       </div>
       <div class="flex items-center gap-2 overflow-x-auto scrollbar-none">
         @for (style of styles; track style.id) {

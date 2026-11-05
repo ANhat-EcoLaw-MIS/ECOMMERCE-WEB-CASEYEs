@@ -39,6 +39,27 @@
       </ul>
     </nav>
 
+    <!-- Center: Active Model & Switcher Pill in Design Studio (Exact Canvas match) -->
+    @if (isDesignStudio() && selectedModel(); as model) {
+      <div class="hidden md:flex items-center gap-2 rounded-pill border border-white/15 bg-white/5 px-4 py-1 text-xs text-white/85 shadow-xs backdrop-blur-md">
+        <span class="inline-block h-2 w-2 rounded-full" [class]="model.has3dModel ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+        <span class="text-white/60">Dòng máy:</span>
+        <span class="font-display font-bold text-white tracking-wide">{{ model.name }}</span>
+        @if (!model.has3dModel) {
+          <span class="rounded bg-amber-400/20 border border-amber-300/30 px-1.5 py-0.2 text-[9px] font-bold text-amber-200">Chưa hỗ trợ 3D</span>
+        }
+        <span class="text-white/20">•</span>
+        <a
+          routerLink="/design-studio/select-model"
+          class="font-semibold text-brand-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+          title="Đổi sang dòng điện thoại khác"
+        >
+          <span>Đổi dòng máy</span>
+          <span class="text-[11px]">↺</span>
+        </a>
+      </div>
+    }
+
     <!-- Right side actions -->
     <div class="ml-auto flex items-center gap-1 sm:gap-2">
       <!-- Search: wide field on xl, icon button below -->
