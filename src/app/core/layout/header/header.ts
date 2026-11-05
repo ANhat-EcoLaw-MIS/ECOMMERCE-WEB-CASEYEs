@@ -1,12 +1,9 @@
 import {ChangeDetectionStrategy, Component, computed, inject, input, output, signal} from '@angular/core';
-import {NavigationEnd, Router, RouterLink, RouterLinkActive} from '@angular/router';
-import {toSignal} from '@angular/core/rxjs-interop';
-import {filter, map, startWith} from 'rxjs/operators';
+import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NAV_ITEMS} from './nav-items';
 import {NotificationManager} from '../../../shared/ui/notification/notification.manager';
 import {SupabaseAuthService} from '../../supabase/supabase-auth.service';
 import {AuthModal} from '../../auth/auth-modal';
-import {StudioCatalogService} from '../../../features/design-studio/services/studio-catalog';
 
 @Component({
   selector: 'app-header',
@@ -20,24 +17,6 @@ export class Header {
   protected readonly auth = inject(SupabaseAuthService);
   private readonly notifications = inject(NotificationManager);
   private readonly authModal = inject(AuthModal);
-  private readonly catalog = inject(StudioCatalogService, { optional: true });
-
-  private readonly currentUrl = toSignal(
-    this.router.events.pipe(
-      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-      map((e) => e.urlAfterRedirects),
-      startWith(this.router.url)
-    ),
-    { initialValue: this.router.url }
-  );
-
-  protected readonly isDesignStudio = computed(() => {
-    return this.currentUrl().includes('/design-studio');
-  });
-
-  protected readonly selectedModel = computed(() => {
-    return this.catalog?.selectedModel() ?? null;
-  });
   /** Number of items in the cart. Provided by the parent. */
   readonly cartCount = input(0);
 

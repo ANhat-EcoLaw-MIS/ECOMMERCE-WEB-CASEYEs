@@ -203,13 +203,6 @@ export class TemplateBrowser {
     this.showNoResults.set(false);
   }
 
-  protected onQuickChangeModel(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    if (target?.value) {
-      this.state.requestModelChange(target.value);
-    }
-  }
-
   /** FR-DES-06/AF3: Trigger AI suggestion. Show Trending when no match. */
   protected onAiSearch(): void {
     if (!this.aiPrompt().trim()) return;
