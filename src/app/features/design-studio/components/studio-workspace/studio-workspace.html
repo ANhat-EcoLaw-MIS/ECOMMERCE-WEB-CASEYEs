@@ -426,10 +426,15 @@
                   [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'">{{ layer.content }}</span>
               }
               @if (layer.type === 'sticker') {
-                <span class="block text-4xl leading-none">{{ layer.name }}</span>
+                <span class="block select-none leading-none" [style.fontSize.px]="(layer.width / 100) * 120">{{ layer.name }}</span>
               }
               @if (layer.type === 'image') {
-                <img [src]="layer.storageUrl" [alt]="layer.type" class="max-h-56 max-w-56 rounded-lg object-contain pointer-events-none"/>
+                <img
+                  [src]="layer.storageUrl"
+                  [alt]="layer.type"
+                  [style.width.px]="(layer.width / 100) * 300"
+                  class="rounded-lg object-contain pointer-events-none select-none block max-w-none"
+                />
               }
               @if (state.selectedLayerId() === layer.id) {
                 <div (pointerdown)="onResizeHandlePointerDown($event, layer.id)"
@@ -552,6 +557,14 @@
             <input type="range" min="10" max="90" [value]="sel.y" (input)="updateProperty('y', $event)" class="accent-brand-800"/>
           </div>
         </div>
+
+        <!-- Size slider for image and sticker -->
+        @if (sel.type === 'image' || sel.type === 'sticker') {
+          <div>
+            <label class="insp-label">Kích thước ({{ sel.width }}%)</label>
+            <input type="range" min="15" max="95" [value]="sel.width" (input)="updateProperty('width', $event)" class="w-full accent-brand-800 mt-1"/>
+          </div>
+        }
 
         <!-- Opacity slider -->
         <div>

@@ -78,6 +78,7 @@ export class StudioWorkspace implements OnDestroy {
 
   // Texture sync timer
   private textureSyncTimer: any = null;
+  private readonly imageCache = new Map<string, HTMLImageElement>();
 
   constructor() {
     effect(() => {
@@ -625,6 +626,7 @@ export class StudioWorkspace implements OnDestroy {
 
     if (key === 'x') this.state.updateLayer(layer.id, { x: Number(value) });
     if (key === 'y') this.state.updateLayer(layer.id, { y: Number(value) });
+    if (key === 'width') this.state.updateLayer(layer.id, { width: Number(value) });
     if (key === 'opacity') this.state.updateLayer(layer.id, { opacity: Number(value) / 100 });
     if (key === 'fontSize') this.state.updateLayer(layer.id, { fontSize: Number(value) });
     if (key === 'textColor') this.state.updateLayer(layer.id, { textColor: value });
@@ -729,14 +731,22 @@ export class StudioWorkspace implements OnDestroy {
         ctx.textBaseline = 'middle';
         ctx.fillText(layer.content, 0, 0);
       } else if (layer.type === 'sticker') {
-        ctx.font = '84px sans-serif';
+        const stickerSizePx = Math.round((layer.width / 100) * 240);
+        ctx.font = `${stickerSizePx}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(layer.name, 0, 0);
       } else if (layer.type === 'image' && layer.storageUrl) {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = layer.storageUrl;
+        let img = this.imageCache.get(layer.storageUrl);
+        if (!img) {
+          img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            this.imageCache.set(layer.storageUrl, img!);
+            this.trigger3dTextureSync(true);
+          };
+          img.src = layer.storageUrl;
+        }
         if (img.complete && img.naturalWidth > 0) {
           const imgW = (layer.width / 100) * W;
           const imgH = imgW * (img.naturalHeight / (img.naturalWidth || 1));
