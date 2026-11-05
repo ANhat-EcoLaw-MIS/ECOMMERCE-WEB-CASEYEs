@@ -54,6 +54,7 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly isFileDragging = signal<boolean>(false);
   protected readonly consentChecked = signal<boolean>(false);
   protected readonly consentError = signal<boolean>(false);
+  protected readonly dontRemindConsent = signal<boolean>(false);
 
   // Toast Notification for Cart, Save and Warnings (Bug 7)
   protected readonly cartToast = signal<string | null>(null);
@@ -461,7 +462,7 @@ export class StudioWorkspace implements OnDestroy {
         if (dpi < 150) {
           this.state.isLowResModalOpen.set(true);
         } else {
-          this.state.isConsentModalOpen.set(true);
+          this.proceedWithUpload(uploadObj);
         }
       };
       img.src = reader.result as string;
@@ -469,9 +470,24 @@ export class StudioWorkspace implements OnDestroy {
     reader.readAsDataURL(file);
   }
 
+  private proceedWithUpload(upload: any): void {
+    const skipConsent = typeof window !== 'undefined' && localStorage.getItem('caseyes_dont_remind_consent') === 'true';
+    if (skipConsent) {
+      this.state.recordConsent(upload.id);
+      this.state.uploads.update((list) => [upload, ...list]);
+      this.state.addImageLayer(upload.url, upload.name, upload.dpi);
+      this.state.pendingUpload.set(null);
+    } else {
+      this.state.isConsentModalOpen.set(true);
+    }
+  }
+
   protected continueLowRes(): void {
     this.state.isLowResModalOpen.set(false);
-    this.state.isConsentModalOpen.set(true);
+    const upload = this.state.pendingUpload();
+    if (upload) {
+      this.proceedWithUpload(upload);
+    }
   }
 
   protected cancelUpload(): void {
@@ -480,12 +496,21 @@ export class StudioWorkspace implements OnDestroy {
     this.state.pendingUpload.set(null);
     this.consentChecked.set(false);
     this.consentError.set(false);
+    this.dontRemindConsent.set(false);
   }
 
   protected confirmConsent(): void {
     if (!this.consentChecked()) {
       this.consentError.set(true);
       return;
+    }
+
+    if (this.dontRemindConsent() && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('caseyes_dont_remind_consent', 'true');
+      } catch {
+        // Ignore localStorage quota or private browsing exceptions
+      }
     }
 
     const upload = this.state.pendingUpload();
