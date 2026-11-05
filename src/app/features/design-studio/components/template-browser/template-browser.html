@@ -1,167 +1,220 @@
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-  <!-- AI Prompt Search Bar (FR-DES-05 / FR-DES-06) -->
-  <div class="mb-8 rounded-card border border-line bg-surface-alt p-6 shadow-soft md:p-8">
-    <div class="mb-3 flex items-center gap-2">
-      <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-sm">✨</span>
-      <h2 class="font-display text-lg font-bold text-ink">Tìm kiếm mẫu thiết kế bằng Trợ lý AI</h2>
-    </div>
-    <p class="mb-4 text-sm text-ink-soft">
-      Mô tả cảm xúc hoặc ý tưởng tự nhiên của bạn, AI sẽ phân tích và gợi ý các mẫu ốp lưng phù hợp nhất.
-    </p>
+<section class="min-h-screen" style="background: linear-gradient(180deg, #f6f3fe 0%, #fafafa 40%, #ffffff 100%);">
 
-    <div class="flex flex-col gap-3 sm:flex-row">
-      <div class="relative flex-1">
-        <input
-          id="ai-search-prompt"
-          type="text"
-          [value]="aiPrompt()"
-          (input)="onPromptInput($event)"
-          (keydown.enter)="onAiSearch()"
-          placeholder="Ví dụ: Hoàng hôn tím neon mơ màng phong cách anime kèm mèo con..."
-          class="w-full rounded-pill border border-line bg-surface px-5 py-3 text-sm text-ink placeholder:text-ink-soft/60 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
-        />
+  <!-- ══════════════════════════════════════════════════════
+       HERO – AI Recommendation Section
+  ══════════════════════════════════════════════════════ -->
+  <div class="mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-16">
+
+      <!-- Left: headline -->
+      <div class="space-y-5">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 rounded-pill bg-brand-100 px-3 py-1 text-xs font-bold text-brand-800">
+            ✦ AI Gợi ý mẫu
+            <span class="rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-black text-brand-900">F13</span>
+          </span>
+        </div>
+
+        <h1 class="font-display text-4xl font-extrabold leading-tight text-ink md:text-5xl">
+          Bạn muốn một chiếc<br>
+          <span style="background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            Ốp lưng
+          </span><br>
+          như thế nào?
+        </h1>
+
+        <p class="max-w-xs text-sm leading-relaxed text-ink-soft">
+          Mô tả sở thích, phong cách, màu sắc… và để AI tạo ra
+          những gợi ý phù hợp nhất cho bạn
+        </p>
+
+        <!-- Decorative note -->
+        <div class="hidden rounded-2xl border border-brand-200 bg-white/80 px-4 py-3 shadow-soft backdrop-blur-sm md:inline-block">
+          <p class="text-xs italic leading-relaxed text-ink-soft">
+            💡 Để AI giúp bạn<br>
+            biến ý tưởng thành<br>
+            chiếc ốp hoàn hảo!
+          </p>
+        </div>
       </div>
-      <button
-        id="ai-search-btn"
-        type="button"
-        [disabled]="!aiPrompt().trim() || isAiSearching()"
-        (click)="onAiSearch()"
-        class="inline-flex min-h-[44px] min-w-[140px] items-center justify-center gap-2 rounded-pill px-6 py-3 font-display text-sm font-bold transition-all"
-        [class]="
-          aiPrompt().trim() && !isAiSearching()
-            ? 'bg-brand-800 text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow'
-            : 'cursor-not-allowed bg-line text-ink-soft/50'
-        "
-      >
-        @if (isAiSearching()) {
-          <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <span>Đang tìm...</span>
-        } @else {
-          <span>Gợi ý mẫu AI</span>
-        }
-      </button>
-    </div>
 
-    <!-- Quick Prompt Chips -->
-    <div class="mt-3 flex flex-wrap gap-2">
-      @for (chip of ['Y2K màu pastel dịu nhẹ', 'Cyberpunk neon đô thị', 'Anime hoàng hôn', 'Tối giản đen trắng']; track chip) {
-        <button
-          type="button"
-          (click)="setPrompt(chip)"
-          class="rounded-pill border border-brand-400/40 bg-brand-50/70 px-3 py-1 text-xs text-brand-800 transition-all hover:bg-brand-100"
-        >
-          {{ chip }}
-        </button>
-      }
-    </div>
-  </div>
+      <!-- Right: Textarea card -->
+      <div class="rounded-card border border-line bg-white p-6 shadow-soft">
+        <div class="relative">
+          <textarea
+            id="ai-prompt-textarea"
+            rows="5"
+            [value]="aiPrompt()"
+            (input)="onPromptInput($event)"
+            (keydown.ctrl.enter)="onAiSearch()"
+            maxlength="100"
+            placeholder="Ví dụ: Ốp lưng màu pastel, hoa anh đào, phong cách tối giản, phù hợp cho iPhone 15 Pro…"
+            class="w-full resize-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
+          ></textarea>
+          <span class="absolute bottom-3 right-3 text-[11px] text-ink-soft/60">
+            {{ aiPrompt().length }}/100
+          </span>
+        </div>
 
-  <!-- Style Filter Pills -->
-  <div class="mb-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-    @for (style of styles; track style.id) {
-      <button
-        type="button"
-        (click)="selectStyle(style.id)"
-        class="whitespace-nowrap rounded-pill px-4 py-2 text-xs font-medium transition-all"
-        [class]="
-          selectedStyle() === style.id
-            ? 'bg-brand-800 text-white shadow-soft'
-            : 'border border-line bg-surface-alt text-ink-soft hover:bg-brand-50 hover:text-brand-800'
-        "
-      >
-        {{ style.name }}
-      </button>
-    }
-  </div>
-
-  <!-- AI No-Results → Trending Fallback (FR-DES-06 / AF3) -->
-  @if (showNoResults()) {
-    <div class="mb-8 rounded-card border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-      <div class="mb-3 flex items-center gap-2 font-semibold">
-        <span>🔍</span>
-        <span>Không tìm thấy mẫu phù hợp với "<em>{{ aiPrompt() }}</em>". Có thể bạn sẽ thích những mẫu đang thịnh hành này:</span>
-      </div>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        @for (tpl of trendingTemplates(); track tpl.id) {
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <!-- Primary CTA -->
           <button
             type="button"
-            (click)="onDesignTemplate(tpl)"
-            class="flex flex-col items-center rounded-xl border border-amber-200 bg-white p-3 text-center transition-all hover:border-brand-400 hover:shadow-soft"
+            [disabled]="!aiPrompt().trim() || isAiSearching()"
+            (click)="onAiSearch()"
+            class="inline-flex flex-1 items-center justify-center gap-2 rounded-pill px-6 py-3 font-display text-sm font-bold text-white transition-all"
+            [style]="(aiPrompt().trim() && !isAiSearching()) ? 'background:var(--grad-primary);box-shadow:var(--shadow-soft)' : 'background:#d4c8fa;cursor:not-allowed'"
           >
-            <div class="mb-2 h-12 w-12 rounded-xl" [style.background]="tpl.gradient"></div>
-            <span class="text-xs font-bold text-ink">{{ tpl.name }}</span>
-            <span class="text-[10px] text-ink-soft">{{ tpl.price.toLocaleString('vi-VN') }}đ</span>
+            @if (isAiSearching()) {
+              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+              <span>Đang tìm...</span>
+            } @else {
+              <span>✦ Gợi ý cho tôi</span>
+              <span class="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-black">F11</span>
+            }
           </button>
-        }
+
+          <!-- Retry -->
+          <button
+            type="button"
+            (click)="onRetry()"
+            class="inline-flex items-center justify-center gap-1.5 rounded-pill border border-line px-5 py-3 text-sm font-medium text-ink-soft transition-all hover:border-brand-400 hover:text-brand-800"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Gợi ý lại
+            <span class="rounded bg-line px-1.5 py-0.5 text-[10px] font-black text-ink-soft">F16</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No-Results fallback -->
+  @if (showNoResults()) {
+    <div class="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
+      <div class="rounded-card border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+        <div class="mb-3 flex items-center gap-2 font-semibold">
+          <span>🔍</span>
+          <span>Không tìm thấy mẫu phù hợp với "<em>{{ aiPrompt() }}</em>". Có thể bạn sẽ thích:</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          @for (tpl of trendingTemplates(); track tpl.id) {
+            <button type="button" (click)="onDesignTemplate(tpl)"
+              class="flex flex-col items-center rounded-xl border border-amber-200 bg-white p-3 text-center transition-all hover:border-brand-400 hover:shadow-soft">
+              <div class="mb-2 h-12 w-12 rounded-xl" [style.background]="tpl.gradient"></div>
+              <span class="text-xs font-bold text-ink">{{ tpl.name }}</span>
+              <span class="text-[10px] text-ink-soft">{{ tpl.price.toLocaleString('vi-VN') }}đ</span>
+            </button>
+          }
+        </div>
       </div>
     </div>
   }
 
-  <!-- Template Grid -->
-  <div class="mb-12">
-    <div class="mb-4 flex items-center justify-between">
-      <h3 class="font-display text-xl font-bold text-ink">
-        Mẫu thiết kế nổi bật cho {{ state.selectedModel().name }}
-      </h3>
-      <span class="text-xs text-ink-soft">{{ filteredTemplates().length }} mẫu · Chỉ hiển thị mẫu được phép chỉnh sửa</span>
+  <!-- ══════════════════════════════════════════════════════
+       Template Grid Section
+  ══════════════════════════════════════════════════════ -->
+  <div class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+
+    <!-- Section header + filter pills -->
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="text-base">🎨</span>
+        <h2 class="font-display text-base font-bold text-ink">
+          Gợi ý mẫu thiết kế dành cho bạn
+          <span class="ml-2 rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">F13s</span>
+        </h2>
+      </div>
+      <div class="flex items-center gap-2 overflow-x-auto scrollbar-none">
+        @for (style of styles; track style.id) {
+          <button
+            type="button"
+            (click)="selectStyle(style.id)"
+            class="whitespace-nowrap rounded-pill px-3 py-1.5 text-xs font-medium transition-all"
+            [class]="selectedStyle() === style.id
+              ? 'bg-brand-800 text-white shadow-soft'
+              : 'border border-line bg-white text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
+          >{{ style.name }}</button>
+        }
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      <!-- Dynamic Template Cards -->
-      @for (tpl of filteredTemplates(); track tpl.id) {
-        <div class="group flex flex-col overflow-hidden rounded-card border border-line bg-surface-alt shadow-soft transition-all hover:-translate-y-1 hover:shadow-lift">
-          <!-- Preview area -->
+    <!-- Cards grid: 4-col on lg, 2-col on sm -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+      @for (tpl of filteredTemplates(); track tpl.id; let i = $index) {
+        <div
+          class="group relative flex flex-col overflow-hidden rounded-card border bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
+          [class]="i === 0 ? 'border-brand-400/60' : 'border-line'"
+        >
+          <!-- Phone preview area -->
           <div
-            class="relative flex aspect-9/16 w-full flex-col items-center justify-end p-6"
+            class="relative flex items-center justify-center overflow-hidden"
+            style="aspect-ratio: 9/14;"
             [style.background]="tpl.gradient"
           >
             <div class="absolute inset-0 bg-black/5 opacity-0 transition-opacity group-hover:opacity-100"></div>
 
-            <!-- Style badge -->
-            <span class="absolute left-3 top-3 rounded-pill bg-white/80 px-2.5 py-1 text-[10px] font-bold text-brand-900 backdrop-blur-sm">
-              {{ tpl.styleLabel }}
-            </span>
+            <!-- Phone case shape -->
+            <div class="relative z-10 flex h-[72%] w-[52%] flex-col items-center justify-end rounded-[22%/14%] border-2 border-white/40 pb-4 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+                 style="background: rgba(255,255,255,0.15);">
+              <!-- Camera block -->
+              <div class="absolute left-[12%] top-[5%] h-[20%] w-[28%] rounded-[25%] bg-black/75 shadow-inner"></div>
+              <!-- Tag text -->
+              <p class="px-2 text-center font-display text-xs font-extrabold leading-tight text-white"
+                 style="text-shadow:0 2px 8px rgba(0,0,0,0.6);">{{ tpl.tagText }}</p>
+            </div>
 
-            <!-- Trending badge -->
+            <!-- Style tags top-left -->
+            <div class="absolute left-2 top-2 flex flex-wrap gap-1">
+              @for (tag of tpl.tags; track tag) {
+                <span class="rounded-pill px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm"
+                      [style.background]="tag.color">{{ tag.label }}</span>
+              }
+            </div>
+
             @if (tpl.isTrending) {
-              <span class="absolute right-3 top-3 rounded-pill bg-brand-800/90 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-sm">
-                🔥 Trending
-              </span>
+              <span class="absolute right-2 top-2 rounded-pill bg-black/50 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">🔥 Trending</span>
             }
-
-            <p class="relative z-10 text-center font-display text-xl font-extrabold text-white drop-shadow-md" [style.text-shadow]="'0 2px 8px rgba(0,0,0,0.4)'">
-              {{ tpl.tagText }}
-            </p>
           </div>
 
           <!-- Card body -->
-          <div class="flex flex-1 flex-col gap-3 p-4">
-            <div>
-              <h4 class="font-display text-sm font-bold text-ink">{{ tpl.name }}</h4>
-              <p class="text-xs text-ink-soft">Bởi &#64;{{ tpl.creator }}</p>
-            </div>
-            <div class="mt-auto flex items-center justify-between border-t border-line pt-3">
-              <span class="text-sm font-bold text-brand-800">{{ tpl.price.toLocaleString('vi-VN') }}đ</span>
-              <div class="flex gap-1.5">
-                <!-- FR-DES-08 / AF1: Buy Now (skip canvas) -->
+          <div class="flex flex-1 flex-col gap-2 p-3">
+            <h4 class="font-display text-sm font-bold leading-tight text-ink">{{ tpl.name }}</h4>
+            <p class="line-clamp-2 text-xs leading-relaxed text-ink-soft">{{ tpl.description }}</p>
+
+            <div class="mt-auto flex items-center justify-between pt-2">
+              <!-- View 3D button -->
+              <button
+                type="button"
+                (click)="onDesignTemplate(tpl)"
+                class="inline-flex items-center gap-1.5 rounded-pill border border-brand-400/50 px-3 py-1.5 text-xs font-bold text-brand-800 transition-all hover:bg-brand-50 hover:shadow-soft"
+              >
+                <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                </svg>
+                Xem 3D
+                <span class="rounded bg-brand-100 px-1 py-0.5 text-[9px] font-black text-brand-900">F16</span>
+              </button>
+
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-brand-800">{{ tpl.price.toLocaleString('vi-VN') }}đ</span>
                 <button
                   type="button"
                   (click)="onBuyNow(tpl)"
-                  class="rounded-pill border border-brand-400 px-2.5 py-1.5 text-xs font-bold text-brand-800 transition-all hover:bg-brand-50"
                   title="Mua ngay – không cần chỉnh sửa"
+                  class="rounded-full bg-brand-800 p-1.5 text-white transition-all hover:bg-brand-600 hover:shadow-glow"
                 >
-                  Mua ngay
-                </button>
-                <!-- FR-DES-08 / PF: Design this template -->
-                <button
-                  type="button"
-                  (click)="onDesignTemplate(tpl)"
-                  class="rounded-pill bg-brand-800 px-2.5 py-1.5 text-xs font-bold text-white transition-all hover:bg-brand-600"
-                >
-                  Thiết kế
+                  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 01-8 0"/>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -169,24 +222,21 @@
         </div>
       }
 
-      <!-- Blank Canvas CTA -->
-      <div class="flex flex-col items-center justify-center rounded-card border-2 border-dashed border-brand-400/50 bg-brand-50/50 p-6 text-center transition-all hover:border-brand-800 hover:bg-brand-50">
-        <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-brand-800">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      <!-- Blank canvas CTA -->
+      <div class="flex flex-col items-center justify-center rounded-card border-2 border-dashed border-brand-400/50 bg-brand-50/40 p-6 text-center transition-all hover:border-brand-800 hover:bg-brand-50">
+        <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-800">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
           </svg>
         </div>
-        <h4 class="font-display text-base font-bold text-brand-900">Tự vẽ từ trang trắng</h4>
-        <p class="mt-1 text-xs text-ink-soft">
-          Bắt đầu với phôi ốp {{ state.selectedModel().name }} chưa có bài vẽ nào.
-        </p>
-        <a
-          routerLink="/design-studio/editor"
-          class="mt-4 inline-flex items-center gap-2 rounded-pill bg-brand-800 px-5 py-2 text-xs font-bold text-white shadow-soft transition-all hover:shadow-glow"
-        >
+        <h4 class="font-display text-sm font-bold text-brand-900">Tự vẽ từ trang trắng</h4>
+        <p class="mt-1 text-xs text-ink-soft">Bắt đầu với phôi ốp {{ state.selectedModel().name }} chưa có bài vẽ nào.</p>
+        <a routerLink="/design-studio/editor"
+           class="mt-4 inline-flex items-center gap-1.5 rounded-pill bg-brand-800 px-4 py-2 text-xs font-bold text-white shadow-soft transition-all hover:shadow-glow">
           Mở Studio Canvas →
         </a>
       </div>
     </div>
   </div>
+
 </section>

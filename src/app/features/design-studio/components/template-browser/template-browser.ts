@@ -3,6 +3,11 @@ import { Router, RouterLink } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { StudioState } from '../../services/studio-state';
 
+export interface TemplateTag {
+  label: string;
+  color: string; // inline background color string
+}
+
 export interface TemplateCard {
   id: string;
   name: string;
@@ -11,20 +16,126 @@ export interface TemplateCard {
   styleLabel: string;
   gradient: string;
   tagText: string;
+  description: string;
+  tags: TemplateTag[];
   price: number;
   isEditable: boolean;
   isTrending: boolean;
 }
 
 const TEMPLATE_CATALOG: TemplateCard[] = [
-  { id: 'tpl-001', name: 'Retro Lavender Waves', creator: 'CaseCraftStudio', style: 'y2k', styleLabel: 'Y2K Vibe', gradient: 'linear-gradient(160deg,#D4C8FA 0%,#A58CF4 100%)', tagText: 'Good Vibes Only', price: 250000, isEditable: true, isTrending: true },
-  { id: 'tpl-002', name: 'Night City Lights', creator: 'CyberNomad', style: 'cyberpunk', styleLabel: 'Cyberpunk', gradient: 'linear-gradient(160deg,#0a0a0a 0%,#433075 100%)', tagText: 'TOKYO NEON', price: 260000, isEditable: true, isTrending: false },
-  { id: 'tpl-003', name: 'Clean Typography', creator: 'MinimalStudio', style: 'minimalist', styleLabel: 'Minimalist', gradient: 'linear-gradient(160deg,#FFFFFF 0%,#ECE6FD 100%)', tagText: 'less is more.', price: 230000, isEditable: true, isTrending: true },
-  { id: 'tpl-004', name: 'Sakura Dream', creator: 'AnimeArtist', style: 'anime', styleLabel: 'Anime Manga', gradient: 'linear-gradient(160deg,#ffd1a8 0%,#ff7e8b 100%)', tagText: '桜 SAKURA ✨', price: 240000, isEditable: true, isTrending: true },
-  { id: 'tpl-005', name: 'Pastel Bunny', creator: 'KawaiiShop', style: 'cute', styleLabel: 'Cute & Pastel', gradient: 'linear-gradient(160deg,#ffe3b8 0%,#ffa8d2 100%)', tagText: '🐰 kawaii', price: 235000, isEditable: true, isTrending: false },
-  { id: 'tpl-006', name: 'Electric Ocean', creator: 'NeonWaves', style: 'cyberpunk', styleLabel: 'Cyberpunk', gradient: 'linear-gradient(160deg,#1a1a3d 0%,#0088ff 100%)', tagText: 'ELECTRIC BLUE', price: 255000, isEditable: true, isTrending: false },
-  { id: 'tpl-007', name: 'Aesthetic Moodboard', creator: 'PastelFactory', style: 'y2k', styleLabel: 'Y2K Vibe', gradient: 'linear-gradient(160deg,#a58cf4 0%,#ffd1a8 100%)', tagText: 'that girl era', price: 245000, isEditable: true, isTrending: true },
-  { id: 'tpl-008', name: 'Wabi Sabi Zen', creator: 'ZenStudio', style: 'minimalist', styleLabel: 'Minimalist', gradient: 'linear-gradient(160deg,#f5f0eb 0%,#d4c5b0 100%)', tagText: 'breath.', price: 220000, isEditable: true, isTrending: false },
+  {
+    id: 'tpl-001',
+    name: 'Blossom Breeze',
+    creator: 'CaseCraftStudio',
+    style: 'y2k',
+    styleLabel: 'Y2K Vibe',
+    gradient: 'linear-gradient(160deg,#D4C8FA 0%,#f5b8d8 100%)',
+    tagText: 'Good Vibes Only',
+    description: 'Hoa anh đào nhẹ nhàng, trong trẻo, mang vẻ mùa xuân.',
+    tags: [{ label: '#pastel', color: '#c084fc' }, { label: '#floral', color: '#f472b6' }],
+    price: 250000,
+    isEditable: true,
+    isTrending: true,
+  },
+  {
+    id: 'tpl-002',
+    name: 'Ocean Wave',
+    creator: 'CyberNomad',
+    style: 'cyberpunk',
+    styleLabel: 'Cyberpunk',
+    gradient: 'linear-gradient(160deg,#1a1a3d 0%,#0088cc 100%)',
+    tagText: 'DEEP OCEAN',
+    description: 'Những đường cong mềm mại lấy cảm hứng từ đại dương.',
+    tags: [{ label: '#minimal', color: '#3b82f6' }, { label: '#blue', color: '#06b6d4' }],
+    price: 260000,
+    isEditable: true,
+    isTrending: false,
+  },
+  {
+    id: 'tpl-003',
+    name: 'Meow Daily',
+    creator: 'MinimalStudio',
+    style: 'cute',
+    styleLabel: 'Cute & Pastel',
+    gradient: 'linear-gradient(160deg,#fde68a 0%,#fca5a5 100%)',
+    tagText: '🐱 meow',
+    description: 'Những chú mèo đáng yêu cho ngày vui vẻ của bạn.',
+    tags: [{ label: '#cute', color: '#f97316' }, { label: '#cartoon', color: '#ec4899' }],
+    price: 240000,
+    isEditable: true,
+    isTrending: true,
+  },
+  {
+    id: 'tpl-004',
+    name: 'Galaxy Dream',
+    creator: 'AnimeArtist',
+    style: 'cyberpunk',
+    styleLabel: 'Cyberpunk',
+    gradient: 'linear-gradient(160deg,#0a0a0a 0%,#2a1d4d 100%)',
+    tagText: '✦ COSMOS',
+    description: 'Dải ngân hà tuyệt đẹp, những tầng lớp vũ trụ sâu thẳm.',
+    tags: [{ label: '#space', color: '#433075' }, { label: '#dark', color: '#6d28d9' }],
+    price: 265000,
+    isEditable: true,
+    isTrending: true,
+  },
+  {
+    id: 'tpl-005',
+    name: 'Forest Path',
+    creator: 'NatureStudio',
+    style: 'minimalist',
+    styleLabel: 'Minimalist',
+    gradient: 'linear-gradient(160deg,#166534 0%,#86efac 100%)',
+    tagText: '🌿 nature',
+    description: 'Con đường giữa rừng thông, bình yên và thư thái.',
+    tags: [{ label: '#nature', color: '#16a34a' }, { label: '#green', color: '#059669' }],
+    price: 235000,
+    isEditable: true,
+    isTrending: false,
+  },
+  {
+    id: 'tpl-006',
+    name: 'Memory Lane',
+    creator: 'PastelFactory',
+    style: 'y2k',
+    styleLabel: 'Y2K Vibe',
+    gradient: 'linear-gradient(160deg,#fde68a 0%,#fca5a5 50%,#c4b5fd 100%)',
+    tagText: 'that girl era',
+    description: 'Những khoảnh khắc tính tế, kiểu dáng đẹp, luôn bên bạn.',
+    tags: [{ label: '#vintage', color: '#d97706' }, { label: '#aesthetic', color: '#db2777' }],
+    price: 245000,
+    isEditable: true,
+    isTrending: true,
+  },
+  {
+    id: 'tpl-007',
+    name: 'Purple Wings',
+    creator: 'KawaiiShop',
+    style: 'cute',
+    styleLabel: 'Cute & Pastel',
+    gradient: 'linear-gradient(160deg,#c4b5fd 0%,#f9a8d4 100%)',
+    tagText: '🦋 flutter',
+    description: 'Bướm đầm bướm, kiều lương, nhẹ nhàng như giấc mơ.',
+    tags: [{ label: '#purple', color: '#7c3aed' }, { label: '#butterfly', color: '#a855f7' }],
+    price: 240000,
+    isEditable: true,
+    isTrending: false,
+  },
+  {
+    id: 'tpl-008',
+    name: 'Sweet Square',
+    creator: 'ZenStudio',
+    style: 'y2k',
+    styleLabel: 'Y2K Vibe',
+    gradient: 'linear-gradient(160deg,#fde68a 0%,#f9a8d4 100%)',
+    tagText: '🍬 sweet',
+    description: 'Hoạ tiết caro pastel, dịu dàng và giản dị.',
+    tags: [{ label: '#pastel', color: '#f472b6' }, { label: '#pattern', color: '#fb923c' }],
+    price: 230000,
+    isEditable: true,
+    isTrending: false,
+  },
 ];
 
 @Component({
@@ -61,7 +172,7 @@ export class TemplateBrowser {
   });
 
   protected readonly trendingTemplates = computed(() =>
-    this.templates.filter(t => t.isTrending)
+    this.templates.filter(t => t.isTrending),
   );
 
   protected setPrompt(text: string): void {
@@ -70,7 +181,7 @@ export class TemplateBrowser {
   }
 
   protected onPromptInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
+    const input = event.target as HTMLInputElement | HTMLTextAreaElement;
     this.aiPrompt.set(input.value);
     this.showNoResults.set(false);
   }
@@ -80,10 +191,7 @@ export class TemplateBrowser {
     this.showNoResults.set(false);
   }
 
-  /**
-   * FR-DES-05: Disable send when prompt is empty.
-   * FR-DES-06/AF3: Show Trending when no results found.
-   */
+  /** FR-DES-06/AF3: Trigger AI suggestion. Show Trending when no match. */
   protected onAiSearch(): void {
     if (!this.aiPrompt().trim()) return;
     this.isAiSearching.set(true);
@@ -94,14 +202,22 @@ export class TemplateBrowser {
         t =>
           t.name.toLowerCase().includes(prompt) ||
           t.styleLabel.toLowerCase().includes(prompt) ||
-          t.tagText.toLowerCase().includes(prompt),
+          t.tagText.toLowerCase().includes(prompt) ||
+          t.description.toLowerCase().includes(prompt),
       );
       this.showNoResults.set(!hasMatch);
     }, 900);
   }
 
+  /** F16: Regenerate / clear and retry */
+  protected onRetry(): void {
+    this.aiPrompt.set('');
+    this.showNoResults.set(false);
+    this.selectedStyle.set('all');
+  }
+
   /**
-   * FR-DES-08 / AF1: "Mua ngay" – check BaseSKU stock, skip canvas, add directly to cart.
+   * FR-DES-08 / AF1: "Mua ngay" – skip canvas, add directly to cart.
    */
   protected onBuyNow(template: TemplateCard): void {
     const sku = this.catalog.selectedSku();
@@ -109,7 +225,7 @@ export class TemplateBrowser {
       alert('Phiên bản ốp lưng cho dòng máy này hiện đang hết hàng. Vui lòng chọn dòng máy khác.');
       return;
     }
-    // Production: inject CartState from core/ and add item. Using alert for demo scope.
+    // Production: inject CartState from core/ and add item.
     alert(
       `✅ Đã thêm mẫu "${template.name}" (${sku.colorName}) vào giỏ hàng!\nGiá: ${template.price.toLocaleString('vi-VN')}đ`,
     );
@@ -117,7 +233,7 @@ export class TemplateBrowser {
   }
 
   /**
-   * FR-DES-08 / PF: "Thiết kế mẫu này" – load template layers into canvas and navigate to editor.
+   * FR-DES-08 / PF: "Xem 3D / Thiết kế" – load template layers and open editor.
    */
   protected onDesignTemplate(_template: TemplateCard): void {
     // Production: dispatch template load action to StudioState before routing.
