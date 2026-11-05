@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  OnDestroy,
   computed,
   inject,
   signal,
@@ -10,7 +11,14 @@ import {
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { CanvasLayer } from '../../models/canvas-element.model';
-import { BG_PRESETS, STICKERS_LIST, StudioState } from '../../services/studio-state';
+import { CASE_MATERIALS, CaseMaterial } from '../../models/studio-domain.model';
+import {
+  BANNED_KEYWORDS,
+  BG_PRESETS,
+  SavedDesignItem,
+  STICKERS_LIST,
+  StudioState,
+} from '../../services/studio-state';
 import { StudioDraft } from '../../services/studio-draft';
 
 @Component({
@@ -21,11 +29,12 @@ import { StudioDraft } from '../../services/studio-draft';
   styleUrl: './studio-workspace.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StudioWorkspace {
+export class StudioWorkspace implements OnDestroy {
   protected readonly state = inject(StudioState);
   protected readonly draft = inject(StudioDraft);
   protected readonly stickers = STICKERS_LIST;
   protected readonly bgPresets = BG_PRESETS;
+  protected readonly caseMaterials = CASE_MATERIALS;
 
   // Text inputs
   protected readonly textInput = signal<string>('Good vibes');
@@ -33,6 +42,7 @@ export class StudioWorkspace {
   protected readonly selectedColor = signal<string>('#433075');
   protected readonly isTextBold = signal<boolean>(true);
   protected readonly isTextItalic = signal<boolean>(false);
+  protected readonly bannedInputError = signal<string | null>(null);
 
   // File Upload & DPI calculation
   protected readonly fileInputRef = viewChild<ElementRef<HTMLInputElement>>('fileInput');
@@ -40,7 +50,15 @@ export class StudioWorkspace {
   protected readonly consentChecked = signal<boolean>(false);
   protected readonly consentError = signal<boolean>(false);
 
-  // 3D Preview modal
+  // Toast Notification for Cart and Save (Bug 7)
+  protected readonly cartToast = signal<string | null>(null);
+
+  // Modals for First Save Naming & Guest Login (Issue 13 & 14)
+  protected readonly showNamingModal = signal<boolean>(false);
+  protected readonly namingInput = signal<string>('');
+  protected readonly showAuthModal = signal<boolean>(false);
+
+  // 3D Preview
   protected readonly is3dSupported = signal<boolean>(true);
   protected readonly orbitRx = signal<number>(-10);
   protected readonly orbitRy = signal<number>(-25);
@@ -48,6 +66,9 @@ export class StudioWorkspace {
   private isOrbitDragging = false;
   private dragStartX = 0;
   private dragStartY = 0;
+
+  // Auto-save interval handle (Issue 14)
+  private autoSaveTimer: ReturnType<typeof setInterval> | null = null;
 
   // Canvas Viewport Dragging state
   private activeDrag: {
@@ -76,15 +97,36 @@ export class StudioWorkspace {
     'Brush Script MT',
   ];
 
+  ngOnDestroy(): void {
+    if (this.autoSaveTimer) {
+      clearInterval(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
+  }
+
   // --- Tool Switching ---
   protected selectTool(tool: 'txt' | 'stk' | 'img' | 'bg' | 'tpl'): void {
     this.state.activeTool.set(tool);
   }
 
+  // --- Real-time Banned Keyword Validation (Issue 5) ---
+  protected onTextInputChange(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.textInput.set(val);
+    const hit = BANNED_KEYWORDS.find((w) => val.toLowerCase().includes(w));
+    if (hit) {
+      this.bannedInputError.set(
+        `Nội dung chứa từ khóa vi phạm tiêu chuẩn cộng đồng ("${hit}"). Vui lòng chỉnh sửa.`
+      );
+    } else {
+      this.bannedInputError.set(null);
+    }
+  }
+
   // --- Text Operations ---
   protected onApplyText(): void {
     const text = this.textInput().trim();
-    if (!text) return;
+    if (!text || this.bannedInputError()) return;
 
     if (this.state.selectedLayer()?.type === 'text') {
       this.state.updateLayer(this.state.selectedLayer()!.id, {
@@ -102,8 +144,151 @@ export class StudioWorkspace {
     this.state.addText(content, this.selectedFont(), this.selectedColor(), size);
   }
 
-  protected onManualSave(): void {
-    this.draft.saveDraft();
+  // --- Material Selection (Issue 9) ---
+  protected onSelectMaterial(mat: CaseMaterial): void {
+    this.state.selectMaterial(mat);
+  }
+
+  // --- Save & Naming Flow (Issue 13 & 14) ---
+  protected onSaveDesign(): void {
+    if (!this.state.hasLayers()) {
+      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi lưu.');
+      return;
+    }
+
+    this.saveToGuestLocalStorage();
+
+    if (this.state.isFirstSave()) {
+      this.namingInput.set(
+        this.state.designName() === 'Thiết kế chưa đặt tên'
+          ? `Ốp lưng ${this.state.selectedModel().name}`
+          : this.state.designName()
+      );
+      this.showNamingModal.set(true);
+    } else {
+      this.performSave();
+    }
+  }
+
+  protected confirmNaming(): void {
+    const name = this.namingInput().trim();
+    if (name) {
+      this.state.designName.set(name);
+    }
+    this.state.isFirstSave.set(false);
+    this.showNamingModal.set(false);
+    this.performSave();
+    this.startAutoSaveTimer();
+  }
+
+  protected closeNamingModal(): void {
+    this.showNamingModal.set(false);
+  }
+
+  private performSave(): void {
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+    this.state.lastSavedTime.set(timeStr);
+    this.state.designStatus.set('SAVED');
+
+    const currentName = this.state.designName();
+    const model = this.state.selectedModel();
+    const existingIndex = this.state.savedDesigns().findIndex((d) => d.name === currentName);
+
+    const newDesign: SavedDesignItem = {
+      id: 'saved_' + Date.now(),
+      name: currentName,
+      modelId: model.id,
+      modelName: model.name,
+      material: this.state.selectedMaterial(),
+      bg: this.state.caseBg(),
+      layerCount: this.state.layers().length,
+      layers: [...this.state.layers()],
+      savedAt: `Hôm nay lúc ${timeStr}`,
+      thumbnailText:
+        this.state.layers().find((l) => l.type === 'text')?.['content'] || currentName,
+    };
+
+    if (existingIndex >= 0) {
+      this.state.savedDesigns.update((list) => {
+        const copy = [...list];
+        copy[existingIndex] = newDesign;
+        return copy;
+      });
+    } else {
+      this.state.savedDesigns.update((list) => [newDesign, ...list]);
+    }
+
+    this.cartToast.set(`✓ Đã lưu thiết kế "${currentName}" thành công!`);
+    setTimeout(() => this.cartToast.set(null), 3500);
+  }
+
+  private startAutoSaveTimer(): void {
+    if (this.autoSaveTimer) return;
+    this.autoSaveTimer = setInterval(() => {
+      if (this.state.hasLayers() && !this.state.isFirstSave()) {
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now
+          .getMinutes()
+          .toString()
+          .padStart(2, '0')}`;
+        this.state.lastSavedTime.set(timeStr);
+        this.saveToGuestLocalStorage();
+      }
+    }, 60000);
+  }
+
+  private saveToGuestLocalStorage(): void {
+    if (typeof localStorage === 'undefined') return;
+    const draftData = {
+      modelId: this.state.selectedModel().id,
+      material: this.state.selectedMaterial(),
+      bg: this.state.caseBg(),
+      designName: this.state.designName(),
+      layers: this.state.layers(),
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem('caseyes_guest_draft', JSON.stringify(draftData));
+  }
+
+  // --- Add to Cart (Bug 7 Resolved: No Auto Drawer Popup) ---
+  protected onAddToCart(): void {
+    if (this.state.designStatus() === 'REJECTED') {
+      alert(
+        'Bản thiết kế này đang ở trạng thái từ chối do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa các chi tiết vi phạm trước khi đặt mua.'
+      );
+      return;
+    }
+    if (!this.state.hasLayers()) {
+      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi thêm vào giỏ.');
+      return;
+    }
+
+    this.saveToGuestLocalStorage();
+
+    // Show sleek toast instead of popping open a full drawer
+    this.cartToast.set('✓ Đã thêm thiết kế vào giỏ hàng thành công!');
+    setTimeout(() => {
+      this.cartToast.set(null);
+    }, 4500);
+  }
+
+  protected dismissToast(): void {
+    this.cartToast.set(null);
+  }
+
+  // --- Layer Reordering (Bug 6) ---
+  protected onMoveLayerUp(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.state.moveLayerUp(id);
+  }
+
+  protected onMoveLayerDown(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.state.moveLayerDown(id);
   }
 
   // --- Sticker & Background ---
@@ -159,7 +344,6 @@ export class StudioWorkspace {
       const img = new Image();
       img.onload = () => {
         const printWidthMm = this.state.selectedModel().printWidthMm || 71.5;
-        // Calculate DPI
         const dpi = Math.round(img.naturalWidth / (printWidthMm / 25.4));
         const uploadObj = {
           id: 'img_' + crypto.randomUUID().slice(0, 8),
@@ -171,7 +355,6 @@ export class StudioWorkspace {
 
         this.state.pendingUpload.set(uploadObj);
 
-        // Check DPI threshold
         if (dpi < 150) {
           this.state.isLowResModalOpen.set(true);
         } else {
@@ -287,7 +470,6 @@ export class StudioWorkspace {
       const newX = Math.max(10, Math.min(90, initialX + deltaX));
       const newY = Math.max(10, Math.min(90, initialY + deltaY));
 
-      // Camera collision check (EF2)
       const cam = this.cameraCutout();
       const inCameraArea =
         newX < cam.xPercent + cam.widthPercent &&
@@ -314,8 +496,21 @@ export class StudioWorkspace {
     this.activeDrag = null;
   }
 
-  protected onStageClick(): void {
+  // Bug 1 Fix: Only deselect when clicking on the true empty canvas backdrop
+  protected onStageClick(event?: MouseEvent): void {
+    if (event && event.target !== event.currentTarget) {
+      return;
+    }
     this.state.selectLayer(null);
+  }
+
+  // Issue 10: Touchpad pinch-to-zoom
+  protected onStageWheel(event: WheelEvent): void {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      const zoomDelta = event.deltaY < 0 ? 5 : -5;
+      this.state.zoom.update((z) => Math.min(160, Math.max(50, z + zoomDelta)));
+    }
   }
 
   // --- Properties Panel Inputs ---
@@ -372,17 +567,6 @@ export class StudioWorkspace {
     this.orbitRx.set(-10);
     this.orbitRy.set(-25);
     this.orbitZoom.set(1);
-  }
-
-  // --- Cart Drawer ---
-  protected openCart(): void {
-    if (this.state.designStatus() === 'REJECTED') {
-      alert(
-        'Bản thiết kế này đang ở trạng thái từ chối do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa các chi tiết vi phạm trước khi đặt mua.'
-      );
-      return;
-    }
-    this.state.isCartDrawerOpen.set(true);
   }
 
   protected closeCart(): void {

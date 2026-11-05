@@ -1,4 +1,18 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, Routes } from '@angular/router';
+
+const modelOnboardingGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  const activeModel =
+    typeof localStorage !== 'undefined'
+      ? localStorage.getItem('caseyes_active_model')
+      : null;
+
+  if (activeModel) {
+    return router.parseUrl('/design-studio/templates');
+  }
+  return router.parseUrl('/design-studio/select-model');
+};
 
 export const DESIGN_STUDIO_ROUTES: Routes = [
   {
@@ -8,8 +22,9 @@ export const DESIGN_STUDIO_ROUTES: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'select-model',
         pathMatch: 'full',
+        canActivate: [modelOnboardingGuard],
+        children: [],
       },
       {
         path: 'select-model',

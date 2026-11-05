@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, signal, inject, resource } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { Header } from './core/layout/header/header';
-import { Placeholder } from './shared/ui/placeholder/placeholder';
-import {Footer} from './core/layout/footer/footer';
+import { Footer } from './core/layout/footer/footer';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Placeholder, Footer],
+  standalone: true,
+  imports: [RouterOutlet, Header, Footer],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

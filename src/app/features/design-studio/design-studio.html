@@ -1,10 +1,10 @@
 <div class="min-h-screen bg-surface">
-  <!-- Top Navigation Bar -->
+  <!-- Top Navigation Bar (Clean Header, No Clunky 4-Step Bar - Bug 3 & Issue 1 Resolved) -->
   <header class="sticky top-0 z-40 border-b border-line bg-surface-alt/95 px-4 py-2.5 backdrop-blur-xl sm:px-6 lg:px-8">
-    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
 
-      <!-- Title & Branding -->
-      <a routerLink="/design-studio" class="flex items-center gap-3 transition-opacity hover:opacity-90">
+      <!-- Left: Title & Branding -->
+      <a routerLink="/design-studio/templates" class="flex items-center gap-3 transition-opacity hover:opacity-90">
         <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[image:var(--grad-primary)] text-white shadow-soft">
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -18,79 +18,25 @@
         </div>
       </a>
 
-      <!-- Step Indicator (Mockup 4a: 1 Chọn dòng máy ── 2 Chọn điểm bắt đầu ── 3 Thiết kế ── 4 Preview & lưu) -->
-      <nav class="hidden md:flex items-center gap-1 sm:gap-2">
-        <!-- Step 1: Chọn dòng máy -->
-        <a
-          routerLink="select-model"
-          class="flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-bold transition-all"
-          [class]="
-            currentStep() === 1
-              ? 'bg-brand-800 text-white shadow-soft'
-              : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'
-          "
-        >
-          <span
-            class="flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black"
-            [class]="currentStep() === 1 ? 'bg-white text-brand-800' : 'bg-line text-ink-soft'"
-          >1</span>
-          <span>Chọn dòng máy</span>
-        </a>
-
-        <span class="text-xs text-line font-bold">──</span>
-
-        <!-- Step 2: Chọn điểm bắt đầu -->
-        <a
-          routerLink="templates"
-          class="flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-bold transition-all"
-          [class]="
-            currentStep() === 2
-              ? 'bg-brand-800 text-white shadow-soft'
-              : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'
-          "
-        >
-          <span
-            class="flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black"
-            [class]="currentStep() === 2 ? 'bg-white text-brand-800' : 'bg-line text-ink-soft'"
-          >2</span>
-          <span>Chọn điểm bắt đầu</span>
-        </a>
-
-        <span class="text-xs text-line font-bold">──</span>
-
-        <!-- Step 3: Thiết kế -->
-        <a
-          routerLink="editor"
-          class="flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-bold transition-all"
-          [class]="
-            currentStep() === 3
-              ? 'bg-brand-800 text-white shadow-soft'
-              : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'
-          "
-        >
-          <span
-            class="flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-black"
-            [class]="currentStep() === 3 ? 'bg-white text-brand-800' : 'bg-line text-ink-soft'"
-          >3</span>
-          <span>Thiết kế</span>
-        </a>
-
-        <span class="text-xs text-line font-bold">──</span>
-
-        <!-- Step 4: Preview & lưu -->
-        <button
-          type="button"
-          (click)="onAddToCart()"
-          class="flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-bold text-ink-soft hover:bg-brand-50 hover:text-brand-800 transition-all cursor-pointer"
-        >
-          <span class="flex h-4 w-4 items-center justify-center rounded-full bg-line text-[10px] font-black text-ink-soft">4</span>
-          <span>Preview & lưu</span>
-        </button>
-      </nav>
+      <!-- Center: Active Model & Material Badge (Visible on templates & editor) -->
+      @if (!isSelectModelPage()) {
+        <div class="hidden md:flex items-center gap-2 rounded-pill border border-line bg-surface px-3 py-1.5 shadow-xs">
+          <span class="text-xs text-ink-soft">Dòng máy:</span>
+          <span class="font-display text-xs font-bold text-ink">{{ state.selectedModel().name }}</span>
+          <span class="text-line text-xs font-bold">•</span>
+          <a
+            routerLink="select-model"
+            class="text-xs font-bold text-brand-800 hover:text-brand-600 transition-colors cursor-pointer"
+            title="Đổi sang dòng điện thoại khác"
+          >
+            Đổi dòng máy ↺
+          </a>
+        </div>
+      }
 
       <!-- Right Action Items -->
       <div class="flex items-center gap-2">
-        <!-- Editor Specific Controls (Only show when on step 3) -->
+        <!-- Editor Specific Controls (Only show when on editor) -->
         @if (currentStep() === 3) {
           <app-model-selector />
 
@@ -98,7 +44,7 @@
             type="button"
             (click)="onUndo()"
             [disabled]="!state.canUndo()"
-            class="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink transition-colors disabled:opacity-40 hover:bg-surface"
+            class="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink transition-colors disabled:opacity-40 hover:bg-surface cursor-pointer"
             title="Hoàn tác (Undo)"
           >
             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -110,33 +56,19 @@
             type="button"
             (click)="onRedo()"
             [disabled]="!state.canRedo()"
-            class="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink transition-colors disabled:opacity-40 hover:bg-surface"
+            class="hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-line text-ink transition-colors disabled:opacity-40 hover:bg-surface cursor-pointer"
             title="Làm lại (Redo)"
           >
             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
             </svg>
           </button>
-
-          <button
-            type="button"
-            (click)="onAddToCart()"
-            [class.opacity-60]="state.designStatus() === 'REJECTED'"
-            class="flex items-center gap-1.5 rounded-pill bg-[image:var(--grad-primary)] px-3.5 py-1.5 text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow"
-          >
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h2l2.4 11.2a1 1 0 001 .8h8.9a1 1 0 001-.76L20 8H6.2" />
-            </svg>
-            <span class="hidden lg:inline">Thêm vào giỏ</span>
-            <span>•</span>
-            <span>{{ state.totalPrice().toLocaleString('vi-VN') }}đ</span>
-          </button>
         }
 
-        <!-- Thoát Button (Mockup 4a: Right-aligned Exit) -->
+        <!-- Thoát Button -->
         <a
           routerLink="/"
-          class="inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink-soft transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          class="inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink-soft transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 cursor-pointer"
           title="Thoát khỏi Studio"
         >
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -7,6 +7,7 @@ import {
 } from '../models/canvas-element.model';
 import { ContentPolicyConsent } from '../models/policy-consent.model';
 import { DesignStatus } from '../models/studio-state.model';
+import { CaseMaterial } from '../models/studio-domain.model';
 import { StudioCatalogService } from './studio-catalog';
 
 export const BANNED_KEYWORDS = [
@@ -44,6 +45,19 @@ export const BG_PRESETS = [
   'linear-gradient(180deg, #141a3d 0%, #5b4b9a 100%)',
 ];
 
+export interface SavedDesignItem {
+  readonly id: string;
+  readonly name: string;
+  readonly modelId: string;
+  readonly modelName: string;
+  readonly material: CaseMaterial;
+  readonly bg: string;
+  readonly layerCount: number;
+  readonly layers: CanvasLayer[];
+  readonly savedAt: string;
+  readonly thumbnailText?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class StudioState {
   private readonly catalog = inject(StudioCatalogService);
@@ -53,6 +67,9 @@ export class StudioState {
   readonly selectedSku = this.catalog.selectedSku;
   readonly allBrands = this.catalog.brands;
   readonly allModels = this.catalog.models;
+
+  // Case Material selection (Snap / Tough / MagSafe)
+  readonly selectedMaterial = signal<CaseMaterial>('snap');
 
   // Metadata
   readonly designName = signal<string>('Thiết kế chưa đặt tên');
@@ -100,15 +117,54 @@ export class StudioState {
   readonly isLowResModalOpen = signal<boolean>(false);
   readonly isCartDrawerOpen = signal<boolean>(false);
 
+  // Auto-save & My Designs persistence
+  readonly lastSavedTime = signal<string | null>(null);
+  readonly isFirstSave = signal<boolean>(true);
+  readonly savedDesigns = signal<SavedDesignItem[]>([
+    {
+      id: 'saved_sample_1',
+      name: 'Y2K Retro Vibes',
+      modelId: 'iphone-15-pro-max',
+      modelName: 'iPhone 15 Pro Max',
+      material: 'tough',
+      bg: 'linear-gradient(160deg,#D4C8FA 0%,#f5b8d8 100%)',
+      layerCount: 2,
+      layers: [
+        {
+          id: 'sample_txt_1',
+          type: 'text',
+          zIndex: 1,
+          content: 'Good Vibes Only',
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 22,
+          textColor: '#FFFFFF',
+          textAlign: 'center',
+          fontWeight: 'bold',
+          x: 50,
+          y: 65,
+          width: 50,
+          height: 12,
+          rotation: 0,
+          opacity: 1,
+          isLocked: false,
+        },
+      ],
+      savedAt: 'Hôm nay lúc 10:15',
+      thumbnailText: 'Good Vibes Only',
+    },
+  ]);
+
   // Uploaded images gallery
   readonly uploads = signal<{ id: string; name: string; url: string; dpi: number }[]>([]);
   readonly pendingUpload = signal<{ id: string; name: string; url: string; dpi: number; size: number } | null>(null);
 
-  // Pricing calculation
+  // Pricing calculation (BaseSKU + CaseMaterial + Layer AddOn)
   readonly totalPrice = computed(() => {
-    const basePrice = this.selectedSku()?.price ?? 250000;
-    const addOn = this._layers().length > 3 ? 20000 : 0;
-    return basePrice + addOn;
+    const basePrice = this.selectedSku()?.price ?? 220000;
+    const materialAddOn =
+      this.selectedMaterial() === 'magsafe' ? 70000 : this.selectedMaterial() === 'tough' ? 40000 : 0;
+    const layerAddOn = this._layers().length > 3 ? 20000 : 0;
+    return basePrice + materialAddOn + layerAddOn;
   });
 
   readonly hasLayers = computed(() => this._layers().length > 0);
@@ -116,6 +172,11 @@ export class StudioState {
   readonly requiresModeration = computed(() =>
     this._layers().some((l) => l.type === 'image')
   );
+
+  // --- Material Management ---
+  selectMaterial(material: CaseMaterial): void {
+    this.selectedMaterial.set(material);
+  }
 
   // --- Layer Management ---
   setLayers(layers: CanvasLayer[]): void {
@@ -238,6 +299,34 @@ export class StudioState {
     this._layers.update((layers) =>
       layers.map((l) => (l.id === id ? { ...l, isLocked: !l.isLocked } : l))
     );
+  }
+
+  moveLayerUp(id: string): void {
+    const layers = this._layers();
+    const index = layers.findIndex((l) => l.id === id);
+    if (index < 0 || index >= layers.length - 1) return;
+
+    this.recordHistory();
+    const nextLayers = [...layers];
+    const temp = nextLayers[index];
+    nextLayers[index] = nextLayers[index + 1];
+    nextLayers[index + 1] = temp;
+    const reindexed = nextLayers.map((l, idx) => ({ ...l, zIndex: idx + 1 } as CanvasLayer));
+    this._layers.set(reindexed);
+  }
+
+  moveLayerDown(id: string): void {
+    const layers = this._layers();
+    const index = layers.findIndex((l) => l.id === id);
+    if (index <= 0) return;
+
+    this.recordHistory();
+    const nextLayers = [...layers];
+    const temp = nextLayers[index];
+    nextLayers[index] = nextLayers[index - 1];
+    nextLayers[index - 1] = temp;
+    const reindexed = nextLayers.map((l, idx) => ({ ...l, zIndex: idx + 1 } as CanvasLayer));
+    this._layers.set(reindexed);
   }
 
   removeLayer(id: string): void {

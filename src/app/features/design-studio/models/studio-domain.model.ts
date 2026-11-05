@@ -32,6 +32,44 @@ export interface SafeZoneMask {
   readonly version: number;
 }
 
+export type CaseMaterial = 'snap' | 'tough' | 'magsafe';
+
+export interface CaseMaterialOption {
+  readonly id: CaseMaterial;
+  readonly name: string;
+  readonly label: string;
+  readonly priceAddOn: number;
+  readonly description: string;
+  readonly badgeText: string;
+}
+
+export const CASE_MATERIALS: readonly CaseMaterialOption[] = [
+  {
+    id: 'snap',
+    name: 'Snap Case (Slim)',
+    label: 'Ốp Slim mỏng nhẹ',
+    priceAddOn: 0,
+    description: 'Nhựa Polycarbonate bóng mờ, siêu mỏng nhẹ, giữ nguyên form máy.',
+    badgeText: 'Tiêu chuẩn',
+  },
+  {
+    id: 'tough',
+    name: 'Tough Case (2 Lớp)',
+    label: 'Ốp Chống sốc Tough',
+    priceAddOn: 40000,
+    description: '2 lớp bảo vệ TPU + PC, đệm cao su 4 góc gia cố chống rơi rớt 2 mét.',
+    badgeText: '+40.000đ',
+  },
+  {
+    id: 'magsafe',
+    name: 'MagSafe Clear',
+    label: 'Ốp Trong suốt MagSafe',
+    priceAddOn: 70000,
+    description: 'Viền TPU chống ố vàng tích hợp vòng nam châm từ tính MagSafe chuẩn hít.',
+    badgeText: '+70.000đ',
+  },
+];
+
 export type CaseType = 'snap' | 'tough' | 'clear' | 'magsafe';
 
 export interface BaseSKU {
@@ -57,6 +95,7 @@ export interface PhoneModel {
   readonly printWidthMm: number;
   readonly printHeightMm: number;
   readonly minPrintDpi: number; // default: 150
+  readonly has3dModel?: boolean;
   readonly model3dUrl?: string;
   readonly specs?: readonly string[];
   readonly safeZoneMask: SafeZoneMask;
@@ -80,7 +119,7 @@ export interface Template {
   readonly previewUrl?: string;
   readonly styles: readonly string[]; // slugs of TemplateStyle
   readonly layoutJson: string; // Serialized CanvasLayer structure
-  readonly isEditable: boolean; // FR-DES-10: Only editable templates can be opened in canvas
+  readonly isBlankCanvas?: boolean;
   readonly isActive: boolean;
   readonly trendingScore: number;
   readonly createdAt: string;

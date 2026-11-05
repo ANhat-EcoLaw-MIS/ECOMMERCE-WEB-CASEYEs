@@ -27,7 +27,11 @@ export class DesignStudio {
     { initialValue: this.router.url }
   );
 
-  // 1: Chọn dòng máy | 2: Chọn điểm bắt đầu (templates) | 3: Thiết kế (editor) | 4: Preview & lưu
+  protected readonly isSelectModelPage = computed(() => {
+    return this.currentUrl().includes('/select-model');
+  });
+
+  // 1: Chọn dòng máy | 2: Kho mẫu (templates) | 3: Thiết kế (editor)
   protected readonly currentStep = computed(() => {
     const url = this.currentUrl();
     if (url.includes('/editor')) return 3;
@@ -49,28 +53,5 @@ export class DesignStudio {
 
   protected onRedo(): void {
     this.state.redo();
-  }
-
-  protected onSaveDesign(): void {
-    if (!this.state.hasLayers()) {
-      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi lưu.');
-      return;
-    }
-    this.state.designStatus.set('SAVED');
-    alert('Bản thiết kế đã được lưu an toàn vào mục My Designs của bạn!');
-  }
-
-  protected onAddToCart(): void {
-    if (this.state.designStatus() === 'REJECTED') {
-      alert(
-        'Bản thiết kế này từng bị từ chối kiểm duyệt do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa lại các chi tiết vi phạm trước khi tiến hành đặt mua.'
-      );
-      return;
-    }
-    if (!this.state.hasLayers()) {
-      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi thêm vào giỏ.');
-      return;
-    }
-    this.state.isCartDrawerOpen.set(true);
   }
 }

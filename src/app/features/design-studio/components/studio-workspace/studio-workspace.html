@@ -15,8 +15,8 @@
       @if (draft.draftSavedAt()) { <span class="text-amber-600">· {{ draft.draftSavedAt()! | date:'HH:mm, dd/MM' }}</span> }
     </div>
     <div class="flex gap-2">
-      <button type="button" (click)="draft.restoreDraft()" class="rounded-pill bg-amber-600 px-4 py-1 font-bold text-white hover:bg-amber-700">Khôi phục</button>
-      <button type="button" (click)="draft.dismissDraft()" class="rounded-pill border border-amber-300 px-4 py-1 font-medium text-amber-700 hover:bg-amber-100">Bỏ qua</button>
+      <button type="button" (click)="draft.restoreDraft()" class="rounded-pill bg-amber-600 px-4 py-1 font-bold text-white hover:bg-amber-700 cursor-pointer">Khôi phục</button>
+      <button type="button" (click)="draft.dismissDraft()" class="rounded-pill border border-amber-300 px-4 py-1 font-medium text-amber-700 hover:bg-amber-100 cursor-pointer">Bỏ qua</button>
     </div>
   </div>
 }
@@ -125,7 +125,7 @@
                     <p class="text-[10px] text-ink-soft">~{{ item.dpi }} DPI</p>
                   </div>
                   <button type="button" (click)="reuseImage(item.url, item.name, item.dpi)"
-                    class="rounded-pill border border-line px-2 py-0.5 text-[10px] font-bold text-brand-800 hover:bg-brand-100">Dùng lại</button>
+                    class="rounded-pill border border-line px-2 py-0.5 text-[10px] font-bold text-brand-800 hover:bg-brand-100 cursor-pointer">Dùng lại</button>
                 </div>
               }
             </div>
@@ -134,30 +134,44 @@
       </div>
     }
 
-    <!-- ── Chữ panel ── -->
+    <!-- ── Chữ panel (Real-time Banned Check - Issue 5) ── -->
     @if (state.activeTool() === 'txt') {
       <div class="space-y-3">
         <p class="drawer-section-title">Chỉnh sửa chữ</p>
-        <textarea [value]="textInput()" (input)="textInput.set($any($event.target).value)" rows="3"
-          placeholder="Nhập nội dung chữ..." class="w-full rounded-xl border border-line bg-surface p-2.5 text-xs text-ink outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 resize-none"></textarea>
-        @if (state.bannedKeywordError()) {
-          <div class="flex items-start gap-2 rounded-xl bg-red-50 p-2.5 text-xs text-red-600">
-            <svg class="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <span>{{ state.bannedKeywordError() }}</span>
+        <textarea
+          [value]="textInput()"
+          (input)="onTextInputChange($event)"
+          rows="3"
+          placeholder="Nhập nội dung chữ..."
+          class="w-full rounded-xl border p-2.5 text-xs text-ink outline-none transition resize-none"
+          [class]="bannedInputError() ? 'border-red-400 bg-red-50/30' : 'border-line bg-surface focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20'"
+        ></textarea>
+
+        @if (bannedInputError()) {
+          <div class="flex items-start gap-2 rounded-xl bg-red-50 p-2.5 text-xs text-red-600 animate-fade-in">
+            <svg class="h-4 w-4 shrink-0 mt-0.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span class="font-medium">{{ bannedInputError() }}</span>
           </div>
         }
-        <button type="button" (click)="onApplyText()"
-          class="w-full rounded-pill bg-brand-800 py-2 font-display text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 hover:shadow-glow">
-          Thêm chữ
+
+        <button
+          type="button"
+          (click)="onApplyText()"
+          [disabled]="!textInput().trim() || !!bannedInputError()"
+          class="w-full rounded-pill py-2 font-display text-xs font-bold text-white shadow-soft transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          [style]="!bannedInputError() && textInput().trim() ? 'background: var(--grad-primary)' : 'background: #9ca3af'"
+        >
+          {{ state.selectedLayer()?.type === 'text' ? 'Cập nhật chữ' : 'Thêm chữ' }}
         </button>
+
         <div class="border-t border-line pt-3 space-y-1.5">
           <p class="drawer-section-title">Kiểu chữ gợi ý</p>
           <button type="button" (click)="applyPresetText('TIÊU ĐỀ NỔI BẬT', 30, true)"
-            class="w-full rounded-lg border border-line p-2 text-left font-display text-sm font-extrabold text-ink transition hover:border-brand-400 hover:bg-brand-50">TIÊU ĐỀ NỔI BẬT</button>
+            class="w-full rounded-lg border border-line p-2 text-left font-display text-sm font-extrabold text-ink transition hover:border-brand-400 hover:bg-brand-50 cursor-pointer">TIÊU ĐỀ NỔI BẬT</button>
           <button type="button" (click)="applyPresetText('Phụ đề thanh lịch', 20, false)"
-            class="w-full rounded-lg border border-line p-2 text-left font-body text-sm font-semibold text-ink transition hover:border-brand-400 hover:bg-brand-50">Phụ đề thanh lịch</button>
+            class="w-full rounded-lg border border-line p-2 text-left font-body text-sm font-semibold text-ink transition hover:border-brand-400 hover:bg-brand-50 cursor-pointer">Phụ đề thanh lịch</button>
           <button type="button" (click)="applyPresetText('Nội dung văn bản nhỏ xinh', 16, false)"
-            class="w-full rounded-lg border border-line p-2 text-left font-body text-xs text-ink-soft transition hover:border-brand-400 hover:bg-brand-50">Nội dung văn bản nhỏ xinh</button>
+            class="w-full rounded-lg border border-line p-2 text-left font-body text-xs text-ink-soft transition hover:border-brand-400 hover:bg-brand-50 cursor-pointer">Nội dung văn bản nhỏ xinh</button>
         </div>
       </div>
     }
@@ -169,7 +183,7 @@
         <div class="grid grid-cols-4 gap-1.5">
           @for (s of stickers; track s) {
             <button type="button" (click)="onAddSticker(s)"
-              class="flex aspect-square items-center justify-center rounded-xl border border-line bg-surface text-xl transition-all hover:scale-110 hover:border-brand-400 hover:bg-brand-100">{{ s }}</button>
+              class="flex aspect-square items-center justify-center rounded-xl border border-line bg-surface text-xl transition-all hover:scale-110 hover:border-brand-400 hover:bg-brand-100 cursor-pointer">{{ s }}</button>
           }
         </div>
       </div>
@@ -182,44 +196,74 @@
         <div class="grid grid-cols-4 gap-2">
           @for (bg of bgPresets; track bg) {
             <button type="button" (click)="onSelectBg(bg)"
-              class="aspect-square rounded-xl border border-line shadow-xs transition-transform hover:scale-105 hover:ring-2 hover:ring-brand-400"
+              class="aspect-square rounded-xl border border-line shadow-xs transition-transform hover:scale-105 hover:ring-2 hover:ring-brand-400 cursor-pointer"
               [style.background]="bg"></button>
           }
         </div>
       </div>
     }
 
-    <!-- ── Layers / Template panel ── -->
+    <!-- ── Layers Panel with Move Up / Down (Bug 6 Resolved) ── -->
     @if (state.activeTool() === 'tpl') {
       <div class="space-y-3">
-        <p class="drawer-section-title">Layers</p>
-        <div class="space-y-1.5 max-h-64 overflow-y-auto">
-          @for (layer of state.layers(); track layer.id) {
+        <div class="flex items-center justify-between">
+          <p class="drawer-section-title">Danh sách Layers</p>
+          <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">
+            {{ state.layers().length }} lớp
+          </span>
+        </div>
+
+        <div class="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
+          @for (layer of state.layers(); track layer.id; let idx = $index) {
             <div (click)="state.selectLayer(layer.id)"
-              class="flex items-center gap-2 rounded-xl border p-2 text-xs cursor-pointer transition-all"
+              class="flex items-center gap-1.5 rounded-xl border p-2 text-xs cursor-pointer transition-all"
               [class]="state.selectedLayerId() === layer.id
-                ? 'border-brand-800 bg-brand-100 font-bold text-brand-900'
+                ? 'border-brand-800 bg-brand-100 font-bold text-brand-900 shadow-xs'
                 : 'border-line bg-surface-alt text-ink hover:bg-brand-50'">
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface text-base border border-line">
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface text-sm border border-line">
                 {{ layer.type === 'text' ? 'T' : layer.type === 'sticker' ? layer.name : '🖼' }}
               </div>
               <span class="truncate flex-1">
                 {{ layer.type === 'text' ? layer.content : layer.type === 'sticker' ? 'Sticker ' + layer.name : 'Ảnh tải lên' }}
               </span>
+
+              <!-- Move Up / Down Controls (Bug 6) -->
+              <div class="flex items-center gap-0.5 shrink-0" (click)="$event.stopPropagation()">
+                <button
+                  type="button"
+                  (click)="onMoveLayerUp(layer.id, $event)"
+                  [disabled]="idx === state.layers().length - 1"
+                  class="rounded p-1 text-[10px] text-ink-soft hover:bg-white hover:text-brand-800 disabled:opacity-20 cursor-pointer"
+                  title="Đưa lên trên (Move Up)"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  (click)="onMoveLayerDown(layer.id, $event)"
+                  [disabled]="idx === 0"
+                  class="rounded p-1 text-[10px] text-ink-soft hover:bg-white hover:text-brand-800 disabled:opacity-20 cursor-pointer"
+                  title="Hạ xuống dưới (Move Down)"
+                >
+                  ▼
+                </button>
+              </div>
+
               <button type="button" (click)="$event.stopPropagation(); state.toggleLayerLock(layer.id)"
-                class="shrink-0 p-0.5 text-ink-soft hover:text-ink">
+                class="shrink-0 p-1 text-ink-soft hover:text-ink cursor-pointer">
                 {{ layer.isLocked ? '🔒' : '🔓' }}
               </button>
             </div>
           }
           <div class="flex items-center gap-2 rounded-xl border border-line bg-surface-alt/50 p-2 text-xs text-ink-soft">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-line bg-surface">🏠</div>
+            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-surface">🏠</div>
             <span>Phôi ốp (Nền)</span>
             <span class="ml-auto text-[10px]">Cố định</span>
           </div>
         </div>
+
         <a routerLink="/design-studio/templates"
-          class="block rounded-xl border border-brand-400 bg-brand-50 p-2.5 text-center text-xs font-bold text-brand-800 hover:bg-brand-100">
+          class="block rounded-xl border border-brand-400 bg-brand-50 p-2.5 text-center text-xs font-bold text-brand-800 hover:bg-brand-100 transition-colors">
           Duyệt kho mẫu →
         </a>
       </div>
@@ -228,27 +272,31 @@
   </aside>
 
   <!-- ───────────────────────────────────
-       COL 3 · Canvas Stage
+       COL 3 · Canvas Stage (Bug 1 & Issue 10 Zoom Resolved)
   ─────────────────────────────────────── -->
-  <main class="canvas-stage" (click)="onStageClick()"
-    (pointermove)="onCanvasPointerMove($event)" (pointerup)="onCanvasPointerUp()">
+  <main
+    class="canvas-stage"
+    (click)="onStageClick($event)"
+    (wheel)="onStageWheel($event)"
+    (pointermove)="onCanvasPointerMove($event)"
+    (pointerup)="onCanvasPointerUp()"
+  >
 
     <!-- Canvas top toolbar: design name + zoom -->
     <div class="absolute top-3 left-4 right-4 z-30 flex items-center justify-between">
       <!-- Design name editable -->
       <div class="flex items-center gap-1.5 rounded-xl bg-white/80 px-3 py-1.5 shadow-soft backdrop-blur-sm border border-line">
         <span class="text-xs font-bold text-ink">{{ state.designName() }}</span>
-        <button class="text-ink-soft hover:text-brand-800 transition-colors">
+        <button type="button" (click)="onSaveDesign()" class="text-ink-soft hover:text-brand-800 transition-colors cursor-pointer" title="Đổi tên">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         </button>
-        <span class="ml-1 rounded bg-line px-1.5 py-0.5 text-[9px] font-black text-ink-soft">F6</span>
       </div>
 
-      <!-- Zoom control -->
+      <!-- Zoom control (Touchpad or buttons) -->
       <div class="flex items-center gap-1 rounded-full border border-line bg-white/80 px-2 py-1 shadow-soft backdrop-blur-sm">
-        <button type="button" (click)="state.zoomOut()" class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center">−</button>
+        <button type="button" (click)="state.zoomOut()" class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center cursor-pointer">−</button>
         <span class="min-w-[36px] text-center font-mono text-xs font-bold text-ink">{{ state.zoom() }}%</span>
-        <button type="button" (click)="state.zoomIn()" class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center">+</button>
+        <button type="button" (click)="state.zoomIn()" class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center cursor-pointer">+</button>
       </div>
     </div>
 
@@ -272,10 +320,10 @@
           <input type="range" min="10" max="100" [value]="sel.opacity * 100" (input)="updateProperty('opacity', $event)" class="w-16 accent-brand-800"/>
         </label>
         <div class="h-4 w-px bg-line"></div>
-        <button type="button" (click)="state.duplicateLayer(sel.id)" class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800" title="Nhân đôi">
+        <button type="button" (click)="state.duplicateLayer(sel.id)" class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer" title="Nhân đôi">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
         </button>
-        <button type="button" (click)="state.removeLayer(sel.id)" class="rounded-lg p-1 text-red-500 hover:bg-red-50" title="Xóa">
+        <button type="button" (click)="state.removeLayer(sel.id)" class="rounded-lg p-1 text-red-500 hover:bg-red-50 cursor-pointer" title="Xóa">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
         </button>
       </div>
@@ -286,32 +334,80 @@
       <div id="case-viewport" class="relative h-[620px] w-[300px] overflow-hidden rounded-[46px] shadow-lift ring-4 ring-[#1f2230]"
         [style.background]="state.caseBg()">
 
-        <!-- Camera bump -->
-        <div class="pointer-events-none absolute z-20 rounded-[28px] bg-[#10121a] p-2 shadow-inner ring-1 ring-white/20 backdrop-blur-md"
-          [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
-          [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
-          <div class="grid h-full w-full grid-cols-2 gap-2 place-items-center">
-            <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
-            <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
-            <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+        <!-- ── Dynamic Camera Cutout per Model (Issue 6) ── -->
+        @if (state.selectedModel().id === 'galaxy-s24') {
+          <!-- Samsung Galaxy S24: 3 distinct vertical camera circles -->
+          <div class="pointer-events-none absolute z-20 flex flex-col gap-2.5 items-center p-1.5"
+            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent">
+            <div class="h-8 w-8 rounded-full bg-[#111] ring-2 ring-[#4a4845] flex items-center justify-center shadow-lg">
+              <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
+            </div>
+            <div class="h-8 w-8 rounded-full bg-[#111] ring-2 ring-[#4a4845] flex items-center justify-center shadow-lg">
+              <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
+            </div>
+            <div class="h-8 w-8 rounded-full bg-[#111] ring-2 ring-[#4a4845] flex items-center justify-center shadow-lg">
+              <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
+            </div>
           </div>
-        </div>
+        } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
+          <!-- Xiaomi 14 Ultra: Large Leica circular camera bump -->
+          <div class="pointer-events-none absolute z-20 rounded-full bg-[#18181b] ring-2 ring-amber-500/30 p-2 shadow-2xl flex items-center justify-center"
+            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
+            <div class="grid grid-cols-2 gap-2 place-items-center">
+              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
+              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
+              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
+              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
+            </div>
+          </div>
+        } @else {
+          <!-- Apple iPhone: Squircle bump with 3 lenses -->
+          <div class="pointer-events-none absolute z-20 rounded-[28px] bg-[#10121a] p-2 shadow-inner ring-1 ring-white/20 backdrop-blur-md"
+            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
+            <div class="grid h-full w-full grid-cols-2 gap-2 place-items-center">
+              <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+              <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+              <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+            </div>
+          </div>
+        }
 
-        <!-- Safe zone -->
+        <!-- ── Material Visual Overlay (Issue 9) ── -->
+        @if (state.selectedMaterial() === 'tough') {
+          <!-- Tough Case 4 Corner TPU Bumpers -->
+          <div class="pointer-events-none absolute -top-1 -left-1 h-9 w-9 rounded-tl-[48px] rounded-br-xl bg-[#0A0A0A] ring-1 ring-white/25 shadow-md"></div>
+          <div class="pointer-events-none absolute -top-1 -right-1 h-9 w-9 rounded-tr-[48px] rounded-bl-xl bg-[#0A0A0A] ring-1 ring-white/25 shadow-md"></div>
+          <div class="pointer-events-none absolute -bottom-1 -left-1 h-9 w-9 rounded-bl-[48px] rounded-tr-xl bg-[#0A0A0A] ring-1 ring-white/25 shadow-md"></div>
+          <div class="pointer-events-none absolute -bottom-1 -right-1 h-9 w-9 rounded-br-[48px] rounded-tl-xl bg-[#0A0A0A] ring-1 ring-white/25 shadow-md"></div>
+        }
+        @if (state.selectedMaterial() === 'magsafe') {
+          <!-- MagSafe Clear Magnetic Ring -->
+          <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center opacity-80 z-10">
+            <div class="h-32 w-32 rounded-full border-[3.5px] border-white/70 shadow-[0_0_15px_rgba(255,255,255,0.35)]"></div>
+            <div class="h-6 w-2 rounded-full bg-white/70 -mt-1 shadow-xs"></div>
+          </div>
+        }
+
+        <!-- Safe zone boundary -->
         <div class="pointer-events-none absolute inset-[5%] z-10 rounded-[34px] border-2 border-dashed transition-colors"
           [class]="state.safeZoneAlert() ? 'border-red-500 animate-pulse bg-red-500/10' : 'border-emerald-500/60'"></div>
 
-        <!-- Dynamic layers -->
+        <!-- ── Dynamic layers (Bug 1 Fix: stopPropagation on click prevents deselecting) ── -->
         @for (layer of state.layers(); track layer.id) {
           @if (!layer.isLocked) {
-            <div (pointerdown)="onElementPointerDown($event, layer.id)"
+            <div
+              (pointerdown)="onElementPointerDown($event, layer.id)"
+              (click)="$event.stopPropagation()"
               class="absolute cursor-move select-none transition-transform"
               [style.left.%]="layer.x" [style.top.%]="layer.y"
               [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
               [style.opacity]="layer.opacity"
               [class.ring-2]="state.selectedLayerId() === layer.id"
               [class.ring-brand-400]="state.selectedLayerId() === layer.id"
-              [class.ring-red-500]="state.designStatus() === 'REJECTED' && layer.type === 'image'">
+              [class.ring-red-500]="state.designStatus() === 'REJECTED' && layer.type === 'image'"
+            >
               @if (layer.type === 'text') {
                 <span class="block whitespace-nowrap px-2 py-1 leading-tight"
                   [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
@@ -344,38 +440,69 @@
   </main>
 
   <!-- ───────────────────────────────────
-       COL 4 · 3D Preview (inline)
+       COL 4 · 3D Preview (Bug 2 & Issue 7 Depth Extrusion)
   ─────────────────────────────────────── -->
   <aside class="preview-panel border-x border-line">
     <div class="preview-panel-header">
-      <span class="text-xs font-bold text-ink">Preview 3D</span>
+      <span class="text-xs font-bold text-ink">Preview 3D (Xoay 360°)</span>
       <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">F16</span>
     </div>
 
     <!-- 3D Orbit stage -->
-    <div (pointerdown)="onOrbitPointerDown($event)" (pointermove)="onOrbitPointerMove($event)" (pointerup)="onOrbitPointerUp()"
+    <div
+      (pointerdown)="onOrbitPointerDown($event)"
+      (pointermove)="onOrbitPointerMove($event)"
+      (pointerup)="onOrbitPointerUp()"
       class="flex items-center justify-center cursor-grab active:cursor-grabbing select-none overflow-hidden rounded-2xl mx-3 mt-2"
-      style="height: 260px; background: radial-gradient(circle at 50% 40%, #ece6fd 0%, #f6f3fe 100%); perspective: 1000px">
-      <div class="relative w-[108px] h-[220px] rounded-[28px] shadow-2xl transition-transform"
+      style="height: 260px; background: radial-gradient(circle at 50% 40%, #ece6fd 0%, #f6f3fe 100%); perspective: 1000px"
+    >
+      <!-- 3D Extruded Case with Physical Thickness (Bug 2 Fix) -->
+      <div
+        class="relative w-[112px] h-[224px] rounded-[26px] shadow-2xl transition-transform"
         [style.transform]="'scale(' + orbitZoom() + ') rotateX(' + orbitRx() + 'deg) rotateY(' + orbitRy() + 'deg)'"
-        [style.background]="state.caseBg()" style="transform-style: preserve-3d">
-        <div class="pointer-events-none absolute inset-0 rounded-[28px] bg-linear-115 from-white/35 via-transparent to-white/10"></div>
+        [style.background]="state.caseBg()"
+        style="transform-style: preserve-3d;"
+      >
+        <!-- Front Case Bevel with thickness -->
+        <div class="pointer-events-none absolute inset-0 rounded-[26px] border border-white/40 bg-linear-115 from-white/30 via-transparent to-white/10"
+             style="transform: translateZ(6px);"></div>
+
+        <!-- Back Edge Shadow (Simulating physical bumper depth) -->
+        <div class="pointer-events-none absolute inset-0 rounded-[26px] bg-black/25 shadow-2xl"
+             style="transform: translateZ(-6px);"></div>
+
+        <!-- 3D Camera Bump -->
         <div class="absolute rounded-[12px] bg-[#10121a] p-1 shadow-lg"
           [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
           [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent"
-          style="transform: translateZ(5px)">
+          style="transform: translateZ(8px);">
           <div class="grid h-full w-full grid-cols-2 gap-1 place-items-center">
             <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
             <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
             <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
           </div>
         </div>
+
+        <!-- MagSafe Ring in 3D -->
+        @if (state.selectedMaterial() === 'magsafe') {
+          <div class="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center opacity-70"
+               style="transform: translateZ(6px);">
+            <div class="h-14 w-14 rounded-full border-2 border-white/60"></div>
+          </div>
+        }
+
+        <!-- 3D Text Preview -->
         @for (layer of state.layers(); track layer.id) {
           @if (layer.type === 'text') {
             <div class="absolute -translate-x-1/2 -translate-y-1/2 truncate font-bold text-center"
               [style.left.%]="layer.x" [style.top.%]="layer.y"
               [style.color]="layer.textColor" [style.fontFamily]="layer.fontFamily"
-              style="transform: translateZ(2px); font-size: 9px">{{ layer.content }}</div>
+              style="transform: translateZ(7px); font-size: 8px">{{ layer.content }}</div>
+          }
+          @if (layer.type === 'sticker') {
+            <div class="absolute -translate-x-1/2 -translate-y-1/2 text-center text-sm"
+              [style.left.%]="layer.x" [style.top.%]="layer.y"
+              style="transform: translateZ(7px);">{{ layer.name }}</div>
           }
         }
       </div>
@@ -383,11 +510,11 @@
 
     <!-- 360° label + reset -->
     <div class="mt-1 flex items-center justify-center gap-3 px-3">
-      <button type="button" class="flex items-center gap-1 rounded-full border border-line bg-white px-3 py-1 text-[10px] font-bold text-ink-soft shadow-soft hover:border-brand-400 hover:text-brand-800">
+      <button type="button" class="flex items-center gap-1 rounded-full border border-line bg-white px-3 py-1 text-[10px] font-bold text-ink-soft shadow-soft">
         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-        360°
+        Giữ chuột xoay 360°
       </button>
-      <button type="button" (click)="reset3dView()" class="text-[10px] text-brand-800 font-bold hover:underline">Đặt lại</button>
+      <button type="button" (click)="reset3dView()" class="text-[10px] text-brand-800 font-bold hover:underline cursor-pointer">Đặt lại</button>
     </div>
 
     <!-- Case color swatches row -->
@@ -396,148 +523,105 @@
       <div class="flex flex-wrap gap-1.5">
         @for (bg of bgPresets.slice(0, 6); track bg) {
           <button type="button" (click)="onSelectBg(bg)"
-            class="h-6 w-6 rounded-full border-2 transition-all hover:scale-110"
+            class="h-6 w-6 rounded-full border-2 transition-all hover:scale-110 cursor-pointer"
             [class]="state.caseBg() === bg ? 'border-brand-800 ring-2 ring-brand-400/40' : 'border-line'"
             [style.background]="bg"></button>
-        }
-      </div>
-    </div>
-
-    <!-- Divider -->
-    <div class="my-3 border-t border-line mx-3"></div>
-
-    <!-- Below: Bộ sưu tập / style label -->
-    <div class="mx-3">
-      <p class="text-[10px] font-bold text-ink-soft uppercase tracking-wider mb-1.5">Bộ sưu tập</p>
-      <div class="flex gap-1.5 flex-wrap">
-        @for (s of ['Pastel Dream', 'Cyberpunk', 'Anime', 'Zen']; track s) {
-          <span class="rounded-pill border border-line bg-surface px-2 py-0.5 text-[10px] font-medium text-ink-soft cursor-pointer hover:border-brand-400 hover:text-brand-800 transition-all">{{ s }}</span>
         }
       </div>
     </div>
   </aside>
 
   <!-- ───────────────────────────────────
-       COL 5 · Inspector (Thuộc tính)
+       COL 5 · Properties Inspector
   ─────────────────────────────────────── -->
   <aside class="inspector-panel">
-    <div class="preview-panel-header">
+    <div class="inspector-header">
       <span class="text-xs font-bold text-ink">Thuộc tính</span>
-      <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">F14</span>
-      <button type="button" class="ml-auto text-ink-soft hover:text-ink">
-        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
+      <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">F4/F5</span>
     </div>
 
-    <!-- Tabs: Văn bản | Hình ảnh | Sticker -->
-    <div class="mx-3 mt-3 flex rounded-xl border border-line bg-surface-alt p-0.5">
-      @for (tab of ['Văn bản', 'Hình ảnh', 'Sticker']; track tab; let i = $index) {
-        <button type="button" (click)="selectTool(i === 0 ? 'txt' : i === 1 ? 'img' : 'stk')"
-          class="flex-1 rounded-lg py-1.5 text-[10px] font-bold transition-all"
-          [class]="(i === 0 && state.activeTool() === 'txt') || (i === 1 && state.activeTool() === 'img') || (i === 2 && state.activeTool() === 'stk')
-            ? 'bg-white shadow-soft text-ink'
-            : 'text-ink-soft'">{{ tab }}</button>
-      }
-    </div>
-
-    <div class="mx-3 mt-3 space-y-3">
+    <div class="space-y-3 p-3 text-xs">
       @if (state.selectedLayer(); as sel) {
-        <!-- Font -->
+
+        <!-- Type badge -->
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-ink">
+            {{ sel.type === 'text' ? 'Văn bản' : sel.type === 'sticker' ? 'Sticker' : 'Hình ảnh' }}
+          </span>
+          <span class="rounded bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-800 uppercase">{{ sel.type }}</span>
+        </div>
+
+        <!-- Position sliders (X, Y) -->
+        <div>
+          <label class="insp-label">Vị trí (X: {{ sel.x }}%, Y: {{ sel.y }}%)</label>
+          <div class="grid grid-cols-2 gap-2 mt-1">
+            <input type="range" min="10" max="90" [value]="sel.x" (input)="updateProperty('x', $event)" class="accent-brand-800"/>
+            <input type="range" min="10" max="90" [value]="sel.y" (input)="updateProperty('y', $event)" class="accent-brand-800"/>
+          </div>
+        </div>
+
+        <!-- Opacity slider -->
+        <div>
+          <label class="insp-label">Độ mờ đục ({{ (sel.opacity * 100) | number:'1.0-0' }}%)</label>
+          <input type="range" min="10" max="100" [value]="sel.opacity * 100" (input)="updateProperty('opacity', $event)" class="w-full accent-brand-800 mt-1"/>
+        </div>
+
         @if (sel.type === 'text') {
+          <!-- Font family -->
           <div>
-            <label class="insp-label">Font</label>
+            <label class="insp-label">Phông chữ</label>
             <select [value]="sel.fontFamily" (change)="updateProperty('fontFamily', $event)"
-              class="w-full rounded-xl border border-line bg-surface px-2.5 py-2 text-xs text-ink outline-none focus:border-brand-400">
+              class="w-full rounded-lg border border-line bg-surface p-1.5 text-xs text-ink outline-none mt-1">
               @for (f of fonts; track f) { <option [value]="f">{{ f }}</option> }
             </select>
           </div>
 
-          <!-- Size -->
-          <div>
-            <label class="insp-label">Size</label>
-            <input type="number" min="12" max="120" [value]="sel.fontSize" (input)="updateProperty('fontSize', $event)"
-              class="w-full rounded-xl border border-line bg-surface px-2.5 py-2 text-xs text-ink outline-none focus:border-brand-400"/>
-          </div>
-
-          <!-- Color -->
-          <div>
-            <label class="insp-label">Color</label>
-            <div class="flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
-              <input type="color" [value]="sel.textColor" (input)="updateProperty('textColor', $event)"
-                class="h-7 w-7 cursor-pointer rounded-lg border-0 p-0"/>
-              <span class="font-mono text-xs text-ink uppercase">{{ sel.textColor }}</span>
-              <!-- Simple gradient swatch strip (decorative) -->
-              <div class="ml-auto h-6 w-24 rounded-lg" style="background: linear-gradient(to right, #ff0000, #ff9900, #ffff00, #00ff00, #00ffff, #0000ff, #9900ff)"></div>
-            </div>
-          </div>
-        }
-
-        <!-- Opacity -->
-        <div>
-          <div class="flex items-center justify-between">
-            <label class="insp-label">Opacity</label>
-            <span class="text-[10px] font-bold text-ink">{{ (sel.opacity * 100) | number:'1.0-0' }}%</span>
-          </div>
-          <input type="range" min="10" max="100" [value]="sel.opacity * 100" (input)="updateProperty('opacity', $event)"
-            class="w-full accent-brand-800 mt-1"/>
-        </div>
-
-        <!-- Position (X/Y) -->
-        <div>
-          <label class="insp-label">Position</label>
+          <!-- Font size & Color -->
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-[9px] text-ink-soft">X (%)</label>
-              <input type="number" [value]="sel.x" (input)="updateProperty('x', $event)"
-                class="w-full rounded-xl border border-line bg-surface px-2 py-1.5 text-xs text-ink outline-none focus:border-brand-400"/>
+              <label class="insp-label">Cỡ chữ</label>
+              <input type="number" min="12" max="100" [value]="sel.fontSize" (input)="updateProperty('fontSize', $event)"
+                class="w-full rounded-lg border border-line bg-surface p-1.5 text-xs text-ink mt-1"/>
             </div>
             <div>
-              <label class="text-[9px] text-ink-soft">Y (%)</label>
-              <input type="number" [value]="sel.y" (input)="updateProperty('y', $event)"
-                class="w-full rounded-xl border border-line bg-surface px-2 py-1.5 text-xs text-ink outline-none focus:border-brand-400"/>
-            </div>
-          </div>
-        </div>
-
-        @if (sel.type === 'text') {
-          <!-- Padding presets -->
-          <div>
-            <label class="insp-label">Padding</label>
-            <div class="flex gap-1.5">
-              @for (pad of [0,4,8,12,16,20]; track pad) {
-                <button type="button"
-                  class="flex h-7 w-7 items-center justify-center rounded-lg border border-line bg-surface text-[10px] font-bold text-ink-soft hover:border-brand-400 hover:text-brand-800 transition-all">{{ pad }}</button>
-              }
-            </div>
-          </div>
-
-          <!-- Style presets (Aa options) -->
-          <div>
-            <div class="flex items-center justify-between">
-              <label class="insp-label">Style</label>
-              <span class="rounded bg-brand-100 px-1 py-0.5 text-[9px] font-black text-brand-800">F5s</span>
-            </div>
-            <div class="flex gap-1.5 mt-1">
-              <button type="button" (click)="applyPresetText(sel.content, 24, true)"
-                class="flex-1 rounded-lg border border-line py-2 font-display text-sm font-extrabold text-ink hover:border-brand-400 hover:bg-brand-50 transition-all">Aa</button>
-              <button type="button" (click)="applyPresetText(sel.content, 20, false)"
-                class="flex-1 rounded-lg border border-line py-2 font-body text-sm font-semibold text-ink hover:border-brand-400 hover:bg-brand-50 transition-all">Aa</button>
-              <button type="button" (click)="applyPresetText(sel.content, 16, false)"
-                class="flex-1 rounded-lg border border-line py-2 font-body text-xs italic text-ink-soft hover:border-brand-400 hover:bg-brand-50 transition-all">Aa</button>
+              <label class="insp-label">Màu chữ</label>
+              <input type="color" [value]="sel.textColor" (input)="updateProperty('textColor', $event)"
+                class="w-full h-8 rounded-lg border border-line p-0.5 cursor-pointer mt-1"/>
             </div>
           </div>
         }
 
         <!-- Duplicate & Delete -->
-        <div class="flex gap-2 pt-1 border-t border-line">
+        <div class="flex gap-2 pt-2 border-t border-line">
           <button type="button" (click)="state.duplicateLayer(sel.id)"
-            class="flex-1 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-ink hover:bg-brand-50 transition-all">Nhân đôi</button>
+            class="flex-1 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-ink hover:bg-brand-50 transition-all cursor-pointer">Nhân đôi</button>
           <button type="button" (click)="state.removeLayer(sel.id)"
-            class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100 transition-all">Xóa</button>
+            class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer">Xóa</button>
         </div>
 
       } @else {
-        <p class="text-[11px] text-ink-soft leading-relaxed">Chọn một phần tử trên Canvas để xem và chỉnh thuộc tính.</p>
+        <!-- When no layer selected: show Material Selector in Inspector -->
+        <div class="space-y-3">
+          <p class="drawer-section-title">Chất liệu ốp lưng (Issue 9)</p>
+          <div class="space-y-2">
+            @for (mat of caseMaterials; track mat.id) {
+              <div
+                (click)="onSelectMaterial(mat.id)"
+                class="rounded-xl border p-2.5 cursor-pointer transition-all"
+                [class]="state.selectedMaterial() === mat.id
+                  ? 'border-brand-800 bg-brand-50/70 shadow-xs ring-1 ring-brand-400'
+                  : 'border-line bg-surface hover:bg-white'"
+              >
+                <div class="flex items-center justify-between font-bold text-ink">
+                  <span>{{ mat.label }}</span>
+                  <span class="rounded bg-brand-100 px-1.5 py-0.2 text-[9px] text-brand-800">{{ mat.badgeText }}</span>
+                </div>
+                <p class="mt-1 text-[10px] text-ink-soft leading-relaxed">{{ mat.description }}</p>
+              </div>
+            }
+          </div>
+          <p class="text-[11px] text-ink-soft leading-relaxed pt-2">💡 Bấm vào một phần tử trên Canvas để điều chỉnh vị trí và phông chữ.</p>
+        </div>
       }
     </div>
   </aside>
@@ -545,51 +629,123 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     BOTTOM ACTION BAR (Full-width, fixed below grid)
+     BOTTOM ACTION BAR (Issue 9, 14 & Bug 7 Resolved)
 ═══════════════════════════════════════════════ -->
 <div class="studio-bottom-bar">
-  <!-- Left: Model info -->
-  <div class="flex items-center gap-3">
+  <!-- Left: Model info & Material Selector -->
+  <div class="flex flex-wrap items-center gap-3">
     <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     </div>
     <div>
       <p class="text-xs font-bold text-ink">Ốp lưng {{ state.selectedModel().name }}</p>
-      <p class="text-[10px] text-ink-soft">{{ state.totalPrice().toLocaleString('vi-VN') }}đ · Phôi {{ state.selectedSku().colorName }}</p>
+      <p class="text-[10px] text-ink-soft">
+        {{ state.totalPrice().toLocaleString('vi-VN') }}đ ·
+        <span class="font-semibold text-brand-800">
+          {{ state.selectedMaterial() === 'magsafe' ? 'MagSafe Trong suốt' : state.selectedMaterial() === 'tough' ? 'Chống sốc Tough' : 'Slim Tiêu chuẩn' }}
+        </span>
+      </p>
+    </div>
+
+    <!-- Quick Material Selector Pills (Issue 9) -->
+    <div class="hidden sm:flex items-center gap-1 rounded-pill border border-line bg-surface p-1">
+      @for (mat of caseMaterials; track mat.id) {
+        <button
+          type="button"
+          (click)="onSelectMaterial(mat.id)"
+          class="rounded-pill px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer"
+          [class]="state.selectedMaterial() === mat.id
+            ? 'bg-brand-800 text-white shadow-soft'
+            : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
+          [title]="mat.description"
+        >
+          {{ mat.name }}
+          <span class="text-[9px] opacity-80">({{ mat.badgeText }})</span>
+        </button>
+      }
     </div>
   </div>
 
-  <!-- Center: action buttons -->
+  <!-- Center & Right action buttons -->
   <div class="flex items-center gap-2">
-    <button type="button"
-      class="inline-flex items-center gap-1.5 rounded-pill border border-line bg-white px-4 py-2 text-xs font-bold text-ink shadow-soft transition-all hover:border-brand-400 hover:text-brand-800">
-      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
-      Tạo bộ đồng bộ
-      <span class="rounded bg-line px-1.5 py-0.5 text-[9px] font-black text-ink-soft">F16</span>
+    <!-- Save Design Button (Issue 14: Dynamic auto-save label) -->
+    <button
+      type="button"
+      (click)="onSaveDesign()"
+      class="inline-flex flex-col items-center justify-center rounded-pill border border-brand-400/60 bg-brand-50 px-4 py-1.5 text-xs font-bold text-brand-800 shadow-soft transition-all hover:bg-brand-100 cursor-pointer"
+    >
+      <div class="flex items-center gap-1.5">
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+        </svg>
+        <span>Lưu thiết kế</span>
+      </div>
+      @if (state.lastSavedTime()) {
+        <span class="text-[9px] font-normal text-brand-600">✓ Đã tự động lưu lúc {{ state.lastSavedTime() }}</span>
+      }
     </button>
-    <button type="button"
-      class="inline-flex items-center gap-1.5 rounded-pill border border-brand-400/60 bg-brand-50 px-4 py-2 text-xs font-bold text-brand-800 shadow-soft transition-all hover:bg-brand-100">
-      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-      Lưu thiết kế
-      <span class="rounded bg-brand-200 px-1.5 py-0.5 text-[9px] font-black text-brand-900">F6</span>
+
+    <!-- Add to Cart (Bug 7: Toast only, no drawer popup) -->
+    <button
+      type="button"
+      (click)="onAddToCart()"
+      class="inline-flex items-center gap-2 rounded-pill px-5 py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow cursor-pointer"
+      style="background: var(--grad-primary)"
+    >
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+      <span>Thêm vào giỏ</span>
+      <span>•</span>
+      <span>{{ state.totalPrice().toLocaleString('vi-VN') }}đ</span>
     </button>
   </div>
-
-  <!-- Right: Add to cart -->
-  <button type="button" (click)="openCart()"
-    class="inline-flex items-center gap-2 rounded-pill px-5 py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow"
-    style="background: var(--grad-primary)">
-    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-    Thêm vào giỏ
-    <span class="rounded bg-white/20 px-1.5 py-0.5 text-[9px] font-black">F20</span>
-  </button>
 </div>
 
 <!-- ═══════════════════════════════════════════════
-     MODALS (DPI, Consent, Cart Drawer)
+     TOAST NOTIFICATION (Bug 7 & Issue 14)
 ═══════════════════════════════════════════════ -->
+@if (cartToast()) {
+  <div class="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-full border border-brand-400 bg-brand-900 px-5 py-2.5 text-xs font-bold text-white shadow-lift animate-fade-in backdrop-blur-md">
+    <span>{{ cartToast() }}</span>
+    <a routerLink="/cart" class="rounded-pill bg-white px-3 py-1 text-[11px] font-black text-brand-900 transition hover:bg-brand-100">
+      Xem giỏ hàng →
+    </a>
+    <button type="button" (click)="dismissToast()" class="text-white/60 hover:text-white cursor-pointer">✕</button>
+  </div>
+}
 
-<!-- DPI Warning Modal -->
+<!-- ═══════════════════════════════════════════════
+     FIRST-SAVE NAMING MODAL (Issue 14)
+═══════════════════════════════════════════════ -->
+@if (showNamingModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div class="w-full max-w-sm rounded-card border border-line bg-surface-alt p-6 shadow-lift text-center">
+      <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-800">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      </div>
+      <h3 class="font-display text-base font-bold text-ink">Đặt tên cho bản thiết kế</h3>
+      <p class="mt-1 text-xs text-ink-soft">Đặt tên để dễ dàng tìm kiếm và vẽ tiếp trong mục My Designs.</p>
+      <input
+        type="text"
+        [value]="namingInput()"
+        (input)="namingInput.set($any($event.target).value)"
+        class="mt-4 w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-bold text-ink focus:border-brand-400 focus:outline-none"
+        placeholder="Ví dụ: Ốp hoa anh đào mùa xuân"
+      />
+      <div class="mt-5 flex gap-2">
+        <button type="button" (click)="closeNamingModal()" class="flex-1 rounded-pill border border-line py-2 text-xs font-semibold text-ink hover:bg-surface cursor-pointer">Hủy</button>
+        <button type="button" (click)="confirmNaming()" class="flex-1 rounded-pill bg-brand-800 py-2 text-xs font-bold text-white shadow-soft hover:bg-brand-600 cursor-pointer">Lưu thiết kế</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════
+     DPI Warning Modal & Consent Modal
+═══════════════════════════════════════════════ -->
 @if (state.isLowResModalOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
     <div class="w-full max-w-sm rounded-card border border-line bg-surface-alt p-6 shadow-lift text-center">
@@ -599,14 +755,13 @@
       <h3 class="font-display text-base font-bold text-ink">Ảnh có thể in mờ</h3>
       <p class="mt-2 text-xs text-ink-soft">Mật độ điểm ảnh chỉ đạt ~{{ state.pendingUpload()?.dpi }} DPI (dưới ngưỡng in chuẩn 150 DPI). Sản phẩm in thực tế có thể bị vỡ hạt.</p>
       <div class="mt-6 flex gap-3">
-        <button type="button" (click)="cancelUpload()" class="flex-1 rounded-pill border border-line py-2.5 text-xs font-semibold text-ink hover:bg-surface">Thay ảnh khác</button>
-        <button type="button" (click)="continueLowRes()" class="flex-1 rounded-pill bg-brand-800 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-600">Tiếp tục dùng</button>
+        <button type="button" (click)="cancelUpload()" class="flex-1 rounded-pill border border-line py-2.5 text-xs font-semibold text-ink hover:bg-surface cursor-pointer">Thay ảnh khác</button>
+        <button type="button" (click)="continueLowRes()" class="flex-1 rounded-pill bg-brand-800 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-600 cursor-pointer">Tiếp tục dùng</button>
       </div>
     </div>
   </div>
 }
 
-<!-- Content Policy Consent Modal -->
 @if (state.isConsentModalOpen()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
     <div class="w-full max-w-md rounded-card border border-line bg-surface-alt p-6 shadow-lift">
@@ -634,47 +789,8 @@
         <p class="mt-2 text-[11px] font-bold text-red-600">⚠️ Bạn cần tích chọn xác nhận cam kết để tiếp tục sử dụng ảnh.</p>
       }
       <div class="mt-6 flex justify-end gap-3">
-        <button type="button" (click)="cancelUpload()" class="rounded-pill border border-line px-5 py-2 text-xs font-semibold text-ink hover:bg-surface">Hủy bỏ</button>
-        <button type="button" (click)="confirmConsent()" class="rounded-pill bg-brand-800 px-5 py-2 text-xs font-bold text-white shadow-soft hover:bg-brand-600">Đồng ý & Nạp lên Canvas</button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- Cart Drawer -->
-@if (state.isCartDrawerOpen()) {
-  <div class="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs animate-fade-in">
-    <div class="flex h-full w-full max-w-md flex-col bg-surface-alt p-6 shadow-2xl">
-      <div class="mb-4 flex items-center justify-between border-b border-line pb-3">
-        <h3 class="font-display text-base font-bold text-ink">Giỏ hàng của bạn (1)</h3>
-        <button type="button" (click)="closeCart()" class="rounded-full p-1 text-ink-soft hover:bg-surface hover:text-ink">✕</button>
-      </div>
-      <div class="mb-4 rounded-xl bg-emerald-50 p-3 text-xs font-semibold text-emerald-800">✓ Đã thêm thiết kế vào giỏ hàng thành công!</div>
-      <div class="flex gap-4 rounded-2xl border border-line bg-surface p-4">
-        <div class="relative h-28 w-14 shrink-0 overflow-hidden rounded-xl shadow-xs" [style.background]="state.caseBg()">
-          <div class="absolute rounded-[4px] bg-[#10121a]"
-            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
-            [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent"></div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <h4 class="font-display text-sm font-bold text-ink truncate">{{ state.designName() }}</h4>
-          <p class="text-xs text-ink-soft">{{ state.selectedModel().name }} • Phôi {{ state.selectedSku().colorName }}</p>
-          <p class="mt-1 text-[11px] text-brand-600 font-mono">ID: {{ state.selectedSku().skuCode }}</p>
-          @if (state.requiresModeration()) {
-            <span class="mt-2 inline-flex items-center gap-1 rounded-pill bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800">⚠️ Cần kiểm duyệt in ấn</span>
-          }
-          <div class="mt-3"><span class="font-display text-sm font-bold text-brand-800">{{ state.totalPrice().toLocaleString('vi-VN') }}đ</span></div>
-        </div>
-      </div>
-      <div class="mt-auto border-t border-line pt-4 space-y-3">
-        <div class="flex items-center justify-between text-sm">
-          <span class="text-ink-soft">Tạm tính:</span>
-          <strong class="font-display font-bold text-ink">{{ state.totalPrice().toLocaleString('vi-VN') }}đ</strong>
-        </div>
-        <div class="flex gap-2">
-          <a routerLink="/cart" class="flex-1 rounded-pill border border-line py-3 text-center text-xs font-bold text-ink hover:bg-surface">Xem giỏ hàng</a>
-          <a routerLink="/checkout" class="flex-1 rounded-pill bg-brand-800 py-3 text-center text-xs font-bold text-white shadow-soft hover:bg-brand-600 hover:shadow-glow">Thanh toán</a>
-        </div>
+        <button type="button" (click)="cancelUpload()" class="rounded-pill border border-line px-5 py-2 text-xs font-semibold text-ink hover:bg-surface cursor-pointer">Hủy bỏ</button>
+        <button type="button" (click)="confirmConsent()" class="rounded-pill bg-brand-800 px-5 py-2 text-xs font-bold text-white shadow-soft hover:bg-brand-600 cursor-pointer">Đồng ý & Nạp lên Canvas</button>
       </div>
     </div>
   </div>

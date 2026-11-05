@@ -24,8 +24,18 @@ export class ModelPicker {
     this.catalog.selectedModel().brandId || 'brand-apple'
   );
   protected readonly selectedModelId = signal<string>(
-    this.catalog.selectedModel().id || 'iphone-15-pro-max'
+    this.getInitialModelId()
   );
+
+  private getInitialModelId(): string {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('caseyes_active_model');
+      if (saved && this.catalog.models().some((m) => m.id === saved)) {
+        return saved;
+      }
+    }
+    return this.catalog.selectedModel().id || 'iphone-15-pro-max';
+  }
 
   // Models filtered by selected brand
   protected readonly availableModels = computed(() => {
@@ -86,33 +96,39 @@ export class ModelPicker {
     }
   }
 
+  private persistAndSelect(modelId: string): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('caseyes_active_model', modelId);
+    }
+    this.catalog.selectModel(modelId);
+    this.state.requestModelChange(modelId);
+  }
+
   // Primary action: Confirm and navigate to templates
   protected onContinue(): void {
     const modelId = this.selectedModelId();
-    this.catalog.selectModel(modelId);
-    this.state.requestModelChange(modelId);
+    this.persistAndSelect(modelId);
     this.router.navigate(['/design-studio/templates']);
   }
 
   // Quick Start Actions from Mockup 4a
   protected onGoTemplates(): void {
     const modelId = this.selectedModelId();
-    this.catalog.selectModel(modelId);
-    this.state.requestModelChange(modelId);
+    this.persistAndSelect(modelId);
     this.router.navigate(['/design-studio/templates']);
   }
 
   protected onGoAiSuggestion(): void {
     const modelId = this.selectedModelId();
-    this.catalog.selectModel(modelId);
-    this.state.requestModelChange(modelId);
+    this.persistAndSelect(modelId);
     this.router.navigate(['/design-studio/templates'], { queryParams: { ai: 'true' } });
   }
 
   protected onGoBlankCanvas(): void {
     const modelId = this.selectedModelId();
-    this.catalog.selectModel(modelId);
-    this.state.requestModelChange(modelId);
+    this.persistAndSelect(modelId);
+    this.state.clearCanvas();
+    this.state.caseBg.set('#FFFFFF');
     this.router.navigate(['/design-studio/editor']);
   }
 }
