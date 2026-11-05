@@ -77,8 +77,10 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly showAuthModal = signal<boolean>(false);
   protected readonly guestActionType = signal<'save' | 'cart'>('save');
 
-  // Texture sync timer
+  // 3D Texture sync & Loading state
+  protected readonly is3dSyncing = signal<boolean>(false);
   private textureSyncTimer: any = null;
+  private syncFadeTimer: any = null;
   private readonly imageCache = new Map<string, HTMLImageElement>();
 
   constructor() {
@@ -138,6 +140,10 @@ export class StudioWorkspace implements OnDestroy {
     if (this.textureSyncTimer) {
       clearTimeout(this.textureSyncTimer);
       this.textureSyncTimer = null;
+    }
+    if (this.syncFadeTimer) {
+      clearTimeout(this.syncFadeTimer);
+      this.syncFadeTimer = null;
     }
   }
 
@@ -669,6 +675,11 @@ export class StudioWorkspace implements OnDestroy {
   }
 
   private trigger3dTextureSync(immediate = false): void {
+    this.is3dSyncing.set(true);
+    if (this.syncFadeTimer) {
+      clearTimeout(this.syncFadeTimer);
+      this.syncFadeTimer = null;
+    }
     if (this.textureSyncTimer) {
       clearTimeout(this.textureSyncTimer);
     }
@@ -677,14 +688,17 @@ export class StudioWorkspace implements OnDestroy {
     } else {
       this.textureSyncTimer = setTimeout(() => {
         this.sync3dTexture();
-      }, 100);
+      }, 120);
     }
   }
 
   private sync3dTexture(): void {
     if (typeof document === 'undefined') return;
     const mv = document.querySelector('model-viewer') as any;
-    if (!mv || !mv.model) return;
+    if (!mv || !mv.model) {
+      this.is3dSyncing.set(false);
+      return;
+    }
 
     // 1. Offscreen 2D Canvas rendering matching the case viewport aspect ratio (300px : 632px)
     const W = 600;
@@ -693,7 +707,10 @@ export class StudioWorkspace implements OnDestroy {
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      this.is3dSyncing.set(false);
+      return;
+    }
 
     // Draw Background
     const bg = this.state.caseBg();
@@ -1065,6 +1082,12 @@ export class StudioWorkspace implements OnDestroy {
                 bumper.material.needsUpdate = true;
               }
             }
+
+            if (this.syncFadeTimer) clearTimeout(this.syncFadeTimer);
+            this.syncFadeTimer = setTimeout(() => {
+              this.is3dSyncing.set(false);
+              this.syncFadeTimer = null;
+            }, 220);
             return;
           }
         }
@@ -1084,8 +1107,17 @@ export class StudioWorkspace implements OnDestroy {
         .then((texture: any) => {
           targetMat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
           targetMat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
+          if (this.syncFadeTimer) clearTimeout(this.syncFadeTimer);
+          this.syncFadeTimer = setTimeout(() => {
+            this.is3dSyncing.set(false);
+            this.syncFadeTimer = null;
+          }, 220);
         })
-        .catch(() => {});
+        .catch(() => {
+          this.is3dSyncing.set(false);
+        });
+    } else {
+      this.is3dSyncing.set(false);
     }
   }
 
