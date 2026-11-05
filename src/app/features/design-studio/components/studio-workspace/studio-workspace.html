@@ -428,9 +428,7 @@
           </div>
         }
 
-        <!-- Safe zone boundary -->
-        <div class="pointer-events-none absolute inset-[5%] z-10 rounded-[34px] border-2 border-dashed transition-colors"
-          [class]="state.safeZoneAlert() ? 'border-red-500 animate-pulse bg-red-500/10' : 'border-emerald-500/60'"></div>
+
 
         <!-- ── Dynamic layers (Bug 1 Fix: stopPropagation on click prevents deselecting) ── -->
         @for (layer of state.layers(); track layer.id) {
@@ -474,11 +472,7 @@
       </div>
     </div>
 
-    <!-- Safe zone legend (bottom left) -->
-    <div class="absolute bottom-4 left-4 flex items-center gap-4 text-[10px] text-ink-soft">
-      <div class="flex items-center gap-1"><span class="h-0 w-4 border-t-2 border-dashed border-emerald-500"></span><span>Vùng in an toàn</span></div>
-      <div class="flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm bg-[#10121a]"></span><span>Cụm camera</span></div>
-    </div>
+
 
   </main>
 
