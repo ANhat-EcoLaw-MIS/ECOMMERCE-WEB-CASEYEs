@@ -8,7 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { CanvasLayer } from '../../models/canvas-element.model';
 import { BG_PRESETS, STICKERS_LIST, StudioState } from '../../services/studio-state';
 import { StudioDraft } from '../../services/studio-draft';
@@ -16,7 +16,7 @@ import { StudioDraft } from '../../services/studio-draft';
 @Component({
   selector: 'app-studio-workspace',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, DecimalPipe],
   templateUrl: './studio-workspace.html',
   styleUrl: './studio-workspace.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
