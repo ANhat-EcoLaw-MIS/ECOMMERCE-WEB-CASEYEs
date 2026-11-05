@@ -793,18 +793,18 @@ export class StudioWorkspace implements OnDestroy {
 
     // Solid dark bumper rim around case perimeter (matching 2D canvas frame)
     ctx.save();
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 18;
     ctx.strokeStyle = '#18181b';
     ctx.beginPath();
     if ((ctx as any).roundRect) {
-      (ctx as any).roundRect(7, 7, W - 14, H - 14, [94, 94, 94, 94]);
+      (ctx as any).roundRect(9, 9, W - 18, H - 18, [92, 92, 92, 92]);
     } else {
-      ctx.rect(7, 7, W - 14, H - 14);
+      ctx.rect(9, 9, W - 18, H - 18);
     }
     ctx.stroke();
 
     // Bold dark protective camera bezel ring (matching outer bumper frame)
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 22;
     ctx.strokeStyle = '#18181b';
     ctx.beginPath();
     if (model.id === 'galaxy-s24') {

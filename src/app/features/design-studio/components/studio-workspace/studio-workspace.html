@@ -331,7 +331,7 @@
 
     <!-- Phone Mockup Canvas -->
     <div class="relative transition-transform duration-200" [style.transform]="'scale(' + state.zoom() / 100 + ')'">
-      <div id="case-viewport" class="relative h-[632px] w-[300px] overflow-hidden rounded-[50px] shadow-lift ring-4 ring-[#1f2230]"
+      <div id="case-viewport" class="relative h-[632px] w-[300px] overflow-hidden rounded-[50px] shadow-lift ring-[6px] ring-[#18181b]"
         [style.background]="state.caseBg()">
 
         <!-- ── Dynamic Camera Cutout per Model (Aligned with 3D GLB Models) ── -->
@@ -366,7 +366,7 @@
           </div>
         } @else {
           <!-- Apple iPhone Pro: Realistic 3-lens Squircle Module 1:1 with 3D GLB model -->
-          <div class="pointer-events-none absolute z-20 rounded-[36px] bg-[#1a1b22]/95 shadow-xl ring-4 ring-[#18181b] backdrop-blur-md"
+          <div class="pointer-events-none absolute z-20 rounded-[36px] bg-[#1a1b22]/95 shadow-xl ring-[6px] ring-[#18181b] backdrop-blur-md"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
             [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
             
