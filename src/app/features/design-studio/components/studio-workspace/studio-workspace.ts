@@ -708,11 +708,6 @@ export class StudioWorkspace implements OnDestroy {
     }
     ctx.fill();
 
-    // Subtle edge bevel / case border
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.stroke();
-
     // Camera Cutout (transparent hole matching 3D phone model camera bump)
     const modelId = this.state.selectedModel().id;
     ctx.save();
@@ -737,6 +732,40 @@ export class StudioWorkspace implements OnDestroy {
       }
     }
     ctx.fill();
+    ctx.restore();
+
+    // Solid dark bumper rim around case perimeter (like 2D canvas frame)
+    ctx.save();
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = '#18181b';
+    ctx.beginPath();
+    if ((ctx as any).roundRect) {
+      (ctx as any).roundRect(7, 7, W - 14, H - 14, [48, 48, 48, 48]);
+    } else {
+      ctx.rect(7, 7, W - 14, H - 14);
+    }
+    ctx.stroke();
+
+    // Subtle dark camera cutout border
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#27272a';
+    ctx.beginPath();
+    if (modelId === 'galaxy-s24') {
+      const cx = W * 0.22;
+      const r = 42;
+      ctx.arc(cx, 100, r, 0, Math.PI * 2);
+      ctx.arc(cx, 200, r, 0, Math.PI * 2);
+      ctx.arc(cx, 300, r, 0, Math.PI * 2);
+    } else if (modelId === 'xiaomi-14-ultra') {
+      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
+    } else {
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
+      } else {
+        ctx.rect(28, 28, 285, 295);
+      }
+    }
+    ctx.stroke();
     ctx.restore();
 
     // Draw Layers (Text, Stickers, Images)
@@ -873,8 +902,8 @@ export class StudioWorkspace implements OnDestroy {
               mat.map = tex;
               mat.transparent = true;
               mat.side = 2; // DoubleSide
-              mat.roughness = 0.25;
-              mat.metalness = 0.05;
+              mat.roughness = 0.42;
+              mat.metalness = 0.02;
 
               overlay = new MeshConstructor(geo, mat);
               overlay.name = 'CaseOverlayMesh';
@@ -885,6 +914,8 @@ export class StudioWorkspace implements OnDestroy {
               if (overlay.material) {
                 overlay.material.map = tex;
                 overlay.material.transparent = true;
+                overlay.material.roughness = 0.42;
+                overlay.material.metalness = 0.02;
                 overlay.material.needsUpdate = true;
               }
             }
