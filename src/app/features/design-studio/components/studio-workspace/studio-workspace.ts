@@ -1083,6 +1083,19 @@ export class StudioWorkspace implements OnDestroy {
               }
             }
 
+            // Force <model-viewer> WebGL render loop to wake up and repaint immediately (eliminates idle pause)
+            if (scene) {
+              scene.isDirty = true;
+              if (typeof scene.queueRender === 'function') {
+                scene.queueRender();
+                requestAnimationFrame(() => {
+                  if (typeof scene.queueRender === 'function') {
+                    scene.queueRender();
+                  }
+                });
+              }
+            }
+
             if (this.syncFadeTimer) clearTimeout(this.syncFadeTimer);
             this.syncFadeTimer = setTimeout(() => {
               this.is3dSyncing.set(false);
@@ -1107,6 +1120,10 @@ export class StudioWorkspace implements OnDestroy {
         .then((texture: any) => {
           targetMat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
           targetMat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
+          if (scene) {
+            scene.isDirty = true;
+            if (typeof scene.queueRender === 'function') scene.queueRender();
+          }
           if (this.syncFadeTimer) clearTimeout(this.syncFadeTimer);
           this.syncFadeTimer = setTimeout(() => {
             this.is3dSyncing.set(false);
