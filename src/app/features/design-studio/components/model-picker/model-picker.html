@@ -55,26 +55,7 @@
               </div>
             </div>
 
-            <!-- Quick Brand Pill Selector -->
-            <div class="mt-2 flex items-center gap-2">
-              @for (brand of brands(); track brand.id) {
-                <button
-                  type="button"
-                  (click)="selectBrand(brand.id)"
-                  class="flex items-center gap-1 rounded-pill px-3 py-1 text-xs font-bold transition-all"
-                  [class]="
-                    selectedBrandId() === brand.id
-                      ? 'bg-brand-800 text-white shadow-soft'
-                      : 'border border-line bg-surface text-ink-soft hover:bg-brand-50 hover:text-brand-800'
-                  "
-                >
-                  @if (brand.slug === 'apple') {
-                    <span class="text-xs"></span>
-                  }
-                  <span>{{ brand.name }}</span>
-                </button>
-              }
-            </div>
+
           </div>
 
           <!-- Field 2: Dòng máy -->
