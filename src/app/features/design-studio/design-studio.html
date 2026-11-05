@@ -1,6 +1,6 @@
-<div class="min-h-screen bg-surface">
+<div class="min-h-screen bg-surface flex flex-col" [class.h-screen]="isEditor()" [class.overflow-hidden]="isEditor()">
   <!-- Top Navigation Bar (Clean Header, No Clunky 4-Step Bar - Bug 3 & Issue 1 Resolved) -->
-  <header class="sticky top-0 z-40 border-b border-line bg-surface-alt/95 px-4 py-2.5 backdrop-blur-xl sm:px-6 lg:px-8">
+  <header class="shrink-0 sticky top-0 z-40 border-b border-line bg-surface-alt/95 px-4 py-2.5 backdrop-blur-xl sm:px-6 lg:px-8">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4">
 
       <!-- Left: Title & Branding -->
@@ -80,7 +80,7 @@
   </header>
 
   <!-- Main Sub-route Content -->
-  <main class="studio-content">
+  <main class="studio-content flex-1 min-h-0" [class.overflow-hidden]="isEditor()">
     <router-outlet />
   </main>
 

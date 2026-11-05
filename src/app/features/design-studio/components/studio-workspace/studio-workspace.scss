@@ -6,8 +6,9 @@
   display: grid;
   /* tool-rail | drawer | canvas | 3d-preview | inspector */
   grid-template-columns: 68px 210px 1fr 220px 240px;
-  /* Full height minus: header(60px) + studio sub-header(48px) + bottom-bar(56px) + banners */
-  min-height: calc(100vh - 164px);
+  /* Full height minus: studio sub-header(52px) + bottom-bar(56px) - Canva/Figma full-screen style */
+  height: calc(100vh - 108px);
+  min-height: calc(100vh - 108px);
   overflow: hidden;
 
   @media (max-width: 1400px) {
@@ -92,7 +93,8 @@
   background: var(--color-surface-alt);
   padding: 14px;
   overflow-y: auto;
-  max-height: calc(100vh - 164px);
+  max-height: calc(100vh - 108px);
+  height: 100%;
 }
 
 .drawer-section-title {
@@ -109,8 +111,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 164px);
-  padding: 60px 24px 32px;
+  height: 100%;
+  min-height: calc(100vh - 108px);
+  padding: 48px 24px 32px;
   overflow: hidden;
   user-select: none;
   /* Dot grid pattern */
@@ -124,7 +127,8 @@
 .preview-panel {
   background: var(--color-surface-alt);
   overflow-y: auto;
-  max-height: calc(100vh - 164px);
+  max-height: calc(100vh - 108px);
+  height: 100%;
   padding-bottom: 16px;
 }
 
@@ -144,7 +148,8 @@
 .inspector-panel {
   background: var(--color-surface-alt);
   overflow-y: auto;
-  max-height: calc(100vh - 164px);
+  max-height: calc(100vh - 108px);
+  height: 100%;
   padding-bottom: 16px;
 }
 

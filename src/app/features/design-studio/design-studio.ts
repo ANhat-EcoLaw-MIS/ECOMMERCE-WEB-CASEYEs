@@ -38,6 +38,8 @@ export class DesignStudio {
     return 1;
   });
 
+  protected readonly isEditor = computed(() => this.currentStep() === 3);
+
   protected onConfirmModelChange(): void {
     this.state.confirmModelChange();
   }
