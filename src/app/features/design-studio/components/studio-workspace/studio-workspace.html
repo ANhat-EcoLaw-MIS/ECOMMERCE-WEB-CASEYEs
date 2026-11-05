@@ -424,65 +424,155 @@
   </main>
 
   <!-- ───────────────────────────────────
-       COL 4 · 3D Preview (Bug 2 & Issue 7 Depth Extrusion)
+       COL 4 · 3D Preview (Real GLB Model Viewer + 3D Extruded Case)
   ─────────────────────────────────────── -->
   <aside class="preview-panel border-x border-line">
-    <div class="preview-panel-header">
-      <span class="text-xs font-bold text-ink">Preview 3D (Xoay 360°)</span>
-      <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">F16</span>
-    </div>
+    <div class="preview-panel-header flex-col items-start gap-1.5 pb-2">
+      <div class="flex items-center justify-between w-full">
+        <span class="text-xs font-bold text-ink">Preview 3D (Xoay 360°)</span>
+        <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">
+          {{ preview3dMode() === 'glb' ? 'GLB 3D' : 'ỐP 3D' }}
+        </span>
+      </div>
 
-    <!-- 3D Orbit stage -->
-    <div
-      (pointerdown)="onOrbitPointerDown($event)"
-      (pointermove)="onOrbitPointerMove($event)"
-      (pointerup)="onOrbitPointerUp()"
-      class="flex items-center justify-center cursor-grab active:cursor-grabbing select-none overflow-hidden rounded-2xl mx-3 mt-2"
-      style="height: 260px; background: radial-gradient(circle at 50% 40%, #ece6fd 0%, #f6f3fe 100%); perspective: 1000px"
-    >
-      <!-- 3D Extruded Case with Physical Thickness (Bug 2 Fix) -->
-      <div
-        class="relative w-[112px] h-[224px] rounded-[26px] shadow-2xl transition-transform"
-        [style.transform]="'scale(' + orbitZoom() + ') rotateX(' + orbitRx() + 'deg) rotateY(' + orbitRy() + 'deg)'"
-        [style.background]="state.caseBg()"
-        style="transform-style: preserve-3d;"
-      >
-        <!-- Front Case Bevel with thickness -->
-        <div class="pointer-events-none absolute inset-0 rounded-[26px] border border-white/40 bg-linear-115 from-white/30 via-transparent to-white/10"
-             style="transform: translateZ(6px);"></div>
-
-        <!-- Back Edge Shadow (Simulating physical bumper depth) -->
-        <div class="pointer-events-none absolute inset-0 rounded-[26px] bg-black/25 shadow-2xl"
-             style="transform: translateZ(-6px);"></div>
-
-        <!-- 3D Camera Bump -->
-        <div class="absolute rounded-[12px] bg-[#10121a] p-1 shadow-lg"
-          [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
-          [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent"
-          style="transform: translateZ(8px);">
-          <div class="grid h-full w-full grid-cols-2 gap-1 place-items-center">
-            <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
-            <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
-            <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
-          </div>
-        </div>
-
-        <!-- 3D Text Preview -->
-        @for (layer of state.layers(); track layer.id) {
-          @if (layer.type === 'text') {
-            <div class="absolute -translate-x-1/2 -translate-y-1/2 truncate font-bold text-center"
-              [style.left.%]="layer.x" [style.top.%]="layer.y"
-              [style.color]="layer.textColor" [style.fontFamily]="layer.fontFamily"
-              style="transform: translateZ(7px); font-size: 8px">{{ layer.content }}</div>
-          }
-          @if (layer.type === 'sticker') {
-            <div class="absolute -translate-x-1/2 -translate-y-1/2 text-center text-sm"
-              [style.left.%]="layer.x" [style.top.%]="layer.y"
-              style="transform: translateZ(7px);">{{ layer.name }}</div>
-          }
-        }
+      <!-- Mode Switcher: Real 3D Model vs Custom Case 3D -->
+      <div class="grid grid-cols-2 gap-1 w-full p-0.5 rounded-lg bg-surface-alt border border-line text-[10px] font-semibold">
+        <button
+          type="button"
+          (click)="preview3dMode.set('glb')"
+          class="py-1 px-1.5 rounded-md transition-all text-center cursor-pointer"
+          [class]="preview3dMode() === 'glb' ? 'bg-white text-brand-900 shadow-xs font-bold' : 'text-ink-soft hover:text-ink'">
+          📱 Máy 3D (.glb)
+        </button>
+        <button
+          type="button"
+          (click)="preview3dMode.set('case')"
+          class="py-1 px-1.5 rounded-md transition-all text-center cursor-pointer"
+          [class]="preview3dMode() === 'case' ? 'bg-white text-brand-900 shadow-xs font-bold' : 'text-ink-soft hover:text-ink'">
+          🎨 Ốp lưng 3D
+        </button>
       </div>
     </div>
+
+    <!-- ── Mode 1: Real WebGL 3D Model (.glb) ── -->
+    @if (preview3dMode() === 'glb') {
+      <div
+        class="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl mx-3 mt-1"
+        style="height: 260px; background: radial-gradient(circle at 50% 40%, #ece6fd 0%, #f6f3fe 100%);"
+      >
+        @if (state.selectedModel().has3dModel && state.selectedModel().model3dUrl) {
+          <model-viewer
+            [src]="state.selectedModel().model3dUrl"
+            [alt]="'Mô hình 3D ' + state.selectedModel().name"
+            camera-controls
+            auto-rotate
+            rotation-per-second="25deg"
+            shadow-intensity="1.5"
+            shadow-softness="0.8"
+            exposure="1.0"
+            touch-action="pan-y"
+            style="width: 100%; height: 100%; outline: none;"
+          >
+          </model-viewer>
+          <div class="pointer-events-none absolute bottom-2 left-2 right-2 flex items-center justify-between px-1">
+            <span class="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold text-brand-900 shadow-xs backdrop-blur-xs">
+              {{ state.selectedModel().name }}
+            </span>
+            <span class="rounded-full bg-black/40 px-2 py-0.5 text-[8px] font-medium text-white shadow-xs backdrop-blur-xs">
+              Chuột xoay 360°
+            </span>
+          </div>
+        } @else {
+          <div class="flex flex-col items-center justify-center p-4 text-center text-xs text-ink-soft">
+            <span class="text-2xl mb-1">📱</span>
+            <p class="font-bold text-ink">Thiết bị chưa có file 3D</p>
+            <p class="text-[10px] mt-1">Đang hiển thị bản xem trước giả lập 2D/3D</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Mode 2: 3D Extruded Case with Solid Side Walls ── -->
+    @if (preview3dMode() === 'case') {
+      <div
+        (pointerdown)="onOrbitPointerDown($event)"
+        (pointermove)="onOrbitPointerMove($event)"
+        (pointerup)="onOrbitPointerUp()"
+        class="flex items-center justify-center cursor-grab active:cursor-grabbing select-none overflow-hidden rounded-2xl mx-3 mt-1"
+        style="height: 260px; background: radial-gradient(circle at 50% 40%, #ece6fd 0%, #f6f3fe 100%); perspective: 1000px"
+      >
+        <!-- 3D Phone Case with 6 Solid Faces (No more flat paper effect when rotated sideways) -->
+        <div
+          class="relative w-[112px] h-[224px] rounded-[24px] shadow-2xl transition-transform"
+          [style.transform]="'scale(' + orbitZoom() + ') rotateX(' + orbitRx() + 'deg) rotateY(' + orbitRy() + 'deg)'"
+          [style.background]="state.caseBg()"
+          style="transform-style: preserve-3d;"
+        >
+          <!-- 1. Front Printed Face (translateZ: +7px) -->
+          <div
+            class="pointer-events-none absolute inset-0 rounded-[24px] border border-white/40 bg-linear-115 from-white/30 via-transparent to-white/10"
+            style="transform: translateZ(7px);"
+          ></div>
+
+          <!-- 2. Back Body (translateZ: -7px) -->
+          <div
+            class="pointer-events-none absolute inset-0 rounded-[24px] bg-[#1a1429] shadow-2xl"
+            style="transform: translateZ(-7px) rotateY(180deg);"
+          ></div>
+
+          <!-- 3. Left Solid Side Bumper Wall (Rotated 90deg, 14px depth) -->
+          <div
+            class="pointer-events-none absolute top-0 bottom-0 rounded-l-[4px] bg-[#2a223f] border-y border-[#3d325c]"
+            style="width: 14px; left: -7px; transform: rotateY(-90deg); transform-origin: center;"
+          ></div>
+
+          <!-- 4. Right Solid Side Bumper Wall (Rotated 90deg, 14px depth) -->
+          <div
+            class="pointer-events-none absolute top-0 bottom-0 rounded-r-[4px] bg-[#2a223f] border-y border-[#3d325c]"
+            style="width: 14px; right: -7px; transform: rotateY(90deg); transform-origin: center;"
+          ></div>
+
+          <!-- 5. Top Solid Bumper Wall (Rotated 90deg, 14px depth) -->
+          <div
+            class="pointer-events-none absolute left-0 right-0 rounded-t-[4px] bg-[#221b34]"
+            style="height: 14px; top: -7px; transform: rotateX(90deg); transform-origin: center;"
+          ></div>
+
+          <!-- 6. Bottom Solid Bumper Wall (Rotated 90deg, 14px depth) -->
+          <div
+            class="pointer-events-none absolute left-0 right-0 rounded-b-[4px] bg-[#221b34]"
+            style="height: 14px; bottom: -7px; transform: rotateX(-90deg); transform-origin: center;"
+          ></div>
+
+          <!-- 3D Camera Bump -->
+          <div class="absolute rounded-[12px] bg-[#10121a] p-1 shadow-lg border border-black/40"
+            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent"
+            style="transform: translateZ(9px);">
+            <div class="grid h-full w-full grid-cols-2 gap-1 place-items-center">
+              <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
+              <span class="h-2.5 w-2.5 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-1 ring-[#2d3748]"></span>
+            </div>
+          </div>
+
+          <!-- 3D Text Preview on Front Face -->
+          @for (layer of state.layers(); track layer.id) {
+            @if (layer.type === 'text') {
+              <div class="absolute -translate-x-1/2 -translate-y-1/2 truncate font-bold text-center pointer-events-none"
+                [style.left.%]="layer.x" [style.top.%]="layer.y"
+                [style.color]="layer.textColor" [style.fontFamily]="layer.fontFamily"
+                style="transform: translateZ(8px); font-size: 8px">{{ layer.content }}</div>
+            }
+            @if (layer.type === 'sticker') {
+              <div class="absolute -translate-x-1/2 -translate-y-1/2 text-center text-sm pointer-events-none"
+                [style.left.%]="layer.x" [style.top.%]="layer.y"
+                style="transform: translateZ(8px);">{{ layer.name }}</div>
+            }
+          }
+        </div>
+      </div>
+    }
 
     <!-- 360° label + reset -->
     <div class="mt-1 flex items-center justify-center gap-3 px-3">
@@ -490,7 +580,9 @@
         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         Giữ chuột xoay 360°
       </button>
-      <button type="button" (click)="reset3dView()" class="text-[10px] text-brand-800 font-bold hover:underline cursor-pointer">Đặt lại</button>
+      @if (preview3dMode() === 'case') {
+        <button type="button" (click)="reset3dView()" class="text-[10px] text-brand-800 font-bold hover:underline cursor-pointer">Đặt lại</button>
+      }
     </div>
 
     <!-- Case color swatches row -->

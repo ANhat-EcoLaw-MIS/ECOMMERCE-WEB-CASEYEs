@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   ElementRef,
   OnDestroy,
   computed,
@@ -27,6 +28,7 @@ import { AuthModal } from '../../../../core/auth/auth-modal';
   selector: 'app-studio-workspace',
   standalone: true,
   imports: [RouterLink, DatePipe, DecimalPipe],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './studio-workspace.html',
   styleUrl: './studio-workspace.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -84,6 +86,7 @@ export class StudioWorkspace implements OnDestroy {
 
   // 3D Preview
   protected readonly is3dSupported = signal<boolean>(true);
+  protected readonly preview3dMode = signal<'glb' | 'case'>('glb');
   protected readonly orbitRx = signal<number>(-10);
   protected readonly orbitRy = signal<number>(-25);
   protected readonly orbitZoom = signal<number>(1);
