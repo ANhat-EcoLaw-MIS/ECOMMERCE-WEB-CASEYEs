@@ -696,7 +696,9 @@ export class StudioWorkspace implements OnDestroy {
       }
       ctx.fillStyle = grad;
     } else {
-      ctx.fillStyle = bg;
+      // Soften pure white slightly to prevent specular burnout/glare in 3D PBR
+      const lower = bg.toLowerCase();
+      ctx.fillStyle = (lower === '#ffffff' || lower === '#fff' || lower === '#fafafa') ? '#f3f3f6' : bg;
     }
 
     // Rounded case silhouette
@@ -707,66 +709,6 @@ export class StudioWorkspace implements OnDestroy {
       ctx.rect(0, 0, W, H);
     }
     ctx.fill();
-
-    // Camera Cutout (transparent hole matching 3D phone model camera bump)
-    const modelId = this.state.selectedModel().id;
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    if (modelId === 'galaxy-s24') {
-      // 3 vertical lens circles
-      const cx = W * 0.22;
-      const r = 42;
-      ctx.arc(cx, 100, r, 0, Math.PI * 2);
-      ctx.arc(cx, 200, r, 0, Math.PI * 2);
-      ctx.arc(cx, 300, r, 0, Math.PI * 2);
-    } else if (modelId === 'xiaomi-14-ultra') {
-      // Large circular bump
-      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
-    } else {
-      // iPhone squircle - expanded right and bottom to comfortably clear all 3 lenses
-      if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
-      } else {
-        ctx.rect(28, 28, 285, 295);
-      }
-    }
-    ctx.fill();
-    ctx.restore();
-
-    // Solid dark bumper rim around case perimeter (like 2D canvas frame)
-    ctx.save();
-    ctx.lineWidth = 14;
-    ctx.strokeStyle = '#18181b';
-    ctx.beginPath();
-    if ((ctx as any).roundRect) {
-      (ctx as any).roundRect(7, 7, W - 14, H - 14, [48, 48, 48, 48]);
-    } else {
-      ctx.rect(7, 7, W - 14, H - 14);
-    }
-    ctx.stroke();
-
-    // Subtle dark camera cutout border
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#27272a';
-    ctx.beginPath();
-    if (modelId === 'galaxy-s24') {
-      const cx = W * 0.22;
-      const r = 42;
-      ctx.arc(cx, 100, r, 0, Math.PI * 2);
-      ctx.arc(cx, 200, r, 0, Math.PI * 2);
-      ctx.arc(cx, 300, r, 0, Math.PI * 2);
-    } else if (modelId === 'xiaomi-14-ultra') {
-      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
-    } else {
-      if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
-      } else {
-        ctx.rect(28, 28, 285, 295);
-      }
-    }
-    ctx.stroke();
-    ctx.restore();
 
     // Draw Layers (Text, Stickers, Images)
     const layers = this.state.layers();
@@ -804,6 +746,64 @@ export class StudioWorkspace implements OnDestroy {
 
       ctx.restore();
     }
+
+    // Camera Cutout (punched out cleanly through background and layers)
+    const modelId = this.state.selectedModel().id;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    if (modelId === 'galaxy-s24') {
+      const cx = W * 0.22;
+      const r = 42;
+      ctx.arc(cx, 100, r, 0, Math.PI * 2);
+      ctx.arc(cx, 200, r, 0, Math.PI * 2);
+      ctx.arc(cx, 300, r, 0, Math.PI * 2);
+    } else if (modelId === 'xiaomi-14-ultra') {
+      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
+    } else {
+      // iPhone squircle - comfortably clear all 3 lenses and flash
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
+      } else {
+        ctx.rect(28, 28, 285, 295);
+      }
+    }
+    ctx.fill();
+    ctx.restore();
+
+    // Solid dark bumper rim around case perimeter (matching 2D canvas frame)
+    ctx.save();
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = '#18181b';
+    ctx.beginPath();
+    if ((ctx as any).roundRect) {
+      (ctx as any).roundRect(7, 7, W - 14, H - 14, [48, 48, 48, 48]);
+    } else {
+      ctx.rect(7, 7, W - 14, H - 14);
+    }
+    ctx.stroke();
+
+    // Subtle dark camera cutout border
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#27272a';
+    ctx.beginPath();
+    if (modelId === 'galaxy-s24') {
+      const cx = W * 0.22;
+      const r = 42;
+      ctx.arc(cx, 100, r, 0, Math.PI * 2);
+      ctx.arc(cx, 200, r, 0, Math.PI * 2);
+      ctx.arc(cx, 300, r, 0, Math.PI * 2);
+    } else if (modelId === 'xiaomi-14-ultra') {
+      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
+    } else {
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
+      } else {
+        ctx.rect(28, 28, 285, 295);
+      }
+    }
+    ctx.stroke();
+    ctx.restore();
 
     // 2. Access Three.js Scene from <model-viewer>
     const sceneSymbol = Object.getOwnPropertySymbols(mv).find((s) =>
@@ -857,6 +857,13 @@ export class StudioWorkspace implements OnDestroy {
             glCtx.drawImage(canvas, 0, 0);
 
             const tex = new TexConstructor(glCvs);
+            // Ensure sRGB color space is preserved (prevents washed-out/pale/glaring textures)
+            if ('colorSpace' in tex) {
+              tex.colorSpace = 'srgb';
+            }
+            if ('encoding' in tex) {
+              (tex as any).encoding = 3001; // sRGBEncoding
+            }
             tex.needsUpdate = true;
 
             // Geometry: plane matching back dimensions (w: 7.52, h: 15.82, z: 0.42)
@@ -902,8 +909,8 @@ export class StudioWorkspace implements OnDestroy {
               mat.map = tex;
               mat.transparent = true;
               mat.side = 2; // DoubleSide
-              mat.roughness = 0.42;
-              mat.metalness = 0.02;
+              mat.roughness = 0.88; // Matte finish to eliminate shiny specular white glare
+              mat.metalness = 0.0;  // Non-metallic case albedo
 
               overlay = new MeshConstructor(geo, mat);
               overlay.name = 'CaseOverlayMesh';
@@ -914,8 +921,8 @@ export class StudioWorkspace implements OnDestroy {
               if (overlay.material) {
                 overlay.material.map = tex;
                 overlay.material.transparent = true;
-                overlay.material.roughness = 0.42;
-                overlay.material.metalness = 0.02;
+                overlay.material.roughness = 0.88;
+                overlay.material.metalness = 0.0;
                 overlay.material.needsUpdate = true;
               }
             }
