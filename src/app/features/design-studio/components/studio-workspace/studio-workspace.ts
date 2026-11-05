@@ -803,21 +803,21 @@ export class StudioWorkspace implements OnDestroy {
     }
     ctx.stroke();
 
-    // Subtle dark camera cutout border
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#27272a';
+    // Bold dark protective camera bezel ring (matching outer bumper frame)
+    ctx.lineWidth = 14;
+    ctx.strokeStyle = '#18181b';
     ctx.beginPath();
     if (model.id === 'galaxy-s24') {
       const cx = camX + camW / 2;
       const r = camW * 0.42;
-      ctx.arc(cx, camY + r + 4, r, 0, Math.PI * 2);
-      ctx.arc(cx, camY + camH * 0.5, r, 0, Math.PI * 2);
-      ctx.arc(cx, camY + camH - r - 4, r, 0, Math.PI * 2);
+      ctx.arc(cx, camY + r + 4, r + 2, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH * 0.5, r + 2, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH - r - 4, r + 2, 0, Math.PI * 2);
     } else if (model.id === 'xiaomi-14-ultra') {
       const cx = W / 2;
       const cy = camY + camH / 2;
       const r = camW / 2;
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
     } else {
       if ((ctx as any).roundRect) {
         (ctx as any).roundRect(camX, camY, camW, camH, [camRadius, camRadius, camRadius, camRadius]);
