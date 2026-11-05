@@ -338,11 +338,7 @@ export class StudioWorkspace implements OnDestroy {
 
   protected closeAuthModal(): void {
     this.showAuthModal.set(false);
-    if (this.guestActionType() === 'cart') {
-      this.showToast('✓ Đã lưu tạm thiết kế! Bạn có thể đăng nhập bất cứ lúc nào để hoàn tất giỏ hàng.');
-    } else {
-      this.showToast('✓ Đã lưu tạm bản thiết kế vào trình duyệt của bạn!');
-    }
+    // Lưu ngầm hoàn toàn trong background, không hiển thị toast thông báo kỹ thuật về localStorage / lưu tạm vào trình duyệt
   }
 
   /**
