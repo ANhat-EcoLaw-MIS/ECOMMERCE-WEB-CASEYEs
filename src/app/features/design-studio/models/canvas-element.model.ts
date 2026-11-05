@@ -15,6 +15,11 @@ export interface BaseDesignElement {
   /** Opacity from 0.0 to 1.0 */
   readonly opacity: number;
   readonly isLocked: boolean;
+  /** Crop percentages (0 - 100) for Canva-style 4-side cropping */
+  readonly cropTop?: number;
+  readonly cropRight?: number;
+  readonly cropBottom?: number;
+  readonly cropLeft?: number;
 }
 
 export interface TextElement extends BaseDesignElement {

@@ -108,10 +108,10 @@ export class StudioWorkspace implements OnDestroy {
   // Auto-save interval handle (Issue 14)
   private autoSaveTimer: ReturnType<typeof setInterval> | null = null;
 
-  // Canvas Viewport Dragging state
+  // Canvas Viewport Dragging & Cropping state
   private activeDrag: {
     id: string;
-    mode: 'move' | 'resize' | 'rotate';
+    mode: 'move' | 'resize' | 'rotate' | 'crop-top' | 'crop-bottom' | 'crop-left' | 'crop-right';
     startX: number;
     startY: number;
     initialX: number;
@@ -119,6 +119,13 @@ export class StudioWorkspace implements OnDestroy {
     initialWidth: number;
     initialHeight: number;
     initialRotation: number;
+    initialCropTop?: number;
+    initialCropBottom?: number;
+    initialCropLeft?: number;
+    initialCropRight?: number;
+    elemPxWidth?: number;
+    elemPxHeight?: number;
+    corner?: 'br' | 'bl' | 'tr' | 'tl';
   } | null = null;
 
   // Camera cutout geometry for active model
@@ -611,7 +618,16 @@ export class StudioWorkspace implements OnDestroy {
     (event.target as HTMLElement).setPointerCapture(event.pointerId);
   }
 
-  protected onResizeHandlePointerDown(event: PointerEvent, layerId: string): void {
+  protected resetCrop(layerId: string): void {
+    this.state.updateLayer(layerId, { cropTop: 0, cropBottom: 0, cropLeft: 0, cropRight: 0 });
+    this.trigger3dTextureSync(true);
+  }
+
+  protected onResizeHandlePointerDown(
+    event: PointerEvent,
+    layerId: string,
+    corner: 'br' | 'bl' | 'tr' | 'tl' = 'br'
+  ): void {
     event.stopPropagation();
     const layer = this.state.layers().find((l) => l.id === layerId);
     if (!layer || layer.isLocked) return;
@@ -626,6 +642,48 @@ export class StudioWorkspace implements OnDestroy {
       initialWidth: layer.width,
       initialHeight: layer.height,
       initialRotation: layer.rotation,
+      initialCropTop: layer.cropTop ?? 0,
+      initialCropBottom: layer.cropBottom ?? 0,
+      initialCropLeft: layer.cropLeft ?? 0,
+      initialCropRight: layer.cropRight ?? 0,
+      elemPxWidth: (layer.width / 100) * 300,
+      elemPxHeight: (layer.width / 100) * 300,
+      corner,
+    };
+    (event.target as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  protected onCropHandlePointerDown(
+    event: PointerEvent,
+    layerId: string,
+    side: 'top' | 'bottom' | 'left' | 'right'
+  ): void {
+    event.stopPropagation();
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer || layer.isLocked) return;
+
+    const parentContainer = (event.target as HTMLElement).closest('.cursor-move') as HTMLElement;
+    const rect = parentContainer ? parentContainer.getBoundingClientRect() : null;
+    const zoomFactor = this.state.zoom() / 100;
+    const elemPxWidth = rect ? rect.width / zoomFactor : (layer.width / 100) * 300;
+    const elemPxHeight = rect ? rect.height / zoomFactor : (layer.width / 100) * 300;
+
+    this.activeDrag = {
+      id: layerId,
+      mode: `crop-${side}` as any,
+      startX: event.clientX,
+      startY: event.clientY,
+      initialX: layer.x,
+      initialY: layer.y,
+      initialWidth: layer.width,
+      initialHeight: layer.height,
+      initialRotation: layer.rotation,
+      initialCropTop: layer.cropTop ?? 0,
+      initialCropBottom: layer.cropBottom ?? 0,
+      initialCropLeft: layer.cropLeft ?? 0,
+      initialCropRight: layer.cropRight ?? 0,
+      elemPxWidth,
+      elemPxHeight,
     };
     (event.target as HTMLElement).setPointerCapture(event.pointerId);
   }
@@ -645,21 +703,44 @@ export class StudioWorkspace implements OnDestroy {
       initialWidth: layer.width,
       initialHeight: layer.height,
       initialRotation: layer.rotation,
+      initialCropTop: layer.cropTop ?? 0,
+      initialCropBottom: layer.cropBottom ?? 0,
+      initialCropLeft: layer.cropLeft ?? 0,
+      initialCropRight: layer.cropRight ?? 0,
+      elemPxWidth: (layer.width / 100) * 300,
+      elemPxHeight: (layer.width / 100) * 300,
     };
     (event.target as HTMLElement).setPointerCapture(event.pointerId);
   }
 
   protected onCanvasPointerMove(event: PointerEvent): void {
     if (!this.activeDrag) return;
-    const { id, mode, startX, startY, initialX, initialY, initialWidth, initialRotation } =
-      this.activeDrag;
+    const {
+      id,
+      mode,
+      startX,
+      startY,
+      initialX,
+      initialY,
+      initialWidth,
+      initialRotation,
+      corner,
+    } = this.activeDrag;
+    const initialCropTop = this.activeDrag.initialCropTop ?? 0;
+    const initialCropBottom = this.activeDrag.initialCropBottom ?? 0;
+    const initialCropLeft = this.activeDrag.initialCropLeft ?? 0;
+    const initialCropRight = this.activeDrag.initialCropRight ?? 0;
+    const elemPxWidth = this.activeDrag.elemPxWidth ?? 300;
+    const elemPxHeight = this.activeDrag.elemPxHeight ?? 300;
 
-    const deltaX = ((event.clientX - startX) / 300) * 100;
-    const deltaY = ((event.clientY - startY) / 632) * 100;
+    const zoomFactor = this.state.zoom() / 100;
+    const deltaX = ((event.clientX - startX) / (300 * zoomFactor)) * 100;
+    const deltaY = ((event.clientY - startY) / (632 * zoomFactor)) * 100;
 
     if (mode === 'move') {
-      const newX = Math.max(-30, Math.min(130, initialX + deltaX));
-      const newY = Math.max(-25, Math.min(125, initialY + deltaY));
+      // Unrestricted freedom to place elements anywhere on the stage (parking / staging area)
+      const newX = Math.max(-200, Math.min(300, initialX + deltaX));
+      const newY = Math.max(-150, Math.min(250, initialY + deltaY));
 
       const cam = this.cameraCutout();
       const inCameraArea =
@@ -674,12 +755,40 @@ export class StudioWorkspace implements OnDestroy {
 
       this.state.updateLayer(id, { x: Math.round(newX), y: Math.round(newY) });
     } else if (mode === 'resize') {
-      const scaleDelta = (event.clientX - startX) / 2;
-      const newWidth = Math.max(15, Math.min(90, initialWidth + scaleDelta));
+      // No upper percentage limit! Scale as big as desired like Canva
+      let scaleDelta = (event.clientX - startX) / (2 * zoomFactor);
+      if (corner === 'bl' || corner === 'tl') {
+        scaleDelta = -scaleDelta;
+      }
+      const newWidth = Math.max(5, initialWidth + scaleDelta);
       this.state.updateLayer(id, { width: Math.round(newWidth) });
     } else if (mode === 'rotate') {
       const angle = (event.clientX - startX) * 1.5;
       this.state.updateLayer(id, { rotation: Math.round((initialRotation + angle) % 360) });
+    } else if (mode === 'crop-top') {
+      const deltaPixels = (event.clientY - startY) / zoomFactor;
+      const deltaPercent = (deltaPixels / Math.max(20, elemPxHeight)) * 100;
+      const maxCrop = 100 - initialCropBottom - 5;
+      const newCrop = Math.max(0, Math.min(maxCrop, initialCropTop + deltaPercent));
+      this.state.updateLayer(id, { cropTop: Math.round(newCrop) });
+    } else if (mode === 'crop-bottom') {
+      const deltaPixels = (startY - event.clientY) / zoomFactor;
+      const deltaPercent = (deltaPixels / Math.max(20, elemPxHeight)) * 100;
+      const maxCrop = 100 - initialCropTop - 5;
+      const newCrop = Math.max(0, Math.min(maxCrop, initialCropBottom + deltaPercent));
+      this.state.updateLayer(id, { cropBottom: Math.round(newCrop) });
+    } else if (mode === 'crop-left') {
+      const deltaPixels = (event.clientX - startX) / zoomFactor;
+      const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
+      const maxCrop = 100 - initialCropRight - 5;
+      const newCrop = Math.max(0, Math.min(maxCrop, initialCropLeft + deltaPercent));
+      this.state.updateLayer(id, { cropLeft: Math.round(newCrop) });
+    } else if (mode === 'crop-right') {
+      const deltaPixels = (startX - event.clientX) / zoomFactor;
+      const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
+      const maxCrop = 100 - initialCropLeft - 5;
+      const newCrop = Math.max(0, Math.min(maxCrop, initialCropRight + deltaPercent));
+      this.state.updateLayer(id, { cropRight: Math.round(newCrop) });
     }
   }
 
@@ -822,6 +931,31 @@ export class StudioWorkspace implements OnDestroy {
       ctx.translate(posX, posY);
       ctx.rotate((layer.rotation * Math.PI) / 180);
       ctx.globalAlpha = layer.opacity;
+
+      // Apply Canva-style 4-side crop if present
+      if (layer.cropTop || layer.cropBottom || layer.cropLeft || layer.cropRight) {
+        let elemW = (layer.width / 100) * W;
+        let elemH = elemW;
+        if (layer.type === 'image') {
+          const img = this.imageCache.get(layer.storageUrl);
+          if (img && img.naturalWidth > 0) {
+            elemH = elemW * (img.naturalHeight / (img.naturalWidth || 1));
+          }
+        }
+        const cL = (layer.cropLeft || 0) / 100;
+        const cT = (layer.cropTop || 0) / 100;
+        const cR = (layer.cropRight || 0) / 100;
+        const cB = (layer.cropBottom || 0) / 100;
+
+        ctx.beginPath();
+        ctx.rect(
+          -elemW / 2 + cL * elemW,
+          -elemH / 2 + cT * elemH,
+          elemW * (1 - cL - cR),
+          elemH * (1 - cT - cB)
+        );
+        ctx.clip();
+      }
 
       if (layer.type === 'text') {
         const fontSizePx = Math.round((layer.fontSize / 300) * W);
