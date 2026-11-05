@@ -729,11 +729,11 @@ export class StudioWorkspace implements OnDestroy {
       // Large circular bump
       ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
     } else {
-      // iPhone squircle
+      // iPhone squircle - expanded right and bottom to comfortably clear all 3 lenses
       if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(32, 32, 250, 260, [46, 46, 46, 46]);
+        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
       } else {
-        ctx.rect(32, 32, 250, 260);
+        ctx.rect(28, 28, 285, 295);
       }
     }
     ctx.fill();
