@@ -4,6 +4,7 @@ import {
   ElementRef,
   OnDestroy,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -19,6 +20,8 @@ import {
   StudioState,
 } from '../../services/studio-state';
 import { StudioDraft } from '../../services/studio-draft';
+import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
+import { AuthModal } from '../../../../core/auth/auth-modal';
 
 @Component({
   selector: 'app-studio-workspace',
@@ -31,6 +34,8 @@ import { StudioDraft } from '../../services/studio-draft';
 export class StudioWorkspace implements OnDestroy {
   protected readonly state = inject(StudioState);
   protected readonly draft = inject(StudioDraft);
+  protected readonly auth = inject(SupabaseAuthService);
+  protected readonly authModal = inject(AuthModal);
   protected readonly stickers = STICKERS_LIST;
   protected readonly bgPresets = BG_PRESETS;
 
@@ -67,6 +72,15 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly showNamingModal = signal<boolean>(false);
   protected readonly namingInput = signal<string>('');
   protected readonly showAuthModal = signal<boolean>(false);
+  protected readonly guestActionType = signal<'save' | 'cart'>('save');
+
+  constructor() {
+    effect(() => {
+      if (this.auth.isAuthenticated()) {
+        this.checkAndSyncGuestDraft();
+      }
+    });
+  }
 
   // 3D Preview
   protected readonly is3dSupported = signal<boolean>(true);
@@ -161,7 +175,15 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
+    // Luôn lưu bản nháp an toàn vào LocalStorage cho phiên hiện tại
     this.saveToGuestLocalStorage();
+
+    // Khách vãng lai: hiện popup yêu cầu đăng nhập nhưng đã lưu ngầm vào local storage (Issue 13)
+    if (!this.auth.isAuthenticated()) {
+      this.guestActionType.set('save');
+      this.showAuthModal.set(true);
+      return;
+    }
 
     if (this.state.isFirstSave()) {
       this.namingInput.set(
@@ -259,7 +281,7 @@ export class StudioWorkspace implements OnDestroy {
     localStorage.setItem('caseyes_guest_draft', JSON.stringify(draftData));
   }
 
-  // --- Add to Cart (Bug 7 Resolved: No Auto Drawer Popup) ---
+  // --- Add to Cart (Bug 7 & Issue 13 Resolved: Guest Prompt + Auto Local Storage) ---
   protected onAddToCart(): void {
     if (this.state.designStatus() === 'REJECTED') {
       this.showToast(
@@ -272,12 +294,81 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
+    // Luôn lưu bản nháp an toàn vào LocalStorage cho khách vãng lai
     this.saveToGuestLocalStorage();
+
+    // Khách vãng lai: hiện popup yêu cầu đăng nhập nhưng đã đồng thời lưu vào local storage
+    if (!this.auth.isAuthenticated()) {
+      this.guestActionType.set('cart');
+      this.showAuthModal.set(true);
+      return;
+    }
+
     this.showToast('✓ Đã thêm thiết kế vào giỏ hàng thành công!');
   }
 
   protected dismissToast(): void {
     this.cartToast.set(null);
+  }
+
+  // --- Guest Auth Flow (Issue 13) ---
+  protected onGuestLoginClick(): void {
+    this.showAuthModal.set(false);
+    this.authModal.open('login');
+  }
+
+  protected closeAuthModal(): void {
+    this.showAuthModal.set(false);
+    if (this.guestActionType() === 'cart') {
+      this.showToast('✓ Đã lưu tạm thiết kế! Bạn có thể đăng nhập bất cứ lúc nào để hoàn tất giỏ hàng.');
+    } else {
+      this.showToast('✓ Đã lưu tạm bản thiết kế vào trình duyệt của bạn!');
+    }
+  }
+
+  /**
+   * Tự động đồng bộ bản vẽ nháp của khách vãng lai sang danh sách My Designs ngay khi đăng nhập
+   */
+  private checkAndSyncGuestDraft(): void {
+    if (typeof localStorage === 'undefined') return;
+    const raw = localStorage.getItem('caseyes_guest_draft');
+    if (!raw) return;
+
+    try {
+      const draft = JSON.parse(raw);
+      if (draft && draft.layers && draft.layers.length > 0) {
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now
+          .getMinutes()
+          .toString()
+          .padStart(2, '0')}`;
+        const currentName = draft.designName || `Ốp lưng ${this.state.selectedModel().name}`;
+
+        const syncedItem: SavedDesignItem = {
+          id: 'synced_' + Date.now(),
+          name: currentName,
+          modelId: draft.modelId || this.state.selectedModel().id,
+          modelName: this.state.selectedModel().name,
+          material: draft.material || 'standard',
+          bg: draft.bg || this.state.caseBg(),
+          layerCount: draft.layers.length,
+          layers: draft.layers,
+          savedAt: `Đã đồng bộ lúc ${timeStr}`,
+          thumbnailText:
+            draft.layers.find((l: any) => l.type === 'text')?.content || currentName,
+        };
+
+        this.state.savedDesigns.update((list) => {
+          const exists = list.some((d) => d.id === syncedItem.id || d.name === syncedItem.name);
+          return exists ? list : [syncedItem, ...list];
+        });
+
+        localStorage.removeItem('caseyes_guest_draft');
+        this.showToast('✓ Đã tự động đồng bộ bản thiết kế từ phiên khách vãng lai vào tài khoản của bạn!');
+      }
+    } catch {
+      // Bỏ qua lỗi parse nếu có
+    }
   }
 
   // --- Layer Reordering (Bug 6) ---

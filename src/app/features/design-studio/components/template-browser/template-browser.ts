@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
+import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 
 export interface TemplateTag {
   label: string;
@@ -156,9 +157,10 @@ export class TemplateBrowser {
   protected readonly state = inject(StudioState);
   private readonly catalog = inject(StudioCatalogService);
   private readonly router = inject(Router);
+  private readonly auth = inject(SupabaseAuthService);
 
-  // My Designs for logged-in user (Issue 8)
-  protected readonly isLoggedIn = signal<boolean>(true);
+  // My Designs for logged-in user only (Issue 8 & 13)
+  protected readonly isLoggedIn = this.auth.isAuthenticated;
   protected readonly myDesigns = this.state.savedDesigns;
 
   protected readonly aiPrompt = signal('');
