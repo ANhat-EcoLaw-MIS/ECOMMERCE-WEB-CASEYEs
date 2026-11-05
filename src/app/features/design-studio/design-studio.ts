@@ -2,13 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
-import { ModelSelector } from './components/model-selector/model-selector';
 import { StudioState } from './services/studio-state';
 
 @Component({
   selector: 'app-design-studio',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, ModelSelector],
+  imports: [RouterOutlet, RouterLink],
   templateUrl: './design-studio.html',
   styleUrl: './design-studio.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
