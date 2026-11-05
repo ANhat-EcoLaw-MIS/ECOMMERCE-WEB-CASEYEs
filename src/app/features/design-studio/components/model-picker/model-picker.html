@@ -90,7 +90,7 @@
                 class="w-full appearance-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 cursor-pointer"
               >
                 @for (model of availableModels(); track model.id) {
-                  <option [value]="model.id">{{ model.name }} ({{ model.releaseYear }})</option>
+                  <option [value]="model.id">{{ model.name }} ({{ model.releaseYear }}){{ !model.has3dModel ? ' - [Chưa hỗ trợ 3D]' : '' }}</option>
                 }
               </select>
               <!-- Dropdown Chevron -->
@@ -252,9 +252,20 @@
         <div class="space-y-4 max-w-xs text-left">
           <div>
             <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600">Thông số kỹ thuật</span>
-            <h3 class="font-display text-xl font-extrabold text-ink sm:text-2xl">
-              {{ activeModel().name }}
-            </h3>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="font-display text-xl font-extrabold text-ink sm:text-2xl">
+                {{ activeModel().name }}
+              </h3>
+              @if (activeModel().has3dModel) {
+                <span class="rounded-pill bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                  ✓ Hỗ trợ 3D
+                </span>
+              } @else {
+                <span class="rounded-pill bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                  Chưa hỗ trợ Preview 3D
+                </span>
+              }
+            </div>
             <p class="text-xs text-ink-soft">
               Phát hành {{ activeModel().releaseYear }} · Chuẩn phôi CasEYE's Precision
             </p>
