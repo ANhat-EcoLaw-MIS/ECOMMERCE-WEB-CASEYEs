@@ -566,7 +566,7 @@ export class StudioWorkspace implements OnDestroy {
       this.activeDrag;
 
     const deltaX = ((event.clientX - startX) / 300) * 100;
-    const deltaY = ((event.clientY - startY) / 620) * 100;
+    const deltaY = ((event.clientY - startY) / 632) * 100;
 
     if (mode === 'move') {
       const newX = Math.max(10, Math.min(90, initialX + deltaX));
@@ -659,9 +659,9 @@ export class StudioWorkspace implements OnDestroy {
     const mv = document.querySelector('model-viewer') as any;
     if (!mv || !mv.model) return;
 
-    // 1. Offscreen 2D Canvas rendering matching the case viewport aspect ratio (300px : 620px)
+    // 1. Offscreen 2D Canvas rendering matching the case viewport aspect ratio (300px : 632px)
     const W = 600;
-    const H = 1240;
+    const H = 1264;
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
@@ -701,10 +701,10 @@ export class StudioWorkspace implements OnDestroy {
       ctx.fillStyle = (lower === '#ffffff' || lower === '#fff' || lower === '#fafafa') ? '#f3f3f6' : bg;
     }
 
-    // Rounded case silhouette
+    // Rounded case silhouette matching 2D canvas frame radius (50px * 2)
     ctx.beginPath();
     if ((ctx as any).roundRect) {
-      (ctx as any).roundRect(0, 0, W, H, [54, 54, 54, 54]);
+      (ctx as any).roundRect(0, 0, W, H, [100, 100, 100, 100]);
     } else {
       ctx.rect(0, 0, W, H);
     }
@@ -747,25 +747,35 @@ export class StudioWorkspace implements OnDestroy {
       ctx.restore();
     }
 
-    // Camera Cutout (punched out cleanly through background and layers)
-    const modelId = this.state.selectedModel().id;
+    // Camera Cutout (punched out cleanly through background and layers using exact model config)
+    const model = this.state.selectedModel();
+    const cam = model.safeZoneMask.cameraCutout;
+    const camX = (cam.xPercent / 100) * W;
+    const camY = (cam.yPercent / 100) * H;
+    const camW = (cam.widthPercent / 100) * W;
+    const camH = (cam.heightPercent / 100) * H;
+    const camRadius = cam.borderRadius * 2;
+
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    if (modelId === 'galaxy-s24') {
-      const cx = W * 0.22;
-      const r = 42;
-      ctx.arc(cx, 100, r, 0, Math.PI * 2);
-      ctx.arc(cx, 200, r, 0, Math.PI * 2);
-      ctx.arc(cx, 300, r, 0, Math.PI * 2);
-    } else if (modelId === 'xiaomi-14-ultra') {
-      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
+    if (model.id === 'galaxy-s24') {
+      const cx = camX + camW / 2;
+      const r = camW * 0.42;
+      ctx.arc(cx, camY + r + 4, r, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH * 0.5, r, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH - r - 4, r, 0, Math.PI * 2);
+    } else if (model.id === 'xiaomi-14-ultra') {
+      const cx = W / 2;
+      const cy = camY + camH / 2;
+      const r = camW / 2;
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
     } else {
-      // iPhone squircle - comfortably clear all 3 lenses and flash
+      // iPhone squircle - 1:1 match with 2D canvas frame and 3D camera island
       if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
+        (ctx as any).roundRect(camX, camY, camW, camH, [camRadius, camRadius, camRadius, camRadius]);
       } else {
-        ctx.rect(28, 28, 285, 295);
+        ctx.rect(camX, camY, camW, camH);
       }
     }
     ctx.fill();
@@ -777,7 +787,7 @@ export class StudioWorkspace implements OnDestroy {
     ctx.strokeStyle = '#18181b';
     ctx.beginPath();
     if ((ctx as any).roundRect) {
-      (ctx as any).roundRect(7, 7, W - 14, H - 14, [48, 48, 48, 48]);
+      (ctx as any).roundRect(7, 7, W - 14, H - 14, [94, 94, 94, 94]);
     } else {
       ctx.rect(7, 7, W - 14, H - 14);
     }
@@ -787,19 +797,22 @@ export class StudioWorkspace implements OnDestroy {
     ctx.lineWidth = 6;
     ctx.strokeStyle = '#27272a';
     ctx.beginPath();
-    if (modelId === 'galaxy-s24') {
-      const cx = W * 0.22;
-      const r = 42;
-      ctx.arc(cx, 100, r, 0, Math.PI * 2);
-      ctx.arc(cx, 200, r, 0, Math.PI * 2);
-      ctx.arc(cx, 300, r, 0, Math.PI * 2);
-    } else if (modelId === 'xiaomi-14-ultra') {
-      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
+    if (model.id === 'galaxy-s24') {
+      const cx = camX + camW / 2;
+      const r = camW * 0.42;
+      ctx.arc(cx, camY + r + 4, r, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH * 0.5, r, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH - r - 4, r, 0, Math.PI * 2);
+    } else if (model.id === 'xiaomi-14-ultra') {
+      const cx = W / 2;
+      const cy = camY + camH / 2;
+      const r = camW / 2;
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
     } else {
       if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(28, 28, 285, 295, [50, 50, 50, 50]);
+        (ctx as any).roundRect(camX, camY, camW, camH, [camRadius, camRadius, camRadius, camRadius]);
       } else {
-        ctx.rect(28, 28, 285, 295);
+        ctx.rect(camX, camY, camW, camH);
       }
     }
     ctx.stroke();
@@ -866,9 +879,9 @@ export class StudioWorkspace implements OnDestroy {
             }
             tex.needsUpdate = true;
 
-            // Geometry: plane matching back dimensions (w: 7.52, h: 15.82, z: 0.42)
-            const w = 7.52;
-            const h = 15.82;
+            // Geometry: plane matching back dimensions (w: 7.48, h: 15.755, z: 0.42)
+            const w = 7.48;
+            const h = 15.755;
             const halfW = w / 2;
             const halfH = h / 2;
             const z = 0.42;

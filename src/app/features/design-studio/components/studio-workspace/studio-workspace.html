@@ -331,46 +331,74 @@
 
     <!-- Phone Mockup Canvas -->
     <div class="relative transition-transform duration-200" [style.transform]="'scale(' + state.zoom() / 100 + ')'">
-      <div id="case-viewport" class="relative h-[620px] w-[300px] overflow-hidden rounded-[46px] shadow-lift ring-4 ring-[#1f2230]"
+      <div id="case-viewport" class="relative h-[632px] w-[300px] overflow-hidden rounded-[50px] shadow-lift ring-4 ring-[#1f2230]"
         [style.background]="state.caseBg()">
 
-        <!-- ── Dynamic Camera Cutout per Model (Issue 6) ── -->
+        <!-- ── Dynamic Camera Cutout per Model (Aligned with 3D GLB Models) ── -->
         @if (state.selectedModel().id === 'galaxy-s24') {
-          <!-- Samsung Galaxy S24: 3 distinct vertical camera circles -->
-          <div class="pointer-events-none absolute z-20 flex flex-col gap-2.5 items-center p-1.5"
+          <!-- Samsung Galaxy S24: 3 distinct vertical camera circles matching 3D model -->
+          <div class="pointer-events-none absolute z-20 flex flex-col gap-3.5 items-center p-1"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent">
-            <div class="h-8 w-8 rounded-full bg-[#111] ring-2 ring-[#4a4845] flex items-center justify-center shadow-lg">
+            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 ring-[#52525b] flex items-center justify-center shadow-lg">
               <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
             </div>
-            <div class="h-8 w-8 rounded-full bg-[#111] ring-2 ring-[#4a4845] flex items-center justify-center shadow-lg">
+            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 ring-[#52525b] flex items-center justify-center shadow-lg">
               <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
             </div>
-            <div class="h-8 w-8 rounded-full bg-[#111] ring-2 ring-[#4a4845] flex items-center justify-center shadow-lg">
+            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 ring-[#52525b] flex items-center justify-center shadow-lg">
               <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
             </div>
+            <!-- Small flash -->
+            <div class="absolute -right-3 top-2 h-2.5 w-2.5 rounded-full bg-[#fef08a] ring-1 ring-white/60"></div>
           </div>
         } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
-          <!-- Xiaomi 14 Ultra: Large Leica circular camera bump -->
-          <div class="pointer-events-none absolute z-20 rounded-full bg-[#18181b] ring-2 ring-amber-500/30 p-2 shadow-2xl flex items-center justify-center"
+          <!-- Xiaomi 14 Ultra: Large Leica circular camera bump matching 3D model -->
+          <div class="pointer-events-none absolute z-20 rounded-full bg-[#18181b] ring-3 ring-amber-500/40 p-2 shadow-2xl flex items-center justify-center"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
             [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
-            <div class="grid grid-cols-2 gap-2 place-items-center">
-              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
-              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
-              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
-              <span class="h-7 w-7 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#3f3f46]"></span>
+            <div class="grid grid-cols-2 gap-3 place-items-center">
+              <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
+              <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
+              <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
+              <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
             </div>
+            <span class="absolute text-[8px] font-bold text-amber-500/80 tracking-widest uppercase">LEICA</span>
           </div>
         } @else {
-          <!-- Apple iPhone: Squircle bump with 3 lenses -->
-          <div class="pointer-events-none absolute z-20 rounded-[28px] bg-[#10121a] p-2 shadow-inner ring-1 ring-white/20 backdrop-blur-md"
+          <!-- Apple iPhone Pro: Realistic 3-lens Squircle Module 1:1 with 3D GLB model -->
+          <div class="pointer-events-none absolute z-20 rounded-[34px] bg-[#1a1b22]/95 shadow-xl ring-2 ring-[#2e303b] backdrop-blur-md"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
             [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
-            <div class="grid h-full w-full grid-cols-2 gap-2 place-items-center">
-              <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
-              <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
-              <span class="h-7 w-7 rounded-full bg-radial from-[#4a5568] to-[#0a0a0a] ring-2 ring-[#2d3748]"></span>
+            
+            <!-- Lens 1 (Top-Left: Main 48MP) -->
+            <div class="absolute left-[11%] top-[11%] h-[42px] w-[42px] rounded-full bg-[#0a0a0d] ring-2 ring-[#404352] flex items-center justify-center shadow-md">
+              <div class="h-6 w-6 rounded-full bg-radial from-[#2a3045] to-[#04060a] ring-1 ring-[#1e2330] flex items-center justify-center">
+                <span class="h-2 w-2 rounded-full bg-[#1e40af]/60"></span>
+              </div>
             </div>
+
+            <!-- Lens 2 (Bottom-Left: Ultra-Wide) -->
+            <div class="absolute left-[11%] bottom-[11%] h-[42px] w-[42px] rounded-full bg-[#0a0a0d] ring-2 ring-[#404352] flex items-center justify-center shadow-md">
+              <div class="h-6 w-6 rounded-full bg-radial from-[#2a3045] to-[#04060a] ring-1 ring-[#1e2330] flex items-center justify-center">
+                <span class="h-2 w-2 rounded-full bg-[#1e40af]/60"></span>
+              </div>
+            </div>
+
+            <!-- Lens 3 (Middle-Right: Telephoto) -->
+            <div class="absolute right-[11%] top-1/2 -translate-y-1/2 h-[42px] w-[42px] rounded-full bg-[#0a0a0d] ring-2 ring-[#404352] flex items-center justify-center shadow-md">
+              <div class="h-6 w-6 rounded-full bg-radial from-[#2a3045] to-[#04060a] ring-1 ring-[#1e2330] flex items-center justify-center">
+                <span class="h-2 w-2 rounded-full bg-[#1e40af]/60"></span>
+              </div>
+            </div>
+
+            <!-- True Tone Flash (Top-Right) -->
+            <div class="absolute right-[19%] top-[15%] h-[15px] w-[15px] rounded-full bg-radial from-[#fef08a] to-[#ca8a04] ring-1 ring-white/50 shadow-xs"></div>
+
+            <!-- LiDAR Sensor (Bottom-Right) -->
+            <div class="absolute right-[21%] bottom-[16%] h-[13px] w-[13px] rounded-full bg-[#050507] ring-1 ring-[#374151]"></div>
+
+            <!-- Microphone hole -->
+            <div class="absolute right-[8%] top-[68%] h-1.5 w-1.5 rounded-full bg-[#111]"></div>
           </div>
         }
 
