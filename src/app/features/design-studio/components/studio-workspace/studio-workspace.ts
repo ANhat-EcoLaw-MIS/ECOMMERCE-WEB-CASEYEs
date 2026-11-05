@@ -76,23 +76,27 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly showAuthModal = signal<boolean>(false);
   protected readonly guestActionType = signal<'save' | 'cart'>('save');
 
+  // Texture sync timer
+  private textureSyncTimer: any = null;
+
   constructor() {
     effect(() => {
       if (this.auth.isAuthenticated()) {
         this.checkAndSyncGuestDraft();
       }
     });
+
+    // Real-time 3D texture projection onto GLB Phone Case
+    effect(() => {
+      this.state.caseBg();
+      this.state.layers();
+      this.state.selectedModel();
+      this.trigger3dTextureSync();
+    });
   }
 
   // 3D Preview
   protected readonly is3dSupported = signal<boolean>(true);
-  protected readonly preview3dMode = signal<'glb' | 'case'>('glb');
-  protected readonly orbitRx = signal<number>(-10);
-  protected readonly orbitRy = signal<number>(-25);
-  protected readonly orbitZoom = signal<number>(1);
-  private isOrbitDragging = false;
-  private dragStartX = 0;
-  private dragStartY = 0;
 
   // Auto-save interval handle (Issue 14)
   private autoSaveTimer: ReturnType<typeof setInterval> | null = null;
@@ -128,6 +132,10 @@ export class StudioWorkspace implements OnDestroy {
     if (this.autoSaveTimer) {
       clearInterval(this.autoSaveTimer);
       this.autoSaveTimer = null;
+    }
+    if (this.textureSyncTimer) {
+      clearTimeout(this.textureSyncTimer);
+      this.textureSyncTimer = null;
     }
   }
 
@@ -623,44 +631,293 @@ export class StudioWorkspace implements OnDestroy {
     if (key === 'fontFamily') this.state.updateLayer(layer.id, { fontFamily: value });
   }
 
-  // --- 3D Preview Operations ---
-  protected open3dPreview(): void {
-    this.state.is3dPreviewOpen.set(true);
-    this.orbitRx.set(-10);
-    this.orbitRy.set(-25);
-    this.orbitZoom.set(1);
+  // --- Real-time 3D Texture Projection on GLB Case Model ---
+  protected onModelViewerLoad(): void {
+    const mv = document.querySelector('model-viewer') as any;
+    if (mv) {
+      mv.cameraOrbit = '0deg 85deg 105%';
+      if (mv.jumpCameraToGoal) mv.jumpCameraToGoal();
+    }
+    this.trigger3dTextureSync(true);
   }
 
-  protected close3dPreview(): void {
-    this.state.is3dPreviewOpen.set(false);
+  private trigger3dTextureSync(immediate = false): void {
+    if (this.textureSyncTimer) {
+      clearTimeout(this.textureSyncTimer);
+    }
+    if (immediate) {
+      this.sync3dTexture();
+    } else {
+      this.textureSyncTimer = setTimeout(() => {
+        this.sync3dTexture();
+      }, 100);
+    }
   }
 
-  protected onOrbitPointerDown(event: PointerEvent): void {
-    this.isOrbitDragging = true;
-    this.dragStartX = event.clientX;
-    this.dragStartY = event.clientY;
-    (event.target as HTMLElement).setPointerCapture(event.pointerId);
-  }
+  private sync3dTexture(): void {
+    if (typeof document === 'undefined') return;
+    const mv = document.querySelector('model-viewer') as any;
+    if (!mv || !mv.model) return;
 
-  protected onOrbitPointerMove(event: PointerEvent): void {
-    if (!this.isOrbitDragging) return;
-    const deltaX = event.clientX - this.dragStartX;
-    const deltaY = event.clientY - this.dragStartY;
-    this.dragStartX = event.clientX;
-    this.dragStartY = event.clientY;
+    // 1. Offscreen 2D Canvas rendering matching the case viewport aspect ratio (300px : 620px)
+    const W = 600;
+    const H = 1240;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    this.orbitRy.update((y) => y + deltaX * 0.6);
-    this.orbitRx.update((x) => Math.max(-60, Math.min(60, x - deltaY * 0.5)));
-  }
+    // Draw Background
+    const bg = this.state.caseBg();
+    if (bg.includes('gradient')) {
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      if (bg.includes('#ffd1a8')) {
+        grad.addColorStop(0, '#ffd1a8');
+        grad.addColorStop(1, '#ff7e8b');
+      } else if (bg.includes('#433075')) {
+        grad.addColorStop(0, '#433075');
+        grad.addColorStop(1, '#A58CF4');
+      } else if (bg.includes('#8fd3ff')) {
+        grad.addColorStop(0, '#8fd3ff');
+        grad.addColorStop(1, '#ffe3b8');
+      } else if (bg.includes('#b9e4f5')) {
+        grad.addColorStop(0, '#b9e4f5');
+        grad.addColorStop(1, '#7fc29b');
+      } else if (bg.includes('#141a3d')) {
+        grad.addColorStop(0, '#141a3d');
+        grad.addColorStop(1, '#5b4b9a');
+      } else if (bg.includes('#D4C8FA') || bg.includes('#f5b8d8')) {
+        grad.addColorStop(0, '#D4C8FA');
+        grad.addColorStop(1, '#f5b8d8');
+      } else {
+        grad.addColorStop(0, '#FAFAFA');
+        grad.addColorStop(1, '#ECE6FD');
+      }
+      ctx.fillStyle = grad;
+    } else {
+      ctx.fillStyle = bg;
+    }
 
-  protected onOrbitPointerUp(): void {
-    this.isOrbitDragging = false;
+    // Rounded case silhouette
+    ctx.beginPath();
+    if ((ctx as any).roundRect) {
+      (ctx as any).roundRect(0, 0, W, H, [54, 54, 54, 54]);
+    } else {
+      ctx.rect(0, 0, W, H);
+    }
+    ctx.fill();
+
+    // Subtle edge bevel / case border
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.stroke();
+
+    // Camera Cutout (transparent hole matching 3D phone model camera bump)
+    const modelId = this.state.selectedModel().id;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    if (modelId === 'galaxy-s24') {
+      // 3 vertical lens circles
+      const cx = W * 0.22;
+      const r = 42;
+      ctx.arc(cx, 100, r, 0, Math.PI * 2);
+      ctx.arc(cx, 200, r, 0, Math.PI * 2);
+      ctx.arc(cx, 300, r, 0, Math.PI * 2);
+    } else if (modelId === 'xiaomi-14-ultra') {
+      // Large circular bump
+      ctx.arc(W / 2, 220, 140, 0, Math.PI * 2);
+    } else {
+      // iPhone squircle
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(32, 32, 250, 260, [46, 46, 46, 46]);
+      } else {
+        ctx.rect(32, 32, 250, 260);
+      }
+    }
+    ctx.fill();
+    ctx.restore();
+
+    // Draw Layers (Text, Stickers, Images)
+    const layers = this.state.layers();
+    for (const layer of layers) {
+      const posX = (layer.x / 100) * W;
+      const posY = (layer.y / 100) * H;
+
+      ctx.save();
+      ctx.translate(posX, posY);
+      ctx.rotate((layer.rotation * Math.PI) / 180);
+      ctx.globalAlpha = layer.opacity;
+
+      if (layer.type === 'text') {
+        const fontSizePx = Math.round((layer.fontSize / 300) * W);
+        ctx.fillStyle = layer.textColor;
+        ctx.font = `${layer.fontWeight || 'bold'} ${fontSizePx}px ${layer.fontFamily || 'sans-serif'}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(layer.content, 0, 0);
+      } else if (layer.type === 'sticker') {
+        ctx.font = '84px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(layer.name, 0, 0);
+      } else if (layer.type === 'image' && layer.storageUrl) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = layer.storageUrl;
+        if (img.complete && img.naturalWidth > 0) {
+          const imgW = (layer.width / 100) * W;
+          const imgH = imgW * (img.naturalHeight / (img.naturalWidth || 1));
+          ctx.drawImage(img, -imgW / 2, -imgH / 2, imgW, imgH);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // 2. Access Three.js Scene from <model-viewer>
+    const sceneSymbol = Object.getOwnPropertySymbols(mv).find((s) =>
+      s.toString().includes('scene')
+    );
+    const scene = sceneSymbol ? mv[sceneSymbol] : null;
+
+    if (scene) {
+      // Find back mesh & sample mesh to borrow Three.js constructors
+      let backMesh: any = null;
+      let sampleMesh: any = null;
+      let foundTex: any = null;
+
+      scene.traverse((o: any) => {
+        if (o.isMesh) {
+          if (!sampleMesh && o.name !== 'CaseOverlayMesh') sampleMesh = o;
+          if (o.material?.map && !foundTex) foundTex = o.material.map;
+          if (
+            o.name === 'wLfSXtbwRlBrwof' ||
+            o.material?.name === 'oZRkkORNzkufnGD' ||
+            o.material?.name === 'glass' ||
+            o.name?.toLowerCase().includes('back')
+          ) {
+            backMesh = o;
+          }
+          // Hide Apple logo mesh if present
+          if (o.name === 'IykfmVvLplTsTEW' || o.material?.name === 'PaletteMaterial004') {
+            o.visible = false;
+          }
+        }
+      });
+
+      if (!backMesh && sampleMesh) backMesh = sampleMesh;
+
+      if (backMesh && sampleMesh) {
+        const MeshConstructor = sampleMesh.constructor;
+        const MaterialConstructor = sampleMesh.material.constructor;
+        const BufferGeometryConstructor = sampleMesh.geometry.constructor;
+        const BufferAttributeConstructor = sampleMesh.geometry.attributes.position.constructor;
+        const TexConstructor = foundTex?.constructor;
+
+        if (TexConstructor) {
+          // Prepare WebGL Texture - Flipped horizontally and vertically to match 3D phone model back orientation
+          const glCvs = document.createElement('canvas');
+          glCvs.width = W;
+          glCvs.height = H;
+          const glCtx = glCvs.getContext('2d');
+          if (glCtx) {
+            glCtx.translate(W, H);
+            glCtx.scale(-1, -1);
+            glCtx.drawImage(canvas, 0, 0);
+
+            const tex = new TexConstructor(glCvs);
+            tex.needsUpdate = true;
+
+            // Geometry: plane matching back dimensions (w: 7.52, h: 15.82, z: 0.42)
+            const w = 7.52;
+            const h = 15.82;
+            const halfW = w / 2;
+            const halfH = h / 2;
+            const z = 0.42;
+
+            const positions = new Float32Array([
+              -halfW, -halfH, z,
+               halfW, -halfH, z,
+               halfW,  halfH, z,
+              -halfW,  halfH, z
+            ]);
+            // Planar UV coordinates aligned with phone back view (cutout at top-left matching camera)
+            const uvs = new Float32Array([
+              1, 1, // vertex 0 (-halfW, -halfH): bottom-left
+              0, 1, // vertex 1 (+halfW, -halfH): bottom-right
+              0, 0, // vertex 2 (+halfW,  halfH): top-right
+              1, 0  // vertex 3 (-halfW,  halfH): top-left (camera lenses cutout)
+            ]);
+            const indices = new Uint16Array([
+              0, 1, 2,
+              0, 2, 3
+            ]);
+            const normals = new Float32Array([
+              0, 0, 1,
+              0, 0, 1,
+              0, 0, 1,
+              0, 0, 1
+            ]);
+
+            const geo = new BufferGeometryConstructor();
+            geo.setAttribute('position', new BufferAttributeConstructor(positions, 3));
+            geo.setAttribute('uv', new BufferAttributeConstructor(uvs, 2));
+            geo.setAttribute('normal', new BufferAttributeConstructor(normals, 3));
+            geo.setIndex(new BufferAttributeConstructor(indices, 1));
+
+            let overlay = backMesh.parent.getObjectByName('CaseOverlayMesh');
+            if (!overlay) {
+              const mat = new MaterialConstructor();
+              mat.map = tex;
+              mat.transparent = true;
+              mat.side = 2; // DoubleSide
+              mat.roughness = 0.25;
+              mat.metalness = 0.05;
+
+              overlay = new MeshConstructor(geo, mat);
+              overlay.name = 'CaseOverlayMesh';
+              overlay.scale.copy(backMesh.scale);
+              backMesh.parent.add(overlay);
+            } else {
+              overlay.geometry = geo;
+              if (overlay.material) {
+                overlay.material.map = tex;
+                overlay.material.transparent = true;
+                overlay.material.needsUpdate = true;
+              }
+            }
+            return;
+          }
+        }
+      }
+    }
+
+    // Fallback: If Three scene injection not available, fallback to model-viewer texture API
+    const targetMat = mv.model?.materials?.find(
+      (m: any) =>
+        m.name === 'oZRkkORNzkufnGD' ||
+        m.name === 'glass' ||
+        m.name === 'back' ||
+        m.name?.toLowerCase().includes('case')
+    );
+    if (targetMat?.pbrMetallicRoughness?.baseColorTexture) {
+      mv.createTexture(canvas.toDataURL('image/png'))
+        .then((texture: any) => {
+          targetMat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+          targetMat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
+        })
+        .catch(() => {});
+    }
   }
 
   protected reset3dView(): void {
-    this.orbitRx.set(-10);
-    this.orbitRy.set(-25);
-    this.orbitZoom.set(1);
+    const mv = document.querySelector('model-viewer') as any;
+    if (mv) {
+      mv.cameraOrbit = '0deg 85deg 105%';
+      if (mv.jumpCameraToGoal) mv.jumpCameraToGoal();
+    }
   }
 
   protected closeCart(): void {
