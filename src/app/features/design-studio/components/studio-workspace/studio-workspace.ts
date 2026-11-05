@@ -80,6 +80,11 @@ export class StudioWorkspace implements OnDestroy {
   // Bleed View Mode: 'bleed' (shows overflow at 50% opacity) | 'clipped' (strictly hides overflow)
   protected readonly viewMode = signal<'bleed' | 'clipped'>('bleed');
 
+  // Image Auto-Resize Modal State for > 10MB files
+  protected readonly isResizeNoticeModalOpen = signal<boolean>(false);
+  protected readonly resizeNoticeInfo = signal<{ originalSizeMb: string; optimizedSizeMb: string; name: string } | null>(null);
+  private pendingResizedUpload: any = null;
+
   // Case Stroke / Bumper Color (Màu viền ốp)
   protected readonly caseStrokeColor = signal<string>('#18181b');
 
@@ -532,10 +537,115 @@ export class StudioWorkspace implements OnDestroy {
     this.isFileDragging.set(false);
   }
 
+  private compressAndResizeImage(file: File): Promise<{ dataUrl: string; optimizedSize: number }> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 3600;
+          let w = img.naturalWidth;
+          let h = img.naturalHeight;
+
+          if (w > MAX_DIM || h > MAX_DIM) {
+            if (w > h) {
+              h = Math.round((h * MAX_DIM) / w);
+              w = MAX_DIM;
+            } else {
+              w = Math.round((w * MAX_DIM) / h);
+              h = MAX_DIM;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve({ dataUrl: reader.result as string, optimizedSize: file.size });
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const isPng = file.type === 'image/png';
+          const format = isPng ? 'image/png' : 'image/jpeg';
+          const quality = isPng ? undefined : 0.88;
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob && blob.size > 9.5 * 1024 * 1024) {
+                // Compress further to ensure strictly <= 9.5MB
+                canvas.toBlob(
+                  (smallerBlob) => {
+                    const finalBlob = smallerBlob || blob;
+                    const r = new FileReader();
+                    r.onload = () => resolve({ dataUrl: r.result as string, optimizedSize: finalBlob.size });
+                    r.readAsDataURL(finalBlob);
+                  },
+                  'image/jpeg',
+                  0.78
+                );
+              } else if (blob) {
+                const r = new FileReader();
+                r.onload = () => resolve({ dataUrl: r.result as string, optimizedSize: blob.size });
+                r.readAsDataURL(blob);
+              } else {
+                resolve({ dataUrl: reader.result as string, optimizedSize: file.size });
+              }
+            },
+            format,
+            quality
+          );
+        };
+        img.onerror = reject;
+        img.src = reader.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   private processFile(file: File): void {
-    const validTypes = ['image/png', 'image/jpeg'];
-    if (!validTypes.includes(file.type) || file.size > 10 * 1024 * 1024) {
-      this.showToast('⚠️ Hệ thống chỉ hỗ trợ định dạng PNG, JPG và dung lượng tối đa 10MB.');
+    const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      this.showToast('⚠️ Hệ thống chỉ hỗ trợ định dạng PNG, JPG và WEBP.');
+      return;
+    }
+
+    // Auto-resize and optimize images larger than 10MB with modal notice
+    if (file.size > 10 * 1024 * 1024) {
+      const originalSizeMb = (file.size / (1024 * 1024)).toFixed(1);
+      this.showToast(`⏳ Đang tối ưu dung lượng ảnh (${originalSizeMb} MB)...`, 3000);
+
+      this.compressAndResizeImage(file)
+        .then(({ dataUrl, optimizedSize }) => {
+          const optimizedSizeMb = (optimizedSize / (1024 * 1024)).toFixed(1);
+          const img = new Image();
+          img.onload = () => {
+            const printWidthMm = this.state.selectedModel().printWidthMm || 71.5;
+            const dpi = Math.round(img.naturalWidth / (printWidthMm / 25.4));
+            const uploadObj = {
+              id: 'img_' + crypto.randomUUID().slice(0, 8),
+              name: file.name,
+              url: dataUrl,
+              dpi,
+              size: optimizedSize,
+            };
+
+            this.pendingResizedUpload = uploadObj;
+            this.resizeNoticeInfo.set({
+              name: file.name,
+              originalSizeMb,
+              optimizedSizeMb,
+            });
+            this.isResizeNoticeModalOpen.set(true);
+          };
+          img.src = dataUrl;
+        })
+        .catch(() => {
+          this.showToast('⚠️ Không thể tối ưu ảnh. Vui lòng chọn ảnh khác.');
+        });
       return;
     }
 
@@ -564,6 +674,20 @@ export class StudioWorkspace implements OnDestroy {
       img.src = reader.result as string;
     };
     reader.readAsDataURL(file);
+  }
+
+  protected confirmResizeAndUpload(): void {
+    this.isResizeNoticeModalOpen.set(false);
+    const upload = this.pendingResizedUpload;
+    this.pendingResizedUpload = null;
+    if (upload) {
+      this.state.pendingUpload.set(upload);
+      if (upload.dpi < 150) {
+        this.state.isLowResModalOpen.set(true);
+      } else {
+        this.proceedWithUpload(upload);
+      }
+    }
   }
 
   private proceedWithUpload(upload: any): void {
