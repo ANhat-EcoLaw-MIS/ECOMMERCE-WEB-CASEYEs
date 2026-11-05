@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import {
   CanvasLayer,
   ImageElement,
@@ -46,6 +46,53 @@ export const BG_PRESETS = [
   'linear-gradient(160deg, #b9e4f5 0%, #7fc29b 100%)',
   'linear-gradient(180deg, #141a3d 0%, #5b4b9a 100%)',
 ];
+
+const SAVED_DESIGNS_KEY = 'caseyes_saved_designs';
+
+function loadInitialSavedDesigns(): SavedDesignItem[] {
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const data = localStorage.getItem(SAVED_DESIGNS_KEY);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+  }
+  return [
+    {
+      id: 'saved_sample_1',
+      name: 'Y2K Retro Vibes',
+      modelId: 'iphone-15-pro-max',
+      modelName: 'iPhone 15 Pro Max',
+      material: 'standard',
+      bg: 'linear-gradient(160deg,#D4C8FA 0%,#f5b8d8 100%)',
+      layerCount: 2,
+      layers: [
+        {
+          id: 'sample_txt_1',
+          type: 'text',
+          zIndex: 1,
+          content: 'Good Vibes Only',
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 22,
+          textColor: '#FFFFFF',
+          textAlign: 'center',
+          fontWeight: 'bold',
+          x: 50,
+          y: 65,
+          width: 50,
+          height: 12,
+          rotation: 0,
+          opacity: 1,
+          isLocked: false,
+        },
+      ],
+      savedAt: 'Hôm nay lúc 10:15',
+      thumbnailText: 'Good Vibes Only',
+    },
+  ];
+}
 
 export interface SavedDesignItem {
   readonly id: string;
@@ -122,39 +169,18 @@ export class StudioState {
   // Auto-save & My Designs persistence
   readonly lastSavedTime = signal<string | null>(null);
   readonly isFirstSave = signal<boolean>(true);
-  readonly savedDesigns = signal<SavedDesignItem[]>([
-    {
-      id: 'saved_sample_1',
-      name: 'Y2K Retro Vibes',
-      modelId: 'iphone-15-pro-max',
-      modelName: 'iPhone 15 Pro Max',
-      material: 'standard',
-      bg: 'linear-gradient(160deg,#D4C8FA 0%,#f5b8d8 100%)',
-      layerCount: 2,
-      layers: [
-        {
-          id: 'sample_txt_1',
-          type: 'text',
-          zIndex: 1,
-          content: 'Good Vibes Only',
-          fontFamily: 'Plus Jakarta Sans',
-          fontSize: 22,
-          textColor: '#FFFFFF',
-          textAlign: 'center',
-          fontWeight: 'bold',
-          x: 50,
-          y: 65,
-          width: 50,
-          height: 12,
-          rotation: 0,
-          opacity: 1,
-          isLocked: false,
-        },
-      ],
-      savedAt: 'Hôm nay lúc 10:15',
-      thumbnailText: 'Good Vibes Only',
-    },
-  ]);
+  readonly savedDesigns = signal<SavedDesignItem[]>(loadInitialSavedDesigns());
+
+  constructor() {
+    effect(() => {
+      const items = this.savedDesigns();
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem(SAVED_DESIGNS_KEY, JSON.stringify(items));
+        } catch {}
+      }
+    });
+  }
 
   // Uploaded images gallery
   readonly uploads = signal<{ id: string; name: string; url: string; dpi: number }[]>([]);

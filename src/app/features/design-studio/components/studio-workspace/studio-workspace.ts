@@ -48,8 +48,20 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly consentChecked = signal<boolean>(false);
   protected readonly consentError = signal<boolean>(false);
 
-  // Toast Notification for Cart and Save (Bug 7)
+  // Toast Notification for Cart, Save and Warnings (Bug 7)
   protected readonly cartToast = signal<string | null>(null);
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  protected showToast(message: string, duration = 4000): void {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+    this.cartToast.set(message);
+    this.toastTimer = setTimeout(() => {
+      this.cartToast.set(null);
+      this.toastTimer = null;
+    }, duration);
+  }
 
   // Modals for First Save Naming & Guest Login (Issue 13 & 14)
   protected readonly showNamingModal = signal<boolean>(false);
@@ -145,7 +157,7 @@ export class StudioWorkspace implements OnDestroy {
   // --- Save & Naming Flow (Issue 13 & 14) ---
   protected onSaveDesign(): void {
     if (!this.state.hasLayers()) {
-      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi lưu.');
+      this.showToast('⚠️ Canvas đang trống: Hãy thêm ít nhất một phần tử trước khi lưu.');
       return;
     }
 
@@ -250,23 +262,18 @@ export class StudioWorkspace implements OnDestroy {
   // --- Add to Cart (Bug 7 Resolved: No Auto Drawer Popup) ---
   protected onAddToCart(): void {
     if (this.state.designStatus() === 'REJECTED') {
-      alert(
-        'Bản thiết kế này đang ở trạng thái từ chối do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa các chi tiết vi phạm trước khi đặt mua.'
+      this.showToast(
+        '⚠️ Bản thiết kế này đang ở trạng thái từ chối do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa trước khi đặt mua.'
       );
       return;
     }
     if (!this.state.hasLayers()) {
-      alert('Canvas đang trống: hãy thêm ít nhất một phần tử trước khi thêm vào giỏ.');
+      this.showToast('⚠️ Canvas đang trống: Hãy thêm ít nhất một phần tử trước khi thêm vào giỏ.');
       return;
     }
 
     this.saveToGuestLocalStorage();
-
-    // Show sleek toast instead of popping open a full drawer
-    this.cartToast.set('✓ Đã thêm thiết kế vào giỏ hàng thành công!');
-    setTimeout(() => {
-      this.cartToast.set(null);
-    }, 4500);
+    this.showToast('✓ Đã thêm thiết kế vào giỏ hàng thành công!');
   }
 
   protected dismissToast(): void {
@@ -328,7 +335,7 @@ export class StudioWorkspace implements OnDestroy {
   private processFile(file: File): void {
     const validTypes = ['image/png', 'image/jpeg'];
     if (!validTypes.includes(file.type) || file.size > 10 * 1024 * 1024) {
-      alert('Hệ thống chỉ hỗ trợ định dạng PNG, JPG và dung lượng tối đa 10MB.');
+      this.showToast('⚠️ Hệ thống chỉ hỗ trợ định dạng PNG, JPG và dung lượng tối đa 10MB.');
       return;
     }
 

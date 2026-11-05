@@ -245,6 +245,9 @@ export class TemplateBrowser {
     this.router.navigate(['/design-studio/editor']);
   }
 
+  // Delete confirmation modal state (Custom Popup Modal - Bug Fix)
+  protected readonly designToDelete = signal<SavedDesignItem | null>(null);
+
   /** Load saved design from My Designs (Issue 8) */
   protected onContinueSavedDesign(saved: SavedDesignItem): void {
     this.state.clearCanvas();
@@ -260,11 +263,23 @@ export class TemplateBrowser {
     this.router.navigate(['/design-studio/editor']);
   }
 
-  /** Remove saved design from My Designs */
-  protected onDeleteSavedDesign(id: string, event: MouseEvent): void {
+  /** Trigger delete confirmation modal */
+  protected onDeleteSavedDesign(item: SavedDesignItem, event: MouseEvent): void {
     event.stopPropagation();
-    if (confirm('Bạn có chắc muốn xóa bản thiết kế này khỏi danh sách đã lưu?')) {
-      this.state.savedDesigns.update((list) => list.filter((item) => item.id !== id));
+    this.designToDelete.set(item);
+  }
+
+  /** Confirm deletion of saved design */
+  protected confirmDelete(): void {
+    const target = this.designToDelete();
+    if (target) {
+      this.state.savedDesigns.update((list) => list.filter((item) => item.id !== target.id));
     }
+    this.designToDelete.set(null);
+  }
+
+  /** Cancel deletion */
+  protected cancelDelete(): void {
+    this.designToDelete.set(null);
   }
 }
