@@ -429,13 +429,14 @@
                 [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
                 [style.opacity]="activeDrag?.id === layer.id && isDragInDeleteZone() ? 0.25 : layer.opacity * 0.5"
               >
-                <!-- Ghost Content with Canva 4-Side Crop -->
+                <!-- Ghost Content with Canva 4-Side Crop & Text Auto-wrap -->
                 <div class="relative block select-none"
-                  [style.clipPath]="'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
+                  [style.clipPath]="layer.type === 'text' ? 'none' : 'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
                   @if (layer.type === 'text') {
-                    <span class="block whitespace-nowrap px-2 py-1 leading-tight"
+                    <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none text-center"
+                      [style.width.px]="(layer.width / 100) * 300"
                       [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
-                      [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'">{{ layer.content }}</span>
+                      [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'">{{ layer.content }}</div>
                   }
                   @if (layer.type === 'sticker') {
                     <span class="block select-none leading-none" [style.fontSize.px]="(layer.width / 100) * 120">{{ layer.name }}</span>
@@ -469,25 +470,27 @@
                     <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'br')"
                       class="pointer-events-auto absolute -bottom-1.5 -right-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-purple-600 bg-white shadow-sm z-40"></div>
 
-                    <!-- 4 Edge pill crop handles (Canva white capsules) -->
-                    <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'top')"
-                      class="pointer-events-auto absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-                      title="Cắt xén từ trên xuống">
-                      <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
-                    </div>
-                    <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'bottom')"
-                      class="pointer-events-auto absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-                      title="Cắt xén từ dưới lên">
-                      <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
-                    </div>
+                    <!-- Edge pill handles: Canva-style crop for images, width/word-wrap for text -->
+                    @if (layer.type !== 'text') {
+                      <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'top')"
+                        class="pointer-events-auto absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
+                        title="Cắt xén từ trên xuống">
+                        <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
+                      </div>
+                      <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'bottom')"
+                        class="pointer-events-auto absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
+                        title="Cắt xén từ dưới lên">
+                        <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
+                      </div>
+                    }
                     <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'left')"
                       class="pointer-events-auto absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-                      title="Cắt xén từ bên trái">
+                      [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên trái'">
                       <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
                     </div>
                     <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'right')"
                       class="pointer-events-auto absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-                      title="Cắt xén từ bên phải">
+                      [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên phải'">
                       <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
                     </div>
 
@@ -605,13 +608,14 @@
               [style.opacity]="activeDrag?.id === layer.id && isDragInDeleteZone() ? 0.25 : layer.opacity"
               [class.ring-red-500]="state.designStatus() === 'REJECTED' && layer.type === 'image'"
             >
-              <!-- Content with Canva 4-Side Crop -->
+              <!-- Content with Canva 4-Side Crop & Text Auto-wrap -->
               <div class="relative block select-none"
-                [style.clipPath]="'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
+                [style.clipPath]="layer.type === 'text' ? 'none' : 'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
                 @if (layer.type === 'text') {
-                  <span class="block whitespace-nowrap px-2 py-1 leading-tight"
+                  <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none text-center"
+                    [style.width.px]="(layer.width / 100) * 300"
                     [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
-                    [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'">{{ layer.content }}</span>
+                    [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'">{{ layer.content }}</div>
                 }
                 @if (layer.type === 'sticker') {
                   <span class="block select-none leading-none" [style.fontSize.px]="(layer.width / 100) * 120">{{ layer.name }}</span>
@@ -657,39 +661,41 @@
                     title="Kéo giãn góc dưới-phải"
                   ></div>
 
-                  <!-- 4 Edge pill crop handles (Canva white horizontal/vertical capsules as seen in user's image) -->
-                  <!-- Top Crop Handle -->
-                  <div
-                    (pointerdown)="onCropHandlePointerDown($event, layer.id, 'top')"
-                    class="pointer-events-auto absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-                    title="Cắt xén từ trên xuống"
-                  >
-                    <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
-                  </div>
+                  <!-- Edge pill handles: Canva-style crop for images, width/word-wrap for text -->
+                  @if (layer.type !== 'text') {
+                    <!-- Top Crop Handle -->
+                    <div
+                      (pointerdown)="onCropHandlePointerDown($event, layer.id, 'top')"
+                      class="pointer-events-auto absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
+                      title="Cắt xén từ trên xuống"
+                    >
+                      <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
+                    </div>
 
-                  <!-- Bottom Crop Handle -->
-                  <div
-                    (pointerdown)="onCropHandlePointerDown($event, layer.id, 'bottom')"
-                    class="pointer-events-auto absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-                    title="Cắt xén từ dưới lên"
-                  >
-                    <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
-                  </div>
+                    <!-- Bottom Crop Handle -->
+                    <div
+                      (pointerdown)="onCropHandlePointerDown($event, layer.id, 'bottom')"
+                      class="pointer-events-auto absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
+                      title="Cắt xén từ dưới lên"
+                    >
+                      <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
+                    </div>
+                  }
 
-                  <!-- Left Crop Handle -->
+                  <!-- Left Handle -->
                   <div
                     (pointerdown)="onCropHandlePointerDown($event, layer.id, 'left')"
                     class="pointer-events-auto absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-                    title="Cắt xén từ bên trái"
+                    [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên trái'"
                   >
                     <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
                   </div>
 
-                  <!-- Right Crop Handle -->
+                  <!-- Right Handle -->
                   <div
                     (pointerdown)="onCropHandlePointerDown($event, layer.id, 'right')"
                     class="pointer-events-auto absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-                    title="Cắt xén từ bên phải"
+                    [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên phải'"
                   >
                     <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
                   </div>

@@ -1011,6 +1011,7 @@ export class StudioWorkspace implements OnDestroy {
       initialWidth: layer.width,
       initialHeight: layer.height,
       initialRotation: layer.rotation,
+      layerType: layer.type,
       initialCropTop: layer.cropTop ?? 0,
       initialCropBottom: layer.cropBottom ?? 0,
       initialCropLeft: layer.cropLeft ?? 0,
@@ -1139,17 +1140,33 @@ export class StudioWorkspace implements OnDestroy {
       const newCrop = Math.max(0, Math.min(maxCrop, initialCropBottom + deltaPercent));
       this.state.updateLayer(id, { cropBottom: Math.round(newCrop) });
     } else if (mode === 'crop-left') {
-      const deltaPixels = (event.clientX - startX) / zoomFactor;
-      const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
-      const maxCrop = 100 - initialCropRight - 5;
-      const newCrop = Math.max(0, Math.min(maxCrop, initialCropLeft + deltaPercent));
-      this.state.updateLayer(id, { cropLeft: Math.round(newCrop) });
+      if (this.activeDrag.layerType === 'text') {
+        // Dragging left handle on text box: changes box width to wrap words naturally (Canva behavior)
+        const deltaPixels = (startX - event.clientX) / zoomFactor;
+        const deltaPercent = (deltaPixels / 300) * 100;
+        const newWidth = Math.max(15, Math.round(initialWidth + deltaPercent));
+        this.state.updateLayer(id, { width: newWidth });
+      } else {
+        const deltaPixels = (event.clientX - startX) / zoomFactor;
+        const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
+        const maxCrop = 100 - initialCropRight - 5;
+        const newCrop = Math.max(0, Math.min(maxCrop, initialCropLeft + deltaPercent));
+        this.state.updateLayer(id, { cropLeft: Math.round(newCrop) });
+      }
     } else if (mode === 'crop-right') {
-      const deltaPixels = (startX - event.clientX) / zoomFactor;
-      const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
-      const maxCrop = 100 - initialCropLeft - 5;
-      const newCrop = Math.max(0, Math.min(maxCrop, initialCropRight + deltaPercent));
-      this.state.updateLayer(id, { cropRight: Math.round(newCrop) });
+      if (this.activeDrag.layerType === 'text') {
+        // Dragging right handle on text box: changes box width to wrap words naturally (Canva behavior)
+        const deltaPixels = (event.clientX - startX) / zoomFactor;
+        const deltaPercent = (deltaPixels / 300) * 100;
+        const newWidth = Math.max(15, Math.round(initialWidth + deltaPercent));
+        this.state.updateLayer(id, { width: newWidth });
+      } else {
+        const deltaPixels = (startX - event.clientX) / zoomFactor;
+        const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
+        const maxCrop = 100 - initialCropLeft - 5;
+        const newCrop = Math.max(0, Math.min(maxCrop, initialCropRight + deltaPercent));
+        this.state.updateLayer(id, { cropRight: Math.round(newCrop) });
+      }
     }
   }
 
@@ -1344,11 +1361,35 @@ export class StudioWorkspace implements OnDestroy {
 
       if (layer.type === 'text') {
         const fontSizePx = Math.round((layer.fontSize / 300) * W);
+        const maxTextWidthPx = Math.max(40, Math.round((layer.width / 100) * W));
         ctx.fillStyle = layer.textColor;
         ctx.font = `${layer.fontWeight || 'bold'} ${fontSizePx}px ${layer.fontFamily || 'sans-serif'}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(layer.content, 0, 0);
+
+        // Multi-line word wrapping matching 2D canvas
+        const words = layer.content.split(' ');
+        const lines: string[] = [];
+        let curLine = '';
+
+        for (const w of words) {
+          const test = curLine ? `${curLine} ${w}` : w;
+          if (ctx.measureText(test).width > maxTextWidthPx && curLine) {
+            lines.push(curLine);
+            curLine = w;
+          } else {
+            curLine = test;
+          }
+        }
+        if (curLine) lines.push(curLine);
+
+        const lineHeight = fontSizePx * 1.25;
+        const totalHeight = lines.length * lineHeight;
+        const startY = -totalHeight / 2 + lineHeight / 2;
+
+        lines.forEach((lStr, lIdx) => {
+          ctx.fillText(lStr, 0, startY + lIdx * lineHeight);
+        });
       } else if (layer.type === 'sticker') {
         const stickerSizePx = Math.round((layer.width / 100) * 240);
         ctx.font = `${stickerSizePx}px sans-serif`;

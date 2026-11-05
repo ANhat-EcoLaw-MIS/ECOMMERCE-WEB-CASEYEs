@@ -212,6 +212,8 @@ export class StudioState {
     }
 
     this.recordHistory();
+    // Calculate initial box width so new text comfortably fits on one line
+    const calcWidth = Math.max(50, Math.min(95, Math.round(((content.length * (size * 0.68) + 30) / 300) * 100)));
     const newText: TextElement = {
       id: crypto.randomUUID(),
       type: 'text',
@@ -224,7 +226,7 @@ export class StudioState {
       fontWeight: 'bold',
       x: 50,
       y: 50,
-      width: 40,
+      width: calcWidth,
       height: 12,
       rotation: 0,
       opacity: 1,
