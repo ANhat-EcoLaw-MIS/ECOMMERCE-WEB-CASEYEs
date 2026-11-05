@@ -889,25 +889,23 @@ export class StudioWorkspace implements OnDestroy {
             }
             tex.needsUpdate = true;
 
-            // Geometry: plane matching back dimensions (w: 7.48, h: 15.755, z: 0.42)
-            const w = 7.48;
-            const h = 15.755;
-            const halfW = w / 2;
-            const halfH = h / 2;
-            const z = 0.42;
+            // 1. Back Overlay Mesh: Full phone chassis dimensions (w: 7.80, h: 16.00, z: 0.425)
+            const hw = 3.90;
+            const hh = 8.00;
+            const z = 0.425;
 
             const positions = new Float32Array([
-              -halfW, -halfH, z,
-               halfW, -halfH, z,
-               halfW,  halfH, z,
-              -halfW,  halfH, z
+              -hw, -hh, z,
+               hw, -hh, z,
+               hw,  hh, z,
+              -hw,  hh, z
             ]);
             // Planar UV coordinates aligned with phone back view (cutout at top-left matching camera)
             const uvs = new Float32Array([
-              1, 1, // vertex 0 (-halfW, -halfH): bottom-left
-              0, 1, // vertex 1 (+halfW, -halfH): bottom-right
-              0, 0, // vertex 2 (+halfW,  halfH): top-right
-              1, 0  // vertex 3 (-halfW,  halfH): top-left (camera lenses cutout)
+              1, 1, // vertex 0 (-hw, -hh): bottom-left
+              0, 1, // vertex 1 (+hw, -hh): bottom-right
+              0, 0, // vertex 2 (+hw,  hh): top-right
+              1, 0  // vertex 3 (-hw,  hh): top-left (camera lenses cutout)
             ]);
             const indices = new Uint16Array([
               0, 1, 2,
@@ -947,6 +945,99 @@ export class StudioWorkspace implements OnDestroy {
                 overlay.material.roughness = 0.88;
                 overlay.material.metalness = 0.0;
                 overlay.material.needsUpdate = true;
+              }
+            }
+
+            // 2. 3D Protective Extrusion Bumper with Raised Bezel Lip & Full Sidewall Depth
+            const rOut = 1.20; // Rounded corners matching phone corner curvature
+            const hwIn = 3.74;
+            const hhIn = 7.85;
+            const rIn = 1.05;
+            const zBack = 0.435; // Raised protective lip above back plate
+            const zFront = -0.52; // Full extrusion wrapping towards front screen
+            const segmentsPerCorner = 12;
+            const N = segmentsPerCorner * 4; // 48 points for smooth curves
+
+            const generatePoints = (wVal: number, hVal: number, rVal: number) => {
+              const pts: { x: number; y: number }[] = [];
+              const corners = [
+                { cx: wVal - rVal, cy: hVal - rVal, startAngle: 0, endAngle: Math.PI / 2 },
+                { cx: -wVal + rVal, cy: hVal - rVal, startAngle: Math.PI / 2, endAngle: Math.PI },
+                { cx: -wVal + rVal, cy: -hVal + rVal, startAngle: Math.PI, endAngle: Math.PI * 1.5 },
+                { cx: wVal - rVal, cy: -hVal + rVal, startAngle: Math.PI * 1.5, endAngle: Math.PI * 2 }
+              ];
+              for (const c of corners) {
+                for (let i = 0; i < segmentsPerCorner; i++) {
+                  const theta = c.startAngle + (i / segmentsPerCorner) * (c.endAngle - c.startAngle);
+                  pts.push({
+                    x: c.cx + rVal * Math.cos(theta),
+                    y: c.cy + rVal * Math.sin(theta)
+                  });
+                }
+              }
+              return pts;
+            };
+
+            const ptsOut = generatePoints(hw, hh, rOut);
+            const ptsIn = generatePoints(hwIn, hhIn, rIn);
+
+            const bumperPos: number[] = [];
+            const bumperIndices: number[] = [];
+
+            // Layout:
+            // [0 .. N-1]: Outer Top (ptsOut, zBack)
+            // [N .. 2N-1]: Outer Bottom (ptsOut, zFront)
+            // [2N .. 3N-1]: Inner Top (ptsIn, zBack)
+            for (let i = 0; i < N; i++) bumperPos.push(ptsOut[i].x, ptsOut[i].y, zBack);
+            for (let i = 0; i < N; i++) bumperPos.push(ptsOut[i].x, ptsOut[i].y, zFront);
+            for (let i = 0; i < N; i++) bumperPos.push(ptsIn[i].x, ptsIn[i].y, zBack);
+
+            // Outer Sidewall Quads (Outer Top -> Outer Bottom)
+            for (let i = 0; i < N; i++) {
+              const next = (i + 1) % N;
+              const t0 = i;
+              const t1 = next;
+              const b0 = N + i;
+              const b1 = N + next;
+              bumperIndices.push(t0, b0, t1);
+              bumperIndices.push(t1, b0, b1);
+            }
+
+            // Raised Bevel Lip Quads (Inner Top -> Outer Top)
+            for (let i = 0; i < N; i++) {
+              const next = (i + 1) % N;
+              const out0 = i;
+              const out1 = next;
+              const in0 = 2 * N + i;
+              const in1 = 2 * N + next;
+              bumperIndices.push(in0, out0, in1);
+              bumperIndices.push(in1, out0, out1);
+            }
+
+            const bumperGeo = new BufferGeometryConstructor();
+            bumperGeo.setAttribute('position', new BufferAttributeConstructor(new Float32Array(bumperPos), 3));
+            bumperGeo.setIndex(new BufferAttributeConstructor(new Uint16Array(bumperIndices), 1));
+            bumperGeo.computeVertexNormals();
+
+            let bumper = backMesh.parent.getObjectByName('CaseExtrusionBumper');
+            if (!bumper) {
+              const bumperMat = new MaterialConstructor();
+              bumperMat.color.set('#18181b');
+              bumperMat.roughness = 0.85;
+              bumperMat.metalness = 0.1;
+              bumperMat.side = 2; // DoubleSide
+
+              bumper = new MeshConstructor(bumperGeo, bumperMat);
+              bumper.name = 'CaseExtrusionBumper';
+              bumper.scale.copy(backMesh.scale);
+              backMesh.parent.add(bumper);
+            } else {
+              bumper.geometry = bumperGeo;
+              if (bumper.material) {
+                bumper.material.color.set('#18181b');
+                bumper.material.roughness = 0.85;
+                bumper.material.metalness = 0.1;
+                bumper.material.needsUpdate = true;
               }
             }
             return;
