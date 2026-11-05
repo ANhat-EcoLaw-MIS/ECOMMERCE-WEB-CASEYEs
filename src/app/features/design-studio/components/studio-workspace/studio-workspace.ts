@@ -80,6 +80,30 @@ export class StudioWorkspace implements OnDestroy {
   // Bleed View Mode: 'bleed' (shows overflow at 50% opacity) | 'clipped' (strictly hides overflow)
   protected readonly viewMode = signal<'bleed' | 'clipped'>('bleed');
 
+  // Case Stroke / Bumper Color (Màu viền ốp)
+  protected readonly caseStrokeColor = signal<string>('#18181b');
+
+  protected readonly strokePresets = [
+    { name: 'Đen nhám', color: '#18181b' },
+    { name: 'Trắng sứ', color: '#ffffff' },
+    { name: 'Tím pastel', color: '#a78bfa' },
+    { name: 'Hồng blush', color: '#f472b6' },
+    { name: 'Xanh baby', color: '#38bdf8' },
+    { name: 'Titan tự nhiên', color: '#71717a' },
+    { name: 'Xanh midnight', color: '#15803d' },
+  ];
+
+  protected onSelectStrokeColor(color: string): void {
+    this.caseStrokeColor.set(color);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected getStrokeColorName(): string {
+    const found = this.strokePresets.find((s) => s.color === this.caseStrokeColor());
+    return found ? found.name : 'Tùy chỉnh';
+  }
+
+
   // 3D Texture sync & Loading state
   protected readonly is3dSyncing = signal<boolean>(false);
   private textureSyncTimer: any = null;
@@ -119,6 +143,8 @@ export class StudioWorkspace implements OnDestroy {
     initialWidth: number;
     initialHeight: number;
     initialRotation: number;
+    initialFontSize?: number;
+    layerType?: string;
     initialCropTop?: number;
     initialCropBottom?: number;
     initialCropLeft?: number;
@@ -618,6 +644,39 @@ export class StudioWorkspace implements OnDestroy {
     (event.target as HTMLElement).setPointerCapture(event.pointerId);
   }
 
+  protected getToolbarTransform(layer: CanvasLayer): string {
+    const W = 300;
+    const elemW = (layer.width / 100) * W;
+    let elemH = elemW;
+
+    if (layer.type === 'text') {
+      elemH = (layer.fontSize || 30) * 1.5;
+    } else if (layer.type === 'sticker') {
+      elemH = (layer.width / 100) * 120;
+    } else if (layer.type === 'image') {
+      const img = this.imageCache.get(layer.storageUrl);
+      if (img && img.naturalWidth > 0) {
+        elemH = elemW * (img.naturalHeight / img.naturalWidth);
+      }
+    }
+
+    const cT = (layer.cropTop || 0) / 100;
+    const cB = (layer.cropBottom || 0) / 100;
+    const croppedH = elemH * (1 - cT - cB);
+
+    // Distance above element center: half-height + rotate handle (~32px) + margin (~26px)
+    const offsetAbove = croppedH / 2 + 58;
+
+    // If too close to top of phone case, flip to float below
+    const posYPx = (layer.y / 100) * 632;
+    if (posYPx - offsetAbove < 15) {
+      const offsetBelow = croppedH / 2 + 35;
+      return `translate(-50%, calc(-50% + ${Math.round(offsetBelow)}px))`;
+    }
+
+    return `translate(-50%, calc(-50% - ${Math.round(offsetAbove)}px))`;
+  }
+
   protected resetCrop(layerId: string): void {
     this.state.updateLayer(layerId, { cropTop: 0, cropBottom: 0, cropLeft: 0, cropRight: 0 });
     this.trigger3dTextureSync(true);
@@ -642,6 +701,8 @@ export class StudioWorkspace implements OnDestroy {
       initialWidth: layer.width,
       initialHeight: layer.height,
       initialRotation: layer.rotation,
+      initialFontSize: layer.type === 'text' ? (layer.fontSize || 30) : undefined,
+      layerType: layer.type,
       initialCropTop: layer.cropTop ?? 0,
       initialCropBottom: layer.cropBottom ?? 0,
       initialCropLeft: layer.cropLeft ?? 0,
@@ -756,12 +817,30 @@ export class StudioWorkspace implements OnDestroy {
       this.state.updateLayer(id, { x: Math.round(newX), y: Math.round(newY) });
     } else if (mode === 'resize') {
       // No upper percentage limit! Scale as big as desired like Canva
-      let scaleDelta = (event.clientX - startX) / (2 * zoomFactor);
-      if (corner === 'bl' || corner === 'tl') {
-        scaleDelta = -scaleDelta;
+      const deltaX = (event.clientX - startX) / (2 * zoomFactor);
+      const deltaY = (event.clientY - startY) / (2 * zoomFactor);
+
+      let scaleDelta = deltaX;
+      if (corner === 'br') {
+        scaleDelta = (deltaX + deltaY) / 2;
+      } else if (corner === 'bl') {
+        scaleDelta = (-deltaX + deltaY) / 2;
+      } else if (corner === 'tr') {
+        scaleDelta = (deltaX - deltaY) / 2;
+      } else if (corner === 'tl') {
+        scaleDelta = (-deltaX - deltaY) / 2;
       }
+
       const newWidth = Math.max(5, initialWidth + scaleDelta);
-      this.state.updateLayer(id, { width: Math.round(newWidth) });
+
+      if (this.activeDrag.layerType === 'text') {
+        const initialFontSize = this.activeDrag.initialFontSize || 30;
+        const scaleRatio = newWidth / Math.max(5, initialWidth);
+        const newFontSize = Math.max(10, Math.min(250, Math.round(initialFontSize * scaleRatio)));
+        this.state.updateLayer(id, { width: Math.round(newWidth), fontSize: newFontSize } as any);
+      } else {
+        this.state.updateLayer(id, { width: Math.round(newWidth) });
+      }
     } else if (mode === 'rotate') {
       const angle = (event.clientX - startX) * 1.5;
       this.state.updateLayer(id, { rotation: Math.round((initialRotation + angle) % 360) });
@@ -1025,10 +1104,10 @@ export class StudioWorkspace implements OnDestroy {
     ctx.fill();
     ctx.restore();
 
-    // Solid dark bumper rim around case perimeter (matching 2D canvas frame)
+    // Bumper rim around case perimeter matching selected stroke color
     ctx.save();
     ctx.lineWidth = 18;
-    ctx.strokeStyle = '#18181b';
+    ctx.strokeStyle = this.caseStrokeColor();
     ctx.beginPath();
     if ((ctx as any).roundRect) {
       (ctx as any).roundRect(9, 9, W - 18, H - 18, [92, 92, 92, 92]);
@@ -1037,9 +1116,9 @@ export class StudioWorkspace implements OnDestroy {
     }
     ctx.stroke();
 
-    // Bold dark protective camera bezel ring (matching outer bumper frame)
+    // Protective camera bezel ring matching selected stroke color
     ctx.lineWidth = 22;
-    ctx.strokeStyle = '#18181b';
+    ctx.strokeStyle = this.caseStrokeColor();
     ctx.beginPath();
     if (model.id === 'galaxy-s24') {
       const cx = camX + camW / 2;
@@ -1268,7 +1347,7 @@ export class StudioWorkspace implements OnDestroy {
             } else {
               bumper.geometry = bumperGeo;
               if (bumper.material) {
-                bumper.material.color.set('#18181b');
+                bumper.material.color.set(this.caseStrokeColor());
                 bumper.material.roughness = 0.85;
                 bumper.material.metalness = 0.1;
                 bumper.material.needsUpdate = true;

@@ -4,21 +4,15 @@
 
 .studio-shell {
   display: grid;
-  /* tool-rail | drawer | canvas | 3d-preview | inspector */
-  grid-template-columns: 68px 210px 1fr 220px 240px;
+  /* tool-rail | drawer | canvas | 3d-preview (Canva/Figma clean 4-column layout) */
+  grid-template-columns: 68px 220px 1fr 260px;
   /* Full height minus: studio sub-header(52px) + bottom-bar(56px) - Canva/Figma full-screen style */
   height: calc(100vh - 108px);
   min-height: calc(100vh - 108px);
   overflow: hidden;
 
-  @media (max-width: 1400px) {
-    grid-template-columns: 64px 190px 1fr 200px 220px;
-  }
-
-  @media (max-width: 1150px) {
-    grid-template-columns: 60px 180px 1fr 200px;
-    /* hide inspector on medium screens */
-    .inspector-panel { display: none; }
+  @media (max-width: 1200px) {
+    grid-template-columns: 64px 200px 1fr 240px;
   }
 
   @media (max-width: 900px) {

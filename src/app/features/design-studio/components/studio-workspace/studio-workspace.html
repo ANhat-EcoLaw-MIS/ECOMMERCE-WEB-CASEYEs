@@ -59,7 +59,7 @@
     <button type="button" (click)="selectTool('bg')"
       class="tool-btn" [class.tool-btn--active]="state.activeTool() === 'bg'">
       <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
-      <span class="tool-label">Hiệu ứng</span>
+      <span class="tool-label">Nền</span>
       <span class="fr-badge">F15</span>
     </button>
 
@@ -361,49 +361,53 @@
       </div>
     </div>
 
-    <!-- Contextual floating toolbar (selected element) -->
-    @if (state.selectedLayer(); as sel) {
-      <div (click)="$event.stopPropagation()"
-        class="absolute top-14 z-30 flex items-center gap-2 rounded-full border border-line bg-white/95 px-4 py-1.5 shadow-lift backdrop-blur-xl animate-fade-in left-1/2 -translate-x-1/2">
-        @if (sel.type === 'text') {
-          <select [value]="sel.fontFamily" (change)="updateProperty('fontFamily', $event)"
-            class="rounded-lg border border-line bg-surface px-2 py-1 text-xs text-ink outline-none">
-            @for (f of fonts; track f) { <option [value]="f">{{ f }}</option> }
-          </select>
-          <input type="number" min="12" max="120" [value]="sel.fontSize" (input)="updateProperty('fontSize', $event)"
-            class="w-12 rounded-lg border border-line bg-surface px-2 py-1 text-xs text-ink text-center"/>
-          <input type="color" [value]="sel.textColor" (input)="updateProperty('textColor', $event)"
-            class="h-6 w-7 cursor-pointer rounded border border-line p-0.5"/>
-          <div class="h-4 w-px bg-line"></div>
-        }
-        <label class="flex items-center gap-1 text-xs text-ink-soft">
-          <span>Mờ:</span>
-          <input type="range" min="10" max="100" [value]="sel.opacity * 100" (input)="updateProperty('opacity', $event)" class="w-16 accent-brand-800"/>
-        </label>
-        <div class="h-4 w-px bg-line"></div>
-        @if (sel.cropTop || sel.cropBottom || sel.cropLeft || sel.cropRight) {
-          <button
-            type="button"
-            (click)="resetCrop(sel.id)"
-            class="flex items-center gap-1 rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
-            title="Khôi phục lại kích thước ảnh ban đầu chưa cắt xén"
-          >
-            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span>Bỏ cắt</span>
-          </button>
-          <div class="h-4 w-px bg-line"></div>
-        }
-        <button type="button" (click)="state.duplicateLayer(sel.id)" class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer" title="Nhân đôi">
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
-        </button>
-        <button type="button" (click)="state.removeLayer(sel.id)" class="rounded-lg p-1 text-red-500 hover:bg-red-50 cursor-pointer" title="Xóa">
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-        </button>
-      </div>
-    }
-
     <!-- Phone Mockup Canvas (Supports Bleed Overflow View) -->
     <div class="relative transition-transform duration-200" [style.transform]="'scale(' + state.zoom() / 100 + ')'">
+
+      <!-- Contextual floating toolbar (Floats directly above selected element like Canva) -->
+      @if (state.selectedLayer(); as sel) {
+        <div (click)="$event.stopPropagation()"
+          class="pointer-events-auto absolute z-50 flex items-center gap-2 rounded-full border border-line bg-white/95 px-3.5 py-1.5 shadow-lift backdrop-blur-xl whitespace-nowrap transition-all duration-75"
+          [style.left.%]="sel.x"
+          [style.top.%]="sel.y"
+          [style.transform]="getToolbarTransform(sel)"
+        >
+          @if (sel.type === 'text') {
+            <select [value]="sel.fontFamily" (change)="updateProperty('fontFamily', $event)"
+              class="rounded-lg border border-line bg-surface px-2 py-1 text-xs text-ink outline-none">
+              @for (f of fonts; track f) { <option [value]="f">{{ f }}</option> }
+            </select>
+            <input type="number" min="12" max="120" [value]="sel.fontSize" (input)="updateProperty('fontSize', $event)"
+              class="w-12 rounded-lg border border-line bg-surface px-2 py-1 text-xs text-ink text-center"/>
+            <input type="color" [value]="sel.textColor" (input)="updateProperty('textColor', $event)"
+              class="h-6 w-7 cursor-pointer rounded border border-line p-0.5"/>
+            <div class="h-4 w-px bg-line"></div>
+          }
+          <label class="flex items-center gap-1 text-xs text-ink-soft">
+            <span>Mờ:</span>
+            <input type="range" min="10" max="100" [value]="sel.opacity * 100" (input)="updateProperty('opacity', $event)" class="w-16 accent-brand-800"/>
+          </label>
+          <div class="h-4 w-px bg-line"></div>
+          @if (sel.cropTop || sel.cropBottom || sel.cropLeft || sel.cropRight) {
+            <button
+              type="button"
+              (click)="resetCrop(sel.id)"
+              class="flex items-center gap-1 rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
+              title="Khôi phục lại kích thước ảnh ban đầu chưa cắt xén"
+            >
+              <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span>Bỏ cắt</span>
+            </button>
+            <div class="h-4 w-px bg-line"></div>
+          }
+          <button type="button" (click)="state.duplicateLayer(sel.id)" class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer" title="Nhân đôi">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
+          </button>
+          <button type="button" (click)="state.removeLayer(sel.id)" class="rounded-lg p-1 text-red-500 hover:bg-red-50 cursor-pointer" title="Xóa">
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      }
       
       <!-- Outer Bleed Ghost Layer (50% opacity overflow when viewMode === 'bleed') -->
       @if (viewMode() === 'bleed') {
@@ -495,29 +499,38 @@
       }
 
       <!-- Case Viewport (Inner elements at 100% normal opacity, strictly clipped to phone frame) -->
-      <div id="case-viewport" class="relative z-20 h-[632px] w-[300px] overflow-hidden rounded-[50px] shadow-lift ring-[6px] ring-[#18181b]"
+      <div id="case-viewport" class="relative z-20 h-[632px] w-[300px] overflow-hidden rounded-[50px] shadow-lift ring-[6px] transition-all duration-200"
+        [style.boxShadow]="'0 0 0 6px ' + caseStrokeColor() + ', 0 20px 40px rgba(0,0,0,0.18)'"
         [style.background]="state.caseBg()">
 
         <!-- ── Dynamic Camera Cutout per Model (Aligned with 3D GLB Models) ── -->
         @if (state.selectedModel().id === 'galaxy-s24') {
-          <!-- Samsung Galaxy S24: 3 distinct vertical camera circles matching 3D model -->
+          <!-- Samsung Galaxy S24: 3 distinct vertical camera circles with dynamic stroke bezel ring -->
           <div class="pointer-events-none absolute z-20 flex flex-col gap-3.5 items-center p-1"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent">
-            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 ring-[#52525b] flex items-center justify-center shadow-lg">
+            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 transition-all duration-200 flex items-center justify-center shadow-lg"
+              [style.--tw-ring-color]="caseStrokeColor()"
+              [style.boxShadow]="'0 0 0 2px ' + caseStrokeColor()">
               <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
             </div>
-            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 ring-[#52525b] flex items-center justify-center shadow-lg">
+            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 transition-all duration-200 flex items-center justify-center shadow-lg"
+              [style.--tw-ring-color]="caseStrokeColor()"
+              [style.boxShadow]="'0 0 0 2px ' + caseStrokeColor()">
               <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
             </div>
-            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 ring-[#52525b] flex items-center justify-center shadow-lg">
+            <div class="h-9 w-9 rounded-full bg-[#111] ring-2 transition-all duration-200 flex items-center justify-center shadow-lg"
+              [style.--tw-ring-color]="caseStrokeColor()"
+              [style.boxShadow]="'0 0 0 2px ' + caseStrokeColor()">
               <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
             </div>
             <!-- Small flash -->
             <div class="absolute -right-3 top-2 h-2.5 w-2.5 rounded-full bg-[#fef08a] ring-1 ring-white/60"></div>
           </div>
         } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
-          <!-- Xiaomi 14 Ultra: Large Leica circular camera bump matching 3D model -->
-          <div class="pointer-events-none absolute z-20 rounded-full bg-[#18181b] ring-3 ring-amber-500/40 p-2 shadow-2xl flex items-center justify-center"
+          <!-- Xiaomi 14 Ultra: Large Leica circular camera bump with dynamic stroke bezel ring -->
+          <div class="pointer-events-none absolute z-20 rounded-full bg-[#18181b] ring-4 transition-all duration-200 p-2 shadow-2xl flex items-center justify-center"
+            [style.--tw-ring-color]="caseStrokeColor()"
+            [style.boxShadow]="'0 0 0 4px ' + caseStrokeColor()"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
             [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
             <div class="grid grid-cols-2 gap-3 place-items-center">
@@ -529,8 +542,10 @@
             <span class="absolute text-[8px] font-bold text-amber-500/80 tracking-widest uppercase">LEICA</span>
           </div>
         } @else {
-          <!-- Apple iPhone Pro: Realistic 3-lens Squircle Module 1:1 with 3D GLB model -->
-          <div class="pointer-events-none absolute z-20 rounded-[36px] bg-[#1a1b22]/95 shadow-xl ring-[6px] ring-[#18181b] backdrop-blur-md"
+          <!-- Apple iPhone Pro: Realistic 3-lens Squircle Module with dynamic stroke bezel ring -->
+          <div class="pointer-events-none absolute z-20 rounded-[36px] bg-[#1a1b22]/95 shadow-xl ring-[6px] backdrop-blur-md transition-all duration-200"
+            [style.--tw-ring-color]="caseStrokeColor()"
+            [style.boxShadow]="'0 0 0 6px ' + caseStrokeColor() + ', 0 10px 25px rgba(0,0,0,0.35)'"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
             [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
             
@@ -771,143 +786,29 @@
       </div>
     }
 
-    <!-- Case color swatches row -->
+    <!-- Case border / stroke color swatches row -->
     <div class="mx-3 mt-3">
-      <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-soft">Màu phôi</p>
+      <div class="flex items-center justify-between mb-1.5">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Màu viền ốp</p>
+        <span class="text-[10px] font-semibold text-brand-800">{{ getStrokeColorName() }}</span>
+      </div>
       <div class="flex flex-wrap gap-1.5">
-        @for (bg of bgPresets.slice(0, 6); track bg) {
-          <button type="button" (click)="onSelectBg(bg)"
-            class="h-6 w-6 rounded-full border-2 transition-all hover:scale-110 cursor-pointer"
-            [class]="state.caseBg() === bg ? 'border-brand-800 ring-2 ring-brand-400/40' : 'border-line'"
-            [style.background]="bg"></button>
+        @for (stroke of strokePresets; track stroke.color) {
+          <button type="button" (click)="onSelectStrokeColor(stroke.color)"
+            class="h-6 w-6 rounded-full border-2 transition-all hover:scale-110 cursor-pointer shadow-xs flex items-center justify-center"
+            [class]="caseStrokeColor() === stroke.color ? 'border-brand-800 ring-2 ring-brand-400' : 'border-line'"
+            [style.background]="stroke.color"
+            [title]="stroke.name">
+            @if (caseStrokeColor() === stroke.color) {
+              <span class="h-1.5 w-1.5 rounded-full" [class]="stroke.color === '#ffffff' || stroke.color === '#FAFAFA' ? 'bg-black' : 'bg-white'"></span>
+            }
+          </button>
         }
       </div>
     </div>
   </aside>
 
-  <!-- ───────────────────────────────────
-       COL 5 · Properties Inspector
-  ─────────────────────────────────────── -->
-  <aside class="inspector-panel">
-    <div class="inspector-header">
-      <span class="text-xs font-bold text-ink">Thuộc tính</span>
-      <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">F4/F5</span>
-    </div>
 
-    <div class="space-y-3 p-3 text-xs">
-      @if (state.selectedLayer(); as sel) {
-
-        <!-- Type badge -->
-        <div class="flex items-center justify-between">
-          <span class="font-bold text-ink">
-            {{ sel.type === 'text' ? 'Văn bản' : sel.type === 'sticker' ? 'Sticker' : 'Hình ảnh' }}
-          </span>
-          <span class="rounded bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-800 uppercase">{{ sel.type }}</span>
-        </div>
-
-        <!-- Position sliders (X, Y) -->
-        <div>
-          <label class="insp-label">Vị trí (X: {{ sel.x }}%, Y: {{ sel.y }}%)</label>
-          <div class="grid grid-cols-2 gap-2 mt-1">
-            <input type="range" min="10" max="90" [value]="sel.x" (input)="updateProperty('x', $event)" class="accent-brand-800"/>
-            <input type="range" min="10" max="90" [value]="sel.y" (input)="updateProperty('y', $event)" class="accent-brand-800"/>
-          </div>
-        </div>
-
-        <!-- Size slider for image and sticker -->
-        @if (sel.type === 'image' || sel.type === 'sticker') {
-          <div>
-            <label class="insp-label">Kích thước ({{ sel.width }}%)</label>
-            <input type="range" min="15" max="95" [value]="sel.width" (input)="updateProperty('width', $event)" class="w-full accent-brand-800 mt-1"/>
-          </div>
-        }
-
-        <!-- Opacity slider -->
-        <div>
-          <label class="insp-label">Độ mờ đục ({{ (sel.opacity * 100) | number:'1.0-0' }}%)</label>
-          <input type="range" min="10" max="100" [value]="sel.opacity * 100" (input)="updateProperty('opacity', $event)" class="w-full accent-brand-800 mt-1"/>
-        </div>
-
-        @if (sel.type === 'text') {
-          <!-- Font family -->
-          <div>
-            <label class="insp-label">Phông chữ</label>
-            <select [value]="sel.fontFamily" (change)="updateProperty('fontFamily', $event)"
-              class="w-full rounded-lg border border-line bg-surface p-1.5 text-xs text-ink outline-none mt-1">
-              @for (f of fonts; track f) { <option [value]="f">{{ f }}</option> }
-            </select>
-          </div>
-
-          <!-- Font size & Color -->
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="insp-label">Cỡ chữ</label>
-              <input type="number" min="12" max="100" [value]="sel.fontSize" (input)="updateProperty('fontSize', $event)"
-                class="w-full rounded-lg border border-line bg-surface p-1.5 text-xs text-ink mt-1"/>
-            </div>
-            <div>
-              <label class="insp-label">Màu chữ</label>
-              <input type="color" [value]="sel.textColor" (input)="updateProperty('textColor', $event)"
-                class="w-full h-8 rounded-lg border border-line p-0.5 cursor-pointer mt-1"/>
-            </div>
-          </div>
-        }
-
-        <!-- Duplicate & Delete -->
-        <div class="flex gap-2 pt-2 border-t border-line">
-          <button type="button" (click)="state.duplicateLayer(sel.id)"
-            class="flex-1 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-ink hover:bg-brand-50 transition-all cursor-pointer">Nhân đôi</button>
-          <button type="button" (click)="state.removeLayer(sel.id)"
-            class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-600 hover:bg-red-100 transition-all cursor-pointer">Xóa</button>
-        </div>
-
-      } @else {
-        <!-- When no layer selected: show Design Tips & Case Specification -->
-        <div class="space-y-3">
-          <div class="rounded-xl border border-brand-100 bg-brand-50/60 p-3">
-            <div class="flex items-center gap-2 font-bold text-brand-800 text-xs">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span>Mẹo thiết kế ốp lưng</span>
-            </div>
-            <p class="mt-1.5 text-[11px] text-ink-soft leading-relaxed">
-              Bấm vào bất kỳ phần tử nào (chữ, sticker, ảnh) trên khung ốp để chỉnh sửa vị trí, cỡ chữ, màu sắc và góc xoay.
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <p class="drawer-section-title">Chất liệu ốp lưng</p>
-            <div class="rounded-xl border border-line bg-surface p-2.5">
-              <div class="flex items-center justify-between font-bold text-ink">
-                <span>Phôi ốp Polycarbonate cao cấp</span>
-                <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800">Đồng giá 250k</span>
-              </div>
-              <p class="mt-1 text-[10px] text-ink-soft leading-relaxed">
-                Ốp lưng tiêu chuẩn chống sốc, viền TPU dẻo ôm khít máy, mặt lưng bóng in nhiệt chuẩn nét cao độ bền màu.
-              </p>
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-1">
-            <p class="drawer-section-title">Thao tác nhanh</p>
-            <div class="space-y-1.5 text-[10px] text-ink-soft">
-              <div class="flex items-center justify-between rounded-lg bg-surface p-1.5 border border-line">
-                <span>Phóng to / thu nhỏ canvas</span>
-                <kbd class="rounded bg-surface-alt px-1.5 py-0.5 font-mono text-[9px] font-bold text-ink border border-line">Ctrl + Cuộn chuột</kbd>
-              </div>
-              <div class="flex items-center justify-between rounded-lg bg-surface p-1.5 border border-line">
-                <span>Xoay 3D sản phẩm</span>
-                <kbd class="rounded bg-surface-alt px-1.5 py-0.5 font-mono text-[9px] font-bold text-ink border border-line">Giữ & Kéo chuột</kbd>
-              </div>
-              <div class="flex items-center justify-between rounded-lg bg-surface p-1.5 border border-line">
-                <span>Hoàn tác (Undo)</span>
-                <kbd class="rounded bg-surface-alt px-1.5 py-0.5 font-mono text-[9px] font-bold text-ink border border-line">Ctrl + Z</kbd>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-    </div>
-  </aside>
 
 </div>
 
