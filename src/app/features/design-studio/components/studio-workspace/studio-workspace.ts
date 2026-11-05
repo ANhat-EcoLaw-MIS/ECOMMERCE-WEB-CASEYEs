@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
+  HostListener,
   ElementRef,
   OnDestroy,
   computed,
@@ -122,6 +123,25 @@ export class StudioWorkspace implements OnDestroy {
     const found = this.strokePresets.find((s) => s.color === this.caseStrokeColor());
     return found ? found.name : 'Tùy chỉnh';
   }
+
+  // Material Info & Flat Price (Đồng nhất 1 chất liệu duy nhất: Polycarbonate cao cấp)
+  protected readonly caseMaterialInfo = {
+    name: 'Polycarbonate cao cấp',
+    badge: 'Tiêu chuẩn in UV',
+    tag: 'Chống ố vàng',
+    desc: 'Chất liệu Polycarbonate cao cấp chống trầy xước, bền màu, ôm khít thân máy và bảo vệ camera tối đa.',
+    flatPrice: '250.000₫',
+  };
+
+  protected getLayerDisplayTitle(layer: CanvasLayer): string {
+    if (layer.type === 'text') return layer.content || 'Văn bản';
+    if (layer.type === 'sticker') return layer.name || 'Sticker';
+    if (layer.type === 'image') return 'Ảnh tải lên';
+    return 'Lớp đối tượng';
+  }
+
+  // Visual indicator for drag-to-delete (Throw away element)
+  protected readonly isDragInDeleteZone = signal<boolean>(false);
 
 
   // 3D Texture sync & Loading state
@@ -1009,9 +1029,31 @@ export class StudioWorkspace implements OnDestroy {
     const deltaY = ((event.clientY - startY) / (632 * zoomFactor)) * 100;
 
     if (mode === 'move') {
-      // Unrestricted freedom to place elements anywhere on the stage (parking / staging area)
-      const newX = Math.max(-200, Math.min(300, initialX + deltaX));
-      const newY = Math.max(-150, Math.min(250, initialY + deltaY));
+      // Freedom to move or fling completely off the canvas (throw-away gesture)
+      const newX = Math.max(-300, Math.min(400, initialX + deltaX));
+      const newY = Math.max(-250, Math.min(350, initialY + deltaY));
+
+      // Only consider "Delete / Vứt đi" if dragged COMPLETELY out of reach of the canvas
+      // Allow full freedom to park elements around the phone case for staging / arranging without accidental deletion
+      let isOutFarAway = false;
+      const stageEl = document.querySelector('.canvas-stage');
+      if (stageEl) {
+        const stageRect = stageEl.getBoundingClientRect();
+        // Cursor must be dragged FAR outside the stage (> 120px deep into sidebars or off window)
+        const isCursorFarOut =
+          event.clientX < stageRect.left - 120 ||
+          event.clientX > stageRect.right + 120 ||
+          event.clientY < stageRect.top - 100 ||
+          event.clientY > stageRect.bottom + 100;
+        
+        // Element must also be flung far beyond the canvas staging boundaries
+        const isElementFarOut = newX < -250 || newX > 350 || newY < -200 || newY > 300;
+
+        if (isCursorFarOut || isElementFarOut) {
+          isOutFarAway = true;
+        }
+      }
+      this.isDragInDeleteZone.set(isOutFarAway);
 
       const cam = this.cameraCutout();
       const inCameraArea =
@@ -1081,7 +1123,42 @@ export class StudioWorkspace implements OnDestroy {
     }
   }
 
-  protected onCanvasPointerUp(): void {
+  @HostListener('window:pointerup', ['$event'])
+  protected onCanvasPointerUp(event?: PointerEvent): void {
+    if (!this.activeDrag) return;
+
+    if (this.activeDrag.mode === 'move') {
+      const draggedId = this.activeDrag.id;
+      let shouldDelete = false;
+
+      // Only delete if the user literally threw it out of reach (> 120px past stage or > 260% out)
+      const stageEl = document.querySelector('.canvas-stage');
+      if (stageEl && event) {
+        const stageRect = stageEl.getBoundingClientRect();
+        const isCursorFarOut =
+          event.clientX < stageRect.left - 120 ||
+          event.clientX > stageRect.right + 120 ||
+          event.clientY < stageRect.top - 100 ||
+          event.clientY > stageRect.bottom + 100;
+
+        const layer = this.state.layers().find((l) => l.id === draggedId);
+        const isElementFarOut = layer && (layer.x < -250 || layer.x > 350 || layer.y < -200 || layer.y > 300);
+
+        if (isCursorFarOut || isElementFarOut) {
+          shouldDelete = true;
+        }
+      }
+
+      if (shouldDelete) {
+        this.state.removeLayer(draggedId);
+        this.showToast('🗑️ Đã xóa phần tử ra khỏi canvas', 2500);
+        this.isDragInDeleteZone.set(false);
+        this.activeDrag = null;
+        return;
+      }
+    }
+
+    this.isDragInDeleteZone.set(false);
     this.activeDrag = null;
   }
 

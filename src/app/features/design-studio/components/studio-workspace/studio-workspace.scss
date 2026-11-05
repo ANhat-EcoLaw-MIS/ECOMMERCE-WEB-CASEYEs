@@ -5,7 +5,7 @@
 .studio-shell {
   display: grid;
   /* tool-rail | drawer | canvas | 3d-preview (Canva/Figma clean 4-column layout) */
-  grid-template-columns: 68px 220px 1fr 260px;
+  grid-template-columns: 68px 240px 1fr 270px;
   /* Full height minus: studio sub-header(52px) + bottom-bar(56px) - Canva/Figma full-screen style */
   height: calc(100vh - 108px);
   min-height: calc(100vh - 108px);

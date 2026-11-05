@@ -203,17 +203,18 @@
       </div>
     }
 
-    <!-- ── Layers Panel with Move Up / Down (Bug 6 Resolved) ── -->
+    <!-- ── Layers Panel with Full Height Expansion & Rich Thumbnail (User Request) ── -->
     @if (state.activeTool() === 'tpl') {
-      <div class="space-y-3">
-        <div class="flex items-center justify-between">
+      <div class="flex flex-col h-full space-y-2.5">
+        <div class="flex items-center justify-between shrink-0">
           <p class="drawer-section-title">Danh sách Layers</p>
-          <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-black text-brand-800">
+          <span class="rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">
             {{ state.layers().length }} lớp
           </span>
         </div>
 
-        <div class="space-y-1.5 max-h-64 overflow-y-auto pr-0.5">
+        <!-- Full height layer list stretching across entire panel -->
+        <div class="flex-1 space-y-1.5 overflow-y-auto pr-1 min-h-0 pb-3">
           @for (item of displayLayers(); track item.layer.id; let visualIdx = $index) {
             <div
               draggable="true"
@@ -223,7 +224,7 @@
               (drop)="onLayerDrop($event, visualIdx)"
               (dragend)="onLayerDragEnd()"
               (click)="state.selectLayer(item.layer.id)"
-              class="group flex items-center gap-1.5 rounded-xl border p-2 text-xs transition-all cursor-grab active:cursor-grabbing select-none"
+              class="group flex items-center gap-2 rounded-xl border p-2 text-xs transition-all cursor-grab active:cursor-grabbing select-none"
               [class.opacity-40]="draggingLayerVisualIdx() === visualIdx"
               [class.border-brand-500]="dragOverLayerVisualIdx() === visualIdx"
               [class.ring-2]="dragOverLayerVisualIdx() === visualIdx"
@@ -245,12 +246,20 @@
                 </svg>
               </div>
 
-              <!-- Type Icon -->
-              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface text-sm border border-line">
-                {{ item.layer.type === 'text' ? 'T' : item.layer.type === 'sticker' ? item.layer.name : '🖼' }}
+              <!-- Type Icon / Real Image Thumbnail -->
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface text-sm border border-line overflow-hidden">
+                @if (item.layer.type === 'image') {
+                  <img [src]="item.layer.storageUrl" alt="Thumbnail" class="h-full w-full object-cover" />
+                } @else if (item.layer.type === 'text') {
+                  <span class="font-bold text-xs text-brand-800">T</span>
+                } @else if (item.layer.type === 'sticker') {
+                  <span>{{ item.layer.name }}</span>
+                } @else {
+                  <span>🎨</span>
+                }
               </div>
-              <span class="truncate flex-1">
-                {{ item.layer.type === 'text' ? item.layer.content : item.layer.type === 'sticker' ? 'Sticker ' + item.layer.name : 'Ảnh tải lên' }}
+              <span class="truncate flex-1 text-xs" [title]="getLayerDisplayTitle(item.layer)">
+                {{ getLayerDisplayTitle(item.layer) }}
               </span>
 
               <!-- Move Up / Down Controls (Visual Order: ▲ = Move Up toward Front, ▼ = Move Down toward Back) -->
@@ -276,22 +285,17 @@
               </div>
 
               <button type="button" (click)="$event.stopPropagation(); state.toggleLayerLock(item.layer.id)"
-                class="shrink-0 p-1 text-ink-soft hover:text-ink cursor-pointer">
+                class="shrink-0 p-1 text-ink-soft hover:text-ink cursor-pointer" title="Khóa / Mở khóa">
                 {{ item.layer.isLocked ? '🔒' : '🔓' }}
               </button>
             </div>
           }
-          <div class="flex items-center gap-2 rounded-xl border border-line bg-surface-alt/50 p-2 text-xs text-ink-soft">
+          <div class="flex items-center gap-2 rounded-xl border border-line bg-surface-alt/50 p-2 text-xs text-ink-soft shrink-0">
             <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-surface">🏠</div>
-            <span>Phôi ốp (Nền)</span>
+            <span class="text-xs">Phôi ốp (Nền)</span>
             <span class="ml-auto text-[10px]">Cố định</span>
           </div>
         </div>
-
-        <a routerLink="/design-studio/templates"
-          class="block rounded-xl border border-brand-400 bg-brand-50 p-2.5 text-center text-xs font-bold text-brand-800 hover:bg-brand-100 transition-colors">
-          Duyệt kho mẫu →
-        </a>
       </div>
     }
 
@@ -305,7 +309,7 @@
     (click)="onStageClick($event)"
     (wheel)="onStageWheel($event)"
     (pointermove)="onCanvasPointerMove($event)"
-    (pointerup)="onCanvasPointerUp()"
+    (pointerup)="onCanvasPointerUp($event)"
   >
 
     <!-- Canvas top toolbar: design name + view mode toggle + zoom -->
@@ -418,9 +422,12 @@
                 (pointerdown)="onElementPointerDown($event, layer.id)"
                 (click)="$event.stopPropagation()"
                 class="pointer-events-auto absolute cursor-move select-none transition-transform"
+                [class.opacity-25]="activeDrag?.id === layer.id && isDragInDeleteZone()"
+                [class.scale-90]="activeDrag?.id === layer.id && isDragInDeleteZone()"
+                [class.grayscale]="activeDrag?.id === layer.id && isDragInDeleteZone()"
                 [style.left.%]="layer.x" [style.top.%]="layer.y"
                 [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
-                [style.opacity]="layer.opacity * 0.5"
+                [style.opacity]="activeDrag?.id === layer.id && isDragInDeleteZone() ? 0.25 : layer.opacity * 0.5"
               >
                 <!-- Ghost Content with Canva 4-Side Crop -->
                 <div class="relative block select-none"
@@ -590,9 +597,12 @@
               (pointerdown)="onElementPointerDown($event, layer.id)"
               (click)="$event.stopPropagation()"
               class="absolute cursor-move select-none transition-transform"
+              [class.opacity-25]="activeDrag?.id === layer.id && isDragInDeleteZone()"
+              [class.scale-90]="activeDrag?.id === layer.id && isDragInDeleteZone()"
+              [class.grayscale]="activeDrag?.id === layer.id && isDragInDeleteZone()"
               [style.left.%]="layer.x" [style.top.%]="layer.y"
               [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
-              [style.opacity]="layer.opacity"
+              [style.opacity]="activeDrag?.id === layer.id && isDragInDeleteZone() ? 0.25 : layer.opacity"
               [class.ring-red-500]="state.designStatus() === 'REJECTED' && layer.type === 'image'"
             >
               <!-- Content with Canva 4-Side Crop -->
@@ -806,6 +816,52 @@
         }
       </div>
     </div>
+
+    <!-- ── Chất Liệu Ốp (Duy nhất 1 chất liệu: Polycarbonate cao cấp) ── -->
+    <div class="mx-3 mt-3.5 border-t border-line/70 pt-3">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Chất liệu ốp</p>
+        <span class="rounded bg-brand-100 px-1.5 py-0.5 text-[9px] font-bold text-brand-800">{{ caseMaterialInfo.badge }}</span>
+      </div>
+      <div class="rounded-xl border border-brand-200 bg-brand-50/60 p-2.5 text-left shadow-xs">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="flex h-5 w-5 items-center justify-center rounded-lg bg-brand-800 text-[10px] text-white">🛡️</span>
+            <span class="text-xs font-bold text-ink">{{ caseMaterialInfo.name }}</span>
+          </div>
+          <span class="text-[9px] font-semibold text-brand-700 bg-white px-1.5 py-0.5 rounded border border-brand-200 shadow-xs">{{ caseMaterialInfo.tag }}</span>
+        </div>
+        <p class="mt-1.5 text-[10px] text-ink-soft leading-relaxed">
+          {{ caseMaterialInfo.desc }}
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Thông Tin Đồng Giá (User Request) ── -->
+    <div class="mx-3 mt-3 mb-4 rounded-xl border border-brand-300/80 bg-gradient-to-br from-brand-50 via-white to-purple-50/70 p-2.5 shadow-soft">
+      <div class="flex items-center justify-between pb-1.5 border-b border-brand-100">
+        <div class="flex items-center gap-1.5">
+          <span class="flex h-5 w-5 items-center justify-center rounded-full bg-brand-800 text-[10px] text-white">🏷️</span>
+          <span class="text-[11px] font-black text-brand-900 uppercase tracking-tight">Đồng giá in ấn</span>
+        </div>
+        <span class="text-sm font-black text-brand-800">250.000₫</span>
+      </div>
+      <div class="mt-2 space-y-1 text-[10px] text-ink-soft leading-tight">
+        <div class="flex items-center gap-1.5">
+          <span class="text-emerald-600 font-bold shrink-0">✓</span>
+          <span>Áp dụng đồng giá cho mọi chất liệu & dòng máy</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-emerald-600 font-bold shrink-0">✓</span>
+          <span>Công nghệ in nhiệt Sublimation Ultra-HD chống phai</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-emerald-600 font-bold shrink-0">✓</span>
+          <span>Bảo hành 1 đổi 1 trong 30 ngày nếu lỗi sản xuất</span>
+        </div>
+      </div>
+    </div>
+
   </aside>
 
 
