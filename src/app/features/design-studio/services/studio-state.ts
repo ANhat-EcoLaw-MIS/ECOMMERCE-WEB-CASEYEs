@@ -10,6 +10,8 @@ import { DesignStatus } from '../models/studio-state.model';
 import { CaseMaterial } from '../models/studio-domain.model';
 import { StudioCatalogService } from './studio-catalog';
 
+export const UNIFIED_STUDIO_PRICE = 250000;
+
 export const BANNED_KEYWORDS = [
   'nike',
   'adidas',
@@ -68,8 +70,8 @@ export class StudioState {
   readonly allBrands = this.catalog.brands;
   readonly allModels = this.catalog.models;
 
-  // Case Material selection (Snap / Tough / MagSafe)
-  readonly selectedMaterial = signal<CaseMaterial>('snap');
+  // Single Standard Material (Simplified per team decision)
+  readonly selectedMaterial = signal<CaseMaterial>('standard');
 
   // Metadata
   readonly designName = signal<string>('Thiết kế chưa đặt tên');
@@ -126,7 +128,7 @@ export class StudioState {
       name: 'Y2K Retro Vibes',
       modelId: 'iphone-15-pro-max',
       modelName: 'iPhone 15 Pro Max',
-      material: 'tough',
+      material: 'standard',
       bg: 'linear-gradient(160deg,#D4C8FA 0%,#f5b8d8 100%)',
       layerCount: 2,
       layers: [
@@ -158,14 +160,8 @@ export class StudioState {
   readonly uploads = signal<{ id: string; name: string; url: string; dpi: number }[]>([]);
   readonly pendingUpload = signal<{ id: string; name: string; url: string; dpi: number; size: number } | null>(null);
 
-  // Pricing calculation (BaseSKU + CaseMaterial + Layer AddOn)
-  readonly totalPrice = computed(() => {
-    const basePrice = this.selectedSku()?.price ?? 220000;
-    const materialAddOn =
-      this.selectedMaterial() === 'magsafe' ? 70000 : this.selectedMaterial() === 'tough' ? 40000 : 0;
-    const layerAddOn = this._layers().length > 3 ? 20000 : 0;
-    return basePrice + materialAddOn + layerAddOn;
-  });
+  // Simplified Unified Pricing: All customized phone cases share one standard price (250.000đ)
+  readonly totalPrice = computed(() => UNIFIED_STUDIO_PRICE);
 
   readonly hasLayers = computed(() => this._layers().length > 0);
 
@@ -335,7 +331,6 @@ export class StudioState {
     if (this.selectedLayerId() === id) {
       this.selectedLayerId.set(null);
     }
-    // If user deleted the violating image, clear rejection
     if (this.designStatus() === 'REJECTED' && !this.requiresModeration()) {
       this.designStatus.set('DRAFT');
     }

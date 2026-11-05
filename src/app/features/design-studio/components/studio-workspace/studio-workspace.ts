@@ -11,7 +11,6 @@ import {
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { CanvasLayer } from '../../models/canvas-element.model';
-import { CASE_MATERIALS, CaseMaterial } from '../../models/studio-domain.model';
 import {
   BANNED_KEYWORDS,
   BG_PRESETS,
@@ -34,7 +33,6 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly draft = inject(StudioDraft);
   protected readonly stickers = STICKERS_LIST;
   protected readonly bgPresets = BG_PRESETS;
-  protected readonly caseMaterials = CASE_MATERIALS;
 
   // Text inputs
   protected readonly textInput = signal<string>('Good vibes');
@@ -142,11 +140,6 @@ export class StudioWorkspace implements OnDestroy {
   protected applyPresetText(content: string, size: number, bold: boolean): void {
     this.isTextBold.set(bold);
     this.state.addText(content, this.selectedFont(), this.selectedColor(), size);
-  }
-
-  // --- Material Selection (Issue 9) ---
-  protected onSelectMaterial(mat: CaseMaterial): void {
-    this.state.selectMaterial(mat);
   }
 
   // --- Save & Naming Flow (Issue 13 & 14) ---

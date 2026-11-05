@@ -32,7 +32,7 @@ export interface SafeZoneMask {
   readonly version: number;
 }
 
-export type CaseMaterial = 'snap' | 'tough' | 'magsafe';
+export type CaseMaterial = 'standard';
 
 export interface CaseMaterialOption {
   readonly id: CaseMaterial;
@@ -45,32 +45,16 @@ export interface CaseMaterialOption {
 
 export const CASE_MATERIALS: readonly CaseMaterialOption[] = [
   {
-    id: 'snap',
-    name: 'Snap Case (Slim)',
-    label: 'Ốp Slim mỏng nhẹ',
+    id: 'standard',
+    name: 'Ốp Lưng Tiêu Chuẩn',
+    label: 'Ốp lưng cao cấp',
     priceAddOn: 0,
-    description: 'Nhựa Polycarbonate bóng mờ, siêu mỏng nhẹ, giữ nguyên form máy.',
+    description: 'Chất liệu Polycarbonate cao cấp chống trầy xước, bền màu và ôm khít thân máy.',
     badgeText: 'Tiêu chuẩn',
-  },
-  {
-    id: 'tough',
-    name: 'Tough Case (2 Lớp)',
-    label: 'Ốp Chống sốc Tough',
-    priceAddOn: 40000,
-    description: '2 lớp bảo vệ TPU + PC, đệm cao su 4 góc gia cố chống rơi rớt 2 mét.',
-    badgeText: '+40.000đ',
-  },
-  {
-    id: 'magsafe',
-    name: 'MagSafe Clear',
-    label: 'Ốp Trong suốt MagSafe',
-    priceAddOn: 70000,
-    description: 'Viền TPU chống ố vàng tích hợp vòng nam châm từ tính MagSafe chuẩn hít.',
-    badgeText: '+70.000đ',
   },
 ];
 
-export type CaseType = 'snap' | 'tough' | 'clear' | 'magsafe';
+export type CaseType = 'snap' | 'tough' | 'clear' | 'magsafe' | 'standard';
 
 export interface BaseSKU {
   readonly skuId: string;

@@ -48,7 +48,7 @@
                 <p class="text-[10px] text-ink-soft truncate">{{ item.modelName }}</p>
                 <div class="mt-1 flex items-center gap-1.5">
                   <span class="rounded-pill bg-brand-100 px-1.5 py-0.2 text-[9px] font-semibold text-brand-800">
-                    {{ item.material === 'magsafe' ? 'MagSafe' : item.material === 'tough' ? 'Chống sốc' : 'Slim' }}
+                    Bản thiết kế
                   </span>
                   <span class="text-[9px] text-ink-soft">{{ item.savedAt }}</span>
                 </div>
@@ -58,7 +58,7 @@
               <button
                 type="button"
                 (click)="onDeleteSavedDesign(item.id, $event)"
-                class="rounded-full p-1 text-ink-soft opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                class="rounded-full p-1 text-ink-soft opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 cursor-pointer"
                 title="Xóa bản vẽ này"
               >
                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,7 +99,7 @@
           Mô tả sở thích, phong cách, màu sắc… và để AI tạo ra những gợi ý phù hợp nhất cho chiếc ốp lưng của bạn.
         </p>
 
-        <!-- Decorative note (Bug 5 Refined: Không gãy dòng thô, thiết kế pill mượt mà) -->
+        <!-- Decorative note -->
         <div class="inline-flex items-center gap-2.5 rounded-2xl border border-brand-200/80 bg-white/90 px-4 py-2.5 shadow-soft backdrop-blur-sm">
           <span class="text-base">💡</span>
           <p class="text-xs font-medium text-ink-soft">
@@ -132,7 +132,7 @@
             type="button"
             [disabled]="!aiPrompt().trim() || isAiSearching()"
             (click)="onAiSearch()"
-            class="inline-flex flex-1 items-center justify-center gap-2 rounded-pill px-6 py-3 font-display text-sm font-bold text-white transition-all"
+            class="inline-flex flex-1 items-center justify-center gap-2 rounded-pill px-6 py-3 font-display text-sm font-bold text-white transition-all cursor-pointer"
             [style]="(aiPrompt().trim() && !isAiSearching()) ? 'background:var(--grad-primary);box-shadow:var(--shadow-soft)' : 'background:#d4c8fa;cursor:not-allowed'"
           >
             @if (isAiSearching()) {
@@ -151,7 +151,7 @@
           <button
             type="button"
             (click)="onRetry()"
-            class="inline-flex items-center justify-center gap-1.5 rounded-pill border border-line px-5 py-3 text-sm font-medium text-ink-soft transition-all hover:border-brand-400 hover:text-brand-800"
+            class="inline-flex items-center justify-center gap-1.5 rounded-pill border border-line px-5 py-3 text-sm font-medium text-ink-soft transition-all hover:border-brand-400 hover:text-brand-800 cursor-pointer"
           >
             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -177,11 +177,10 @@
             <button
               type="button"
               (click)="onDesignTemplate(tpl)"
-              class="flex flex-col items-center rounded-xl border border-amber-200 bg-white p-3 text-center transition-all hover:border-brand-400 hover:shadow-soft"
+              class="flex flex-col items-center rounded-xl border border-amber-200 bg-white p-3 text-center transition-all hover:border-brand-400 hover:shadow-soft cursor-pointer"
             >
               <div class="mb-2 h-12 w-12 rounded-xl" [style.background]="tpl.gradient"></div>
               <span class="text-xs font-bold text-ink">{{ tpl.name }}</span>
-              <span class="text-[10px] text-ink-soft">{{ tpl.price.toLocaleString('vi-VN') }}đ</span>
             </button>
           }
         </div>
@@ -190,7 +189,7 @@
   }
 
   <!-- ══════════════════════════════════════════════════════
-       SECTION 2: Template Grid Section
+       SECTION 2: Template Grid Section (Không hiển thị giá từng mẫu)
   ══════════════════════════════════════════════════════ -->
   <div class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
 
@@ -211,7 +210,7 @@
           <button
             type="button"
             (click)="selectStyle(style.id)"
-            class="whitespace-nowrap rounded-pill px-3 py-1.5 text-xs font-medium transition-all"
+            class="whitespace-nowrap rounded-pill px-3 py-1.5 text-xs font-medium transition-all cursor-pointer"
             [class]="selectedStyle() === style.id
               ? 'bg-brand-800 text-white shadow-soft'
               : 'border border-line bg-white text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
@@ -278,18 +277,14 @@
             <h4 class="font-display text-sm font-bold leading-tight text-ink">{{ tpl.name }}</h4>
             <p class="line-clamp-2 text-xs leading-relaxed text-ink-soft">{{ tpl.description }}</p>
 
-            <div class="mt-auto flex items-center justify-between pt-2.5 border-t border-line/60">
-              <span class="font-display text-xs font-bold text-brand-800">
-                {{ tpl.price.toLocaleString('vi-VN') }}đ
-              </span>
-
-              <!-- Single Primary Action: Thiết kế mẫu này (Bug 4 & Issue 2 Resolved) -->
+            <!-- Card Action Footer (Không hiện giá theo yêu cầu, tập trung hoàn toàn vào nút thiết kế) -->
+            <div class="mt-auto pt-2.5 border-t border-line/60">
               <button
                 type="button"
                 (click)="onDesignTemplate(tpl)"
-                class="inline-flex items-center gap-1.5 rounded-pill bg-brand-800 px-3.5 py-1.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 hover:shadow-glow cursor-pointer"
+                class="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-brand-800 px-4 py-2 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 hover:shadow-glow cursor-pointer"
               >
-                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
                 <span>Thiết kế mẫu này</span>
