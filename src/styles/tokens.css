@@ -14,6 +14,10 @@
   --color-ink: #0A0A0A; /* Jet black, main text */
   --color-ink-soft: #52525b; /* secondary text */
   --color-line: #e8e6ef; /* borders, dividers */
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
   /* Typography */
   --font-display: "Plus Jakarta Sans", "Sora", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;

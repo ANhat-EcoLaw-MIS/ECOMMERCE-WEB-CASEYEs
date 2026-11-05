@@ -1,0 +1,28 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-brand-900/60 p-4 backdrop-blur-sm" (keydown.escape)="close()">
+  <section aria-labelledby="otp-modal-title" aria-modal="true" class="w-full max-w-md rounded-card border border-line bg-surface-alt p-6 shadow-lift sm:p-8" role="dialog">
+    <div class="mb-5 flex items-start justify-between gap-4">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-brand-800">CasEYE's Security</span>
+        <h2 class="mt-1 font-display text-xl font-bold text-ink" id="otp-modal-title">
+          {{ target() === 'email' ? 'Xác minh thay đổi Email' : 'Xác minh số điện thoại' }}
+        </h2>
+      </div>
+      <button aria-label="Đóng" class="min-h-[44px] min-w-[44px] rounded-full text-xl text-ink-soft hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-brand-400" (click)="close()" type="button">×</button>
+    </div>
+    <p class="text-sm text-ink-soft">
+      {{ target() === 'email' ? 'Mã OTP gồm 6 chữ số đã được gửi tới email hiện tại để xác minh bảo mật.' : 'Mã OTP SMS gồm 6 chữ số đã được gửi tới số điện thoại hiện tại để cấp phép thay đổi.' }}
+    </p>
+    <form class="mt-5 space-y-4" (ngSubmit)="confirm()" [formGroup]="form">
+      <label class="block text-sm font-semibold text-ink" for="sensitive-otp">Mã xác thực OTP</label>
+      <input autocomplete="one-time-code" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 text-center font-mono text-lg font-bold tracking-widest text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="code" id="sensitive-otp" inputmode="numeric" maxlength="6" placeholder="••••••" type="text"/>
+      @if (submitted() && form.controls.code.invalid) {
+        <p class="text-xs text-danger">Mã OTP không hợp lệ. Vui lòng nhập đủ 6 chữ số.</p>
+      }
+      <p class="text-xs text-ink-soft">Gửi lại mã sau 00:45</p>
+      <div class="flex gap-3 pt-2">
+        <button class="min-h-[44px] w-1/2 rounded-pill border border-line bg-surface-alt px-4 py-2.5 text-sm font-semibold text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-400" (click)="close()" type="button">Hủy</button>
+        <button class="min-h-[44px] w-1/2 rounded-pill bg-brand-800 px-4 py-2.5 text-sm font-semibold text-white shadow-soft hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-brand-400" type="submit">Xác nhận</button>
+      </div>
+    </form>
+  </section>
+</div>
