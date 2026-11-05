@@ -34,9 +34,10 @@ export class SupabaseAuthService {
   signInWithGoogle() {
     return this.wrap(this.db.auth.signInWithOAuth({ provider: 'google' }));
   }
+
   resetPassword(email: string) {
     return this.wrap(
-      this.db.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/reset-password` }),
+      this.db.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/auth/reset-password` }),
     );
   }
   updatePassword(password: string) {

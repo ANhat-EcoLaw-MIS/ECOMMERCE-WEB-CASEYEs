@@ -287,26 +287,103 @@ export const SHOP_ROUTES: Routes = [
 
 ## 6. Supabase
 
-Supabase code is split into two layers. Keep them separate.
+### 6.1. Architectural Mental Model
+Enforce strict multi-layered separation of concerns for all database operations:
+```
+[UI Components / Pages]
+│
+▼
+[Service Layer] ── consumes ──► [Auth Service] (core/auth/supabase-auth.service.ts)
+│
+▼
+[Feature Repository Layer] (e.g., product.repository.ts)
+│
+▼
+[Base Generic Repository] (core/supabase/supabase-repository.ts)
+│
+▼
+[Supabase Client (Singleton)] (core/supabase/supabase.client.ts)
+│
+▼
+[Supabase Database]
+```
 
-**1. Connection: `core/supabase/`.** This folder only creates the connection. It builds the one Supabase client, reads the keys from environment configuration and makes the client available through `inject()`. It contains **no queries** and no feature logic.
+Layer Responsibilities
+* Connection Layer (core/supabase/supabase.client.ts): Singleton client connection. Reads environment configuration. Direct access is restricted to multi-table joins, RPC calls, or bucket/storage access.
+* Base Repository Layer (core/supabase/supabase-repository.ts): Abstract class managing generic CRUD operations and wrapping database responses into unified result types.
+* Feature Repository Layer: Table-specific classes extending the base repository. Uses a declarative property override for table identification.
+* Service/Component Layer: Consumes repositories and authentication services via Dependency Injection (DI). Components must never interact with the Supabase client directly.
 
+### 6.2. Invariants & Strict Rules
+
+* Client Singleton: Exactly one createClient invocation in the entire codebase (supabase.client.ts). Never instantiate clients elsewhere.
+* Browser Keys: Only the public anon key is permitted in browser contexts. Never hardcode credentials.
+* No Direct UI Queries: Components must never call Supabase directly; all queries flow through Repositories or Services.
+* Auth Encapsulation: Components and route guards must only query authService.isAuthenticated() or the Auth Service API—never inspect raw JWT tokens or session storage directly.
+* No Manual Schema Edits: Direct schema modifications in the Supabase Dashboard UI are strictly forbidden. All schema changes must use migration files.
+
+### 6.3. Data Contracts & Standardized Results
+
+All repository queries must wrap their outputs into standardized operational outcome envelopes (`supabase.types.ts`):
+
+* Success Shape: `{ status: 'ok', data: T }`
+* Error Shape: `{ status: 'fail', error: E }`
+
+This guarantees uniform UI state handling (loading/success/error) across all consuming modules.
+
+### 6.4. Repository Implementation Pattern
+
+Feature repositories use a declarative approach: the class extends the abstract base class and overrides the table property directly. No constructor or super() call is used.
+
+Minimal Declarative Implementation
 ```ts
-// core/supabase/supabase.ts
 @Injectable({ providedIn: 'root' })
-export class Supabase {
-  readonly client = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
+export class ProductRepository extends SupabaseRepository<Product> {
+// Declarative approach: override table property (no constructor needed)
+protected override readonly tableName = 'products';
+
+// Custom queries specific to this table
+async getActiveProductsByCategory(categoryId: string) {
+const { data, error } = await this.client
+.from(this.tableName)
+.select('*')
+.eq('category_id', categoryId)
+.eq('status', 'active');
+
+    if (error) return { status: 'fail', error };
+    return { status: 'ok', data };
+}
 }
 ```
 
-**2. Data access layer: services inside each feature.** The code that actually reads and writes data lives in services such as `features/shop/services/product-api.ts`. They use `inject(Supabase).client`, run the queries, convert the rows into typed models and expose signals (data, loading, error). Data shared by several features or by the shell (auth session, cart) lives in a service in `core/` instead.
 
-Rules:
+### 6.5. Authentication Pattern (`core/auth/supabase-auth.service.ts`)
 
-- There is exactly **one** client. Never call `createClient` anywhere else.
-- Keys come from environment configuration, never hard-coded. Only the public anon key is used in the browser.
-- Components never talk to Supabase directly. They use a data access service.
-- Database changes go through migrations in `supabase/`, not manual edits.
+* Feature components and route guards must inject SupabaseAuthService using DI (e.g., inject(SupabaseAuthService)).
+* Session verification must use authService.isAuthenticated() to return a boolean or reactive state, abstracting away token storage and parsing.
+
+### 6.6. Migration Workflow & CLI Operations
+
+All schema alterations must follow this standard sequence:
+
+Generate Migration File:
+```bash
+npx supabase migration new <descriptive_migration_name>
+```
+
+Author DDL: Write PostgreSQL statements inside supabase/migrations/<timestamp>_<descriptive_migration_name>.sql.
+
+Apply Migration Locally:
+```
+npx supabase db reset
+or 'npx supabase start' if starting from a cold state
+```
+
+Regenerate TypeScript Types: Run immediately after any migration to synchronize types with the updated schema:
+```bash
+bash: npx supabase gen types typescript --local > src/core/supabase/database.types.ts
+PS: npx supabase gen types typescript --local | Out-File -FilePath src/core/supabase/database.types.ts -Encoding utf8
+```
 
 ## 7. Styling
 

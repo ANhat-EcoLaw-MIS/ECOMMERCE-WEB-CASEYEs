@@ -1,6 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
 @import "./styles/tokens.css";
+@import "./styles/mixins.scss";
+@import "./styles/effects.scss";
 @media print {
   // 1. Hide interactive and layout elements
   button, .sidebar, .no-print {
