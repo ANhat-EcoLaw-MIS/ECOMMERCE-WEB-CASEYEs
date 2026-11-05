@@ -8,8 +8,14 @@ export const DESIGN_STUDIO_ROUTES: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'templates',
+        redirectTo: 'select-model',
         pathMatch: 'full',
+      },
+      {
+        path: 'select-model',
+        title: "Chọn Dòng Máy | CasEYE's Design Studio",
+        loadComponent: () =>
+          import('./components/model-picker/model-picker').then((m) => m.ModelPicker),
       },
       {
         path: 'templates',

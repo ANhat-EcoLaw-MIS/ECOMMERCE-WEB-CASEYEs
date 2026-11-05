@@ -9,6 +9,74 @@ export const BRANDS_DATA: readonly Brand[] = [
 
 export const PHONE_MODELS_DATA: readonly PhoneModel[] = [
   {
+    id: 'iphone-15-pro-max',
+    brandId: 'brand-apple',
+    brandName: 'Apple',
+    name: 'iPhone 15 Pro Max',
+    slug: 'iphone-15-pro-max',
+    releaseYear: 2023,
+    printWidthMm: 76.7,
+    printHeightMm: 159.9,
+    minPrintDpi: 150,
+    specs: [
+      'Màn hình 6.7" Super Retina XDR',
+      'Camera Pro 48MP',
+      'Chip A17 Pro',
+      'Titanium cao cấp',
+    ],
+    safeZoneMask: {
+      maskId: 'mask-ip15pm',
+      modelId: 'iphone-15-pro-max',
+      safeMarginMm: 3.5,
+      safeMarginPercent: 5,
+      version: 1,
+      cameraCutout: {
+        xPercent: 8,
+        yPercent: 3.5,
+        widthPercent: 38,
+        heightPercent: 28,
+        borderRadius: 24,
+        lensCount: 3,
+      },
+    },
+    skus: [
+      {
+        skuId: 'sku-ip15pm-titanium',
+        skuCode: 'CASE-IP15PM-TITAN',
+        modelId: 'iphone-15-pro-max',
+        caseType: 'tough',
+        colorName: 'Titan Tự Nhiên',
+        colorHex: '#9E9A93',
+        price: 260000,
+        stockQty: 95,
+        isAvailable: true,
+      },
+      {
+        skuId: 'sku-ip15pm-lilac',
+        skuCode: 'CASE-IP15PM-LILAC',
+        modelId: 'iphone-15-pro-max',
+        caseType: 'tough',
+        colorName: 'Tím Lilac',
+        colorHex: '#A58CF4',
+        price: 250000,
+        stockQty: 80,
+        isAvailable: true,
+      },
+      {
+        skuId: 'sku-ip15pm-black',
+        skuCode: 'CASE-IP15PM-BLACK',
+        modelId: 'iphone-15-pro-max',
+        caseType: 'snap',
+        colorName: 'Đen Jet Black',
+        colorHex: '#0A0A0A',
+        price: 240000,
+        stockQty: 110,
+        isAvailable: true,
+      },
+    ],
+    isActive: true,
+  },
+  {
     id: 'iphone-16-pro',
     brandId: 'brand-apple',
     brandName: 'Apple',
@@ -18,6 +86,12 @@ export const PHONE_MODELS_DATA: readonly PhoneModel[] = [
     printWidthMm: 71.5,
     printHeightMm: 149.6,
     minPrintDpi: 150,
+    specs: [
+      'Màn hình 6.3" Super Retina XDR ProMotion',
+      'Camera Fusion 48MP & Nút Điều khiển Camera',
+      'Chip A18 Pro mạnh mẽ',
+      'Titanium cấp 5 siêu nhẹ',
+    ],
     safeZoneMask: {
       maskId: 'mask-ip16p',
       modelId: 'iphone-16-pro',
@@ -91,6 +165,12 @@ export const PHONE_MODELS_DATA: readonly PhoneModel[] = [
     printWidthMm: 70.6,
     printHeightMm: 146.6,
     minPrintDpi: 150,
+    specs: [
+      'Màn hình 6.1" Super Retina XDR',
+      'Camera Pro 48MP',
+      'Chip A17 Pro',
+      'Khung viền Titanium',
+    ],
     safeZoneMask: {
       maskId: 'mask-ip15p',
       modelId: 'iphone-15-pro',
@@ -142,6 +222,12 @@ export const PHONE_MODELS_DATA: readonly PhoneModel[] = [
     printWidthMm: 70.6,
     printHeightMm: 147.0,
     minPrintDpi: 150,
+    specs: [
+      'Màn hình 6.2" Dynamic AMOLED 2X 120Hz',
+      'Camera AI 50MP ProVisual Engine',
+      'Chip Exynos 2400 / Snapdragon 8 Gen 3',
+      'Khung viền Armor Aluminum',
+    ],
     safeZoneMask: {
       maskId: 'mask-s24',
       modelId: 'galaxy-s24',
@@ -193,6 +279,12 @@ export const PHONE_MODELS_DATA: readonly PhoneModel[] = [
     printWidthMm: 75.3,
     printHeightMm: 161.4,
     minPrintDpi: 150,
+    specs: [
+      'Màn hình 6.73" AMOLED WQHD+ 120Hz',
+      'Hệ thống 4 camera Leica Summilux 50MP',
+      'Chip Snapdragon 8 Gen 3 đỉnh cao',
+      'Khung Titanium nguyên khối',
+    ],
     safeZoneMask: {
       maskId: 'mask-mi14u',
       modelId: 'xiaomi-14-ultra',
@@ -230,12 +322,12 @@ export class StudioCatalogService {
   readonly brands = signal<readonly Brand[]>(BRANDS_DATA);
   readonly models = signal<readonly PhoneModel[]>(PHONE_MODELS_DATA);
 
-  readonly selectedModelId = signal<string>('iphone-16-pro');
+  readonly selectedModelId = signal<string>('iphone-15-pro-max');
   readonly selectedModel = computed(() => {
     return this.models().find((m) => m.id === this.selectedModelId()) ?? this.models()[0];
   });
 
-  readonly selectedSkuId = signal<string>('sku-ip16p-lilac');
+  readonly selectedSkuId = signal<string>('sku-ip15pm-titanium');
   readonly selectedSku = computed(() => {
     const model = this.selectedModel();
     return model.skus.find((s) => s.skuId === this.selectedSkuId()) ?? model.skus[0];

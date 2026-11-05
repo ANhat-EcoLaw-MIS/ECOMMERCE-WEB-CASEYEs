@@ -58,6 +58,7 @@ export interface PhoneModel {
   readonly printHeightMm: number;
   readonly minPrintDpi: number; // default: 150
   readonly model3dUrl?: string;
+  readonly specs?: readonly string[];
   readonly safeZoneMask: SafeZoneMask;
   readonly skus: readonly BaseSKU[];
   readonly isActive: boolean;

@@ -126,9 +126,12 @@
       <div class="flex items-center gap-2">
         <span class="text-base">🎨</span>
         <h2 class="font-display text-base font-bold text-ink">
-          Gợi ý mẫu thiết kế dành cho bạn
-          <span class="ml-2 rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">F13s</span>
+          Gợi ý mẫu cho {{ state.selectedModel().name }}
+          <span class="ml-1 rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">F13s</span>
         </h2>
+        <a routerLink="/design-studio/select-model" class="text-xs font-bold text-brand-600 hover:underline">
+          (Đổi dòng máy)
+        </a>
       </div>
       <div class="flex items-center gap-2 overflow-x-auto scrollbar-none">
         @for (style of styles; track style.id) {

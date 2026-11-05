@@ -1,0 +1,295 @@
+<section class="min-h-[calc(100vh-130px)] flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8"
+  style="background: linear-gradient(180deg, #f6f3fe 0%, #fafafa 45%, #ffffff 100%);">
+
+  <div class="w-full max-w-5xl rounded-card border border-line bg-surface-alt p-6 sm:p-8 lg:p-10 shadow-soft transition-all">
+
+    <!-- 2-Column Responsive Layout -->
+    <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
+
+      <!-- ══════════════════════════════════════════════════════
+           LEFT COLUMN: Brand & Model Selection Form (5 cols)
+      ══════════════════════════════════════════════════════ -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- FR Tag & Title -->
+        <div>
+          <div class="mb-2 flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 rounded-pill bg-brand-100 px-2.5 py-0.5 text-xs font-bold text-brand-800">
+              ✦ Chọn máy & Cấu hình
+              <span class="rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-black text-brand-900">F10</span>
+            </span>
+          </div>
+
+          <h1 class="font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+            Chọn dòng máy
+          </h1>
+          <p class="mt-2 text-xs leading-relaxed text-ink-soft sm:text-sm">
+            Chọn hãng và dòng máy của bạn để bắt đầu thiết kế ốp lưng theo đúng chuẩn phôi in.
+          </p>
+        </div>
+
+        <!-- Form Controls -->
+        <div class="space-y-4">
+
+          <!-- Field 1: Hãng điện thoại -->
+          <div>
+            <label for="brand-select" class="mb-1.5 block text-xs font-bold text-ink">
+              Hãng điện thoại
+            </label>
+            <div class="relative">
+              <select
+                id="brand-select"
+                [value]="selectedBrandId()"
+                (change)="onBrandChange($event)"
+                class="w-full appearance-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 cursor-pointer"
+              >
+                @for (brand of brands(); track brand.id) {
+                  <option [value]="brand.id">{{ brand.name }}</option>
+                }
+              </select>
+              <!-- Dropdown Chevron -->
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-ink-soft">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Quick Brand Pill Selector -->
+            <div class="mt-2 flex items-center gap-2">
+              @for (brand of brands(); track brand.id) {
+                <button
+                  type="button"
+                  (click)="selectBrand(brand.id)"
+                  class="flex items-center gap-1 rounded-pill px-3 py-1 text-xs font-bold transition-all"
+                  [class]="
+                    selectedBrandId() === brand.id
+                      ? 'bg-brand-800 text-white shadow-soft'
+                      : 'border border-line bg-surface text-ink-soft hover:bg-brand-50 hover:text-brand-800'
+                  "
+                >
+                  @if (brand.slug === 'apple') {
+                    <span class="text-xs"></span>
+                  }
+                  <span>{{ brand.name }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Field 2: Dòng máy -->
+          <div>
+            <label for="model-select" class="mb-1.5 block text-xs font-bold text-ink">
+              Dòng máy
+            </label>
+            <div class="relative">
+              <select
+                id="model-select"
+                [value]="selectedModelId()"
+                (change)="onModelChange($event)"
+                class="w-full appearance-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20 cursor-pointer"
+              >
+                @for (model of availableModels(); track model.id) {
+                  <option [value]="model.id">{{ model.name }} ({{ model.releaseYear }})</option>
+                }
+              </select>
+              <!-- Dropdown Chevron -->
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-ink-soft">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Primary CTA Button: Tiếp tục -->
+          <div class="pt-2">
+            <button
+              type="button"
+              id="continue-to-templates-btn"
+              (click)="onContinue()"
+              class="inline-flex w-full items-center justify-center gap-2 rounded-pill px-6 py-3.5 font-display text-sm font-bold text-white shadow-soft transition-all hover:scale-[1.02] hover:shadow-glow active:scale-100 cursor-pointer"
+              style="background: var(--grad-primary);"
+            >
+              <span>Tiếp tục</span>
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Quick Points of Start (Mockup 4a: Kho template / AI gợi ý / Canvas trống) -->
+          <div class="border-t border-line pt-4">
+            <p class="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+              Hoặc chọn điểm bắt đầu:
+            </p>
+            <div class="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                (click)="onGoTemplates()"
+                class="flex flex-col items-center justify-center gap-1 rounded-xl border border-line bg-surface p-2 text-center transition-all hover:border-brand-400 hover:bg-brand-50"
+                title="Duyệt kho mẫu thiết kế có sẵn"
+              >
+                <span class="text-base">📁</span>
+                <span class="text-[11px] font-bold text-ink">Kho mẫu</span>
+                <span class="rounded bg-brand-100 px-1 py-0.2 text-[9px] font-black text-brand-900">F12</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="onGoAiSuggestion()"
+                class="flex flex-col items-center justify-center gap-1 rounded-xl border border-line bg-surface p-2 text-center transition-all hover:border-brand-400 hover:bg-brand-50"
+                title="Nhập mô tả ý tưởng để AI tìm mẫu"
+              >
+                <span class="text-base">✨</span>
+                <span class="text-[11px] font-bold text-ink">AI gợi ý</span>
+                <span class="rounded bg-brand-100 px-1 py-0.2 text-[9px] font-black text-brand-900">F13</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="onGoBlankCanvas()"
+                class="flex flex-col items-center justify-center gap-1 rounded-xl border border-line bg-surface p-2 text-center transition-all hover:border-brand-400 hover:bg-brand-50"
+                title="Bắt đầu vẽ từ phôi ốp trắng"
+              >
+                <span class="text-base">✏️</span>
+                <span class="text-[11px] font-bold text-ink">Canvas trống</span>
+                <span class="rounded bg-brand-100 px-1 py-0.2 text-[9px] font-black text-brand-900">F9</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════
+           RIGHT COLUMN: Phone Showcase & Specs Checklist (7 cols)
+      ══════════════════════════════════════════════════════ -->
+      <div class="lg:col-span-7 flex flex-col sm:flex-row items-center justify-center gap-6 rounded-2xl p-6 sm:p-8"
+        style="background: radial-gradient(circle at 45% 50%, rgba(165, 140, 244, 0.22) 0%, rgba(246, 243, 254, 0.6) 50%, transparent 80%);">
+
+        <!-- ── Realistic Phone Illustration (Dual Body & Front) ── -->
+        <div class="relative flex items-center justify-center shrink-0">
+
+          <!-- Background phone: Front Screen with Dynamic Island -->
+          <div
+            class="relative h-[300px] w-[148px] overflow-hidden rounded-[26px] border-2 border-stone-800 bg-[#0A0A0A] shadow-xl transition-all"
+            style="transform: rotate(-6deg) translateX(-18px) translateY(8px); transform-origin: bottom center;"
+          >
+            <!-- Dynamic Island Cutout -->
+            <div class="absolute left-1/2 top-2 h-4 w-14 -translate-x-1/2 rounded-full bg-black ring-1 ring-white/10 flex items-center justify-end pr-1.5">
+              <span class="h-2 w-2 rounded-full bg-[#1c1c1e] ring-1 ring-[#2c2c2e]"></span>
+            </div>
+            <!-- Screen Wallpaper Aesthetic Glow -->
+            <div class="absolute inset-x-0 bottom-0 top-6 rounded-t-[20px] bg-gradient-to-b from-[#2a1d4d] via-[#433075] to-[#120e24] p-3 flex flex-col justify-between">
+              <div class="mt-4 flex flex-col items-center">
+                <span class="text-[10px] font-bold text-white/50 tracking-wider">THIẾT KẾ</span>
+                <span class="text-xs font-extrabold text-white">CasEYE's</span>
+              </div>
+              <!-- Lockscreen widget simulation -->
+              <div class="rounded-xl bg-white/10 p-2 backdrop-blur-md border border-white/10 text-center">
+                <p class="text-[9px] text-white/80 font-medium">Bảo vệ 360°</p>
+                <p class="text-[10px] font-extrabold text-brand-200">Chuẩn in 150+ DPI</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Foreground phone: Realistic Back Body with Titanium finish & Camera Island -->
+          <div
+            class="relative z-10 h-[320px] w-[156px] overflow-hidden rounded-[28px] border-2 border-stone-300 shadow-2xl transition-all"
+            style="background: linear-gradient(145deg, #c5c0b8 0%, #9e9a93 50%, #87837d 100%); transform: rotate(4deg);"
+          >
+            <!-- Metallic Surface Gloss -->
+            <div class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/30 via-transparent to-black/20"></div>
+
+            <!-- Camera Island Bump (Model-specific cutout representation) -->
+            <div
+              class="absolute left-[7%] top-[5%] rounded-[18px] bg-[#2a2928] p-2 shadow-xl ring-1 ring-white/20 backdrop-blur-md"
+              style="width: 44%; height: 32%;"
+            >
+              <div class="grid h-full w-full grid-cols-2 gap-1.5 place-items-center">
+                <!-- Lens 1 -->
+                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111] ring-2 ring-[#4a4845]">
+                  <span class="h-3 w-3 rounded-full bg-radial from-[#38bdf8]/40 to-[#0369a1] ring-1 ring-cyan-300/40"></span>
+                </div>
+                <!-- Lens 2 -->
+                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111] ring-2 ring-[#4a4845]">
+                  <span class="h-3 w-3 rounded-full bg-radial from-[#38bdf8]/40 to-[#0369a1] ring-1 ring-cyan-300/40"></span>
+                </div>
+                <!-- Lens 3 -->
+                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111] ring-2 ring-[#4a4845]">
+                  <span class="h-3 w-3 rounded-full bg-radial from-[#38bdf8]/40 to-[#0369a1] ring-1 ring-cyan-300/40"></span>
+                </div>
+                <!-- Flash / Sensor -->
+                <div class="flex flex-col items-center justify-center gap-1">
+                  <span class="h-2 w-2 rounded-full bg-amber-100 shadow-[0_0_6px_#fef3c7]"></span>
+                  <span class="h-2 w-2 rounded-full bg-[#111]"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Apple / Brand Logo in center -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              @if (activeModel().brandId === 'brand-apple') {
+                <span class="text-2xl text-stone-900/40 drop-shadow-sm font-bold"></span>
+              } @else {
+                <span class="font-display text-xs font-black tracking-widest text-stone-900/40 uppercase">{{ activeModel().brandName }}</span>
+              }
+            </div>
+
+            <!-- Bottom phone model tag -->
+            <div class="absolute bottom-3 inset-x-0 text-center">
+              <span class="rounded-pill bg-black/25 px-2 py-0.5 text-[8px] font-bold text-white/90 backdrop-blur-xs">
+                Phôi ốp {{ activeModel().name }}
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Right Specs Checklist ── -->
+        <div class="space-y-4 max-w-xs text-left">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600">Thông số kỹ thuật</span>
+            <h3 class="font-display text-xl font-extrabold text-ink sm:text-2xl">
+              {{ activeModel().name }}
+            </h3>
+            <p class="text-xs text-ink-soft">
+              Phát hành {{ activeModel().releaseYear }} · Chuẩn phôi CasEYE's Precision
+            </p>
+          </div>
+
+          <!-- Bullet points with custom checkmark icons -->
+          <ul class="space-y-2.5">
+            @for (spec of currentSpecs(); track spec) {
+              <li class="flex items-start gap-2.5">
+                <span class="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-800">
+                  <svg class="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </span>
+                <span class="text-xs font-semibold text-ink leading-tight">{{ spec }}</span>
+              </li>
+            }
+          </ul>
+
+          <!-- Doodle arrow pointing to phone with playful text -->
+          <div class="pt-2 flex items-center gap-2 text-brand-800">
+            <svg class="h-7 w-7 rotate-12 text-brand-600 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+            </svg>
+            <span class="font-display text-xs font-bold text-brand-800 italic">
+              Ốp lưng chuẩn khít từng milimet!
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
