@@ -133,6 +133,48 @@ export class StudioWorkspace implements OnDestroy {
     flatPrice: '250.000₫',
   };
 
+  /**
+   * Dynamically checks if an element has been dragged completely out of the user's field of view,
+   * accounting for the user's current zoom percentage and physical screen dimensions.
+   */
+  private isElementOutOfUserView(
+    xPercent: number,
+    yPercent: number,
+    clientX?: number,
+    clientY?: number
+  ): boolean {
+    const stageEl = document.querySelector('.canvas-stage');
+    const viewportEl = document.querySelector('#case-viewport');
+    if (!stageEl || !viewportEl) return false;
+
+    const stageRect = stageEl.getBoundingClientRect();
+    const vRect = viewportEl.getBoundingClientRect();
+
+    // Physical screen position of element's center based on zoomFactor and viewport
+    const elemScreenX = vRect.left + (xPercent / 100) * vRect.width;
+    const elemScreenY = vRect.top + (yPercent / 100) * vRect.height;
+
+    // Buffer in screen pixels beyond stage edges (must truly leave the user's sight)
+    const SCREEN_BUFFER = 40;
+
+    const isElementPhysicallyOffScreen =
+      elemScreenX < stageRect.left - SCREEN_BUFFER ||
+      elemScreenX > stageRect.right + SCREEN_BUFFER ||
+      elemScreenY < stageRect.top - SCREEN_BUFFER ||
+      elemScreenY > stageRect.bottom + SCREEN_BUFFER;
+
+    // Check if cursor is dragged deep outside the canvas stage (> 40px into sidebars or off screen)
+    const isCursorDeepOutside =
+      clientX !== undefined &&
+      clientY !== undefined &&
+      (clientX < stageRect.left - SCREEN_BUFFER ||
+        clientX > stageRect.right + SCREEN_BUFFER ||
+        clientY < stageRect.top - SCREEN_BUFFER ||
+        clientY > stageRect.bottom + SCREEN_BUFFER);
+
+    return isElementPhysicallyOffScreen || isCursorDeepOutside;
+  }
+
   protected getLayerDisplayTitle(layer: CanvasLayer): string {
     if (layer.type === 'text') return layer.content || 'Văn bản';
     if (layer.type === 'sticker') return layer.name || 'Sticker';
@@ -1029,31 +1071,19 @@ export class StudioWorkspace implements OnDestroy {
     const deltaY = ((event.clientY - startY) / (632 * zoomFactor)) * 100;
 
     if (mode === 'move') {
-      // Freedom to move or fling completely off the canvas (throw-away gesture)
-      const newX = Math.max(-300, Math.min(400, initialX + deltaX));
-      const newY = Math.max(-250, Math.min(350, initialY + deltaY));
+      // Dynamic coordinate bounds that scale inversely with zoom percentage
+      // e.g. at 50% zoom, the user can reach twice as far across the screen
+      const currentZoom = Math.max(30, this.state.zoom());
+      const zoomRatio = currentZoom / 100;
+      const maxReachX = Math.round(500 / zoomRatio);
+      const maxReachY = Math.round(400 / zoomRatio);
 
-      // Only consider "Delete / Vứt đi" if dragged COMPLETELY out of reach of the canvas
-      // Allow full freedom to park elements around the phone case for staging / arranging without accidental deletion
-      let isOutFarAway = false;
-      const stageEl = document.querySelector('.canvas-stage');
-      if (stageEl) {
-        const stageRect = stageEl.getBoundingClientRect();
-        // Cursor must be dragged FAR outside the stage (> 120px deep into sidebars or off window)
-        const isCursorFarOut =
-          event.clientX < stageRect.left - 120 ||
-          event.clientX > stageRect.right + 120 ||
-          event.clientY < stageRect.top - 100 ||
-          event.clientY > stageRect.bottom + 100;
-        
-        // Element must also be flung far beyond the canvas staging boundaries
-        const isElementFarOut = newX < -250 || newX > 350 || newY < -200 || newY > 300;
+      const newX = Math.max(-maxReachX, Math.min(maxReachX + 100, initialX + deltaX));
+      const newY = Math.max(-maxReachY, Math.min(maxReachY + 100, initialY + deltaY));
 
-        if (isCursorFarOut || isElementFarOut) {
-          isOutFarAway = true;
-        }
-      }
-      this.isDragInDeleteZone.set(isOutFarAway);
+      // Zoom-aware & screen-aware check: only mark for deletion when it truly leaves the user's field of view
+      const isOut = this.isElementOutOfUserView(newX, newY, event.clientX, event.clientY);
+      this.isDragInDeleteZone.set(isOut);
 
       const cam = this.cameraCutout();
       const inCameraArea =
@@ -1129,24 +1159,13 @@ export class StudioWorkspace implements OnDestroy {
 
     if (this.activeDrag.mode === 'move') {
       const draggedId = this.activeDrag.id;
-      let shouldDelete = false;
+      const layer = this.state.layers().find((l) => l.id === draggedId);
 
-      // Only delete if the user literally threw it out of reach (> 120px past stage or > 260% out)
-      const stageEl = document.querySelector('.canvas-stage');
-      if (stageEl && event) {
-        const stageRect = stageEl.getBoundingClientRect();
-        const isCursorFarOut =
-          event.clientX < stageRect.left - 120 ||
-          event.clientX > stageRect.right + 120 ||
-          event.clientY < stageRect.top - 100 ||
-          event.clientY > stageRect.bottom + 100;
-
-        const layer = this.state.layers().find((l) => l.id === draggedId);
-        const isElementFarOut = layer && (layer.x < -250 || layer.x > 350 || layer.y < -200 || layer.y > 300);
-
-        if (isCursorFarOut || isElementFarOut) {
-          shouldDelete = true;
-        }
+      let shouldDelete = this.isDragInDeleteZone();
+      if (layer) {
+        const clientX = event ? event.clientX : undefined;
+        const clientY = event ? event.clientY : undefined;
+        shouldDelete = shouldDelete || this.isElementOutOfUserView(layer.x, layer.y, clientX, clientY);
       }
 
       if (shouldDelete) {
