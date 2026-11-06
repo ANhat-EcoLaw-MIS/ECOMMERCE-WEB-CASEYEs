@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════
    Studio Shell – Professional Canva/Figma Layout Standard
-   Tool Rail (Left full-height pillar) + Main Work Area
+   Tool Rail (Left 88px full-height pillar) + Main Work Area
 ══════════════════════════════════════════════════════ */
 
 :host {
@@ -20,7 +20,9 @@
 
 /* ── Tool Rail (Col 1) – Continuous full-height left dock ── */
 .tool-rail {
-  width: 76px;
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
   flex-shrink: 0;
   height: 100%;
   display: flex;
@@ -29,39 +31,17 @@
   gap: 8px;
   border-right: 1px solid var(--color-line);
   background: #FFFFFF;
-  padding: 12px 6px;
+  padding: 14px 6px;
+  overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
   z-index: 20;
-}
-
-.studio-main-area {
-  flex: 1 1 0%;
-  min-width: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--color-surface);
-}
-
-.studio-shell {
-  display: grid;
-  /* drawer(300px) | canvas(1fr) | 3d-preview(290px) */
-  grid-template-columns: 300px 1fr 290px;
-  flex: 1 1 0%;
-  min-height: 0;
-  overflow: hidden;
-
-  @media (max-width: 1240px) {
-    grid-template-columns: 260px 1fr 260px;
-  }
-
-  @media (max-width: 900px) {
-    display: flex;
-    flex-direction: column;
-    min-height: auto;
-    overflow-y: auto;
-  }
 }
 
 .tool-btn {
@@ -70,8 +50,8 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  width: 64px;
-  padding: 6px 4px 5px;
+  width: 74px;
+  padding: 7px 4px 6px;
   border-radius: 14px;
   transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -84,8 +64,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
     background: transparent;
@@ -93,7 +73,7 @@
   }
 
   .tool-label {
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 600;
     line-height: 1.1;
     text-align: center;
@@ -120,6 +100,7 @@
       color: var(--color-brand-800);
       transform: translateY(-1px);
     }
+
     .tool-label {
       color: var(--color-ink);
     }
@@ -142,6 +123,36 @@
   }
 }
 
+.studio-main-area {
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.studio-shell {
+  display: grid;
+  /* drawer(310px) | canvas(1fr) | 3d-preview(300px) */
+  grid-template-columns: 310px 1fr 300px;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+
+  @media (max-width: 1240px) {
+    grid-template-columns: 270px 1fr 270px;
+  }
+
+  @media (max-width: 900px) {
+    display: flex;
+    flex-direction: column;
+    min-height: auto;
+    overflow-y: auto;
+  }
+}
+
 .fr-badge {
   display: none;
 }
@@ -149,10 +160,9 @@
 /* ── Tool Drawer (Col 2) ── */
 .tool-drawer {
   border-right: 1px solid var(--color-line);
-  background: var(--color-surface-alt);
-  padding: 14px;
+  background: #FAF9FE;
+  padding: 16px;
   overflow-y: auto;
-  max-height: calc(100vh - 108px);
   height: 100%;
 }
 
@@ -186,11 +196,11 @@
 
 /* ── 3D Preview Panel (Col 4) ── */
 .preview-panel {
-  background: var(--color-surface-alt);
+  background: #FAF9FE;
   overflow-y: auto;
-  max-height: calc(100vh - 108px);
   height: 100%;
-  padding-bottom: 16px;
+  padding: 12px 14px 20px;
+  border-left: 1px solid var(--color-line);
 }
 
 .preview-panel-header {
@@ -201,7 +211,7 @@
   border-bottom: 1px solid var(--color-line);
   position: sticky;
   top: 0;
-  background: var(--color-surface-alt);
+  background: #FAF9FE;
   z-index: 2;
 }
 
@@ -239,8 +249,15 @@
 
 /* ── Animations ── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -248,5 +265,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in { animation: none; }
+  .animate-fade-in {
+    animation: none;
+  }
 }
