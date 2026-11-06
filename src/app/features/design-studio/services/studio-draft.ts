@@ -3,7 +3,7 @@ import { CanvasLayer } from '../models/canvas-element.model';
 import { StudioState } from './studio-state';
 
 const DRAFT_STORAGE_KEY = 'caseye_studio_draft';
-const AUTO_SAVE_INTERVAL_MS = 30_000; // FR-DES-20 / US-DES-15: 30s non-interrupting auto-save
+const AUTO_SAVE_INTERVAL_MS = 60_000; // FR-DES-22: 60s non-interrupting auto-save
 
 export interface StoredDraft {
   savedAt: string;

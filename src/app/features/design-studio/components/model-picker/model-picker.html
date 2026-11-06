@@ -151,22 +151,28 @@
               style="width: 44%; height: 32%;"
             >
               <div class="grid h-full w-full grid-cols-2 gap-1.5 place-items-center">
-                <!-- Lens 1 -->
-                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111] ring-2 ring-[#4a4845]">
-                  <span class="h-3 w-3 rounded-full bg-radial from-[#38bdf8]/40 to-[#0369a1] ring-1 ring-cyan-300/40"></span>
+                <!-- Lens 1: Obsidian Sapphire -->
+                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111215] ring-1 ring-[#3a3d46] shadow-inner">
+                  <span class="h-3.5 w-3.5 rounded-full bg-[#050608] ring-1 ring-white/10 flex items-center justify-center">
+                    <span class="h-1.5 w-1.5 rounded-full bg-black"></span>
+                  </span>
                 </div>
-                <!-- Lens 2 -->
-                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111] ring-2 ring-[#4a4845]">
-                  <span class="h-3 w-3 rounded-full bg-radial from-[#38bdf8]/40 to-[#0369a1] ring-1 ring-cyan-300/40"></span>
+                <!-- Lens 2: Obsidian Sapphire -->
+                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111215] ring-1 ring-[#3a3d46] shadow-inner">
+                  <span class="h-3.5 w-3.5 rounded-full bg-[#050608] ring-1 ring-white/10 flex items-center justify-center">
+                    <span class="h-1.5 w-1.5 rounded-full bg-black"></span>
+                  </span>
                 </div>
-                <!-- Lens 3 -->
-                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111] ring-2 ring-[#4a4845]">
-                  <span class="h-3 w-3 rounded-full bg-radial from-[#38bdf8]/40 to-[#0369a1] ring-1 ring-cyan-300/40"></span>
+                <!-- Lens 3: Obsidian Sapphire -->
+                <div class="relative flex h-6 w-6 items-center justify-center rounded-full bg-[#111215] ring-1 ring-[#3a3d46] shadow-inner">
+                  <span class="h-3.5 w-3.5 rounded-full bg-[#050608] ring-1 ring-white/10 flex items-center justify-center">
+                    <span class="h-1.5 w-1.5 rounded-full bg-black"></span>
+                  </span>
                 </div>
                 <!-- Flash / Sensor -->
                 <div class="flex flex-col items-center justify-center gap-1">
-                  <span class="h-2 w-2 rounded-full bg-amber-100 shadow-[0_0_6px_#fef3c7]"></span>
-                  <span class="h-2 w-2 rounded-full bg-[#111]"></span>
+                  <span class="h-2 w-2 rounded-full bg-slate-200 border border-slate-300 shadow-xs"></span>
+                  <span class="h-2 w-2 rounded-full bg-[#09090b]"></span>
                 </div>
               </div>
             </div>
@@ -174,7 +180,9 @@
             <!-- Apple / Brand Logo in center -->
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
               @if (activeModel().brandId === 'brand-apple') {
-                <span class="text-2xl text-stone-900/40 drop-shadow-sm font-bold"></span>
+                <svg class="h-8 w-8 text-stone-900/35 drop-shadow-xs" viewBox="0 0 170 170" fill="currentColor">
+                  <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.6-7.85-11.7-14.42-6.19-9.9-10.97-20.67-14.34-32.32-3.37-11.64-5.06-22.68-5.06-33.12 0-14.03 3.52-25.77 10.57-35.23 7.04-9.47 16.03-14.28 26.96-14.42 5.01 0 10.45 1.25 16.32 3.75 5.88 2.51 9.87 3.81 11.98 3.92 1.63 0 5.66-1.36 12.08-4.08 6.42-2.73 11.98-3.97 16.69-3.75 12.52.65 22.81 5.44 30.86 14.39-10.99 6.64-16.38 15.78-16.16 27.42.22 9.14 3.86 16.92 10.93 23.34 7.07 6.42 15.45 10.12 25.13 11.1-2.29 6.96-4.85 13.59-7.68 19.88zM119.22 33.15c0-6.96 2.5-13.49 7.51-19.59 5.01-6.09 11.1-10.39 18.28-12.89-.33 1.41-.54 2.83-.65 4.24-.44 6.75-3.05 13.22-7.83 19.41-4.79 6.19-10.88 10.45-18.28 12.78.22-1.3.65-2.61.97-3.95z"/>
+                </svg>
               } @else {
                 <span class="font-display text-xs font-black tracking-widest text-stone-900/40 uppercase">{{ activeModel().brandName }}</span>
               }
