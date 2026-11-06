@@ -42,3 +42,6 @@ export const REFUND_TONE: Record<RefundStatus, Tone> = {
 
 /** Outline button in warning colour for destructive secondary actions (e.g. "Xác nhận hủy"). */
 export const DANGER_OUTLINE = 'border-rose-700 text-rose-800 hover:bg-rose-50';
+
+/** Red counter dot for things that need the customer (tab "Cần xử lý", notifications). */
+export const ATTENTION_DOT = 'bg-rose-600 text-white';

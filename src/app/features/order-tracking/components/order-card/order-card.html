@@ -1,9 +1,15 @@
 @let o = order();
-<article class="overflow-hidden rounded-card border border-line bg-surface-alt shadow-soft transition-shadow duration-200 hover:shadow-lift motion-reduce:transition-none">
-  <header class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3.5">
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-      <span class="font-display font-bold text-ink">{{ o.orderCode }}</span>
-      <span class="text-ink-soft">Đặt lúc {{ o.createdAt | date: 'HH:mm dd/MM/yyyy' }}</span>
+@let a = action();
+<article class="overflow-hidden rounded-card border bg-surface-alt shadow-soft transition-shadow duration-200 hover:shadow-lift motion-reduce:transition-none"
+  [class.border-line]="!attention()" [class.border-brand-400]="attention()">
+  <header class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
+    <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+      <span class="font-display font-bold text-ink"><app-highlight-text [text]="o.orderCode" [query]="query()" /></span>
+      <button type="button" (click)="copyCode()" [attr.aria-label]="'Sao chép mã đơn ' + o.orderCode"
+        class="grid size-9 place-items-center rounded-full text-ink-soft transition-colors hover:bg-brand-50 hover:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-400 active:bg-brand-100">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+      </button>
+      <span class="text-ink-soft">{{ o.createdAt | date: 'dd/MM/yyyy' }}</span>
       @if (mixed()) {
         <span class="rounded-pill border border-brand-200 bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-800">Giao chung một kiện</span>
       }
@@ -11,42 +17,44 @@
     <app-status-badge [status]="o.status" [label]="label()" />
   </header>
 
-  <ul class="divide-y divide-line px-5">
-    @for (item of o.items; track item.id) {
-      <li class="flex items-center gap-4 py-4">
-        <div class="w-12 shrink-0">
-          @if (item.isCustom) {
-            <app-phone-case-mock tone="lilac" />
+  <ul class="divide-y divide-line px-4 sm:px-5">
+    @for (item of shownItems(); track item.id) {
+      <li class="flex items-center gap-3 py-3 sm:gap-4">
+        <div class="w-12 shrink-0 sm:w-14">
+          @if (item.design?.previewUrl ?? item.imageUrl; as src) {
+            <img [src]="src" [alt]="item.isCustom ? 'Bản thiết kế ' + item.productName : item.productName" width="56" height="118" loading="lazy" class="aspect-9/19 w-full rounded-xl object-cover ring-1 ring-line" />
           } @else {
-            <div class="grid aspect-9/19 w-full place-items-center rounded-xl bg-brand-50 text-[10px] font-semibold text-brand-800">Có sẵn</div>
+            <app-phone-case-mock tone="lilac" />
           }
         </div>
         <div class="min-w-0 flex-1">
-          <p class="truncate font-semibold text-ink">{{ item.productName }}</p>
+          <p class="line-clamp-2 font-semibold text-ink"><app-highlight-text [text]="item.productName" [query]="query()" /></p>
           <p class="text-sm text-ink-soft">
             {{ item.phoneModel }} · x{{ item.quantity }}
             @if (item.isCustom) {
-              <span class="ml-1 rounded-pill bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-800">Thiết kế theo yêu cầu</span>
+              <span class="ml-1 whitespace-nowrap rounded-pill bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-800">Thiết kế theo yêu cầu</span>
             }
           </p>
         </div>
         <p class="shrink-0 text-sm font-semibold text-ink">{{ formatVnd(item.unitPrice * item.quantity) }}</p>
       </li>
     }
+    @if (hiddenCount() > 0) {
+      <li class="py-2 text-sm text-ink-soft">và {{ hiddenCount() }} sản phẩm khác</li>
+    }
   </ul>
 
-  <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface px-5 py-3.5">
-    <p class="text-sm" [class.font-semibold]="needsAction()" [class.text-brand-800]="needsAction()" [class.text-ink-soft]="!needsAction()">
-      {{ needsAction() ? 'Cần bạn xử lý · ' : '' }}{{ caption() }}
+  <footer class="flex flex-col gap-3 border-t border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+    <p class="text-sm" [class.font-semibold]="attention()" [class.text-brand-800]="attention()" [class.text-ink-soft]="!attention()">
+      @if (attention()) {
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="mr-1 inline size-4 align-[-3px]"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
+        Cần bạn xử lý ·
+      }
+      {{ caption() }}
     </p>
-    <div class="flex items-center gap-4">
+    <div class="flex items-center justify-between gap-4 sm:justify-end">
       <p class="text-sm text-ink-soft">Thành tiền <span class="font-display text-base font-bold text-brand-800">{{ total() }}</span></p>
-      <a
-        [routerLink]="['/order-tracking', o.orderCode]"
-        class="inline-flex min-h-11 items-center rounded-pill bg-brand-800 px-5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-glow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 motion-reduce:transition-none motion-reduce:hover:transform-none"
-      >
-        Xem chi tiết
-      </a>
+      <a [routerLink]="a.link" [queryParams]="a.queryParams ?? null" (click)="onAction()" [class]="btnPrimary">{{ a.label }}</a>
     </div>
   </footer>
 </article>

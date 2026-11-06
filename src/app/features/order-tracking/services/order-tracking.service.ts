@@ -222,6 +222,7 @@ export class OrderTrackingService {
           isCustom: i.isCustom,
           quantity: i.quantity,
           unitPrice: i.unitPrice,
+          imageUrl: i.imageUrl,
           design: i.design ? { id: newId('dsg'), ...i.design, version: 1 } : undefined,
         })),
         logs: [],

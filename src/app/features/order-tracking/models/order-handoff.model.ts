@@ -35,6 +35,7 @@ export interface OrderHandoffItem {
   readonly isCustom: boolean;
   readonly quantity: number;
   readonly unitPrice: number;
+  readonly imageUrl?: string;
   readonly design?: {
     readonly previewUrl?: string;
     readonly caption?: string;

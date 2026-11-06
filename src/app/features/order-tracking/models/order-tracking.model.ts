@@ -114,6 +114,8 @@ export interface OrderItem {
   readonly isCustom: boolean;
   readonly quantity: number;
   readonly unitPrice: number;
+  /** Product photo for in-stock items (from Mua sắm). */
+  readonly imageUrl?: string;
   readonly design?: DesignSnapshot;
 }
 
