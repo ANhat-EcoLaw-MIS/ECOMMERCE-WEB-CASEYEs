@@ -20,6 +20,9 @@ export interface BaseDesignElement {
   readonly cropRight?: number;
   readonly cropBottom?: number;
   readonly cropLeft?: number;
+  /** Canva-style flip transforms */
+  readonly flipH?: boolean;
+  readonly flipV?: boolean;
 }
 
 export interface TextElement extends BaseDesignElement {
@@ -30,6 +33,8 @@ export interface TextElement extends BaseDesignElement {
   readonly textColor: string; // Hex or CSS color
   readonly textAlign: 'left' | 'center' | 'right';
   readonly fontWeight?: 'normal' | 'bold' | '800';
+  readonly fontStyle?: 'normal' | 'italic';
+  readonly textDecoration?: 'none' | 'underline';
   readonly isCurved?: boolean;
 }
 

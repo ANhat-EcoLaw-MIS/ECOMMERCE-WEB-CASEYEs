@@ -12,7 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { CanvasLayer } from '../../models/canvas-element.model';
 import {
   BANNED_KEYWORDS,
@@ -28,7 +28,7 @@ import { AuthModal } from '../../../../core/auth/auth-modal';
 @Component({
   selector: 'app-studio-workspace',
   standalone: true,
-  imports: [RouterLink, DatePipe, DecimalPipe],
+  imports: [RouterLink, DatePipe],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './studio-workspace.html',
   styleUrl: './studio-workspace.scss',
@@ -184,6 +184,75 @@ export class StudioWorkspace implements OnDestroy {
 
   // Visual indicator for drag-to-delete (Throw away element)
   protected readonly isDragInDeleteZone = signal<boolean>(false);
+
+  // Canva Smart Alignment Guides (Snap to center lines)
+  protected readonly snapGuideX = signal<boolean>(false);
+  protected readonly snapGuideY = signal<boolean>(false);
+
+  // Canva Shortcuts Modal State
+  protected readonly showShortcutsModal = signal<boolean>(false);
+
+  // Canva-style Flip Transform
+  protected toggleFlipH(layerId: string): void {
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer) return;
+    this.state.updateLayer(layerId, { flipH: !layer.flipH });
+    this.trigger3dTextureSync(true);
+    this.showToast(!layer.flipH ? '↔️ Đã lật ngang' : 'Đã khôi phục hướng ngang');
+  }
+
+  protected toggleFlipV(layerId: string): void {
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer) return;
+    this.state.updateLayer(layerId, { flipV: !layer.flipV });
+    this.trigger3dTextureSync(true);
+    this.showToast(!layer.flipV ? '↕️ Đã lật dọc' : 'Đã khôi phục hướng dọc');
+  }
+
+  // Canva-style Center Alignment
+  protected alignCenter(layerId: string, axis: 'x' | 'y' | 'both' = 'both'): void {
+    const patch: any = {};
+    if (axis === 'x' || axis === 'both') patch.x = 50;
+    if (axis === 'y' || axis === 'both') patch.y = 50;
+    this.state.updateLayer(layerId, patch);
+    this.trigger3dTextureSync(true);
+    this.showToast('🎯 Đã căn giữa canvas');
+  }
+
+  // Canva-style Text Style Toggles
+  protected toggleTextBold(layerId: string): void {
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer || layer.type !== 'text') return;
+    const isBold = (layer as any).fontWeight === 'bold';
+    this.state.updateLayer(layerId, { fontWeight: isBold ? 'normal' : 'bold' } as any);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected toggleTextItalic(layerId: string): void {
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer || layer.type !== 'text') return;
+    const isItalic = (layer as any).fontStyle === 'italic';
+    this.state.updateLayer(layerId, { fontStyle: isItalic ? 'normal' : 'italic' } as any);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected toggleTextUnderline(layerId: string): void {
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer || layer.type !== 'text') return;
+    const isUnderline = (layer as any).textDecoration === 'underline';
+    this.state.updateLayer(layerId, { textDecoration: isUnderline ? 'none' : 'underline' } as any);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected cycleTextAlign(layerId: string): void {
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer || layer.type !== 'text') return;
+    const current = (layer as any).textAlign || 'center';
+    const order: ('left' | 'center' | 'right')[] = ['center', 'left', 'right'];
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    this.state.updateLayer(layerId, { textAlign: next } as any);
+    this.trigger3dTextureSync(true);
+  }
 
 
   // 3D Texture sync & Loading state
@@ -1086,18 +1155,41 @@ export class StudioWorkspace implements OnDestroy {
       const isOut = this.isElementOutOfUserView(newX, newY, event.clientX, event.clientY);
       this.isDragInDeleteZone.set(isOut);
 
+      let finalX = newX;
+      let finalY = newY;
+
+      // Smart Snap Guides (Canva style): snap to center when near 50%
+      if (!isOut) {
+        if (Math.abs(newX - 50) < 2.0) {
+          finalX = 50;
+          this.snapGuideX.set(true);
+        } else {
+          this.snapGuideX.set(false);
+        }
+
+        if (Math.abs(newY - 50) < 2.0) {
+          finalY = 50;
+          this.snapGuideY.set(true);
+        } else {
+          this.snapGuideY.set(false);
+        }
+      } else {
+        this.snapGuideX.set(false);
+        this.snapGuideY.set(false);
+      }
+
       const cam = this.cameraCutout();
       const inCameraArea =
-        newX < cam.xPercent + cam.widthPercent &&
-        newX > cam.xPercent &&
-        newY < cam.yPercent + cam.heightPercent &&
-        newY > cam.yPercent;
+        finalX < cam.xPercent + cam.widthPercent &&
+        finalX > cam.xPercent &&
+        finalY < cam.yPercent + cam.heightPercent &&
+        finalY > cam.yPercent;
 
       if (inCameraArea) {
         this.state.triggerSafeZoneAlert();
       }
 
-      this.state.updateLayer(id, { x: Math.round(newX), y: Math.round(newY) });
+      this.state.updateLayer(id, { x: Math.round(finalX), y: Math.round(finalY) });
     } else if (mode === 'resize') {
       // No upper percentage limit! Scale as big as desired like Canva
       const deltaX = (event.clientX - startX) / (2 * zoomFactor);
@@ -1172,6 +1264,9 @@ export class StudioWorkspace implements OnDestroy {
 
   @HostListener('window:pointerup', ['$event'])
   protected onCanvasPointerUp(event?: PointerEvent): void {
+    this.snapGuideX.set(false);
+    this.snapGuideY.set(false);
+
     if (!this.activeDrag) return;
 
     if (this.activeDrag.mode === 'move') {
@@ -1196,6 +1291,147 @@ export class StudioWorkspace implements OnDestroy {
 
     this.isDragInDeleteZone.set(false);
     this.activeDrag = null;
+  }
+
+  // Canva-style Keyboard Shortcuts Suite
+  @HostListener('window:keydown', ['$event'])
+  protected onWindowKeyDown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    const isInput =
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable);
+
+    // If user is typing in an input or textarea, don't hijack keys except Escape
+    if (isInput) {
+      if (event.key === 'Escape') {
+        target.blur();
+      }
+      return;
+    }
+
+    const selId = this.state.selectedLayerId();
+    const selLayer = this.state.selectedLayer();
+
+    // 1. Duplicate: Ctrl+D or Cmd+D
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'd' || event.key === 'D')) {
+      event.preventDefault();
+      if (selId) {
+        this.state.duplicateLayer(selId);
+        this.showToast('✓ Đã nhân đôi phần tử (Ctrl+D)');
+      }
+      return;
+    }
+
+    // 2. Undo: Ctrl+Z
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'z' || event.key === 'Z') && !event.shiftKey) {
+      event.preventDefault();
+      if (this.state.canUndo()) {
+        this.state.undo();
+        this.showToast('↩️ Hoàn tác (Undo)');
+      }
+      return;
+    }
+
+    // 3. Redo: Ctrl+Y or Ctrl+Shift+Z
+    if (
+      ((event.ctrlKey || event.metaKey) && (event.key === 'y' || event.key === 'Y')) ||
+      ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'z' || event.key === 'Z'))
+    ) {
+      event.preventDefault();
+      if (this.state.canRedo()) {
+        this.state.redo();
+        this.showToast('↪️ Làm lại (Redo)');
+      }
+      return;
+    }
+
+    // 4. Delete: Delete or Backspace
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (selId && (!selLayer || !selLayer.isLocked)) {
+        event.preventDefault();
+        this.state.removeLayer(selId);
+        this.showToast('🗑️ Đã xóa phần tử (Delete)');
+      }
+      return;
+    }
+
+    // 5. Deselect or close modal: Escape
+    if (event.key === 'Escape') {
+      if (this.showShortcutsModal()) {
+        this.showShortcutsModal.set(false);
+        return;
+      }
+      if (this.showNamingModal()) {
+        this.showNamingModal.set(false);
+        return;
+      }
+      if (this.isResizeNoticeModalOpen()) {
+        this.isResizeNoticeModalOpen.set(false);
+        return;
+      }
+      this.state.selectLayer(null);
+      return;
+    }
+
+    // 6. Shortcuts Help Modal: ?
+    if (event.key === '?' || (event.key === '/' && !event.ctrlKey && !event.metaKey)) {
+      event.preventDefault();
+      this.showShortcutsModal.update((v) => !v);
+      return;
+    }
+
+    // 7. Quick tools: 't' for text, 's' for sticker
+    if (!event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (event.key === 't' || event.key === 'T') {
+        event.preventDefault();
+        this.selectTool('txt');
+        this.showToast('✍️ Đã mở công cụ Chữ (T)');
+        return;
+      }
+      if (event.key === 's' || event.key === 'S') {
+        event.preventDefault();
+        this.selectTool('stk');
+        this.showToast('✨ Đã mở thư viện Sticker (S)');
+        return;
+      }
+    }
+
+    // 8. Arrow Keys Nudge Movement (1% normal, 4% with Shift)
+    if (selId && selLayer && !selLayer.isLocked) {
+      const step = event.shiftKey ? 4 : 1;
+      let dx = 0;
+      let dy = 0;
+
+      if (event.key === 'ArrowLeft') dx = -step;
+      else if (event.key === 'ArrowRight') dx = step;
+      else if (event.key === 'ArrowUp') dy = -step;
+      else if (event.key === 'ArrowDown') dy = step;
+
+      if (dx !== 0 || dy !== 0) {
+        event.preventDefault();
+        const newX = Math.max(0, Math.min(100, selLayer.x + dx));
+        const newY = Math.max(0, Math.min(100, selLayer.y + dy));
+        this.state.updateLayer(selId, { x: newX, y: newY });
+        this.trigger3dTextureSync();
+        return;
+      }
+
+      // 9. Reorder Layer: Ctrl+[ (Send down) and Ctrl+] (Bring up)
+      if ((event.ctrlKey || event.metaKey) && event.key === '[') {
+        event.preventDefault();
+        this.state.moveLayerDown(selId);
+        this.showToast('Hạ layer xuống 1 bậc (Ctrl+[)');
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key === ']') {
+        event.preventDefault();
+        this.state.moveLayerUp(selId);
+        this.showToast('Đưa layer lên 1 bậc (Ctrl+])');
+        return;
+      }
+    }
   }
 
   // Bug 1 Fix: Only deselect when clicking on the true empty canvas backdrop
@@ -1332,6 +1568,9 @@ export class StudioWorkspace implements OnDestroy {
       ctx.save();
       ctx.translate(posX, posY);
       ctx.rotate((layer.rotation * Math.PI) / 180);
+      if (layer.flipH || layer.flipV) {
+        ctx.scale(layer.flipH ? -1 : 1, layer.flipV ? -1 : 1);
+      }
       ctx.globalAlpha = layer.opacity;
 
       // Apply Canva-style 4-side crop if present
@@ -1363,8 +1602,10 @@ export class StudioWorkspace implements OnDestroy {
         const fontSizePx = Math.round((layer.fontSize / 300) * W);
         const maxTextWidthPx = Math.max(40, Math.round((layer.width / 100) * W));
         ctx.fillStyle = layer.textColor;
-        ctx.font = `${layer.fontWeight || 'bold'} ${fontSizePx}px ${layer.fontFamily || 'sans-serif'}`;
-        ctx.textAlign = 'center';
+        const fontStyle = (layer as any).fontStyle || 'normal';
+        const fontWeight = layer.fontWeight || 'bold';
+        ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${layer.fontFamily || 'sans-serif'}`;
+        ctx.textAlign = ((layer as any).textAlign as CanvasTextAlign) || 'center';
         ctx.textBaseline = 'middle';
 
         // Multi-line word wrapping matching 2D canvas
