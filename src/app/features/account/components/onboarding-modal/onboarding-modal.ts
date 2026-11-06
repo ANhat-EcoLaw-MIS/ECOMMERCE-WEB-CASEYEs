@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import type { OnboardingPreferences } from '../../models/account.model';
+import type { ProfileSetupPreferences } from '../../models/account.model';
 
 const STYLE_OPTIONS = ['Y2K Cyberpunk', 'Goth Y2K', 'Tối giản', 'Dễ thương', 'Vintage'];
 
@@ -16,7 +16,7 @@ export class OnboardingModal {
   readonly initialStyles = input<string[]>([]);
   readonly initialMaterial = input('Chống sốc viền nhôm Matt');
   readonly closed = output<void>();
-  readonly saved = output<OnboardingPreferences>();
+  readonly saved = output<ProfileSetupPreferences>();
   protected readonly styleOptions = STYLE_OPTIONS;
   protected readonly form = this.formBuilder.nonNullable.group({
     deviceType: ['iPhone 15 Pro Max', Validators.required],

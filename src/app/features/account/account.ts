@@ -6,8 +6,7 @@ import { OnboardingModal } from './components/onboarding-modal/onboarding-modal'
 import { OrdersTab } from './components/orders-tab/orders-tab';
 import { ProfileTab } from './components/profile-tab/profile-tab';
 import { SecurityTab } from './components/security-tab/security-tab';
-import { DESIGNS, ORDERS, type OnboardingPreferences, type TabId } from './models/account.model';
-import { ToastList } from './components/toast-list/toast-list';
+import { DESIGNS, ORDERS, type ProfileSetupPreferences, type TabId } from './models/account.model';
 
 const TABS: { id: TabId; label: string; icon: string; count: 'designs' | 'orders' | null }[] = [
   { id: 'profile', label: 'Hồ sơ cá nhân', icon: '◉', count: null },
@@ -18,7 +17,7 @@ const TABS: { id: TabId; label: string; icon: string; count: 'designs' | 'orders
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DesignsTab, OnboardingModal, OrdersTab, ProfileTab, SecurityTab, ToastList],
+  imports: [DesignsTab, OnboardingModal, OrdersTab, ProfileTab, SecurityTab],
   selector: 'app-account',
   styleUrl: './account.scss',
   templateUrl: './account.html',
@@ -44,7 +43,7 @@ export class Account implements OnInit {
     this.toast.show('Đã bỏ qua phần thiết lập sở thích.', 'info');
   }
 
-  protected async saveOnboarding(preferences: OnboardingPreferences): Promise<void> {
+  protected async saveOnboarding(preferences: ProfileSetupPreferences): Promise<void> {
     const profile = this.accountState.profile();
     const saved = await this.accountState.save({
       fullName: profile?.display_name ?? '',

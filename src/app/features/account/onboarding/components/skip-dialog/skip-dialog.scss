@@ -1,0 +1,7 @@
+dialog {
+  margin: auto;
+}
+
+dialog::backdrop {
+  backdrop-filter: blur(0.25rem);
+}

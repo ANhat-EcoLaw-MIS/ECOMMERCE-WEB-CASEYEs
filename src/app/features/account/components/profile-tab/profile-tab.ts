@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { AccountState } from '../../services/account-state';
 import { AccountToast } from '../../services/account-toast';
-import type { OnboardingPreferences, ProfileFormValue } from '../../models/account.model';
+import type { ProfileFormValue, ProfileSetupPreferences } from '../../models/account.model';
 import { OnboardingModal } from '../onboarding-modal/onboarding-modal';
 import { OtpModal } from '../otp-modal/otp-modal';
 
@@ -104,7 +104,7 @@ export class ProfileTab {
     this.toast.show('Xác thực bảo mật thành công!', 'success');
   }
 
-  protected async savePreferences(preferences: OnboardingPreferences): Promise<void> {
+  protected async savePreferences(preferences: ProfileSetupPreferences): Promise<void> {
     this.deviceType.set(preferences.deviceType);
     this.stylePreferences.set(preferences.stylePreferences);
     this.caseMaterial.set(preferences.caseMaterial);

@@ -2,6 +2,60 @@ html {
   scrollbar-gutter: stable;
 }
 
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes onboarding-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes onboarding-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-marquee-left {
+  animation: marquee-left 32s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marquee-right 34s linear infinite;
+}
+
+.animate-onboarding-float {
+  animation: onboarding-float 5s ease-in-out infinite;
+}
+
+.animate-onboarding-pulse {
+  animation: onboarding-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 body:has(dialog[open]) {
   overflow: hidden;
 }
@@ -50,5 +104,14 @@ dialog {
 @media (prefers-reduced-motion: reduce) {
   dialog, dialog::backdrop {
     transition: none !important;
+  }
+
+  .animate-marquee-left,
+  .animate-marquee-right,
+  .animate-onboarding-float,
+  .animate-onboarding-pulse,
+  .animate-ping,
+  .animate-bounce {
+    animation: none !important;
   }
 }

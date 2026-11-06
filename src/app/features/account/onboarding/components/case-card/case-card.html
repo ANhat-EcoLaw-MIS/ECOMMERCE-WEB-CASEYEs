@@ -1,0 +1,28 @@
+<article [attr.aria-label]="case().badge + ': ' + case().titleLines.join(' ')" [class]="case().caseClass">
+  <div [class]="case().artworkClass"></div>
+  <div aria-hidden="true" [class]="case().cameraClass">
+    <div [class]="cameraRowClass">
+      <span [class]="cameraLensClass"><span [class]="cameraDotClass"></span></span>
+      <span [class]="cameraPointClass"></span>
+    </div>
+    <div [class]="cameraRowClass">
+      <span [class]="cameraLensClass"><span [class]="cameraDotClass"></span></span>
+      <span [class]="cameraSmallLensClass"></span>
+    </div>
+  </div>
+  <div class="relative z-10 my-auto space-y-1.5 text-center">
+    <span [class]="case().badgeClass">{{ case().badge }}</span>
+    <h3 [class]="case().titleClass">
+      {{ case().titleLines[0] }}
+      @if (case().titleLines[1]) {
+        <br />
+        {{ case().titleLines[1] }}
+      }
+    </h3>
+    <p [class]="case().subtitleClass">{{ case().subtitle }}</p>
+  </div>
+  <div [class]="case().footerClass">
+    <span class="font-medium">{{ case().footerLabel }}</span>
+    <span class="font-semibold">{{ case().footerDetail }}</span>
+  </div>
+</article>

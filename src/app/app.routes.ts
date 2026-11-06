@@ -1,43 +1,67 @@
 import { Routes } from '@angular/router';
+import { ShellLayout } from './core/layout/shell-layout/shell-layout';
 
 export const routes: Routes = [
   {
-    path: '',
+    path: 'account/onboarding',
     pathMatch: 'full',
-    title:"CasEYE's",
-    loadComponent: () => import("./features/landing/landing").then((m) => m.Landing),
+    title: "Thiết lập tài khoản | CasEYE's",
+    loadChildren: () =>
+      import('./features/account/onboarding/onboarding.routes').then((m) => m.ONBOARDING_ROUTES),
   },
   {
-    path:'design-studio',
-    loadChildren: ()=>import("./features/design-studio/design-studio.routes").then(m => m.DESIGN_STUDIO_ROUTES)
-  },
-  {
-    path:'cart',
-    loadChildren: ()=>import("./features/cart/cart.routes").then((m) => m.CART_ROUTES),
-  },
-  {
-    path:'shop',
-    loadChildren: ()=>import("./features/shop/shop.routes").then((m) => m.SHOP_ROUTES),
-  },
-  {
-    path:'account',
-    loadChildren:()=>import("./features/account/account.routes").then((m) => m.ACCOUNT_ROUTES),
-  },
-  {
-    path:'customer-support',
-    loadChildren:()=>import("./features/customer-support/customer-support.routes").then((m) => m.SUPPORT_ROUTES),
-  },
-  {
-    path:'test',
-    loadComponent:()=>import("./core/demo/demo").then(m => m.Demo)
-  },
-  {
-    path: 'auth', // /auth/login, /auth/register, /auth/forgot-password, /auth/reset-password
-    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
-  },
-  {
-    path:'**',
-    title:"Not found T~T",
-    loadComponent:()=>import("./core/not-found/not-found").then(m => m.NotFound)
+    path: '',
+    component: ShellLayout,
+    title: "CasEYE's",
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: "CasEYE's",
+        loadComponent: () => import('./features/landing/landing').then((m) => m.Landing),
+      },
+      {
+        path: 'design-studio',
+        title: "Thiết kế | CasEYE's",
+        loadChildren: () =>
+          import('./features/design-studio/design-studio.routes').then((m) => m.DESIGN_STUDIO_ROUTES),
+      },
+      {
+        path: 'cart',
+        title: "Giỏ hàng | CasEYE's",
+        loadChildren: () => import('./features/cart/cart.routes').then((m) => m.CART_ROUTES),
+      },
+      {
+        path: 'shop',
+        title: "Cửa hàng | CasEYE's",
+        loadChildren: () => import('./features/shop/shop.routes').then((m) => m.SHOP_ROUTES),
+      },
+      {
+        path: 'account',
+        title: "Tài khoản | CasEYE's",
+        loadChildren: () => import('./features/account/account.routes').then((m) => m.ACCOUNT_ROUTES),
+      },
+      {
+        path: 'customer-support',
+        title: "Hỗ trợ | CasEYE's",
+        loadChildren: () =>
+          import('./features/customer-support/customer-support.routes').then((m) => m.SUPPORT_ROUTES),
+      },
+      {
+        path: 'test',
+        title: "Kiểm thử | CasEYE's",
+        loadComponent: () => import('./core/demo/demo').then((m) => m.Demo),
+      },
+      {
+        path: 'auth', // /auth/login, /auth/register, /auth/forgot-password, /auth/reset-password
+        title: "Xác thực | CasEYE's",
+        loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+      },
+      {
+        path: '**',
+        title: 'Not found T~T',
+        loadComponent: () => import('./core/not-found/not-found').then((m) => m.NotFound),
+      },
+    ],
   },
 ];

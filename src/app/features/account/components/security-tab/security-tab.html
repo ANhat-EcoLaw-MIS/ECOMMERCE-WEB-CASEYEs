@@ -45,11 +45,11 @@
       <div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-danger/10 text-danger">!</div>
       <div>
         <h3 class="font-display text-lg font-bold text-danger">Khu vực nguy hiểm: Xóa tài khoản CasEYE's</h3>
-        <p class="mt-1 text-sm text-ink-soft">Khi thực hiện xóa hồ sơ, quy trình sẽ tuân thủ cơ chế bảo mật xác minh hai bước theo quy chuẩn hệ thống (BPMN PM-03).</p>
+        <p class="mt-1 text-sm text-ink-soft">Khi thực hiện xóa hồ sơ, quy trình sẽ tuân thủ cơ chế bảo mật xác minh hai bước theo quy chuẩn hệ thống.</p>
       </div>
     </div>
     @if (deletionStep() === 'idle') {
-      <p class="mb-4 text-sm text-ink-soft">Sau khi kích hoạt, bạn sẽ có thời gian ân hạn <strong>30 ngày</strong> để khôi phục trước khi toàn bộ dữ liệu thiết kế độc bản, lịch sử giao dịch và tích điểm bị xóa vĩnh viễn khỏi máy chủ.</p>
+      <p class="mb-4 text-sm text-ink-soft">Sau khi kích hoạt, bạn sẽ có thời gian <strong>30 ngày</strong> để khôi phục trước khi toàn bộ dữ liệu thiết kế độc bản, lịch sử giao dịch và tích điểm bị xóa vĩnh viễn khỏi máy chủ.</p>
       <button class="min-h-[44px] rounded-pill border border-danger px-6 py-2.5 text-sm font-semibold text-danger transition-colors hover:bg-danger hover:text-white focus-visible:outline-2 focus-visible:outline-danger" (click)="startDeletion()" type="button">Bắt đầu yêu cầu xóa hồ sơ...</button>
     } @else {
       <div class="mt-6 space-y-6 border-t border-line pt-6">
