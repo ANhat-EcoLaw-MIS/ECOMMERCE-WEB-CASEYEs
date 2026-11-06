@@ -318,7 +318,7 @@
       <!-- Dialogs -->
       <app-cancel-dialog [order]="o" [mode]="cancelMode() ?? 'cod'" [open]="cancelMode() !== null" (closed)="cancelMode.set(null)" />
       <app-report-issue-dialog [order]="o" [open]="issueOpen()" (closed)="issueOpen.set(false)" />
-      <app-redelivery-dialog [order]="o" [open]="redeliveryOpen()" (closed)="redeliveryOpen.set(false)" />
+      <app-redelivery-dialog [order]="o" [open]="redeliveryOpen()" (closed)="redeliveryOpen.set(false)" (cancelInstead)="openCancel('failed')" />
       <app-ot-modal [open]="confirmOpen()" title="Xác nhận đã nhận hàng" (closed)="confirmOpen.set(false)">
         <p class="text-sm text-ink">Bạn đã kiểm tra kiện hàng và hài lòng với sản phẩm?</p>
         <p class="mt-1 text-xs text-ink-soft">Sau khi xác nhận, đơn chuyển sang Hoàn thành. Bạn vẫn có thể báo sự cố đến hết ngày {{ reportDeadline() }}.</p>

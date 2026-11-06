@@ -7,6 +7,7 @@ import { RefundChoice } from '../../domain/order-mutations';
 import { formatVnd } from '../../domain/shipping-fee';
 import { Order, RefundRequest, RefundSituation } from '../../models/order-tracking.model';
 import { OrderTrackingService } from '../../services/order-tracking.service';
+import { track } from '../../services/tracker';
 import { RefundChoiceForm } from '../refund-choice-form/refund-choice-form';
 import { BTN_PRIMARY } from '../ui';
 
@@ -77,6 +78,7 @@ export class RefundProgress {
     this.busy.set(true);
     const res = this.service.submitRefundAccount(this.order().id, this.refund().id, choice);
     this.busy.set(false);
+    if (!res.error) track('refund_method_chosen', { method: choice.method }, this.order().orderCode);
     this.toast.show(
       res.error
         ? { variant: 'error', title: 'Chưa lưu được', message: res.error.message }

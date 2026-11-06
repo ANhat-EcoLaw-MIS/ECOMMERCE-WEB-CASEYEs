@@ -10,6 +10,7 @@ import { formatVnd } from '../../domain/shipping-fee';
 import { CancelReason, Order, RefundSituation } from '../../models/order-tracking.model';
 import { Clock } from '../../services/clock';
 import { MESSAGES, OrderTrackingService } from '../../services/order-tracking.service';
+import { track } from '../../services/tracker';
 import { OtModal } from '../ot-modal/ot-modal';
 import { RefundChoiceForm } from '../refund-choice-form/refund-choice-form';
 import { BTN_PRIMARY, BTN_SECONDARY, FIELD, LABEL, simulateLatency } from '../ui';
@@ -111,7 +112,10 @@ export class CancelDialog {
   });
 
   constructor() {
-    this.form.controls.reason.valueChanges.subscribe((v) => this.reason.set(v));
+    this.form.controls.reason.valueChanges.subscribe((v) => {
+      this.reason.set(v);
+      if (v) track('cancel_reason_selected', { reason: v }, untracked(() => this.order().orderCode));
+    });
     effect(() => {
       if (this.open()) {
         this.opKey = crypto.randomUUID();
@@ -159,6 +163,8 @@ export class CancelDialog {
       }
       return;
     }
+    track('cancel_submitted', { kind: this.mode() }, o.orderCode);
+    if (choice) track('refund_method_chosen', { method: choice.method }, o.orderCode);
     if (this.mode() === 'request') {
       this.toast.show({ variant: 'functional', title: 'Đã gửi yêu cầu hủy', message: `CSKH sẽ phản hồi trước ${this.slaText()}.` });
     } else {

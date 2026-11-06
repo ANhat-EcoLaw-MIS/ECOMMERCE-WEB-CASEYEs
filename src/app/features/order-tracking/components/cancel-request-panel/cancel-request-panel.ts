@@ -6,6 +6,7 @@ import { TONE_CLASSES } from '../../config/status-style';
 import { Order } from '../../models/order-tracking.model';
 import { Clock } from '../../services/clock';
 import { OrderTrackingService } from '../../services/order-tracking.service';
+import { track } from '../../services/tracker';
 import { BTN_SECONDARY, simulateLatency } from '../ui';
 
 /**
@@ -44,6 +45,7 @@ export class CancelRequestPanel {
     await simulateLatency();
     const r = this.service.withdrawCancelRequest(this.order().id, { opKey: crypto.randomUUID() });
     this.busy.set(false);
+    if (!r.error) track('cancel_withdrawn', {}, this.order().orderCode);
     this.toast.show(
       r.error
         ? { variant: 'warning', title: 'Không rút lại được', message: r.error.message }
