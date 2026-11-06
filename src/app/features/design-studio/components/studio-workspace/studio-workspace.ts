@@ -504,6 +504,86 @@ export class StudioWorkspace implements OnDestroy {
     }
   }
 
+  // --- Inline Double-Click Text Editing (Canva / Figma UX Standard) ---
+  protected readonly editingTextLayerId = signal<string | null>(null);
+
+  protected onTextDoubleClick(event: MouseEvent, layerId: string): void {
+    event.stopPropagation();
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer || layer.type !== 'text' || layer.isLocked) return;
+
+    this.state.selectLayer(layerId);
+    this.editingTextLayerId.set(layerId);
+    this.selectTool('txt');
+    this.textInput.set(layer.content || '');
+
+    // Auto-focus and select all text immediately for effortless in-place editing
+    setTimeout(() => {
+      const textarea = document.querySelector<HTMLTextAreaElement>(`#inline-text-${layerId}`);
+      if (textarea) {
+        textarea.focus();
+        textarea.select();
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.max(textarea.scrollHeight, 28) + 'px';
+      }
+    }, 40);
+  }
+
+  protected onInlineTextInput(event: Event, layerId: string): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    const val = textarea.value;
+
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.max(textarea.scrollHeight, 28) + 'px';
+
+    this.textInput.set(val);
+    this.state.updateLayer(layerId, { content: val });
+    this.trigger3dTextureSync(true);
+
+    const hit = BANNED_KEYWORDS.find((w) => val.toLowerCase().includes(w));
+    if (hit) {
+      this.bannedInputError.set(
+        `Nội dung chứa từ khóa vi phạm tiêu chuẩn cộng đồng ("${hit}"). Vui lòng chỉnh sửa.`
+      );
+    } else {
+      this.bannedInputError.set(null);
+    }
+  }
+
+  protected onInlineTextKeydown(event: KeyboardEvent, layerId: string): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.finishInlineTextEdit();
+    } else if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.finishInlineTextEdit();
+    } else if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.value.trim() === '') {
+      event.preventDefault();
+      this.finishInlineTextEdit();
+    }
+  }
+
+  protected finishInlineTextEdit(): void {
+    const layerId = this.editingTextLayerId();
+    if (!layerId) return;
+    this.editingTextLayerId.set(null);
+
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (layer && layer.type === 'text') {
+      const trimmed = (layer.content || '').trim();
+      if (!trimmed) {
+        // Customer đã xóa hết chữ -> Auto xóa hoàn toàn layer text đó khỏi canvas
+        this.state.removeLayer(layerId);
+        this.textInput.set('');
+        this.trigger3dTextureSync(true);
+        return;
+      }
+    }
+
+    this.trigger3dTextureSync(true);
+  }
+
   // --- Text Operations ---
   protected onApplyText(): void {
     const text = this.textInput().trim();
@@ -1119,9 +1199,18 @@ export class StudioWorkspace implements OnDestroy {
 
   // --- Canvas Element Interactions (Drag, Select, Clamp) ---
   protected onElementPointerDown(event: PointerEvent, layerId: string): void {
+    if (this.editingTextLayerId() === layerId) {
+      return;
+    }
+    if (this.editingTextLayerId() && this.editingTextLayerId() !== layerId) {
+      this.finishInlineTextEdit();
+    }
     event.stopPropagation();
     this.state.selectLayer(layerId);
     const layer = this.state.layers().find((l) => l.id === layerId);
+    if (layer?.type === 'text') {
+      this.textInput.set(layer.content || '');
+    }
     if (!layer || layer.isLocked) return;
 
     this.activeDrag = {
@@ -1589,6 +1678,9 @@ export class StudioWorkspace implements OnDestroy {
 
   // Bug 1 Fix: Only deselect when clicking on the true empty canvas backdrop
   protected onStageClick(event?: MouseEvent): void {
+    if (this.editingTextLayerId()) {
+      this.finishInlineTextEdit();
+    }
     if (event && event.target !== event.currentTarget) {
       return;
     }

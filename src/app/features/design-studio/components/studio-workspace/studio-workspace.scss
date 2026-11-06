@@ -18,20 +18,20 @@
   overflow: hidden;
 }
 
-/* ── Tool Rail (Col 1) – Continuous full-height left dock ── */
+/* ── Tool Rail (Col 1) – Continuous full-height left dock (Zero scrollbar, Image 1 standard) ── */
 .tool-rail {
-  width: 90px;
-  min-width: 90px;
-  max-width: 90px;
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
   flex-shrink: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border-right: 1px solid var(--color-line);
   background: #FFFFFF;
-  padding: 14px 6px;
+  padding: 12px 6px;
   overflow-x: hidden !important;
   overflow-y: auto;
   scrollbar-width: none !important;
@@ -55,13 +55,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  width: 74px;
-  padding: 7px 4px 6px;
-  border-radius: 14px;
+  gap: 4px;
+  width: 72px;
+  padding: 8px 4px 7px;
+  border-radius: 20px;
   transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  color: var(--color-ink-soft);
+  color: #4b5563;
   cursor: pointer;
   border: none;
   background: transparent;
@@ -70,62 +70,72 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
     transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
     background: transparent;
-    color: var(--color-ink-soft);
+    color: currentColor;
   }
 
   .tool-label {
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 600;
     line-height: 1.1;
     text-align: center;
     white-space: nowrap;
-    color: var(--color-ink-soft);
+    color: currentColor;
     transition: color 180ms ease;
   }
 
-  .tool-active-bar {
-    position: absolute;
-    left: -6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 4px;
-    height: 26px;
-    border-radius: 0 4px 4px 0;
-    background: var(--color-brand-800);
-    box-shadow: 0 2px 8px rgba(67, 48, 117, 0.35);
-  }
-
-  &:hover {
-    .tool-icon-box {
-      background: color-mix(in srgb, var(--color-brand-100) 75%, transparent);
-      color: var(--color-brand-800);
-      transform: translateY(-1px);
-    }
-
-    .tool-label {
-      color: var(--color-ink);
-    }
+  &:hover:not(:disabled) {
+    background: rgba(67, 48, 117, 0.06);
+    color: var(--color-brand-900);
+    transform: translateY(-1px);
   }
 
   &.tool-btn--active {
-    background: #F4F0FD;
+    background: #433075;
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(67, 48, 117, 0.32);
 
     .tool-icon-box {
-      background: linear-gradient(135deg, #433075 0%, #6343A8 100%);
-      color: #ffffff;
-      box-shadow: 0 4px 14px rgba(67, 48, 117, 0.28);
-      transform: scale(1.02);
+      color: #FFFFFF;
     }
 
     .tool-label {
-      color: var(--color-brand-900);
-      font-weight: 800;
+      color: #FFFFFF;
+      font-weight: 700;
     }
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* ── Canvas In-Place Inline Text Editor (Canva / Figma UX with Vivid Blue '|' Caret) ── */
+.canvas-inline-textarea {
+  caret-color: #2563eb !important; /* Dấu nháy xanh | nổi bật xác định vị trí ký tự */
+  outline: 2px solid #2563eb !important;
+  outline-offset: 3px;
+  background: transparent !important;
+  resize: none !important;
+  overflow: hidden !important;
+  border: none !important;
+  padding: 0 4px !important;
+  margin: 0 !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2) !important;
+  border-radius: 4px;
+  box-sizing: border-box;
+  word-break: break-word;
+  white-space: normal;
+
+  &::selection {
+    background: rgba(37, 99, 235, 0.28) !important;
+    color: inherit !important;
   }
 }
 

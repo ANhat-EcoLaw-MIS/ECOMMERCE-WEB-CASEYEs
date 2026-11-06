@@ -1,7 +1,7 @@
 <div class="studio-layout">
 
   <!-- ───────────────────────────────────
-       COL 1 · Tool Rail (Continuous 88px Full-Height Pillar)
+       COL 1 · Tool Rail (Continuous 88px Full-Height Pillar, Image 1 Spec)
   ─────────────────────────────────────── -->
   <aside class="tool-rail">
 
@@ -16,9 +16,6 @@
         </svg>
       </span>
       <span class="tool-label">Thêm ảnh</span>
-      @if (state.activeTool() === 'img') {
-      <span class="tool-active-bar"></span>
-      }
     </button>
 
     <!-- Thêm chữ -->
@@ -32,9 +29,6 @@
         </svg>
       </span>
       <span class="tool-label">Thêm chữ</span>
-      @if (state.activeTool() === 'txt') {
-      <span class="tool-active-bar"></span>
-      }
     </button>
 
     <!-- Sticker -->
@@ -46,9 +40,6 @@
         </svg>
       </span>
       <span class="tool-label">Sticker</span>
-      @if (state.activeTool() === 'stk') {
-      <span class="tool-active-bar"></span>
-      }
     </button>
 
     <!-- Hiệu ứng / Màu nền -->
@@ -64,9 +55,6 @@
         </svg>
       </span>
       <span class="tool-label">Nền</span>
-      @if (state.activeTool() === 'bg') {
-      <span class="tool-active-bar"></span>
-      }
     </button>
 
     <!-- Layers -->
@@ -80,35 +68,41 @@
         </svg>
       </span>
       <span class="tool-label">Layers</span>
-      @if (state.activeTool() === 'tpl') {
-      <span class="tool-active-bar"></span>
-      }
     </button>
 
-    <!-- Bottom Quick Actions: Undo, Redo, Shortcuts (Width-constrained, ZERO horizontal scrollbar) -->
-    <div class="mt-auto flex flex-col items-center gap-2 pb-2 w-full shrink-0 overflow-hidden">
-      <div class="mx-auto h-px w-8 bg-line/80 rounded-full"></div>
+    <!-- Subtle Horizontal Divider -->
+    <div class="my-1 h-px w-10 bg-line shrink-0"></div>
 
-      <div class="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface-alt p-1 shadow-2xs w-[68px]">
-        <button type="button" (click)="state.undo()" [disabled]="!state.canUndo()"
-          class="flex h-6.5 w-6.5 items-center justify-center rounded-lg text-ink-soft hover:bg-white hover:text-brand-800 hover:shadow-2xs active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
-          title="Hoàn tác (Ctrl+Z)">
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v6h6M3 13L9 7M3 13a9 9 0 103-7.7"/>
-          </svg>
-        </button>
+    <!-- Undo Button (Matching Image 1: Vertical tool-btn structure) -->
+    <button type="button" (click)="state.undo()" [disabled]="!state.canUndo()"
+      class="tool-btn" [class.opacity-35]="!state.canUndo()" [class.cursor-not-allowed]="!state.canUndo()"
+      title="Hoàn tác (Ctrl+Z)">
+      <span class="tool-icon-box">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7v6h6" />
+          <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+        </svg>
+      </span>
+      <span class="tool-label">Undo</span>
+    </button>
 
-        <button type="button" (click)="state.redo()" [disabled]="!state.canRedo()"
-          class="flex h-6.5 w-6.5 items-center justify-center rounded-lg text-ink-soft hover:bg-white hover:text-brand-800 hover:shadow-2xs active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
-          title="Làm lại (Ctrl+Y)">
-          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7v6h-6M21 13l-6-6M21 13a9 9 0 11-3-7.7"/>
-          </svg>
-        </button>
-      </div>
+    <!-- Redo Button (Matching Image 1: Vertical tool-btn structure) -->
+    <button type="button" (click)="state.redo()" [disabled]="!state.canRedo()"
+      class="tool-btn" [class.opacity-35]="!state.canRedo()" [class.cursor-not-allowed]="!state.canRedo()"
+      title="Làm lại (Ctrl+Y)">
+      <span class="tool-icon-box">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 7v6h-6" />
+          <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" />
+        </svg>
+      </span>
+      <span class="tool-label">Redo</span>
+    </button>
 
+    <!-- Bottom Shortcuts Pill (Fits neatly inside 88px, zero overflow) -->
+    <div class="mt-auto pb-2 w-full flex flex-col items-center shrink-0">
       <button type="button" (click)="showShortcutsModal.set(true)"
-        class="flex h-7 w-[68px] items-center justify-center gap-1 rounded-xl border border-line/70 bg-white text-[10px] font-semibold text-ink-soft shadow-2xs hover:border-brand-400 hover:text-brand-800 active:scale-95 cursor-pointer transition-all"
+        class="flex h-7 w-[68px] items-center justify-center gap-1 rounded-xl border border-line bg-surface text-[10px] font-semibold text-ink-soft shadow-2xs hover:border-brand-400 hover:text-brand-800 active:scale-95 cursor-pointer transition-all"
         title="Bảng phím tắt (Figma/Canva style)">
         <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="4" width="20" height="16" rx="2.5"/>
@@ -818,13 +812,39 @@
             [style.transform]="(layer.flipH ? 'scaleX(-1) ' : '') + (layer.flipV ? 'scaleY(-1)' : '')"
             [style.clipPath]="layer.type === 'text' ? 'none' : 'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
             @if (layer.type === 'text') {
-            <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none"
+            @if (editingTextLayerId() === layer.id) {
+            <!-- In-place Canvas Text Editor (Double-click inline edit mode with blue caret '|') -->
+            <textarea [id]="'inline-text-' + layer.id"
+              (pointerdown)="$event.stopPropagation()"
+              (click)="$event.stopPropagation()"
+              (dblclick)="$event.stopPropagation()"
+              [value]="layer.content"
+              (input)="onInlineTextInput($event, layer.id)"
+              (keydown)="onInlineTextKeydown($event, layer.id)"
+              (blur)="finishInlineTextEdit()"
+              rows="1"
+              class="canvas-inline-textarea block w-full leading-tight select-text cursor-text"
+              [style.textAlign]="layer.textAlign || 'center'"
+              [style.width.px]="(layer.width / 100) * 300"
+              [style.fontFamily]="layer.fontFamily"
+              [style.fontSize.px]="layer.fontSize"
+              [style.color]="layer.textColor"
+              [style.fontWeight]="layer.fontWeight ?? 'bold'"
+              [style.fontStyle]="layer.fontStyle ?? 'normal'"
+              [style.textDecoration]="layer.textDecoration ?? 'none'"
+              style="caret-color: #2563eb !important;"
+              autofocus></textarea>
+            } @else {
+            <div (dblclick)="onTextDoubleClick($event, layer.id)"
+              class="block whitespace-normal break-words px-2 py-1 leading-tight select-none cursor-text hover:outline-dashed hover:outline-1 hover:outline-purple-300 rounded transition-all"
+              title="Nhấn đúp chuột để sửa chữ ngay"
               [style.textAlign]="layer.textAlign || 'center'" [style.width.px]="(layer.width / 100) * 300"
               [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
               [style.color]="layer.textColor"
               [style.fontWeight]="layer.fontWeight ?? 'bold'" [style.fontStyle]="layer.fontStyle ?? 'normal'"
               [style.textDecoration]="layer.textDecoration ?? 'none'">{{
               layer.content }}</div>
+            }
             }
             @if (layer.type === 'sticker') {
             @if (layer.assetUrl) {
@@ -843,7 +863,7 @@
           </div>
 
           <!-- Canva-style Selection & 4-Side Crop Controls (Ghost Layer) -->
-          @if (state.selectedLayerId() === layer.id) {
+          @if (state.selectedLayerId() === layer.id && editingTextLayerId() !== layer.id) {
           <div class="pointer-events-none absolute border border-purple-400/60 z-30" [style.top.%]="layer.cropTop || 0"
             [style.right.%]="layer.cropRight || 0" [style.bottom.%]="layer.cropBottom || 0"
             [style.left.%]="layer.cropLeft || 0">
@@ -1020,95 +1040,117 @@
             <span class="absolute font-mono text-[7px] font-black text-amber-300 tracking-[0.25em] uppercase select-none drop-shadow-xs">LEICA SUMMILUX</span>
           </div>
           } @else {
-          <!-- Apple iPhone Pro: Photorealistic Matte Obsidian Camera Module (Aligned 1:1 with 3D model) -->
+          <!-- Apple iPhone Pro: Photorealistic Signature Camera Module (1:1 with Reference Image 4) -->
           <div
-            class="pointer-events-none absolute z-20 rounded-[34px] transition-all duration-200"
+            class="pointer-events-none absolute z-20 rounded-[34px] transition-all duration-200 select-none overflow-hidden"
             [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
             [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent"
-            style="background: linear-gradient(145deg, #22242a 0%, #151619 50%, #0d0e11 100%);
-                   box-shadow: 0 10px 22px -3px rgba(0, 0, 0, 0.5), 0 3px 6px -1px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.7);
-                   border: 1px solid rgba(255, 255, 255, 0.08);">
+            style="background: linear-gradient(145deg, #1f2127 0%, #131518 50%, #0a0b0d 100%);
+                   box-shadow: 0 14px 28px -3px rgba(0, 0, 0, 0.65), 0 4px 10px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 -1px 2px rgba(0, 0, 0, 0.8);
+                   border: 1.5px solid rgba(255, 255, 255, 0.09);">
 
-            <!-- Subtle Matte Plateau Bevel Rim -->
-            <div class="absolute inset-[2px] rounded-[32px] border border-white/5 pointer-events-none"></div>
+            <!-- Subtle Matte Plateau Bevel Rim Groove -->
+            <div class="absolute inset-[2.5px] rounded-[31px] border border-white/5 pointer-events-none"></div>
 
-            <!-- ── Lens 1: Top-Left (Main 48MP Wide) ── -->
-            <div class="absolute left-[10%] top-[12%] h-[46px] w-[46px] rounded-full flex items-center justify-center"
-              style="background: conic-gradient(from 45deg, #32353e, #1c1d22, #292b32, #16171b, #32353e);
-                     box-shadow: 0 5px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.25);">
-              <div class="h-[39px] w-[39px] rounded-full border border-[#272930] flex items-center justify-center shadow-inner"
-                style="background: #111215;">
+            <!-- ── Iconic Caseye Labs Rim Brand Text (Reference Image 4) ── -->
+            <div class="absolute top-[5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+              <span class="font-mono text-[6.5px] font-black tracking-[0.16em] text-[#94a3b8] uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] scale-90">
+                • CASEYE LABS • IMPACT CASE •
+              </span>
+            </div>
+            <div class="absolute bottom-[5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+              <span class="font-mono text-[6.5px] font-extrabold tracking-[0.14em] text-[#64748b] uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,0.9)] scale-90">
+                2.5M DROP TESTED
+              </span>
+            </div>
+
+            <!-- ── Lens 1: Top-Left (Main 48MP Wide with Sapphire AR Glass & Gold Pupil) ── -->
+            <div class="absolute left-[10%] top-[13%] h-[46px] w-[46px] rounded-full flex items-center justify-center z-10"
+              style="background: conic-gradient(from 45deg, #4b5260 0%, #1e2129 25%, #3d4350 50%, #14161b 75%, #4b5260 100%);
+                     box-shadow: 0 6px 14px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6), inset 0 1.5px 1.5px rgba(255,255,255,0.4), inset 0 -1.5px 1.5px rgba(0,0,0,0.8);">
+              <div class="h-[39px] w-[39px] rounded-full border border-[#23252c] flex items-center justify-center shadow-inner"
+                style="background: #0f1013;">
                 <div class="relative h-[31px] w-[31px] rounded-full overflow-hidden flex items-center justify-center"
-                  style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);
-                         box-shadow: inset 0 2px 4px rgba(0,0,0,0.85);">
-                  <span class="h-3 w-3 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
-                    <span class="h-1 w-1 rounded-full bg-black"></span>
-                  </span>
-                  <span class="absolute top-1 left-2 h-2.5 w-4 rounded-full opacity-15 transform -rotate-25 pointer-events-none"
-                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                  style="background: radial-gradient(circle at 45% 38%, #4361ee 0%, #1e2578 45%, #0d1238 75%, #050716 100%);
+                         box-shadow: inset 0 2px 5px rgba(0,0,0,0.95);">
+                  <!-- Gold Sensor Aperture Core Pupil (Image 4 standard) -->
+                  <div class="h-3.5 w-3.5 rounded-full flex items-center justify-center border border-[#d97706]/90 shadow-[0_0_3px_rgba(245,158,11,0.6)]"
+                    style="background: radial-gradient(circle at center, #fbbf24 0%, #d97706 70%, #92400e 100%);">
+                    <span class="h-1.5 w-1.5 rounded-full bg-black shadow-inner"></span>
+                  </div>
+                  <!-- Optical Gloss Reflection Arc -->
+                  <span class="absolute top-0.5 left-1.5 h-2.5 w-4 rounded-full opacity-35 transform -rotate-25 pointer-events-none"
+                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 75%);"></span>
                 </div>
               </div>
             </div>
 
-            <!-- ── Lens 2: Bottom-Left (Ultra-Wide 12MP) ── -->
-            <div class="absolute left-[10%] bottom-[12%] h-[46px] w-[46px] rounded-full flex items-center justify-center"
-              style="background: conic-gradient(from 45deg, #32353e, #1c1d22, #292b32, #16171b, #32353e);
-                     box-shadow: 0 5px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.25);">
-              <div class="h-[39px] w-[39px] rounded-full border border-[#272930] flex items-center justify-center shadow-inner"
-                style="background: #111215;">
+            <!-- ── Lens 2: Bottom-Left (Ultra-Wide 12MP with Sapphire AR Glass & Gold Pupil) ── -->
+            <div class="absolute left-[10%] bottom-[13%] h-[46px] w-[46px] rounded-full flex items-center justify-center z-10"
+              style="background: conic-gradient(from 45deg, #4b5260 0%, #1e2129 25%, #3d4350 50%, #14161b 75%, #4b5260 100%);
+                     box-shadow: 0 6px 14px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6), inset 0 1.5px 1.5px rgba(255,255,255,0.4), inset 0 -1.5px 1.5px rgba(0,0,0,0.8);">
+              <div class="h-[39px] w-[39px] rounded-full border border-[#23252c] flex items-center justify-center shadow-inner"
+                style="background: #0f1013;">
                 <div class="relative h-[31px] w-[31px] rounded-full overflow-hidden flex items-center justify-center"
-                  style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);
-                         box-shadow: inset 0 2px 4px rgba(0,0,0,0.85);">
-                  <span class="h-3 w-3 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
-                    <span class="h-1 w-1 rounded-full bg-black"></span>
-                  </span>
-                  <span class="absolute top-1 left-2 h-2.5 w-4 rounded-full opacity-15 transform -rotate-25 pointer-events-none"
-                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                  style="background: radial-gradient(circle at 45% 38%, #4361ee 0%, #1e2578 45%, #0d1238 75%, #050716 100%);
+                         box-shadow: inset 0 2px 5px rgba(0,0,0,0.95);">
+                  <!-- Gold Sensor Aperture Core Pupil (Image 4 standard) -->
+                  <div class="h-3.5 w-3.5 rounded-full flex items-center justify-center border border-[#d97706]/90 shadow-[0_0_3px_rgba(245,158,11,0.6)]"
+                    style="background: radial-gradient(circle at center, #fbbf24 0%, #d97706 70%, #92400e 100%);">
+                    <span class="h-1.5 w-1.5 rounded-full bg-black shadow-inner"></span>
+                  </div>
+                  <!-- Optical Gloss Reflection Arc -->
+                  <span class="absolute top-0.5 left-1.5 h-2.5 w-4 rounded-full opacity-35 transform -rotate-25 pointer-events-none"
+                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 75%);"></span>
                 </div>
               </div>
             </div>
 
-            <!-- ── Lens 3: Middle-Right (Telephoto 5x Periscope) ── -->
-            <div class="absolute right-[10%] top-1/2 -translate-y-1/2 h-[46px] w-[46px] rounded-full flex items-center justify-center"
-              style="background: conic-gradient(from 45deg, #32353e, #1c1d22, #292b32, #16171b, #32353e);
-                     box-shadow: 0 5px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.25);">
-              <div class="h-[39px] w-[39px] rounded-full border border-[#272930] flex items-center justify-center shadow-inner"
-                style="background: #111215;">
+            <!-- ── Lens 3: Middle-Right (Telephoto 5x Periscope with Sapphire AR Glass & Gold Pupil) ── -->
+            <div class="absolute right-[10%] top-1/2 -translate-y-1/2 h-[46px] w-[46px] rounded-full flex items-center justify-center z-10"
+              style="background: conic-gradient(from 45deg, #4b5260 0%, #1e2129 25%, #3d4350 50%, #14161b 75%, #4b5260 100%);
+                     box-shadow: 0 6px 14px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6), inset 0 1.5px 1.5px rgba(255,255,255,0.4), inset 0 -1.5px 1.5px rgba(0,0,0,0.8);">
+              <div class="h-[39px] w-[39px] rounded-full border border-[#23252c] flex items-center justify-center shadow-inner"
+                style="background: #0f1013;">
                 <div class="relative h-[31px] w-[31px] rounded-full overflow-hidden flex items-center justify-center"
-                  style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);
-                         box-shadow: inset 0 2px 4px rgba(0,0,0,0.85);">
-                  <span class="h-3 w-3 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
-                    <span class="h-1 w-1 rounded-full bg-black"></span>
-                  </span>
-                  <span class="absolute top-1 left-2 h-2.5 w-4 rounded-full opacity-15 transform -rotate-25 pointer-events-none"
-                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                  style="background: radial-gradient(circle at 45% 38%, #4361ee 0%, #1e2578 45%, #0d1238 75%, #050716 100%);
+                         box-shadow: inset 0 2px 5px rgba(0,0,0,0.95);">
+                  <!-- Gold Sensor Aperture Core Pupil (Image 4 standard) -->
+                  <div class="h-3.5 w-3.5 rounded-full flex items-center justify-center border border-[#d97706]/90 shadow-[0_0_3px_rgba(245,158,11,0.6)]"
+                    style="background: radial-gradient(circle at center, #fbbf24 0%, #d97706 70%, #92400e 100%);">
+                    <span class="h-1.5 w-1.5 rounded-full bg-black shadow-inner"></span>
+                  </div>
+                  <!-- Optical Gloss Reflection Arc -->
+                  <span class="absolute top-0.5 left-1.5 h-2.5 w-4 rounded-full opacity-35 transform -rotate-25 pointer-events-none"
+                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 75%);"></span>
                 </div>
               </div>
             </div>
 
-            <!-- ── Dual-LED True Tone Flash (Frosted Silver/White, 1:1 with 3D model) ── -->
-            <div class="absolute right-[18%] top-[14%] h-[20px] w-[20px] rounded-full flex items-center justify-center"
-              style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);
-                     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4);">
-              <div class="h-[15px] w-[15px] rounded-full flex items-center justify-center overflow-hidden border border-white/40"
-                style="background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 55%, #94a3b8 100%);
-                       box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);">
-                <div class="h-[6px] w-[6px] rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]"></div>
+            <!-- ── Dual-LED True Tone Flash (Polished Silver Bezel & Warm Glowing Core) ── -->
+            <div class="absolute right-[18%] top-[14%] h-[20px] w-[20px] rounded-full flex items-center justify-center z-10"
+              style="background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #cbd5e1 100%);
+                     box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.9);">
+              <div class="h-[14px] w-[14px] rounded-full flex items-center justify-center overflow-hidden border border-[#475569]"
+                style="background: radial-gradient(circle at center, #ffffff 15%, #fef08a 45%, #f59e0b 80%, #b45309 100%);
+                       box-shadow: 0 0 5px rgba(251, 191, 36, 0.7), inset 0 1px 2px rgba(0,0,0,0.3);">
+                <div class="h-[5px] w-[5px] rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.9)]"></div>
               </div>
             </div>
 
-            <!-- ── Optical LiDAR Scanner (Matte Black Sensor) ── -->
-            <div class="absolute right-[20%] bottom-[15%] h-[18px] w-[18px] rounded-full flex items-center justify-center"
+            <!-- ── Optical LiDAR Scanner (Deep Teal Antireflective Tint) ── -->
+            <div class="absolute right-[20%] bottom-[15%] h-[18px] w-[18px] rounded-full flex items-center justify-center z-10"
               style="background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
-                     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15);">
+                     box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.2);">
               <div class="h-[13px] w-[13px] rounded-full overflow-hidden"
-                style="background: radial-gradient(circle at 40% 40%, #18181b 0%, #09090b 60%, #000000 100%);
-                       box-shadow: inset 0 1.5px 3px rgba(0,0,0,0.9);">
+                style="background: radial-gradient(circle at 45% 45%, #14b8a6 0%, #0f766e 40%, #042f2e 70%, #020617 100%);
+                       box-shadow: inset 0 1.5px 3px rgba(0,0,0,0.9), 0 0 4px rgba(20, 184, 166, 0.35);">
               </div>
             </div>
 
-            <!-- ── Rear Precision Microphone Pinhole ── -->
-            <div class="absolute right-[13%] top-[38%] h-[4px] w-[4px] rounded-full bg-[#050608] shadow-[inset_0_1px_1px_rgba(0,0,0,0.9),0_0.5px_0.5px_rgba(255,255,255,0.15)]"></div>
+            <!-- ── Rear Precision Acoustic Microphone Pinholes (Image 4 Spec) ── -->
+            <div class="absolute left-[48%] top-[14%] h-[3.5px] w-[3.5px] rounded-full bg-[#050608] border border-white/10 shadow-inner z-10"></div>
+            <div class="absolute right-[10%] top-[39%] h-[3.5px] w-[3.5px] rounded-full bg-[#050608] border border-white/10 shadow-inner z-10"></div>
           </div>
           }
 
@@ -1130,13 +1172,39 @@
             [style.transform]="(layer.flipH ? 'scaleX(-1) ' : '') + (layer.flipV ? 'scaleY(-1)' : '')"
             [style.clipPath]="layer.type === 'text' ? 'none' : 'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
             @if (layer.type === 'text') {
-            <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none"
+            @if (editingTextLayerId() === layer.id) {
+            <!-- In-place Canvas Text Editor (Double-click inline edit mode with blue caret '|') -->
+            <textarea [id]="'inline-text-' + layer.id"
+              (pointerdown)="$event.stopPropagation()"
+              (click)="$event.stopPropagation()"
+              (dblclick)="$event.stopPropagation()"
+              [value]="layer.content"
+              (input)="onInlineTextInput($event, layer.id)"
+              (keydown)="onInlineTextKeydown($event, layer.id)"
+              (blur)="finishInlineTextEdit()"
+              rows="1"
+              class="canvas-inline-textarea block w-full leading-tight select-text cursor-text"
+              [style.textAlign]="layer.textAlign || 'center'"
+              [style.width.px]="(layer.width / 100) * 300"
+              [style.fontFamily]="layer.fontFamily"
+              [style.fontSize.px]="layer.fontSize"
+              [style.color]="layer.textColor"
+              [style.fontWeight]="layer.fontWeight ?? 'bold'"
+              [style.fontStyle]="layer.fontStyle ?? 'normal'"
+              [style.textDecoration]="layer.textDecoration ?? 'none'"
+              style="caret-color: #2563eb !important;"
+              autofocus></textarea>
+            } @else {
+            <div (dblclick)="onTextDoubleClick($event, layer.id)"
+              class="block whitespace-normal break-words px-2 py-1 leading-tight select-none cursor-text hover:outline-dashed hover:outline-1 hover:outline-purple-300 rounded transition-all"
+              title="Nhấn đúp chuột để sửa chữ ngay"
               [style.textAlign]="layer.textAlign || 'center'" [style.width.px]="(layer.width / 100) * 300"
               [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
               [style.color]="layer.textColor"
               [style.fontWeight]="layer.fontWeight ?? 'bold'" [style.fontStyle]="layer.fontStyle ?? 'normal'"
               [style.textDecoration]="layer.textDecoration ?? 'none'">{{
               layer.content }}</div>
+            }
             }
             @if (layer.type === 'sticker') {
             @if (layer.assetUrl) {
@@ -1155,7 +1223,7 @@
           </div>
 
           <!-- Canva-style Selection & 4-Side Crop Controls (Inner Case Layer) -->
-          @if (state.selectedLayerId() === layer.id) {
+          @if (state.selectedLayerId() === layer.id && editingTextLayerId() !== layer.id) {
           <div class="pointer-events-none absolute border border-purple-500 z-30" [style.top.%]="layer.cropTop || 0"
             [style.right.%]="layer.cropRight || 0" [style.bottom.%]="layer.cropBottom || 0"
             [style.left.%]="layer.cropLeft || 0">
