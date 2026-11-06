@@ -35,6 +35,7 @@ export interface TextElement extends BaseDesignElement {
   readonly fontWeight?: 'normal' | 'bold' | '800';
   readonly fontStyle?: 'normal' | 'italic';
   readonly textDecoration?: 'none' | 'underline';
+  readonly textEffect?: 'none' | 'shadow' | 'neon' | 'hollow' | 'lift';
   readonly isCurved?: boolean;
 }
 
@@ -54,6 +55,7 @@ export interface ImageElement extends BaseDesignElement {
   readonly pixelWidth: number;
   readonly pixelHeight: number;
   readonly dpi: number;
+  readonly imageFilter?: 'none' | 'grayscale' | 'sepia' | 'warm' | 'cool' | 'vivid';
   readonly isLowResAcknowledged: boolean;
   readonly consentRecordId?: string;
 }

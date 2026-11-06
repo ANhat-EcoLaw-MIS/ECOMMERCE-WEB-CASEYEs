@@ -254,6 +254,134 @@ export class StudioWorkspace implements OnDestroy {
     this.trigger3dTextureSync(true);
   }
 
+  // ── Canva Background Studio (Solid Color Picker & Dual Gradient Generator) ──
+  protected readonly bgTab = signal<'solid' | 'gradient' | 'presets'>('solid');
+  protected readonly customSolidColor = signal<string>('#FAFAFA');
+  protected readonly gradientColor1 = signal<string>('#433075');
+  protected readonly gradientColor2 = signal<string>('#A58CF4');
+  protected readonly gradientAngle = signal<number>(135);
+  protected readonly gradientType = signal<'linear' | 'radial'>('linear');
+
+  protected readonly gradientAnglePresets = [
+    { label: 'Dọc ⬇️', angle: 180 },
+    { label: 'Chéo ↘️', angle: 135 },
+    { label: 'Ngang ➡️', angle: 90 },
+    { label: 'Chéo ↗️', angle: 45 },
+  ];
+
+  protected readonly curatedGradients = [
+    { name: 'Y2K Cosmic', c1: '#433075', c2: '#A58CF4', angle: 135 },
+    { name: 'Hoàng hôn', c1: '#ff512f', c2: '#dd2476', angle: 135 },
+    { name: 'Biển xanh', c1: '#2193b0', c2: '#6dd5ed', angle: 180 },
+    { name: 'Kẹo bông', c1: '#D4C8FA', c2: '#f5b8d8', angle: 160 },
+    { name: 'Bạc hà', c1: '#11998e', c2: '#38ef7d', angle: 135 },
+    { name: 'Midnight', c1: '#141a3d', c2: '#5b4b9a', angle: 180 },
+    { name: 'Mật đào', c1: '#ffd1a8', c2: '#ff7e8b', angle: 160 },
+    { name: 'Neon Cyber', c1: '#ff007f', c2: '#7928ca', angle: 135 },
+  ];
+
+  protected readonly solidPalette = [
+    '#FFFFFF', '#F8FAFC', '#E2E8F0', '#94A3B8', '#475569', '#1E293B', '#0F172A', '#000000',
+    '#FEE2E2', '#FECDD3', '#FBCFE8', '#F5D0FE', '#EDE9FE', '#DDD6FE', '#C7D2FE', '#BFDBFE',
+    '#BAE6FD', '#A5F3FC', '#99F6E4', '#A7F3D0', '#BBF7D0', '#D9F99D', '#FEF08A', '#FED7AA',
+    '#EF4444', '#F43F5E', '#EC4899', '#D946EF', '#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9',
+    '#10B981', '#84CC16', '#EAB308', '#F97316', '#433075', '#2A1D4D', '#15803D', '#B91C1C'
+  ];
+
+  protected onCustomSolidColorInput(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.customSolidColor.set(val);
+    this.state.caseBg.set(val);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected setSolidColor(color: string): void {
+    this.customSolidColor.set(color);
+    this.state.caseBg.set(color);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected updateGradientColor(which: 1 | 2, color: string): void {
+    if (which === 1) this.gradientColor1.set(color);
+    else this.gradientColor2.set(color);
+    this.applyCurrentGradient();
+  }
+
+  protected setGradientAngle(angle: number): void {
+    this.gradientType.set('linear');
+    this.gradientAngle.set(angle);
+    this.applyCurrentGradient();
+  }
+
+  protected setRadialGradient(): void {
+    this.gradientType.set('radial');
+    this.applyCurrentGradient();
+  }
+
+  protected swapGradientColors(): void {
+    const c1 = this.gradientColor1();
+    const c2 = this.gradientColor2();
+    this.gradientColor1.set(c2);
+    this.gradientColor2.set(c1);
+    this.applyCurrentGradient();
+  }
+
+  protected applyCuratedGradient(item: { c1: string; c2: string; angle: number }): void {
+    this.gradientColor1.set(item.c1);
+    this.gradientColor2.set(item.c2);
+    this.gradientAngle.set(item.angle);
+    this.gradientType.set('linear');
+    this.applyCurrentGradient();
+  }
+
+  protected applyCurrentGradient(): void {
+    let bgStr = '';
+    if (this.gradientType() === 'radial') {
+      bgStr = `radial-gradient(circle, ${this.gradientColor1()} 0%, ${this.gradientColor2()} 100%)`;
+    } else {
+      bgStr = `linear-gradient(${this.gradientAngle()}deg, ${this.gradientColor1()} 0%, ${this.gradientColor2()} 100%)`;
+    }
+    this.state.caseBg.set(bgStr);
+    this.trigger3dTextureSync(true);
+  }
+
+  // ── Canva Text Effects & Image Filters Helpers ──
+  protected getTextShadow(effect?: string, color: string = '#433075'): string {
+    if (effect === 'shadow') return '2px 4px 6px rgba(0,0,0,0.45)';
+    if (effect === 'neon') return `0 0 5px #fff, 0 0 10px ${color}, 0 0 20px ${color}, 0 0 30px ${color}`;
+    if (effect === 'lift') return '0 6px 14px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.3)';
+    return 'none';
+  }
+
+  protected setTextEffect(layerId: string, effect: string): void {
+    this.state.updateLayer(layerId, { textEffect: effect } as any);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected onTextEffectChange(layerId: string, event: Event): void {
+    const effect = (event.target as HTMLSelectElement).value as any;
+    this.setTextEffect(layerId, effect);
+  }
+
+  protected getImageFilterCss(filter?: string): string {
+    if (filter === 'grayscale') return 'grayscale(100%)';
+    if (filter === 'sepia') return 'sepia(80%) contrast(105%)';
+    if (filter === 'warm') return 'sepia(25%) saturate(140%) brightness(105%)';
+    if (filter === 'cool') return 'saturate(110%) hue-rotate(185deg) contrast(105%)';
+    if (filter === 'vivid') return 'contrast(130%) saturate(145%)';
+    return 'none';
+  }
+
+  protected setImageFilter(layerId: string, filter: string): void {
+    this.state.updateLayer(layerId, { imageFilter: filter } as any);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected onImageFilterChange(layerId: string, event: Event): void {
+    const filter = (event.target as HTMLSelectElement).value as any;
+    this.setImageFilter(layerId, filter);
+  }
+
 
   // 3D Texture sync & Loading state
   protected readonly is3dSyncing = signal<boolean>(false);
@@ -1516,33 +1644,41 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    // Draw Background
+    // Draw Background (Supports any solid color, linear-gradient with any angle, and radial-gradient)
     const bg = this.state.caseBg();
     if (bg.includes('gradient')) {
-      const grad = ctx.createLinearGradient(0, 0, 0, H);
-      if (bg.includes('#ffd1a8')) {
-        grad.addColorStop(0, '#ffd1a8');
-        grad.addColorStop(1, '#ff7e8b');
-      } else if (bg.includes('#433075')) {
-        grad.addColorStop(0, '#433075');
-        grad.addColorStop(1, '#A58CF4');
-      } else if (bg.includes('#8fd3ff')) {
-        grad.addColorStop(0, '#8fd3ff');
-        grad.addColorStop(1, '#ffe3b8');
-      } else if (bg.includes('#b9e4f5')) {
-        grad.addColorStop(0, '#b9e4f5');
-        grad.addColorStop(1, '#7fc29b');
-      } else if (bg.includes('#141a3d')) {
-        grad.addColorStop(0, '#141a3d');
-        grad.addColorStop(1, '#5b4b9a');
-      } else if (bg.includes('#D4C8FA') || bg.includes('#f5b8d8')) {
-        grad.addColorStop(0, '#D4C8FA');
-        grad.addColorStop(1, '#f5b8d8');
+      const colorMatches = bg.match(/#[a-fA-F0-9]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/g);
+      if (colorMatches && colorMatches.length >= 2) {
+        if (bg.includes('radial-gradient')) {
+          const radGrad = ctx.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, H / 1.4);
+          colorMatches.forEach((col, idx) => {
+            radGrad.addColorStop(idx / (colorMatches.length - 1), col);
+          });
+          ctx.fillStyle = radGrad;
+        } else {
+          const angleMatch = bg.match(/(\d+)deg/);
+          const angle = angleMatch ? parseInt(angleMatch[1], 10) : 180;
+          const rad = ((angle - 90) * Math.PI) / 180;
+          const cx = W / 2;
+          const cy = H / 2;
+          const length = Math.sqrt(W * W + H * H) / 2;
+          const x0 = cx - Math.cos(rad) * length;
+          const y0 = cy - Math.sin(rad) * length;
+          const x1 = cx + Math.cos(rad) * length;
+          const y1 = cy + Math.sin(rad) * length;
+
+          const linGrad = ctx.createLinearGradient(x0, y0, x1, y1);
+          colorMatches.forEach((col, idx) => {
+            linGrad.addColorStop(idx / (colorMatches.length - 1), col);
+          });
+          ctx.fillStyle = linGrad;
+        }
       } else {
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
         grad.addColorStop(0, '#FAFAFA');
         grad.addColorStop(1, '#ECE6FD');
+        ctx.fillStyle = grad;
       }
-      ctx.fillStyle = grad;
     } else {
       // Soften pure white slightly to prevent specular burnout/glare in 3D PBR
       const lower = bg.toLowerCase();
@@ -1628,9 +1764,37 @@ export class StudioWorkspace implements OnDestroy {
         const totalHeight = lines.length * lineHeight;
         const startY = -totalHeight / 2 + lineHeight / 2;
 
-        lines.forEach((lStr, lIdx) => {
-          ctx.fillText(lStr, 0, startY + lIdx * lineHeight);
-        });
+        const effect = (layer as any).textEffect || 'none';
+        if (effect === 'shadow') {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetX = 3;
+          ctx.shadowOffsetY = 5;
+        } else if (effect === 'neon') {
+          ctx.shadowColor = layer.textColor;
+          ctx.shadowBlur = 16;
+        } else if (effect === 'lift') {
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+          ctx.shadowBlur = 12;
+          ctx.shadowOffsetY = 6;
+        }
+
+        if (effect === 'hollow') {
+          ctx.strokeStyle = layer.textColor;
+          ctx.lineWidth = Math.max(2, Math.round(fontSizePx / 14));
+          lines.forEach((lStr, lIdx) => {
+            ctx.strokeText(lStr, 0, startY + lIdx * lineHeight);
+          });
+        } else {
+          lines.forEach((lStr, lIdx) => {
+            ctx.fillText(lStr, 0, startY + lIdx * lineHeight);
+          });
+        }
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
       } else if (layer.type === 'sticker') {
         const stickerSizePx = Math.round((layer.width / 100) * 240);
         ctx.font = `${stickerSizePx}px sans-serif`;
@@ -1651,7 +1815,11 @@ export class StudioWorkspace implements OnDestroy {
         if (img.complete && img.naturalWidth > 0) {
           const imgW = (layer.width / 100) * W;
           const imgH = imgW * (img.naturalHeight / (img.naturalWidth || 1));
+          if ((layer as any).imageFilter && (layer as any).imageFilter !== 'none') {
+            (ctx as any).filter = this.getImageFilterCss((layer as any).imageFilter);
+          }
           ctx.drawImage(img, -imgW / 2, -imgH / 2, imgW, imgH);
+          (ctx as any).filter = 'none';
         }
       }
 

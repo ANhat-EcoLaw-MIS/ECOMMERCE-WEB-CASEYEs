@@ -189,17 +189,209 @@
       </div>
     }
 
-    <!-- ── Màu nền / Hiệu ứng panel ── -->
+    <!-- ── Màu nền / Hiệu ứng panel (Canva Background Studio) ── -->
     @if (state.activeTool() === 'bg') {
       <div class="space-y-3">
-        <p class="drawer-section-title">Màu nền ốp lưng</p>
-        <div class="grid grid-cols-4 gap-2">
-          @for (bg of bgPresets; track bg) {
-            <button type="button" (click)="onSelectBg(bg)"
-              class="aspect-square rounded-xl border border-line shadow-xs transition-transform hover:scale-105 hover:ring-2 hover:ring-brand-400 cursor-pointer"
-              [style.background]="bg"></button>
-          }
+        <div class="flex items-center justify-between">
+          <p class="drawer-section-title">Màu nền ốp lưng</p>
         </div>
+
+        <!-- Sub-tabs: Màu đơn | Gradient | Mẫu sẵn -->
+        <div class="flex rounded-xl bg-surface-alt p-1 border border-line text-[11px] font-bold">
+          <button
+            type="button"
+            (click)="bgTab.set('solid')"
+            class="flex-1 rounded-lg py-1 transition-all cursor-pointer text-center"
+            [class]="bgTab() === 'solid' ? 'bg-white text-brand-800 shadow-xs' : 'text-ink-soft hover:text-ink'"
+          >
+            Màu đơn
+          </button>
+          <button
+            type="button"
+            (click)="bgTab.set('gradient')"
+            class="flex-1 rounded-lg py-1 transition-all cursor-pointer text-center"
+            [class]="bgTab() === 'gradient' ? 'bg-white text-brand-800 shadow-xs' : 'text-ink-soft hover:text-ink'"
+          >
+            Gradient
+          </button>
+          <button
+            type="button"
+            (click)="bgTab.set('presets')"
+            class="flex-1 rounded-lg py-1 transition-all cursor-pointer text-center"
+            [class]="bgTab() === 'presets' ? 'bg-white text-brand-800 shadow-xs' : 'text-ink-soft hover:text-ink'"
+          >
+            Mẫu sẵn
+          </button>
+        </div>
+
+        <!-- TAB 1: Màu đơn (Custom Solid Color Picker) -->
+        @if (bgTab() === 'solid') {
+          <div class="space-y-2.5">
+            <!-- Custom Color Picker Bar -->
+            <div class="flex items-center gap-2 rounded-xl border border-line bg-surface p-2 shadow-xs">
+              <label class="relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line shadow-xs overflow-hidden"
+                [style.background]="customSolidColor()"
+                title="Bấm để mở bảng màu tùy chọn">
+                <input
+                  type="color"
+                  [value]="customSolidColor()"
+                  (input)="onCustomSolidColorInput($event)"
+                  class="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                />
+              </label>
+              <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Tự chọn màu</p>
+                <input
+                  type="text"
+                  [value]="customSolidColor()"
+                  (change)="setSolidColor($any($event.target).value)"
+                  class="w-full text-xs font-mono font-bold text-ink outline-none bg-transparent"
+                  placeholder="#FFFFFF"
+                />
+              </div>
+            </div>
+
+            <!-- Color Palette Swatches -->
+            <p class="text-[10px] font-bold uppercase tracking-wider text-ink-soft mt-1">Bảng màu gợi ý</p>
+            <div class="grid grid-cols-8 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
+              @for (c of solidPalette; track c) {
+                <button
+                  type="button"
+                  (click)="setSolidColor(c)"
+                  class="aspect-square rounded-md border border-line/60 transition-transform hover:scale-125 cursor-pointer shadow-2xs"
+                  [class.ring-2]="state.caseBg() === c"
+                  [class.ring-brand-800]="state.caseBg() === c"
+                  [style.background]="c"
+                  [title]="c"
+                ></button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- TAB 2: Gradient tùy chỉnh (Dual Color Pickers + Angles) -->
+        @if (bgTab() === 'gradient') {
+          <div class="space-y-3">
+            <!-- Live Preview Swatch -->
+            <div
+              class="h-10 w-full rounded-xl border border-line shadow-xs transition-all"
+              [style.background]="state.caseBg()"
+            ></div>
+
+            <!-- Dual Color Controls -->
+            <div class="flex items-center gap-2">
+              <!-- Color 1 -->
+              <div class="flex-1 flex items-center gap-1.5 rounded-xl border border-line bg-surface p-1.5 shadow-xs">
+                <label class="relative flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line shadow-xs overflow-hidden"
+                  [style.background]="gradientColor1()" title="Màu bắt đầu">
+                  <input
+                    type="color"
+                    [value]="gradientColor1()"
+                    (input)="updateGradientColor(1, $any($event.target).value)"
+                    class="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                  />
+                </label>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[9px] font-bold text-ink-soft uppercase">Màu 1</p>
+                  <input
+                    type="text"
+                    [value]="gradientColor1()"
+                    (change)="updateGradientColor(1, $any($event.target).value)"
+                    class="w-full text-[11px] font-mono font-bold text-ink outline-none bg-transparent"
+                  />
+                </div>
+              </div>
+
+              <!-- Swap Button -->
+              <button
+                type="button"
+                (click)="swapGradientColors()"
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-ink-soft hover:bg-brand-50 hover:text-brand-800 transition-colors cursor-pointer"
+                title="Đảo 2 màu gradient"
+              >
+                ⇄
+              </button>
+
+              <!-- Color 2 -->
+              <div class="flex-1 flex items-center gap-1.5 rounded-xl border border-line bg-surface p-1.5 shadow-xs">
+                <label class="relative flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-line shadow-xs overflow-hidden"
+                  [style.background]="gradientColor2()" title="Màu kết thúc">
+                  <input
+                    type="color"
+                    [value]="gradientColor2()"
+                    (input)="updateGradientColor(2, $any($event.target).value)"
+                    class="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                  />
+                </label>
+                <div class="min-w-0 flex-1">
+                  <p class="text-[9px] font-bold text-ink-soft uppercase">Màu 2</p>
+                  <input
+                    type="text"
+                    [value]="gradientColor2()"
+                    (change)="updateGradientColor(2, $any($event.target).value)"
+                    class="w-full text-[11px] font-mono font-bold text-ink outline-none bg-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Direction / Angle Buttons -->
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-ink-soft mb-1.5">Hướng chuyển màu</p>
+              <div class="grid grid-cols-5 gap-1 text-[10px] font-semibold">
+                @for (p of gradientAnglePresets; track p.angle) {
+                  <button
+                    type="button"
+                    (click)="setGradientAngle(p.angle)"
+                    class="rounded-lg border py-1 transition-all cursor-pointer text-center"
+                    [class]="gradientType() === 'linear' && gradientAngle() === p.angle ? 'border-brand-800 bg-brand-100 text-brand-900 font-bold' : 'border-line bg-surface text-ink-soft hover:bg-brand-50'"
+                  >
+                    {{ p.label }}
+                  </button>
+                }
+                <button
+                  type="button"
+                  (click)="setRadialGradient()"
+                  class="rounded-lg border py-1 transition-all cursor-pointer text-center"
+                  [class]="gradientType() === 'radial' ? 'border-brand-800 bg-brand-100 text-brand-900 font-bold' : 'border-line bg-surface text-ink-soft hover:bg-brand-50'"
+                >
+                  Tỏa tròn
+                </button>
+              </div>
+            </div>
+
+            <!-- Curated Gradient Themes -->
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-ink-soft mb-1.5">Mẫu Gradient xu hướng</p>
+              <div class="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-0.5">
+                @for (item of curatedGradients; track item.name) {
+                  <button
+                    type="button"
+                    (click)="applyCuratedGradient(item)"
+                    class="flex items-center gap-2 rounded-xl border border-line bg-surface p-1.5 text-left transition-all hover:scale-102 hover:border-brand-400 cursor-pointer shadow-2xs"
+                  >
+                    <span
+                      class="h-6 w-6 shrink-0 rounded-lg border border-line/60 shadow-2xs"
+                      [style.background]="'linear-gradient(' + item.angle + 'deg, ' + item.c1 + ', ' + item.c2 + ')'"
+                    ></span>
+                    <span class="truncate text-[10px] font-bold text-ink">{{ item.name }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- TAB 3: Mẫu sẵn (Classic Presets) -->
+        @if (bgTab() === 'presets') {
+          <div class="grid grid-cols-4 gap-2">
+            @for (bg of bgPresets; track bg) {
+              <button type="button" (click)="onSelectBg(bg)"
+                class="aspect-square rounded-xl border border-line shadow-xs transition-transform hover:scale-105 hover:ring-2 hover:ring-brand-400 cursor-pointer"
+                [style.background]="bg"></button>
+            }
+          </div>
+        }
       </div>
     }
 
@@ -427,6 +619,30 @@
               }
             </button>
 
+            <!-- Canva-style Text Effects Dropdown -->
+            <select [value]="sel.textEffect || 'none'" (change)="onTextEffectChange(sel.id, $event)"
+              class="rounded-lg border border-line bg-surface px-1.5 py-1 text-xs text-ink outline-none" title="Hiệu ứng chữ (Canva Text Effects)">
+              <option value="none">Fx: Chuẩn</option>
+              <option value="shadow">Fx: Đổ bóng</option>
+              <option value="neon">Fx: Neon sáng</option>
+              <option value="hollow">Fx: Viền rỗng</option>
+              <option value="lift">Fx: Nổi 3D</option>
+            </select>
+
+            <div class="h-4 w-px bg-line"></div>
+          }
+
+          <!-- Canva-style Image Filters Dropdown -->
+          @if (sel.type === 'image') {
+            <select [value]="sel.imageFilter || 'none'" (change)="onImageFilterChange(sel.id, $event)"
+              class="rounded-lg border border-line bg-surface px-1.5 py-1 text-xs text-ink outline-none" title="Bộ lọc màu ảnh">
+              <option value="none">Bộ lọc: Gốc</option>
+              <option value="grayscale">Trắng đen (B&W)</option>
+              <option value="sepia">Cổ điển (Sepia)</option>
+              <option value="warm">Ấm áp (Warm)</option>
+              <option value="cool">Mát mẻ (Cool)</option>
+              <option value="vivid">Rực rỡ (Vivid)</option>
+            </select>
             <div class="h-4 w-px bg-line"></div>
           }
 
@@ -473,6 +689,13 @@
 
           <div class="h-4 w-px bg-line"></div>
 
+          <!-- Lock / Unlock Layer (Canva Lock) -->
+          <button type="button" (click)="state.toggleLayerLock(sel.id)"
+            class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer"
+            [title]="sel.isLocked ? 'Mở khóa layer' : 'Khóa layer (Lock)'">
+            <span class="text-xs">{{ sel.isLocked ? '🔒' : '🔓' }}</span>
+          </button>
+
           <button type="button" (click)="state.duplicateLayer(sel.id)" class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer" title="Nhân đôi (Ctrl+D)">
             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
           </button>
@@ -507,9 +730,12 @@
                       [style.textAlign]="layer.textAlign || 'center'"
                       [style.width.px]="(layer.width / 100) * 300"
                       [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
-                      [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'"
+                      [style.color]="layer.textEffect === 'hollow' ? 'transparent' : layer.textColor"
+                      [style.fontWeight]="layer.fontWeight ?? 'bold'"
                       [style.fontStyle]="layer.fontStyle ?? 'normal'"
-                      [style.textDecoration]="layer.textDecoration ?? 'none'">{{ layer.content }}</div>
+                      [style.textDecoration]="layer.textDecoration ?? 'none'"
+                      [style.textShadow]="getTextShadow(layer.textEffect, layer.textColor)"
+                      [style.webkitTextStroke]="layer.textEffect === 'hollow' ? '1.5px ' + layer.textColor : 'none'">{{ layer.content }}</div>
                   }
                   @if (layer.type === 'sticker') {
                     <span class="block select-none leading-none" [style.fontSize.px]="(layer.width / 100) * 120">{{ layer.name }}</span>
@@ -519,6 +745,7 @@
                       [src]="layer.storageUrl"
                       [alt]="layer.type"
                       [style.width.px]="(layer.width / 100) * 300"
+                      [style.filter]="getImageFilterCss(layer.imageFilter)"
                       class="rounded-lg object-contain pointer-events-none select-none block max-w-none"
                     />
                   }
@@ -704,9 +931,12 @@
                     [style.textAlign]="layer.textAlign || 'center'"
                     [style.width.px]="(layer.width / 100) * 300"
                     [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
-                    [style.color]="layer.textColor" [style.fontWeight]="layer.fontWeight ?? 'bold'"
+                    [style.color]="layer.textEffect === 'hollow' ? 'transparent' : layer.textColor"
+                    [style.fontWeight]="layer.fontWeight ?? 'bold'"
                     [style.fontStyle]="layer.fontStyle ?? 'normal'"
-                    [style.textDecoration]="layer.textDecoration ?? 'none'">{{ layer.content }}</div>
+                    [style.textDecoration]="layer.textDecoration ?? 'none'"
+                    [style.textShadow]="getTextShadow(layer.textEffect, layer.textColor)"
+                    [style.webkitTextStroke]="layer.textEffect === 'hollow' ? '1.5px ' + layer.textColor : 'none'">{{ layer.content }}</div>
                 }
                 @if (layer.type === 'sticker') {
                   <span class="block select-none leading-none" [style.fontSize.px]="(layer.width / 100) * 120">{{ layer.name }}</span>
@@ -716,6 +946,7 @@
                     [src]="layer.storageUrl"
                     [alt]="layer.type"
                     [style.width.px]="(layer.width / 100) * 300"
+                    [style.filter]="getImageFilterCss(layer.imageFilter)"
                     class="rounded-lg object-contain pointer-events-none select-none block max-w-none"
                   />
                 }
