@@ -808,43 +808,18 @@
           [style.top.%]="layer.y" [style.transform]="'translate(-50%, -50%) rotate(' + layer.rotation + 'deg)'"
           [style.opacity]="activeDrag?.id === layer.id && isDragInDeleteZone() ? 0.25 : layer.opacity * 0.5">
           <!-- Ghost Content with Canva 4-Side Crop, Flip & Text Auto-wrap -->
-          <div class="relative block select-none"
+          <div class="relative block select-none pointer-events-none"
             [style.transform]="(layer.flipH ? 'scaleX(-1) ' : '') + (layer.flipV ? 'scaleY(-1)' : '')"
             [style.clipPath]="layer.type === 'text' ? 'none' : 'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
             @if (layer.type === 'text') {
-            @if (editingTextLayerId() === layer.id) {
-            <!-- In-place Canvas Text Editor (Double-click inline edit mode with blue caret '|') -->
-            <textarea [id]="'inline-text-' + layer.id"
-              (pointerdown)="$event.stopPropagation()"
-              (click)="$event.stopPropagation()"
-              (dblclick)="$event.stopPropagation()"
-              [value]="layer.content"
-              (input)="onInlineTextInput($event, layer.id)"
-              (keydown)="onInlineTextKeydown($event, layer.id)"
-              (blur)="finishInlineTextEdit()"
-              rows="1"
-              class="canvas-inline-textarea block w-full leading-tight select-text cursor-text"
-              [style.textAlign]="layer.textAlign || 'center'"
-              [style.width.px]="(layer.width / 100) * 300"
-              [style.fontFamily]="layer.fontFamily"
-              [style.fontSize.px]="layer.fontSize"
-              [style.color]="layer.textColor"
-              [style.fontWeight]="layer.fontWeight ?? 'bold'"
-              [style.fontStyle]="layer.fontStyle ?? 'normal'"
-              [style.textDecoration]="layer.textDecoration ?? 'none'"
-              style="caret-color: #2563eb !important;"
-              autofocus></textarea>
-            } @else {
-            <div (dblclick)="onTextDoubleClick($event, layer.id)"
-              class="block whitespace-normal break-words px-2 py-1 leading-tight select-none cursor-text hover:outline-dashed hover:outline-1 hover:outline-purple-300 rounded transition-all"
-              title="Nhấn đúp chuột để sửa chữ ngay"
+            <!-- Static preview in bleed ghost area (never editable) -->
+            <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none pointer-events-none rounded"
               [style.textAlign]="layer.textAlign || 'center'" [style.width.px]="(layer.width / 100) * 300"
               [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
               [style.color]="layer.textColor"
               [style.fontWeight]="layer.fontWeight ?? 'bold'" [style.fontStyle]="layer.fontStyle ?? 'normal'"
               [style.textDecoration]="layer.textDecoration ?? 'none'">{{
               layer.content }}</div>
-            }
             }
             @if (layer.type === 'sticker') {
             @if (layer.assetUrl) {
@@ -1160,7 +1135,9 @@
         @for (layer of state.layers(); track layer.id) {
         @if (!layer.isLocked) {
         <div (pointerdown)="onElementPointerDown($event, layer.id)" (click)="$event.stopPropagation()"
-          class="absolute cursor-move select-none transition-transform"
+          class="absolute transition-transform"
+          [class.cursor-move]="editingTextLayerId() !== layer.id"
+          [class.select-none]="editingTextLayerId() !== layer.id"
           [class.opacity-25]="activeDrag?.id === layer.id && isDragInDeleteZone()"
           [class.scale-90]="activeDrag?.id === layer.id && isDragInDeleteZone()"
           [class.grayscale]="activeDrag?.id === layer.id && isDragInDeleteZone()" [style.left.%]="layer.x"
@@ -1168,7 +1145,8 @@
           [style.opacity]="activeDrag?.id === layer.id && isDragInDeleteZone() ? 0.25 : layer.opacity"
           [class.ring-red-500]="state.designStatus() === 'REJECTED' && layer.type === 'image'">
           <!-- Content with Canva 4-Side Crop, Flip & Text Auto-wrap -->
-          <div class="relative block select-none"
+          <div class="relative block"
+            [class.select-none]="editingTextLayerId() !== layer.id"
             [style.transform]="(layer.flipH ? 'scaleX(-1) ' : '') + (layer.flipV ? 'scaleY(-1)' : '')"
             [style.clipPath]="layer.type === 'text' ? 'none' : 'inset(' + (layer.cropTop || 0) + '% ' + (layer.cropRight || 0) + '% ' + (layer.cropBottom || 0) + '% ' + (layer.cropLeft || 0) + '%)'">
             @if (layer.type === 'text') {
@@ -1192,7 +1170,7 @@
               [style.fontWeight]="layer.fontWeight ?? 'bold'"
               [style.fontStyle]="layer.fontStyle ?? 'normal'"
               [style.textDecoration]="layer.textDecoration ?? 'none'"
-              style="caret-color: #2563eb !important;"
+              style="caret-color: #2563eb !important; user-select: text !important;"
               autofocus></textarea>
             } @else {
             <div (dblclick)="onTextDoubleClick($event, layer.id)"

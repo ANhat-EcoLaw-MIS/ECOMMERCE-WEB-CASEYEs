@@ -517,16 +517,17 @@ export class StudioWorkspace implements OnDestroy {
     this.selectTool('txt');
     this.textInput.set(layer.content || '');
 
-    // Auto-focus and select all text immediately for effortless in-place editing
+    // Auto-focus and place the vivid blue '|' insertion caret at the end of the text
     setTimeout(() => {
       const textarea = document.querySelector<HTMLTextAreaElement>(`#inline-text-${layerId}`);
       if (textarea) {
         textarea.focus();
-        textarea.select();
+        const len = textarea.value.length;
+        textarea.setSelectionRange(len, len);
         textarea.style.height = 'auto';
         textarea.style.height = Math.max(textarea.scrollHeight, 28) + 'px';
       }
-    }, 40);
+    }, 30);
   }
 
   protected onInlineTextInput(event: Event, layerId: string): void {
