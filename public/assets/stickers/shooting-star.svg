@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="tailGrad" x1="10" y1="100" x2="80" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A58CF4" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#FDE047"/>
+    </linearGradient>
+    <filter id="ssGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#38BDF8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#ssGlow)">
+    <path d="M15 105 L80 40 L70 30 L10 90 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6"/>
+    <!-- Rainbow Comet Tail -->
+    <path d="M18 102 L80 40 L70 30 L12 88 Z" fill="url(#tailGrad)"/>
+    <!-- Head Star -->
+    <g transform="translate(85,35) scale(0.9)">
+      <path d="M0 -24 L7 -7 L24 0 L7 7 L0 24 L-7 7 L-24 0 L-7 -7 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6"/>
+      <path d="M0 -24 L7 -7 L24 0 L7 7 L0 24 L-7 7 L-24 0 L-7 -7 Z" fill="#FBBF24"/>
+      <circle cx="0" cy="0" r="5" fill="#FFFFFF"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="moonGrad" x1="20" y1="20" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="60%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <filter id="moonGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#433075" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <g filter="url(#moonGlow)">
+    <!-- White Die Cut Backing -->
+    <path d="M72 18 C42 18 20 40 20 70 C20 95 40 108 65 108 C78 108 92 102 98 94 C70 92 52 70 52 46 C52 32 60 22 72 18 Z"
+          fill="#FFFFFF" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="round"/>
+    <!-- Moon Body -->
+    <path d="M72 18 C42 18 20 40 20 70 C20 95 40 108 65 108 C78 108 92 102 98 94 C70 92 52 70 52 46 C52 32 60 22 72 18 Z" fill="url(#moonGrad)"/>
+    <!-- Sleeping Face -->
+    <path d="M42 58 Q46 64 50 58" stroke="#78350F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <circle cx="38" cy="66" r="3.5" fill="#FB7185" opacity="0.6"/>
+    <!-- Hanging Star -->
+    <path d="M88 38 L90 46 L98 48 L90 50 L88 58 L86 50 L78 48 L86 46 Z" fill="#A58CF4"/>
+  </g>
+</svg>

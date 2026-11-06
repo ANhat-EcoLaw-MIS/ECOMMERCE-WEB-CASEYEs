@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="heartGrad" x1="20" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FF5E98"/>
+      <stop offset="45%" stop-color="#A58CF4"/>
+      <stop offset="100%" stop-color="#433075"/>
+    </linearGradient>
+    <filter id="stickerGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#433075" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Die Cut White Border -->
+  <path d="M60 98 C35 80 15 62 15 42 C15 25 28 14 44 14 C52 14 60 20 60 20 C60 20 68 14 76 14 C92 14 105 25 105 42 C105 62 85 80 60 98 Z"
+        fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round" filter="url(#stickerGlow)"/>
+  <!-- Gradient Heart Body -->
+  <path d="M60 98 C35 80 15 62 15 42 C15 25 28 14 44 14 C52 14 60 20 60 20 C60 20 68 14 76 14 C92 14 105 25 105 42 C105 62 85 80 60 98 Z"
+        fill="url(#heartGrad)"/>
+  <!-- Gloss Specular Highlight -->
+  <path d="M30 36 C30 27 38 22 47 22 C49 22 45 27 38 31 C32 35 30 40 30 40 Z" fill="#FFFFFF" opacity="0.75"/>
+  <circle cx="34" cy="48" r="2.5" fill="#FFFFFF" opacity="0.6"/>
+</svg>

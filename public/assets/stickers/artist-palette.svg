@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <filter id="palGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#78350F" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <g filter="url(#palGlow)">
+    <path d="M60 16 C25 16 14 45 20 75 C24 95 55 105 75 95 C88 88 84 76 96 74 C106 72 108 55 102 38 C96 22 80 16 60 16 Z"
+          fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M60 18 C27 18 16 46 22 74 C26 93 55 102 74 93 C86 86 82 75 95 73 C104 71 106 55 100 39 C95 24 79 18 60 18 Z" fill="#FDE68A"/>
+    <!-- Thumb hole -->
+    <circle cx="78" cy="78" r="8" fill="#FFFFFF"/>
+    <!-- Paint Blobs -->
+    <circle cx="36" cy="38" r="7" fill="#EF4444"/>
+    <circle cx="56" cy="30" r="7" fill="#F59E0B"/>
+    <circle cx="78" cy="34" r="7" fill="#3B82F6"/>
+    <circle cx="34" cy="62" r="7" fill="#8B5CF6"/>
+    <circle cx="48" cy="80" r="7" fill="#10B981"/>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="bfGradL" x1="10" y1="20" x2="60" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="50%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#F43F5E"/>
+    </linearGradient>
+    <filter id="bfGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#7C3AED" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#bfGlow)">
+    <!-- White Die Cut Outline -->
+    <path d="M60 55 C50 20 15 20 18 50 C20 70 45 75 60 85 C75 75 100 70 102 50 C105 20 70 20 60 55 Z"
+          fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round"/>
+    <!-- Upper Left Wing -->
+    <path d="M60 55 C45 15 15 25 20 52 C24 72 48 70 60 62 Z" fill="url(#bfGradL)"/>
+    <!-- Upper Right Wing -->
+    <path d="M60 55 C75 15 105 25 100 52 C96 72 72 70 60 62 Z" fill="url(#bfGradL)"/>
+    <!-- Lower Left Wing -->
+    <path d="M60 62 C40 68 25 78 35 92 C45 100 55 85 60 70 Z" fill="url(#bfGradL)"/>
+    <!-- Lower Right Wing -->
+    <path d="M60 62 C80 68 95 78 85 92 C75 100 65 85 60 70 Z" fill="url(#bfGradL)"/>
+    <!-- Body -->
+    <ellipse cx="60" cy="62" rx="4" ry="18" fill="#1E1B4B"/>
+    <!-- Antennae -->
+    <path d="M58 46 Q50 35 44 38 M62 46 Q70 35 76 38" stroke="#1E1B4B" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

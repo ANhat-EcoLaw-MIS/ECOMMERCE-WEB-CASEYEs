@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <filter id="corgiGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#D97706" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#corgiGlow)">
+    <circle cx="60" cy="65" r="42" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8"/>
+    <!-- Ears -->
+    <path d="M30 40 L16 12 C30 18 42 30 42 38 Z" fill="#F59E0B" stroke="#FFFFFF" stroke-width="4"/>
+    <path d="M90 40 L104 12 C90 18 78 30 78 38 Z" fill="#F59E0B" stroke="#FFFFFF" stroke-width="4"/>
+    <!-- Face -->
+    <circle cx="60" cy="65" r="38" fill="#FBBF24"/>
+    <path d="M46 65 C46 50 74 50 74 65 C74 85 46 85 46 65 Z" fill="#FFFFFF"/>
+    <!-- Sunglasses -->
+    <rect x="28" y="52" width="28" height="18" rx="6" fill="#1E1B4B"/>
+    <rect x="64" y="52" width="28" height="18" rx="6" fill="#1E1B4B"/>
+    <rect x="54" y="58" width="12" height="4" fill="#1E1B4B"/>
+    <!-- Glasses Glint -->
+    <line x1="32" y1="56" x2="42" y2="66" stroke="#A58CF4" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="68" y1="56" x2="78" y2="66" stroke="#A58CF4" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Nose & Mouth -->
+    <ellipse cx="60" cy="74" rx="5" ry="3.5" fill="#1E1B4B"/>
+    <path d="M60 77 Q60 84 54 84 M60 77 Q60 84 66 84" stroke="#1E1B4B" stroke-width="2" fill="none"/>
+  </g>
+</svg>

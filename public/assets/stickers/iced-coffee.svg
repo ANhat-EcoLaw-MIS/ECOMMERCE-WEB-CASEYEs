@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="teaGrad" x1="30" y1="40" x2="80" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="60%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+    <filter id="teaGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#78350F" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <g filter="url(#teaGlow)">
+    <path d="M40 38 L32 98 C32 104 42 108 60 108 C78 108 88 104 88 98 L80 38 Z"
+          fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+    <!-- Cup Body -->
+    <path d="M41 40 L34 96 C34 102 44 106 60 106 C76 106 86 102 86 96 L79 40 Z" fill="url(#teaGrad)"/>
+    <!-- Tapioca Pearls / Boba -->
+    <circle cx="48" cy="94" r="4.5" fill="#1E1B4B"/>
+    <circle cx="62" cy="96" r="4.5" fill="#1E1B4B"/>
+    <circle cx="74" cy="92" r="4.5" fill="#1E1B4B"/>
+    <circle cx="56" cy="86" r="4.5" fill="#1E1B4B"/>
+    <!-- Lid & Straw -->
+    <rect x="36" y="32" width="48" height="8" rx="4" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="38" y="33" width="44" height="6" rx="3" fill="#E2E8F0"/>
+    <path d="M60 32 L70 12" stroke="#F43F5E" stroke-width="6" stroke-linecap="round"/>
+    <!-- Heart on Cup -->
+    <path d="M60 70 C56 64 50 64 50 70 C50 76 60 82 60 82 C60 82 70 76 70 70 C70 64 64 64 60 70 Z" fill="#FFFFFF"/>
+  </g>
+</svg>

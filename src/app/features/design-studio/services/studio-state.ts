@@ -24,10 +24,38 @@ export const BANNED_KEYWORDS = [
   'cấm-demo',
 ];
 
-export const STICKERS_LIST = [
-  '❤️', '⭐', '🌸', '😊', '🌈', '🦋', '🍓', '✨',
-  '🐶', '🌙', '🍀', '🔥', '🎀', '🌻', '☁️', '💫',
-  '⚡', '🥑', '🍒', '🎨', '🪐', '🦄', '🎉', '☕'
+export interface StudioStickerItem {
+  readonly id: string;
+  readonly name: string;
+  readonly url: string;
+  readonly category: string;
+}
+
+export const STICKERS_LIST: StudioStickerItem[] = [
+  { id: 'y2k-heart', name: 'Trái tim Y2K', url: '/assets/stickers/y2k-heart.svg', category: 'y2k' },
+  { id: 'cyber-star', name: 'Ngôi sao Cyber', url: '/assets/stickers/cyber-star.svg', category: 'y2k' },
+  { id: 'sakura-blossom', name: 'Hoa anh đào', url: '/assets/stickers/sakura-blossom.svg', category: 'cute' },
+  { id: 'retro-smiley', name: 'Mặt cười Retro', url: '/assets/stickers/retro-smiley.svg', category: 'y2k' },
+  { id: 'pastel-rainbow', name: 'Cầu vồng Pastel', url: '/assets/stickers/pastel-rainbow.svg', category: 'cute' },
+  { id: 'hologram-butterfly', name: 'Bướm Hologram', url: '/assets/stickers/hologram-butterfly.svg', category: 'y2k' },
+  { id: 'glossy-strawberry', name: 'Dâu tây đỏ mọng', url: '/assets/stickers/glossy-strawberry.svg', category: 'cute' },
+  { id: 'magic-sparkles', name: 'Tia sáng lấp lánh', url: '/assets/stickers/magic-sparkles.svg', category: 'y2k' },
+  { id: 'cool-puppy', name: 'Cún Corgi ngầu', url: '/assets/stickers/cool-puppy.svg', category: 'cute' },
+  { id: 'crescent-moon', name: 'Trăng khuyết mơ màng', url: '/assets/stickers/crescent-moon.svg', category: 'cute' },
+  { id: 'lucky-clover', name: 'Cỏ 4 lá may mắn', url: '/assets/stickers/lucky-clover.svg', category: 'cute' },
+  { id: 'cyber-flame', name: 'Ngọn lửa Cyber', url: '/assets/stickers/cyber-flame.svg', category: 'y2k' },
+  { id: 'coquette-bow', name: 'Ruy băng Coquette', url: '/assets/stickers/coquette-bow.svg', category: 'cute' },
+  { id: 'happy-sunflower', name: 'Hoa hướng dương', url: '/assets/stickers/happy-sunflower.svg', category: 'cute' },
+  { id: 'dreamy-cloud', name: 'Mây bồng bềnh', url: '/assets/stickers/dreamy-cloud.svg', category: 'cute' },
+  { id: 'shooting-star', name: 'Sao băng vút bay', url: '/assets/stickers/shooting-star.svg', category: 'y2k' },
+  { id: 'neon-lightning', name: 'Tia sét Neon', url: '/assets/stickers/neon-lightning.svg', category: 'y2k' },
+  { id: 'kawaii-avocado', name: 'Quả bơ Kawaii', url: '/assets/stickers/kawaii-avocado.svg', category: 'cute' },
+  { id: 'twin-cherries', name: 'Cặp cherry bóng', url: '/assets/stickers/twin-cherries.svg', category: 'cute' },
+  { id: 'artist-palette', name: 'Bảng màu nghệ thuật', url: '/assets/stickers/artist-palette.svg', category: 'creative' },
+  { id: 'saturn-cosmos', name: 'Sao Thổ Cosmos', url: '/assets/stickers/saturn-cosmos.svg', category: 'y2k' },
+  { id: 'magical-unicorn', name: 'Kỳ lân cầu vồng', url: '/assets/stickers/magical-unicorn.svg', category: 'cute' },
+  { id: 'party-popper', name: 'Pháo giấy Party', url: '/assets/stickers/party-popper.svg', category: 'creative' },
+  { id: 'iced-coffee', name: 'Trà sữa Cà phê', url: '/assets/stickers/iced-coffee.svg', category: 'creative' },
 ];
 
 export const BG_PRESETS = [
@@ -239,16 +267,23 @@ export class StudioState {
     return newText;
   }
 
-  addSticker(emoji: string): StickerElement {
+  addSticker(item: StudioStickerItem | string): StickerElement {
     this.recordHistory();
+    const isObj = typeof item !== 'string';
+    const name = isObj ? item.name : item;
+    const found = STICKERS_LIST.find((s) => s.id === item || s.name === item);
+    const url = isObj ? item.url : (found?.url || '');
+    const stickerId = isObj ? `stk_${item.id}` : (found ? `stk_${found.id}` : `stk_${item}`);
+    const category = isObj ? item.category : (found?.category || 'gen-z');
+
     const newSticker: StickerElement = {
       id: crypto.randomUUID(),
       type: 'sticker',
       zIndex: this._layers().length + 1,
-      stickerId: `stk_${emoji}`,
-      category: 'gen-z',
-      name: emoji,
-      assetUrl: '',
+      stickerId,
+      category,
+      name,
+      assetUrl: url,
       x: 50,
       y: 50,
       width: 25,

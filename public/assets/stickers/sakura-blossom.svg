@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="sakuraGrad" x1="30" y1="30" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFE4E6"/>
+      <stop offset="60%" stop-color="#FDA4AF"/>
+      <stop offset="100%" stop-color="#F43F5E"/>
+    </linearGradient>
+    <filter id="sakuraGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#BE185D" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <g filter="url(#sakuraGlow)" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="round" fill="#FFFFFF">
+    <circle cx="60" cy="60" r="42"/>
+  </g>
+  <!-- 5 Petals -->
+  <g transform="translate(60,60)">
+    <path d="M0 -10 C-18 -25 -15 -48 0 -52 C15 -48 18 -25 0 -10 Z" fill="url(#sakuraGrad)"/>
+    <path d="M0 -10 C-18 -25 -15 -48 0 -52 C15 -48 18 -25 0 -10 Z" fill="url(#sakuraGrad)" transform="rotate(72)"/>
+    <path d="M0 -10 C-18 -25 -15 -48 0 -52 C15 -48 18 -25 0 -10 Z" fill="url(#sakuraGrad)" transform="rotate(144)"/>
+    <path d="M0 -10 C-18 -25 -15 -48 0 -52 C15 -48 18 -25 0 -10 Z" fill="url(#sakuraGrad)" transform="rotate(216)"/>
+    <path d="M0 -10 C-18 -25 -15 -48 0 -52 C15 -48 18 -25 0 -10 Z" fill="url(#sakuraGrad)" transform="rotate(288)"/>
+    <circle cx="0" cy="0" r="10" fill="#FEF08A"/>
+    <circle cx="0" cy="0" r="5" fill="#E11D48"/>
+  </g>
+</svg>

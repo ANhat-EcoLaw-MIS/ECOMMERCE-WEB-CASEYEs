@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="boltGrad" x1="30" y1="10" x2="80" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="50%" stop-color="#FACC15"/>
+      <stop offset="100%" stop-color="#F97316"/>
+    </linearGradient>
+    <filter id="boltGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#CA8A04" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <g filter="url(#boltGlow)">
+    <path d="M68 10 L30 64 L58 64 L48 110 L92 48 L64 48 Z"
+          fill="#FFFFFF" stroke="#FFFFFF" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M68 12 L32 64 L60 64 L50 108 L90 50 L64 50 Z" fill="url(#boltGrad)"/>
+    <path d="M62 25 L45 58 L62 58 Z" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+</svg>

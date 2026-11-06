@@ -19,6 +19,7 @@ import {
   BG_PRESETS,
   SavedDesignItem,
   STICKERS_LIST,
+  StudioStickerItem,
   StudioState,
 } from '../../services/studio-state';
 import { StudioDraft } from '../../services/studio-draft';
@@ -770,8 +771,8 @@ export class StudioWorkspace implements OnDestroy {
   }
 
   // --- Sticker & Background ---
-  protected onAddSticker(emoji: string): void {
-    this.state.addSticker(emoji);
+  protected onAddSticker(sticker: StudioStickerItem | string): void {
+    this.state.addSticker(sticker);
   }
 
   protected onSelectBg(bg: string): void {
@@ -1796,11 +1797,30 @@ export class StudioWorkspace implements OnDestroy {
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
       } else if (layer.type === 'sticker') {
-        const stickerSizePx = Math.round((layer.width / 100) * 240);
-        ctx.font = `${stickerSizePx}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(layer.name, 0, 0);
+        const stickerUrl = layer.assetUrl;
+        if (stickerUrl) {
+          let img = this.imageCache.get(stickerUrl);
+          if (!img) {
+            img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              this.imageCache.set(stickerUrl, img!);
+              this.trigger3dTextureSync(true);
+            };
+            img.src = stickerUrl;
+          }
+          if (img && img.naturalWidth > 0) {
+            const stickerW = Math.round((layer.width / 100) * 320);
+            const stickerH = Math.round(stickerW * (img.naturalHeight / img.naturalWidth));
+            ctx.drawImage(img, -stickerW / 2, -stickerH / 2, stickerW, stickerH);
+          }
+        } else {
+          const stickerSizePx = Math.round((layer.width / 100) * 240);
+          ctx.font = `${stickerSizePx}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(layer.name, 0, 0);
+        }
       } else if (layer.type === 'image' && layer.storageUrl) {
         let img = this.imageCache.get(layer.storageUrl);
         if (!img) {
