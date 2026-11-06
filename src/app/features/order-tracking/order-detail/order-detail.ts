@@ -199,7 +199,12 @@ export class OrderDetail {
     return {
       express,
       title: o.status === 'Delivered' ? 'Đã giao' : express ? (sameDay ? 'Giao trong hôm nay' : 'Giao ngày làm việc kế tiếp') : 'Dự kiến giao',
-      range: express || o.earliestEDD === o.latestEDD ? formatDayLabel(o.earliestEDD) : `${formatDayLabel(o.earliestEDD)} – ${formatDayLabel(o.latestEDD)}`,
+      range: o.status === 'Delivered' && o.deliveredAt
+        ? formatDayLabel(toDateKey(new Date(o.deliveredAt)))
+        : express || o.earliestEDD === o.latestEDD
+          ? formatDayLabel(o.earliestEDD)
+          : `${formatDayLabel(o.earliestEDD)} – ${formatDayLabel(o.latestEDD)}`,
+      delivered: o.status === 'Delivered',
       why: express
         ? `Đơn Hỏa tốc xác nhận trước ${String(DELIVERY_CONFIG.expressCutoff.hour).padStart(2, '0')}:00 ngày làm việc được giao trong ngày, sau giờ này giao ngày làm việc kế tiếp.`
         : `Xử lý & in ${handling.min}–${handling.max} ngày làm việc (Thứ 2–Thứ 6) + vận chuyển ${t.min === t.max ? t.min : `${t.min}–${t.max}`} ngày (Thứ 2–Thứ 7, theo địa chỉ của bạn).`,
