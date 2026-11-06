@@ -1,5 +1,6 @@
 import { DELIVERY_CONFIG, FAILURE_CAUSES } from '../config/delivery-config';
 import {
+  CancelRequest,
   FaultParty,
   Order,
   RefundRequest,
@@ -13,11 +14,10 @@ import { twoWayShippingCost } from './shipping-fee';
  * service (which re-checks them before writing). `now` is always passed in.
  */
 
-const MIN = 60_000;
 const DAY = 86_400_000;
 
 export function orderTotal(order: Order): number {
-  return order.goodsTotal + order.shippingFee;
+  return order.goodsTotal + order.shipping.fee;
 }
 
 export function isPrepaid(order: Order): boolean {
@@ -28,16 +28,41 @@ export function isMixed(order: Order): boolean {
   return order.hasCustomItem && order.items.some((i) => !i.isCustom);
 }
 
-export function cancelWindowOpen(order: Order, now: Date): boolean {
-  return (
-    now.getTime() <= new Date(order.createdAt).getTime() + DELIVERY_CONFIG.cancelWindowMinutes * MIN
-  );
+/** COD change-of-mind window is still open (hidden rule, FR-OT-05). */
+export function codWindowOpen(order: Order, now: Date): boolean {
+  return !!order.confirmDueAt && now.getTime() <= new Date(order.confirmDueAt).getTime();
 }
 
-/** FR-OT-05 / EX-01: customer self-cancel (without the Action_Required exception). */
-export function canCustomerCancel(order: Order, now: Date): boolean {
-  if (order.status === 'Pending_Review') return true;
-  return order.status === 'Pending_Confirmation' && cancelWindowOpen(order, now);
+/**
+ * "Đã xác nhận" (Table 3.2) without a new status: confirmedAt is set, or the COD window has
+ * passed (the order confirms itself, no cancel job).
+ */
+export function isConfirmed(order: Order, now: Date): boolean {
+  if (order.confirmedAt) return true;
+  return order.paymentMethod === 'COD' && !!order.confirmDueAt && !codWindowOpen(order, now);
+}
+
+/** FR-OT-05 / EX-01: only COD orders, only inside the hidden window. */
+export function canCancelCod(order: Order, now: Date): boolean {
+  return order.paymentMethod === 'COD' && order.status === 'Pending_Confirmation' && codWindowOpen(order, now);
+}
+
+export function pendingCancelRequest(order: Order): CancelRequest | undefined {
+  return order.cancelRequests.find((r) => r.status === 'Pending');
+}
+
+/** An order with a pending cancel request is held: no review, batch or packing (FR-OT-19). */
+export function isOnHold(order: Order): boolean {
+  return !!pendingCancelRequest(order);
+}
+
+/** FR-OT-19 / EX-15: prepaid orders before production can ask CSKH to cancel. */
+export function canRequestCancel(order: Order): boolean {
+  return (
+    isPrepaid(order) &&
+    (order.status === 'Pending_Review' || order.status === 'Pending_Confirmation') &&
+    !isOnHold(order)
+  );
 }
 
 export function faultParty(order: Order): FaultParty | undefined {
@@ -122,7 +147,7 @@ export function refundAmountFor(
     case 'S4':
       return { amount: orderTotal(order), deductedFee: 0 };
     case 'S3b': {
-      const fee = twoWayShippingCost(order.zone);
+      const fee = twoWayShippingCost(order);
       return { amount: Math.max(0, order.goodsTotal - fee), deductedFee: fee };
     }
     case 'S3c':
@@ -143,15 +168,15 @@ export function openRefund(order: Order): RefundRequest | undefined {
 
 /** Table 3.1: an order blocks account deletion until it is closed. */
 export function isOrderOpen(order: Order): boolean {
-  if (openRefund(order)) return true;
+  if (openRefund(order) || isOnHold(order)) return true;
   return !['Completed', 'Cancelled', 'Refunded'].includes(order.status);
 }
 
 /** Late-delivery guarantee (FR-OT-18, EX-14). */
-export function lateVoucherValue(order: Order): { late: number; fastSurcharge: number } {
+export function lateVoucherValue(order: Order): { late: number; expressSurcharge: number } {
   const cfg = DELIVERY_CONFIG;
   const late = Math.min(Math.round((order.goodsTotal * cfg.lateVoucherPct) / 100), cfg.lateVoucherCap);
-  return { late, fastSurcharge: order.shippingTier === 'Fast' ? order.fastSurcharge : 0 };
+  return { late, expressSurcharge: order.shippingTier === 'Express' ? order.shipping.expressSurcharge : 0 };
 }
 
 /** Customer-facing refund label (FR-OT-13). */

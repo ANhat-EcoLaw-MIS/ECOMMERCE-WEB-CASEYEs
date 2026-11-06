@@ -8,7 +8,7 @@
         <span class="rounded-pill border border-brand-200 bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-800">Giao chung một kiện</span>
       }
     </div>
-    <app-status-badge [status]="o.status" />
+    <app-status-badge [status]="o.status" [label]="label()" />
   </header>
 
   <ul class="divide-y divide-line px-5">
@@ -26,7 +26,7 @@
           <p class="text-sm text-ink-soft">
             {{ item.phoneModel }} · x{{ item.quantity }}
             @if (item.isCustom) {
-              <span class="ml-1 rounded-pill bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-800">Thiết kế riêng</span>
+              <span class="ml-1 rounded-pill bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-800">Thiết kế theo yêu cầu</span>
             }
           </p>
         </div>

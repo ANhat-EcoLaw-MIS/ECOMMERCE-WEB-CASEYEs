@@ -4,24 +4,24 @@
     <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-4 py-5 lg:px-6">
       <div>
         <p class="text-xs font-semibold uppercase tracking-widest text-brand-200">Công cụ mô phỏng · không thuộc sản phẩm</p>
-        <h1 class="font-display text-2xl font-extrabold">Demo Console – Epic 5</h1>
-        <p class="text-sm text-white/70">Thay cho Payment, Admin/Operator, Mock 3PL, Epic 6 và pg_cron chưa có. Mở cạnh tab khách để xem cập nhật tức thì.</p>
+        <h1 class="font-display text-2xl font-extrabold">Demo Console – Quản lý đơn hàng</h1>
+        <p class="text-sm text-white/70">Thay cho Thanh toán, Operator, CSKH, Admin, đơn vị vận chuyển và tiến trình nền chưa có. Mở cạnh tab khách để xem cập nhật tức thì.</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <a routerLink="/order-tracking" target="_blank" class="inline-flex min-h-11 items-center rounded-pill bg-white/10 px-4 text-sm font-semibold hover:bg-white/20">Mở trang khách ↗</a>
         <div role="radiogroup" aria-label="Vai trò giả" class="flex rounded-pill bg-white/10 p-1">
-          @for (r of ['Operator', 'Admin']; track r) {
+          @for (r of roles; track r.key) {
             <button
               type="button"
               role="radio"
-              [attr.aria-checked]="demo.role() === r"
-              (click)="setRole($any(r))"
+              [attr.aria-checked]="demo.role() === r.key"
+              (click)="setRole(r.key)"
               class="min-h-9 rounded-pill px-4 text-sm font-semibold transition-colors"
-              [class.bg-white]="demo.role() === r"
-              [class.text-brand-900]="demo.role() === r"
-              [class.text-white]="demo.role() !== r"
+              [class.bg-white]="demo.role() === r.key"
+              [class.text-brand-900]="demo.role() === r.key"
+              [class.text-white]="demo.role() !== r.key"
             >
-              {{ r }}
+              {{ r.label }}
             </button>
           }
         </div>
@@ -78,25 +78,29 @@
             </select>
           </label>
           <label>
-            <span [class]="label">Khu vực</span>
-            <select formControlName="zone" [class]="field">
-              @for (z of zones; track z) {
-                <option [value]="z">{{ zoneLabels[z] }}</option>
+            <span [class]="label">Địa chỉ (dữ liệu giả của Thanh toán)</span>
+            <select formControlName="address" [class]="field">
+              @for (a of addresses; track a.key) {
+                <option [value]="a.key">{{ a.label }}</option>
               }
             </select>
           </label>
           <label>
-            <span [class]="label">Gói vận chuyển</span>
+            <span [class]="label">Gói giao</span>
             <select formControlName="tier" [class]="field">
               <option value="Standard">Standard</option>
-              <option value="Fast">Giao nhanh</option>
+              <option value="Express" [disabled]="!expressAllowed()">Hỏa tốc {{ expressAllowed() ? '' : '(chỉ đơn hàng có sẵn, địa chỉ gần)' }}</option>
             </select>
           </label>
           @let p = preview();
           <div class="rounded-xl bg-brand-50 p-3 text-sm text-brand-900 sm:col-span-2">
-            Tiền hàng {{ formatVnd(p.goods) }} · Phí ship {{ p.quote.fee === 0 ? 'miễn phí' : formatVnd(p.quote.fee) }}{{ p.quote.freeshipApplied ? ' (đủ ngưỡng freeship)' : '' }}
+            Tiền hàng {{ formatVnd(p.goods) }} · Phí giao {{ formatVnd(p.quote.fee) }} ({{ p.tier === 'Express' ? 'Hỏa tốc' : 'Standard' }})
             <br />
-            Vào mẻ {{ formatShortDate(p.edd.batchDate) }} · Xử lý {{ formatShortDate(p.edd.processingFrom) }}–{{ formatShortDate(p.edd.processingTo) }} · <b>EDD {{ formatShortDate(p.edd.earliest) }} – {{ formatShortDate(p.edd.latest) }}</b>
+            @if (p.tier === 'Express') {
+              <b>Giao {{ formatShortDate(p.edd.earliest) }}</b> ({{ p.edd.sameDay ? 'trong ngày' : 'ngày làm việc kế tiếp' }})
+            } @else {
+              Vào mẻ {{ formatShortDate(p.edd.batchDate) }} · Xử lý {{ formatShortDate(p.edd.processingFrom) }}–{{ formatShortDate(p.edd.processingTo) }} · <b>EDD {{ formatShortDate(p.edd.earliest) }} – {{ formatShortDate(p.edd.latest) }}</b>
+            }
           </div>
           <button type="submit" [class]="btnPrimary" class="sm:col-span-2">Tạo đơn (ghi PolicyConsent)</button>
         </form>
@@ -106,7 +110,7 @@
       <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <h2 class="font-display text-lg font-bold">Đơn hàng ({{ orders().length }})</h2>
-          <button type="button" [class]="btnPrimary" [disabled]="demo.role() !== 'Operator'" (click)="closeBatch()" title="Operator">Chốt mẻ 16:00</button>
+          <button type="button" [class]="btnPrimary" [disabled]="!demo.isOperator()" (click)="closeBatch()" title="Chỉ Operator">Chốt mẻ 16:00</button>
         </div>
         <ul class="mt-3 flex max-h-[28rem] flex-col gap-2 overflow-y-auto pr-1">
           @for (o of orders(); track o.id) {
@@ -122,7 +126,7 @@
                 <span>
                   <span class="block font-semibold text-ink">{{ o.orderCode }}</span>
                   <span class="block text-xs text-ink-soft">
-                    {{ o.hasCustomItem ? (o.items.length > 1 ? 'Hỗn hợp' : 'Custom') : 'Hàng sẵn' }}{{ o.requiresModeration ? ' · có ảnh' : '' }} · {{ o.paymentMethod === 'COD' ? 'COD' : 'trả trước' }} · {{ o.zone }}
+                    {{ o.hasCustomItem ? (o.items.length > 1 ? 'Hỗn hợp' : 'Theo yêu cầu') : 'Có sẵn' }}{{ o.hasUploadedImage ? ' · có ảnh' : '' }} · {{ o.paymentMethod === 'COD' ? 'COD' : 'trả trước' }} · {{ o.shippingTier === 'Express' ? 'Hỏa tốc' : 'Standard' }}{{ pendingRequest(o) ? ' · YC hủy' : '' }}
                   </span>
                 </span>
                 <app-status-badge [status]="o.status" />
@@ -154,8 +158,14 @@
 
           <!-- internal flags (only visible here) -->
           <div class="mt-3 flex flex-wrap gap-2 text-xs">
-            @if (cancelWindowLeft(o); as left) {
-              <span class="rounded-pill bg-amber-50 px-2.5 py-1 font-semibold text-amber-800">Cửa sổ hủy còn {{ left }} (nội bộ)</span>
+            @if (confirmLeft(o); as left) {
+              <span class="rounded-pill bg-amber-50 px-2.5 py-1 font-semibold text-amber-800">COD đổi ý còn {{ left }} (nội bộ)</span>
+            }
+            @if (pendingRequest(o)) {
+              <span class="rounded-pill bg-amber-50 px-2.5 py-1 font-semibold text-amber-800">Tạm giữ: yêu cầu hủy chờ CSKH{{ requestOverdue(o) ? ' · QUÁ HẠN' : '' }}</span>
+            }
+            @if (o.confirmedAt) {
+              <span class="rounded-pill bg-line px-2.5 py-1 text-ink-soft">confirmedAt {{ o.confirmedAt | date: 'HH:mm dd/MM' }}</span>
             }
             @if (reviewOverdue(o)) {
               <span class="rounded-pill bg-rose-50 px-2.5 py-1 font-semibold text-rose-800">Chờ duyệt quá 24 giờ</span>
@@ -181,12 +191,14 @@
           <!-- Operator -->
           <section class="mt-5 border-t border-line pt-4">
             <h3 class="text-sm font-bold uppercase tracking-wide text-ink-soft">Operator · xưởng in</h3>
-            @if (demo.role() !== 'Operator') {
+            @if (!demo.isOperator()) {
               <p class="mt-2 text-sm text-ink-soft">Chuyển sang vai trò Operator để thao tác.</p>
+            } @else if (pendingRequest(o)) {
+              <p class="mt-2 text-sm text-ink-soft">Đơn đang tạm giữ do yêu cầu hủy: không duyệt, chốt mẻ hay đóng gói.</p>
             } @else {
               <div class="mt-2 flex flex-wrap items-end gap-2">
                 @if (o.status === 'Pending_Review') {
-                  <button type="button" [class]="btnPrimary" (click)="moderate(o, true)">Duyệt & đưa vào in</button>
+                  <button type="button" [class]="btnPrimary" (click)="moderate(o, true)">Duyệt bản thiết kế</button>
                   <select [class]="field" class="w-auto" [value]="violation()" (change)="violation.set($any($event.target).value)" aria-label="Nhóm vi phạm">
                     @for (g of violationGroups; track g) {
                       <option [value]="g">{{ g }}</option>
@@ -201,10 +213,11 @@
                 @if (o.status === 'In_Production') {
                   <button type="button" [class]="btnSecondary" (click)="qcReprint(o)">In lại do lỗi QC</button>
                 }
+                @if (o.status === 'Pending_Review' && o.hasUploadedImage) {
+                  <p class="w-full text-xs text-ink-soft">Có ảnh khách tải lên: kiểm tra kỹ bản cam kết nội dung (Design Studio).</p>
+                }
                 @if (o.status === 'Pending_Confirmation' && o.hasCustomItem) {
-                  <p class="text-sm text-ink-soft">
-                    {{ o.requiresModeration ? 'Có ảnh tải lên: chờ Job 0 chuyển sang hậu kiểm.' : 'Custom không ảnh: chờ “Chốt mẻ 16:00”.' }}
-                  </p>
+                  <p class="text-sm text-ink-soft">Đã duyệt bản thiết kế: chờ “Chốt mẻ 16:00”.</p>
                 }
               </div>
             }
@@ -227,11 +240,31 @@
             </div>
           </section>
 
-          <!-- Epic 6 -->
+          <!-- CSKH: cancel requests (FR-OT-19) -->
+          @if (pendingRequest(o); as req) {
+            <section class="mt-5 border-t border-line pt-4">
+              <h3 class="text-sm font-bold uppercase tracking-wide text-ink-soft">CSKH · yêu cầu hủy đơn{{ requestOverdue(o) ? ' (quá hạn)' : '' }}</h3>
+              <p class="mt-1 text-sm">Lý do: {{ req.reason }}{{ req.note ? ' – “' + req.note + '”' : '' }} · hạn phản hồi {{ req.slaDueAt | date: 'HH:mm dd/MM' }}</p>
+              @if (demo.isCskh()) {
+                <div class="mt-2 flex flex-wrap items-end gap-2">
+                  <button type="button" [class]="btnPrimary" (click)="decideCancel(o, true)">Chấp nhận</button>
+                  <input [class]="field" class="w-56" placeholder="Lý do từ chối (bắt buộc)" [value]="cancelDecisionReason()" (input)="cancelDecisionReason.set($any($event.target).value)" />
+                  <button type="button" [class]="btnSecondary" (click)="decideCancel(o, false)">Từ chối</button>
+                </div>
+              } @else {
+                <p class="mt-2 text-xs text-ink-soft">Chuyển sang vai trò CSKH để xử lý.</p>
+              }
+            </section>
+          }
+
+          <!-- CSKH & Khiếu nại: complaint results -->
           @if (openTicket(o); as t) {
             <section class="mt-5 border-t border-line pt-4">
-              <h3 class="text-sm font-bold uppercase tracking-wide text-ink-soft">CSKH · Epic 6 – ticket {{ t.ticketCode }}</h3>
+              <h3 class="text-sm font-bold uppercase tracking-wide text-ink-soft">CSKH · khiếu nại – ticket {{ t.ticketCode }}</h3>
               <p class="mt-1 text-sm">{{ t.issueType }} · “{{ t.description }}” · bằng chứng: {{ t.evidenceNames.length ? t.evidenceNames.join(', ') : 'không có' }}</p>
+              @if (!demo.isCskh()) {
+                <p class="mt-2 text-xs text-ink-soft">Chuyển sang vai trò CSKH để xử lý.</p>
+              } @else {
               <div class="mt-2 flex flex-wrap items-end gap-2">
                 <input [class]="field" class="w-56" placeholder="Ghi chú / lý do" [value]="complaintNote()" (input)="complaintNote.set($any($event.target).value)" />
                 @if (t.issueType === 'Dispute_Failure_Cause') {
@@ -244,6 +277,7 @@
                   <button type="button" [class]="btnSecondary" (click)="complaint(o, 'Rejected')">D · Từ chối</button>
                 }
               </div>
+              }
             </section>
           }
 
@@ -277,7 +311,7 @@
                       }
                     </div>
                   } @else {
-                    <p class="mt-2 text-xs text-ink-soft">Operator không có quyền về tiền. Chuyển sang Admin để xác nhận.</p>
+                    <p class="mt-2 text-xs text-ink-soft">Chỉ Admin có quyền về tiền. Chuyển sang vai trò Admin để xác nhận.</p>
                   }
                 </div>
               }

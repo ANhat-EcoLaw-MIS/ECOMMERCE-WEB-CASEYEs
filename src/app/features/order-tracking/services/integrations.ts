@@ -12,8 +12,8 @@ import { OrderTrackingDb } from './order.repository';
 
 /**
  * Mock adapters for modules that do not exist yet (Class Diagram interfaces:
- * NotificationService, LoyaltyService, RiskProfileService (Shopping), ComplaintService (Epic 6),
- * PaymentService). Epic 5 only calls them; it never owns their data.
+ * NotificationService, LoyaltyService, RiskProfileService (Shopping), ComplaintService (CSKH & Khiếu nại),
+ * PaymentService). Quản lý đơn hàng only calls them; it never owns their data.
  *
  * Fire-and-forget events go through `IntegrationBus.dispatch`: when the target is down the
  * order is still updated and the event waits in the retry queue (FR-OT-EX-12).
@@ -124,7 +124,7 @@ export class NotificationService {
   }
 }
 
-/** Loyalty (Epic 9): points and post-purchase vouchers are issued there. */
+/** Loyalty (Ưu đãi & voucher): points and post-purchase vouchers are issued there. */
 @Injectable({ providedIn: 'root' })
 export class LoyaltyService {
   private readonly bus = inject(IntegrationBus);
@@ -142,7 +142,7 @@ export class LoyaltyService {
   }
 }
 
-/** Shopping RiskProfile (FR-SH-08): Epic 5 reports, Shopping decides cancelCount. */
+/** Shopping RiskProfile (FR-SH-08): Quản lý đơn hàng reports, Shopping decides cancelCount. */
 @Injectable({ providedIn: 'root' })
 export class RiskProfileService {
   private readonly bus = inject(IntegrationBus);
@@ -158,7 +158,7 @@ export class RiskProfileService {
   }
 }
 
-/** Epic 6 complaint adapter. Ticket creation is synchronous: failure means no status change. */
+/** CSKH & Khiếu nại complaint adapter. Ticket creation is synchronous: failure means no status change. */
 @Injectable({ providedIn: 'root' })
 export class ComplaintService {
   private readonly demo = inject(DemoSettings);

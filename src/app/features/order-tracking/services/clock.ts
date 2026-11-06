@@ -5,7 +5,7 @@ const STORAGE_KEY = 'casecraft.ot.clock.v1';
 const TICK_MS = 15_000;
 
 /**
- * Overridable clock (prompt §5.5). Every time rule in Epic 5 reads `now()` from here so the
+ * Overridable clock (prompt §5.5). Every time rule in Quản lý đơn hàng reads `now()` from here so the
  * Demo Console can fast-forward 30 minutes, 72 hours, 7 or 14 days without waiting.
  * The offset is persisted in localStorage and broadcast to other tabs.
  */

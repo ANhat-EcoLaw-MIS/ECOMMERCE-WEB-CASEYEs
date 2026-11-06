@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { POLICY_HIGHLIGHTS, POLICY_SECTIONS, POLICY_VERSION } from '../config/order-policy';
 
-/** FR-OT-17: full order policy owned by Epic 5 (Checkout links here from its consent tick). */
+/** FR-OT-17: full order policy owned by Quản lý đơn hàng (Checkout links here from its consent tick). */
 @Component({
   selector: 'app-order-policy',
   imports: [RouterLink],

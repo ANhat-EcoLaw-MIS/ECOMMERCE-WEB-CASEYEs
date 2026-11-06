@@ -2,7 +2,8 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { TargetService } from '../models/order-tracking.model';
 import { SyncChannel } from './sync-channel';
 
-export type DemoRole = 'Admin' | 'Operator';
+/** Fake back-office roles (v8): each sees only its own buttons. */
+export type DemoRole = 'Operator' | 'CSKH' | 'Admin';
 
 export interface DemoState {
   readonly enabled: boolean;
@@ -38,6 +39,8 @@ export class DemoSettings {
   readonly enabled = computed(() => this._state().enabled);
   readonly role = computed(() => this._state().role);
   readonly isAdmin = computed(() => this._state().role === 'Admin');
+  readonly isOperator = computed(() => this._state().role === 'Operator');
+  readonly isCskh = computed(() => this._state().role === 'CSKH');
 
   constructor() {
     this.sync.on('demo', () => this._state.set(this.read()));

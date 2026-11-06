@@ -11,7 +11,7 @@ import { formatShortDate } from '../domain/calendar';
 import { computeEdd } from '../domain/edd';
 import { Actor } from '../domain/order-mutations';
 import { faultParty, isOrderOpen } from '../domain/order-rules';
-import { formatVnd, quoteShipping } from '../domain/shipping-fee';
+import { formatVnd } from '../domain/shipping-fee';
 import {
   FailureCause,
   Order,
@@ -21,10 +21,9 @@ import {
   ShipmentEventType,
   ShippingTier,
   TargetService,
-  Zone,
 } from '../models/order-tracking.model';
 import { Clock } from '../services/clock';
-import { DEMO_TEMPLATES, DemoOrderFactory, DemoTemplate } from '../services/demo-order-factory';
+import { DEMO_ADDRESSES, DEMO_TEMPLATES, DemoAddress, DemoOrderFactory, DemoTemplate, demoQuote } from '../services/demo-order-factory';
 import { DemoRole, DemoSettings } from '../services/demo-settings';
 import { OrderRepository } from '../services/order.repository';
 import { OrderTrackingService } from '../services/order-tracking.service';
@@ -40,7 +39,7 @@ const HOUR = 3_600_000;
 
 /**
  * Demo Console (v5 FR-OT-07): a testing tool, NOT part of the product. It stands in for the
- * missing Payment (create order), Operator/Admin back office, Mock 3PL, Epic 6 and pg_cron,
+ * missing Payment (create order), Operator/Admin back office, Mock 3PL, CSKH & Khiếu nại and pg_cron,
  * so the customer tab can be demoed end-to-end. Open it next to the customer tab.
  */
 @Component({
@@ -67,8 +66,12 @@ export class DemoConsole {
   protected readonly formatShortDate = formatShortDate;
 
   protected readonly templates = Object.entries(DEMO_TEMPLATES).map(([key, v]) => ({ key: key as DemoTemplate, label: v.label }));
-  protected readonly zones: Zone[] = ['Z1', 'Z2', 'Z3'];
-  protected readonly zoneLabels = DELIVERY_CONFIG.zoneLabels;
+  protected readonly addresses = Object.entries(DEMO_ADDRESSES).map(([key, v]) => ({ key: key as DemoAddress, label: v.label }));
+  protected readonly roles: { key: DemoRole; label: string }[] = [
+    { key: 'Operator', label: 'Operator' },
+    { key: 'CSKH', label: 'CSKH' },
+    { key: 'Admin', label: 'Admin' },
+  ];
   protected readonly failureCauses = Object.entries(FAILURE_CAUSES).map(([key, v]) => ({
     key: key as FailureCause,
     label: `${v.label} (${FAULT_PARTY_LABELS[v.party]})`,
@@ -78,9 +81,9 @@ export class DemoConsole {
   protected readonly jobLabels = JOB_LABELS;
   protected readonly targets: { key: TargetService; label: string }[] = [
     { key: 'Shopping', label: 'Shopping (RiskProfile)' },
-    { key: 'Loyalty', label: 'Loyalty (Epic 9)' },
+    { key: 'Loyalty', label: 'Loyalty (Ưu đãi & voucher)' },
     { key: 'Notification', label: 'Notification Service' },
-    { key: 'CustomerService', label: 'CSKH (Epic 6)' },
+    { key: 'CustomerService', label: 'CSKH (CSKH & Khiếu nại)' },
     { key: 'Payment', label: 'Payment (QR cước giao lại)' },
   ];
   protected readonly minutesOptions = [
@@ -96,21 +99,28 @@ export class DemoConsole {
   protected readonly createForm = this.fb.group({
     template: this.fb.control<DemoTemplate>('custom_upload'),
     paymentMethod: this.fb.control<PaymentMethod>('QR_Transfer'),
-    zone: this.fb.control<Zone>('Z1'),
+    address: this.fb.control<DemoAddress>('near'),
     tier: this.fb.control<ShippingTier>('Standard'),
     minutesAgo: 0,
   });
   private readonly createValue = toSignal(this.createForm.valueChanges, { initialValue: this.createForm.getRawValue() });
+  /** COD and Hỏa tốc only for stock-only orders; Hỏa tốc only where Thanh toán supports it. */
   protected readonly codAllowed = computed(() => this.createValue().template === 'stock');
+  protected readonly expressAllowed = computed(
+    () => this.createValue().template === 'stock' && DEMO_ADDRESSES[this.createValue().address ?? 'near'].expressFee > 0,
+  );
   protected readonly preview = computed(() => {
     const v = { ...this.createForm.getRawValue(), ...this.createValue() };
     const items = DEMO_TEMPLATES[v.template].items;
     const goods = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
     const hasCustom = items.some((i) => i.isCustom);
+    const tier: ShippingTier = this.expressAllowed() ? v.tier : 'Standard';
+    const cod = v.template === 'stock' && v.paymentMethod === 'COD';
     const placedAt = new Date(this.clock.nowSignal().getTime() - v.minutesAgo * 60_000);
-    const quote = quoteShipping(v.zone, v.tier, goods);
-    const edd = computeEdd({ placedAt, hasCustomItem: hasCustom, zone: v.zone, tier: v.tier });
-    return { goods, quote, edd, placedAt };
+    const confirmedAt = cod ? new Date(placedAt.getTime() + DELIVERY_CONFIG.codRegretMinutes * 60_000) : placedAt;
+    const quote = demoQuote(v.address, tier);
+    const edd = computeEdd({ confirmedAt, hasCustomItem: hasCustom, tier, transitDays: quote.transitDays });
+    return { goods, quote, edd, tier };
   });
 
   // ------------------------------------------------------------ orders
@@ -120,11 +130,17 @@ export class DemoConsole {
     const id = this.selectedId();
     return this.orders().find((o) => o.id === id) ?? this.orders()[0] ?? null;
   });
-  protected readonly actor = computed<Actor>(() => ({
-    type: this.demo.role(),
-    id: this.demo.role() === 'Admin' ? 'admin-01' : 'operator-01',
-  }));
-  private readonly cskh: Actor = { type: 'CustomerService', id: 'cskh-01' };
+  protected readonly actor = computed<Actor>(() => {
+    switch (this.demo.role()) {
+      case 'Admin':
+        return { type: 'Admin', id: 'admin-01' };
+      case 'CSKH':
+        return { type: 'CustomerService', id: 'cskh-01' };
+      default:
+        return { type: 'Operator', id: 'operator-01' };
+    }
+  });
+  protected readonly cancelDecisionReason = signal('');
 
   protected readonly db = this.repo.state;
   protected readonly inbox = computed(() => [...this.db().inbox].reverse().slice(0, 30));
@@ -154,12 +170,6 @@ export class DemoConsole {
   });
 
   // ------------------------------------------------------------ helpers for the template
-  protected cancelWindowLeft(o: Order): string | null {
-    if (o.status !== 'Pending_Confirmation') return null;
-    const ms = new Date(o.createdAt).getTime() + DELIVERY_CONFIG.cancelWindowMinutes * 60_000 - this.simTime().getTime();
-    return ms > 0 ? `${Math.min(DELIVERY_CONFIG.cancelWindowMinutes, Math.ceil(ms / 60_000))} phút` : null;
-  }
-
   protected reviewOverdue(o: Order): boolean {
     return (
       o.status === 'Pending_Review' &&
@@ -212,10 +222,11 @@ export class DemoConsole {
   protected createOrder(): void {
     const v = this.createForm.getRawValue();
     const paymentMethod = v.template === 'stock' ? v.paymentMethod : 'QR_Transfer';
-    const r = this.factory.create({ ...v, paymentMethod });
+    const tier: ShippingTier = this.expressAllowed() ? v.tier : 'Standard';
+    const r = this.factory.create({ ...v, paymentMethod, tier });
     if (r.error) return this.log(false, r.error.message);
     this.selectedId.set(r.data.id);
-    this.log(true, `Tạo đơn ${r.data.orderCode} (${DEMO_TEMPLATES[v.template].label}, ${paymentMethod === 'COD' ? 'COD' : 'trả trước'}, ${v.zone}/${v.tier === 'Fast' ? 'Giao nhanh' : 'Standard'}) – EDD ${formatShortDate(r.data.earliestEDD)}–${formatShortDate(r.data.latestEDD)}`);
+    this.log(true, `Tạo đơn ${r.data.orderCode} (${DEMO_TEMPLATES[v.template].label}, ${paymentMethod === 'COD' ? 'COD' : 'trả trước'}, ${tier === 'Express' ? 'Hỏa tốc' : 'Standard'}) – EDD ${formatShortDate(r.data.earliestEDD)}–${formatShortDate(r.data.latestEDD)}`);
   }
 
   protected moderate(o: Order, approve: boolean): void {
@@ -261,13 +272,36 @@ export class DemoConsole {
   }
 
   protected complaint(o: Order, resolution: Resolution): void {
-    this.report(this.service.applyComplaintResult(o.id, resolution, this.complaintNote(), this.cskh), `${o.orderCode}: kết quả khiếu nại ${resolution}`);
+    this.report(this.service.applyComplaintResult(o.id, resolution, this.complaintNote(), this.actor()), `${o.orderCode}: kết quả khiếu nại ${resolution}`);
     this.complaintNote.set('');
   }
 
   protected dispute(o: Order, customerRight: boolean): void {
-    this.report(this.service.resolveDispute(o.id, customerRight, this.complaintNote(), this.cskh), `${o.orderCode}: đối soát – ${customerRight ? 'khách đúng' : 'khách sai'}`);
+    this.report(this.service.resolveDispute(o.id, customerRight, this.complaintNote(), this.actor()), `${o.orderCode}: đối soát – ${customerRight ? 'khách đúng' : 'khách sai'}`);
     this.complaintNote.set('');
+  }
+
+  protected decideCancel(o: Order, accept: boolean): void {
+    this.report(
+      this.service.decideCancelRequest(o.id, accept, this.cancelDecisionReason(), this.actor()),
+      `${o.orderCode}: ${accept ? 'chấp nhận' : 'từ chối'} yêu cầu hủy`,
+    );
+    this.cancelDecisionReason.set('');
+  }
+
+  protected pendingRequest(o: Order) {
+    return o.cancelRequests.find((r) => r.status === 'Pending');
+  }
+
+  protected requestOverdue(o: Order): boolean {
+    const r = this.pendingRequest(o);
+    return !!r && this.simTime().getTime() > new Date(r.slaDueAt).getTime();
+  }
+
+  protected confirmLeft(o: Order): string | null {
+    if (o.paymentMethod !== 'COD' || o.status !== 'Pending_Confirmation' || !o.confirmDueAt) return null;
+    const ms = new Date(o.confirmDueAt).getTime() - this.simTime().getTime();
+    return ms > 0 ? `${Math.min(DELIVERY_CONFIG.codRegretMinutes, Math.ceil(ms / 60_000))} phút` : null;
   }
 
   protected approveRefund(o: Order, r: RefundRequest): void {
@@ -310,7 +344,7 @@ export class DemoConsole {
   }
 
   protected resetData(): void {
-    if (!confirm('Xóa toàn bộ dữ liệu demo của Epic 5 trên trình duyệt này?')) return;
+    if (!confirm('Xóa toàn bộ dữ liệu demo của Quản lý đơn hàng trên trình duyệt này?')) return;
     this.repo.reset();
     this.clock.reset();
     this.activity.set([]);

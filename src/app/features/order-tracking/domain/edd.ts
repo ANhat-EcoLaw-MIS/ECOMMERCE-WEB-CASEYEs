@@ -1,9 +1,10 @@
 import { DayRange, DELIVERY_CONFIG } from '../config/delivery-config';
-import { ShippingTier, Zone } from '../models/order-tracking.model';
+import { ShippingTier } from '../models/order-tracking.model';
 import {
   addCalendarDays,
   addShippingDays,
   addWorkingDays,
+  fromDateKey,
   isWorkingDay,
   nextWorkingDay,
   startOfDay,
@@ -11,15 +12,17 @@ import {
 } from './calendar';
 
 export interface EddInput {
-  /** Time the order was placed (or re-queued). */
-  readonly placedAt: Date;
+  /**
+   * Time the order is (expected to be) confirmed: placement for prepaid orders, end of the
+   * hidden change-of-mind window for COD (FR-OT-04).
+   */
+  readonly confirmedAt: Date;
   readonly hasCustomItem: boolean;
-  readonly zone: Zone;
   readonly tier: ShippingTier;
+  /** Transit days from Thanh toán (Mon–Sat). Not used for Hỏa tốc. */
+  readonly transitDays: DayRange;
   /** Override the processing range (re-delivery, reprint). */
   readonly handling?: DayRange;
-  /** Whether the hidden cancel window delays batch eligibility (true for new orders). */
-  readonly applyCancelWindow?: boolean;
 }
 
 export interface EddResult {
@@ -30,67 +33,92 @@ export interface EddResult {
   readonly latest: string;
   readonly handling: DayRange;
   readonly shipping: DayRange;
+  /** Hỏa tốc only: true when it ships the same day it was confirmed. */
+  readonly sameDay?: boolean;
+}
+
+function cutoffOf(day: Date, cut: { hour: number; minute: number }): Date {
+  const d = new Date(day);
+  d.setHours(cut.hour, cut.minute, 0, 0);
+  return d;
+}
+
+/** First working day on or after `day`. */
+function workingDayOnOrAfter(day: Date): Date {
+  let d = startOfDay(day);
+  while (!isWorkingDay(d, DELIVERY_CONFIG.holidays)) d = addCalendarDays(d, 1);
+  return d;
 }
 
 /**
- * Batch day (FR-OT-04, assumption A-01): today when the order is eligible for the batch
- * before the 16:00 cut-off of a working day, otherwise the next working day.
- * A new order becomes eligible only after the 30-minute cancel window closes, so an order
- * placed at 15:45 joins tomorrow's batch.
+ * Batch day: the working day of confirmation when it happens before the cut-off,
+ * otherwise the next working day (assumption A-01 for orders confirmed on a weekend).
  */
-export function batchDateFor(placedAt: Date, applyCancelWindow = true): Date {
-  const cfg = DELIVERY_CONFIG;
-  const eligibleAt = new Date(
-    placedAt.getTime() + (applyCancelWindow ? cfg.cancelWindowMinutes * 60_000 : 0),
-  );
-  const day = startOfDay(placedAt);
-  const cutoff = new Date(day);
-  cutoff.setHours(cfg.batchCutoff.hour, cfg.batchCutoff.minute, 0, 0);
-
-  if (isWorkingDay(day, cfg.holidays) && eligibleAt.getTime() <= cutoff.getTime()) return day;
-  if (!isWorkingDay(day, cfg.holidays)) {
-    let d = day;
-    while (!isWorkingDay(d, cfg.holidays)) d = addCalendarDays(d, 1);
-    return d;
-  }
-  return nextWorkingDay(day, cfg.holidays);
+export function dayForCutoff(confirmedAt: Date, cut: { hour: number; minute: number }): Date {
+  const day = startOfDay(confirmedAt);
+  if (!isWorkingDay(day, DELIVERY_CONFIG.holidays)) return workingDayOnOrAfter(day);
+  return confirmedAt.getTime() <= cutoffOf(day, cut).getTime() ? day : nextWorkingDay(day, DELIVERY_CONFIG.holidays);
 }
 
-/** EDD = batch day + processing (Mon–Fri) + shipping (Mon–Sat). */
+export function batchDateFor(confirmedAt: Date): Date {
+  return dayForCutoff(confirmedAt, DELIVERY_CONFIG.batchCutoff);
+}
+
+/**
+ * EDD (FR-OT-04, Table 3.5):
+ * - Standard: batch day + processing (Mon–Fri) + transit from Thanh toán (Mon–Sat).
+ * - Hỏa tốc (stock only): same working day if confirmed before 14:00, else next working day.
+ */
 export function computeEdd(input: EddInput): EddResult {
   const cfg = DELIVERY_CONFIG;
-  const handling =
-    input.handling ?? (input.hasCustomItem ? cfg.handlingDays.custom : cfg.handlingDays.stock);
-  const shipping = cfg.zoneRates[input.zone][input.tier].days;
-  const batch = batchDateFor(input.placedAt, input.applyCancelWindow ?? true);
+  if (input.tier === 'Express') {
+    const day = dayForCutoff(input.confirmedAt, cfg.expressCutoff);
+    const key = toDateKey(day);
+    return {
+      batchDate: key,
+      processingFrom: key,
+      processingTo: key,
+      earliest: key,
+      latest: key,
+      handling: { min: 0, max: 0 },
+      shipping: { min: 0, max: 0 },
+      sameDay: key === toDateKey(input.confirmedAt),
+    };
+  }
 
+  const handling = input.handling ?? (input.hasCustomItem ? cfg.handlingDays.custom : cfg.handlingDays.stock);
+  const batch = batchDateFor(input.confirmedAt);
   const processingFrom = addWorkingDays(batch, handling.min, cfg.holidays);
   const processingTo = addWorkingDays(batch, handling.max, cfg.holidays);
-  const earliest = addShippingDays(processingFrom, shipping.min, cfg.holidays);
-  const latest = addShippingDays(processingTo, shipping.max, cfg.holidays);
-
   return {
     batchDate: toDateKey(batch),
     processingFrom: toDateKey(processingFrom),
     processingTo: toDateKey(processingTo),
-    earliest: toDateKey(earliest),
-    latest: toDateKey(latest),
+    earliest: toDateKey(addShippingDays(processingFrom, input.transitDays.min, cfg.holidays)),
+    latest: toDateKey(addShippingDays(processingTo, input.transitDays.max, cfg.holidays)),
     handling,
-    shipping,
+    shipping: input.transitDays,
   };
 }
 
-/** Shifts both EDD bounds by working days (QC reprint, FR-OT-EX-05). */
-export function shiftEdd(
-  earliest: string,
-  latest: string,
-  workingDays: number,
-): { earliest: string; latest: string } {
-  const cfg = DELIVERY_CONFIG;
-  const [ey, em, ed] = earliest.split('-').map(Number);
-  const [ly, lm, ld] = latest.split('-').map(Number);
+/** Shifts both EDD bounds by working days (QC reprint, rejected cancel request). */
+export function shiftEdd(earliest: string, latest: string, workingDays: number): { earliest: string; latest: string } {
+  if (workingDays <= 0) return { earliest, latest };
+  const h = DELIVERY_CONFIG.holidays;
   return {
-    earliest: toDateKey(addWorkingDays(new Date(ey, em - 1, ed), workingDays, cfg.holidays)),
-    latest: toDateKey(addWorkingDays(new Date(ly, lm - 1, ld), workingDays, cfg.holidays)),
+    earliest: toDateKey(addWorkingDays(fromDateKey(earliest), workingDays, h)),
+    latest: toDateKey(addWorkingDays(fromDateKey(latest), workingDays, h)),
   };
+}
+
+/** Working days between two instants (calendar days crossed that are working days). */
+export function workingDaysBetween(fromIso: string, toIso: string): number {
+  let d = startOfDay(new Date(fromIso));
+  const end = startOfDay(new Date(toIso));
+  let n = 0;
+  while (d.getTime() < end.getTime()) {
+    d = addCalendarDays(d, 1);
+    if (isWorkingDay(d, DELIVERY_CONFIG.holidays)) n++;
+  }
+  return n;
 }

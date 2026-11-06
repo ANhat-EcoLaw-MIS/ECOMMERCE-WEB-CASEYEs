@@ -1,5 +1,5 @@
 @let v = view();
-<div>
+<div [class.opacity-50]="v.dimmed" [class.grayscale]="v.dimmed" [attr.aria-disabled]="v.dimmed || null">
   <ol class="relative grid gap-2" [style.grid-template-columns]="'repeat(' + v.steps.length + ', minmax(0, 1fr))'" aria-label="Tiến độ đơn hàng">
     <!-- connector line behind the nodes -->
     <div aria-hidden="true" class="absolute left-[calc(100%/var(--n)/2)] right-[calc(100%/var(--n)/2)] top-5 h-1 rounded-full bg-line" [style.--n]="v.steps.length">
@@ -7,7 +7,7 @@
     </div>
 
     @for (step of v.steps; track step.key) {
-      <li class="relative flex flex-col items-center gap-2 text-center" [attr.aria-current]="step.state === 'current' ? 'step' : null">
+      <li class="relative flex flex-col items-center gap-1.5 text-center" [attr.aria-current]="step.state === 'current' ? 'step' : null">
         <span
           class="grid size-10 place-items-center rounded-full border-2 text-sm font-bold transition-colors"
           [class.border-brand-800]="step.state !== 'upcoming'"
@@ -15,7 +15,7 @@
           [class.text-white]="step.state === 'done'"
           [class.bg-surface-alt]="step.state !== 'done'"
           [class.text-brand-800]="step.state === 'current'"
-          [class.shadow-glow]="step.state === 'current'"
+          [class.shadow-glow]="step.state === 'current' && !v.dimmed"
           [class.border-line]="step.state === 'upcoming'"
           [class.text-ink-soft]="step.state === 'upcoming'"
         >
@@ -28,6 +28,9 @@
         <span class="text-xs font-semibold sm:text-sm" [class.text-ink]="step.state !== 'upcoming'" [class.text-ink-soft]="step.state === 'upcoming'">
           {{ step.label }}
         </span>
+        @if (step.at) {
+          <span class="text-[11px] text-ink-soft">{{ step.at | date: 'HH:mm dd/MM' }}</span>
+        }
       </li>
     }
   </ol>

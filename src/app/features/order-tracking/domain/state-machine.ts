@@ -8,8 +8,10 @@ import { OrderStatus } from '../models/order-tracking.model';
  * allows reporting issues on completed orders.
  */
 export const TRANSITIONS: Readonly<Record<OrderStatus, readonly OrderStatus[]>> = {
-  Pending_Confirmation: ['Pending_Review', 'In_Production', 'Ready_for_Pickup', 'Cancelled'],
-  Pending_Review: ['In_Production', 'Action_Required', 'Cancelled'],
+  // v8: custom orders start in Pending_Review; approval returns them to Pending_Confirmation
+  // ("Đã xác nhận") until the 16:00 batch moves them to In_Production.
+  Pending_Confirmation: ['In_Production', 'Ready_for_Pickup', 'Cancelled'],
+  Pending_Review: ['Pending_Confirmation', 'Action_Required', 'Cancelled'],
   Action_Required: ['Pending_Review', 'Cancelled'],
   In_Production: ['Ready_for_Pickup'],
   Ready_for_Pickup: ['In_Transit'],

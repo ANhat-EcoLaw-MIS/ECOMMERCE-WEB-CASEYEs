@@ -1,7 +1,7 @@
 /**
- * Epic 5 domain model (BRD/SRD v5, Class Diagram 7.1).
+ * Order Management domain model (BRD/SRD v8, Class Diagram 7.1).
  * The mock store keeps one aggregate per order; the SQL migration in
- * docs/epic5-order-tracking-migration.sql normalises the same shapes into tables.
+ * docs/order-management-migration.sql normalises the same shapes into tables.
  */
 
 // ---------------------------------------------------------------- enums
@@ -28,14 +28,28 @@ export type ActorType = 'Customer' | 'Operator' | 'Admin' | 'System' | 'Carrier'
 export type PaymentMethod = 'COD' | 'QR_Transfer';
 export type PaymentStatus = 'Unpaid' | 'Paid';
 
-export type Zone = 'Z1' | 'Z2' | 'Z3';
-export type ShippingTier = 'Standard' | 'Fast';
+/** v8: Standard for every order; Hỏa tốc (Express) only for stock-only orders. */
+export type ShippingTier = 'Standard' | 'Express';
+
+/** Shipping data owned by Thanh toán (FR-P-06, 07), snapshotted into the order. */
+export interface ShippingQuote {
+  /** Amount the customer paid for shipping. */
+  readonly fee: number;
+  /** Standard fee for this address; basis for re-delivery and two-way costs (assumption A-04). */
+  readonly standardFee: number;
+  /** Extra paid for Hỏa tốc over Standard (0 for Standard). */
+  readonly expressSurcharge: number;
+  /** Transit days (Mon–Sat) for Standard; ignored for Hỏa tốc. */
+  readonly transitDays: { readonly min: number; readonly max: number };
+}
+
+export type CancelRequestStatus = 'Pending' | 'Accepted' | 'Rejected' | 'Withdrawn';
 
 export type CancelReason = 'High_Shipping_Fee' | 'Changed_Mind' | 'Wrong_Phone_Model' | 'Wrong_Address' | 'Other';
 /** Why the order was cancelled, used to decide the Shopping cancelCount event. */
 export type CancelCause =
-  | 'Customer_In_Window' // UC-OT-02 main flow: does not count
-  | 'Customer_Pending_Review'
+  | 'Customer_In_Window' // COD change of mind: does not count
+  | 'Customer_Request_Accepted' // prepaid cancel request accepted by CSKH: does not count
   | 'Design_Rejected' // customer fault
   | 'Design_Fix_Expired' // customer fault
   | 'Delivery_Failed_Customer' // customer fault
@@ -58,7 +72,7 @@ export type IssueType =
   | 'Transit_Damage'
   | 'Not_Received'
   | 'Dispute_Failure_Cause';
-/** Epic 6 has exactly three compensations plus rejection (no "exchange"). */
+/** CSKH & Khiếu nại has exactly three compensations plus rejection (no "exchange"). */
 export type Resolution = 'Reprint' | 'Voucher' | 'Refund' | 'Rejected';
 
 export type ModerationDecision = 'Approved' | 'Rejected';
@@ -75,7 +89,7 @@ export type RefundMethod = 'Bank' | 'Voucher';
 export type RefundSituation = 'S1' | 'S2' | 'S3a' | 'S3b' | 'S3c' | 'S4';
 
 export type ShipmentEventType = 'In_Transit' | 'Delivered' | 'Delivery_Failed' | 'Warehouse_Received';
-export type VoucherKind = 'Late_Delivery' | 'Fast_Surcharge' | 'Store_Credit' | 'Complaint_Compensation';
+export type VoucherKind = 'Late_Delivery' | 'Express_Surcharge' | 'Store_Credit' | 'Complaint_Compensation';
 export type TargetService = 'Shopping' | 'Loyalty' | 'Notification' | 'CustomerService' | 'Payment';
 
 // ---------------------------------------------------------------- entities
@@ -121,6 +135,19 @@ export interface ModerationReview {
   readonly reason?: string;
   readonly reviewerId: string;
   readonly createdAt: string;
+}
+
+/** Prepaid orders cannot be cancelled directly; CSKH decides (FR-OT-19). */
+export interface CancelRequest {
+  readonly id: string;
+  readonly reason: CancelReason;
+  readonly note?: string;
+  readonly status: CancelRequestStatus;
+  readonly slaDueAt: string;
+  readonly createdAt: string;
+  readonly decidedAt?: string;
+  readonly decidedBy?: string;
+  readonly decisionReason?: string;
 }
 
 export interface CancellationRecord {
@@ -221,13 +248,13 @@ export interface Order {
   readonly paymentStatus: PaymentStatus;
   readonly paymentTxnRef?: string;
   readonly goodsTotal: number;
-  readonly shippingFee: number;
-  readonly fastSurcharge: number;
-  readonly zone: Zone;
+  /** Snapshot of Thanh toán's quote (fee, Standard fee, Hỏa tốc surcharge, transit days). */
+  readonly shipping: ShippingQuote;
   readonly shippingTier: ShippingTier;
 
   readonly hasCustomItem: boolean;
-  readonly requiresModeration: boolean;
+  /** Info for the Operator only; every custom design is reviewed (v8). */
+  readonly hasUploadedImage: boolean;
 
   readonly earliestEDD: string;
   readonly latestEDD: string;
@@ -238,6 +265,10 @@ export interface Order {
 
   readonly createdAt: string;
   readonly updatedAt: string;
+  /** COD only: end of the hidden change-of-mind window (createdAt + 30 min). */
+  readonly confirmDueAt?: string;
+  /** Set when the order is confirmed (prepaid stock at once, custom when the design is approved). */
+  readonly confirmedAt?: string;
   readonly reviewQueuedAt?: string;
   readonly rejectedAt?: string;
   readonly designFixReminderAt?: string;
@@ -251,13 +282,14 @@ export interface Order {
   readonly redeliveryFeePaid?: number;
   readonly qcReprintCount: number;
   readonly failureCause?: FailureCause;
-  /** Set when Epic 6 rules the customer was right about a failed delivery (FR-OT-EX-03). */
+  /** Set when CSKH & Khiếu nại rules the customer was right about a failed delivery (FR-OT-EX-03). */
   readonly faultOverride?: FaultParty;
   readonly lateVoucherIssued: boolean;
 
   readonly items: readonly OrderItem[];
   readonly logs: readonly OrderStatusLog[];
   readonly moderationReviews: readonly ModerationReview[];
+  readonly cancelRequests: readonly CancelRequest[];
   readonly cancellation?: CancellationRecord;
   readonly review?: Review;
   readonly shipment?: Shipment;

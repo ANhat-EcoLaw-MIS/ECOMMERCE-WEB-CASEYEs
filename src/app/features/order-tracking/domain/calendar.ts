@@ -85,3 +85,16 @@ export function formatShortDate(key: string): string {
   const d = fromDateKey(key);
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
+
+const WEEKDAYS = ['Chủ nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+
+/** "Thứ Ba 10/11" for EDD ranges (v8 UI rule). */
+export function formatDayLabel(key: string): string {
+  return `${WEEKDAYS[fromDateKey(key).getDay()]} ${formatShortDate(key)}`;
+}
+
+/** dd/MM/yyyy from an ISO instant. */
+export function formatFullDate(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}

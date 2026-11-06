@@ -2,8 +2,8 @@ import { Injectable, computed, inject } from '@angular/core';
 import { SupabaseAuthService } from '../../../core/supabase/supabase-auth.service';
 import { Result, fail, ok } from '../../../core/supabase/supabase.types';
 import { CANCEL_REASON_LABELS, DELIVERY_CONFIG, FAILURE_CAUSES } from '../config/delivery-config';
-import { addHours, diffMs, formatShortDate, isWorkingDay, toDateKey } from '../domain/calendar';
-import { computeEdd, shiftEdd } from '../domain/edd';
+import { addHours, addWorkingDays, diffMs, formatFullDate, formatShortDate, isWorkingDay, toDateKey } from '../domain/calendar';
+import { computeEdd, shiftEdd, workingDaysBetween } from '../domain/edd';
 import {
   Actor,
   BusinessError,
@@ -19,8 +19,12 @@ import {
 } from '../domain/order-mutations';
 import {
   canCancelAfterFailure,
-  canCustomerCancel,
+  canCancelCod,
   canReportIssue,
+  canRequestCancel,
+  isConfirmed,
+  isOnHold,
+  pendingCancelRequest,
   canRequestRedelivery,
   canResubmitDesign,
   failedDeliveryRefundSituation,
@@ -31,7 +35,7 @@ import {
   lateVoucherValue,
   sameHolderName,
 } from '../domain/order-rules';
-import { quoteShipping, redeliveryFee } from '../domain/shipping-fee';
+import { formatVnd, redeliveryFee } from '../domain/shipping-fee';
 import { OrderHandoff } from '../models/order-handoff.model';
 import {
   CancelReason,
@@ -66,9 +70,12 @@ export const DEMO_CUSTOMER = {
 };
 
 export const MESSAGES = {
-  cannotCancel: 'Đơn đang được xử lý, không thể hủy',
-  cancelConflict:
-    'Đơn hàng đã được chuyển sang bộ phận xử lý, không thể hủy theo chính sách hàng cá nhân hóa',
+  /** EX-01: the COD window closed while the pop-up was open. */
+  codConfirmed: 'Đơn đã được xác nhận và đang được chuẩn bị, không thể hủy',
+  /** EX-15: the order entered production while the request form was open. */
+  inProduction: 'Đơn đã được chuyển sang sản xuất, không thể hủy. Nếu có vấn đề, vui lòng dùng Báo sự cố sau khi nhận hàng',
+  onHold: 'Đơn đang tạm giữ chờ xử lý yêu cầu hủy',
+  requestExists: 'Đơn đã có yêu cầu hủy đang chờ xử lý',
   staleOrder: 'Trạng thái đơn vừa thay đổi. Thông tin đã được làm mới, vui lòng xem lại.',
   cancelledByCustomer: 'Đơn đã bị khách hủy',
   handledByOther: 'Đơn đã được xử lý bởi người khác. Danh sách đã được làm mới.',
@@ -82,6 +89,8 @@ export const MESSAGES = {
 interface MutateOptions {
   readonly expectedUpdatedAt?: string;
   readonly opKey?: string;
+  /** Message shown when expectedUpdatedAt no longer matches (EX-01). */
+  readonly staleMessage?: string;
 }
 
 /**
@@ -136,25 +145,35 @@ export class OrderTrackingService {
 
   // ------------------------------------------------------------------ order intake
 
-  /** Contract for Payment (OrderHandoff). Validates Payment BR-P-05/06 and snapshots fees + EDD. */
+  /**
+   * Contract for Thanh toán (OrderHandoff). Validates BR-P-05/06 and the v8 routing:
+   * custom (and mixed) orders start in Pending_Review; stock orders in Pending_Confirmation.
+   */
   receiveHandoff(h: OrderHandoff): OpResult {
     if (h.items.length === 0) return fail({ message: 'Đơn hàng không có sản phẩm' });
     const hasCustom = h.items.some((i) => i.isCustom);
     if (h.paymentMethod === 'COD' && hasCustom) {
-      return fail({ message: 'Đơn có hàng Custom bắt buộc thanh toán trước 100% (COD bị khóa)' });
+      return fail({ message: 'Đơn có hàng thiết kế theo yêu cầu bắt buộc thanh toán trước (không nhận COD)' });
+    }
+    if (h.shippingTier === 'Express' && hasCustom) {
+      return fail({ message: 'Hỏa tốc chỉ áp dụng cho đơn chỉ gồm hàng có sẵn' });
     }
     const goodsTotal = h.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-    const quote = quoteShipping(h.zone, h.shippingTier, goodsTotal);
-    if (!quote.available) return fail({ message: 'Khu vực này chưa hỗ trợ Giao nhanh' });
 
     const createdAt = h.createdAt ?? this.clock.nowIso();
+    const isCod = h.paymentMethod === 'COD';
+    const confirmDueAt = isCod
+      ? new Date(new Date(createdAt).getTime() + DELIVERY_CONFIG.codRegretMinutes * 60_000).toISOString()
+      : undefined;
+    // EDD counts from the (expected) confirmation: end of the COD window, or placement for prepaid.
     const edd = computeEdd({
-      placedAt: new Date(createdAt),
+      confirmedAt: new Date(confirmDueAt ?? createdAt),
       hasCustomItem: hasCustom,
-      zone: h.zone,
       tier: h.shippingTier,
+      transitDays: h.shipping.transitDays,
     });
     const nowIso = this.clock.nowIso();
+    const startStatus = hasCustom ? 'Pending_Review' : 'Pending_Confirmation';
 
     return this.run((db) => {
       db.orderSeq += 1;
@@ -169,17 +188,15 @@ export class OrderTrackingService {
         customerEmail: h.customer.email,
         payerName: h.payerName,
         shippingAddress: h.shippingAddress,
-        status: 'Pending_Confirmation',
+        status: startStatus,
         paymentMethod: h.paymentMethod,
-        paymentStatus: h.paymentMethod === 'QR_Transfer' ? 'Paid' : 'Unpaid',
-        paymentTxnRef: h.paymentMethod === 'QR_Transfer' ? (h.paymentTxnRef ?? this.payment.newTransactionRef()) : undefined,
+        paymentStatus: isCod ? 'Unpaid' : 'Paid',
+        paymentTxnRef: isCod ? undefined : (h.paymentTxnRef ?? this.payment.newTransactionRef()),
         goodsTotal,
-        shippingFee: quote.fee,
-        fastSurcharge: quote.fastSurcharge,
-        zone: h.zone,
+        shipping: h.shipping,
         shippingTier: h.shippingTier,
         hasCustomItem: hasCustom,
-        requiresModeration: h.items.some((i) => i.design?.hasUploadedImage),
+        hasUploadedImage: h.items.some((i) => i.design?.hasUploadedImage),
         earliestEDD: edd.earliest,
         latestEDD: edd.latest,
         batchDate: edd.batchDate,
@@ -187,6 +204,10 @@ export class OrderTrackingService {
         policyAcceptedAt: h.policyAcceptedAt,
         createdAt,
         updatedAt: nowIso,
+        confirmDueAt,
+        // Prepaid stock orders are confirmed by the payment itself.
+        confirmedAt: !hasCustom && !isCod ? createdAt : undefined,
+        reviewQueuedAt: hasCustom ? createdAt : undefined,
         designResubmitCount: 0,
         autoCompleteFrozenOnce: false,
         reviewInvitePending: false,
@@ -205,11 +226,12 @@ export class OrderTrackingService {
         })),
         logs: [],
         moderationReviews: [],
+        cancelRequests: [],
         refunds: [],
         tickets: [],
         vouchers: [],
       };
-      order = withLog(order, null, 'Pending_Confirmation', { type: 'Customer', id: h.customer.id }, 'Đặt hàng thành công', createdAt);
+      order = withLog(order, null, startStatus, { type: 'Customer', id: h.customer.id }, 'Đặt hàng thành công', createdAt);
       db.orders.push(order);
       db.consents.push({ orderId: id, userId: h.customer.id, policyVersion: h.policyVersion, acceptedAt: h.policyAcceptedAt });
       this.notifier.notify(db, order, 'Đặt hàng thành công', `Dự kiến giao từ ${formatShortDate(edd.earliest)} đến ${formatShortDate(edd.latest)}.`, nowIso);
@@ -219,26 +241,108 @@ export class OrderTrackingService {
 
   // ------------------------------------------------------------------ customer actions
 
-  /** UC-OT-02 / FR-OT-05 / EX-01. */
-  cancelOrder(
-    orderId: string,
-    input: { reason: CancelReason; note?: string; refund?: RefundChoice },
-    opts: MutateOptions,
-  ): OpResult {
-    return this.mutate(orderId, opts, (o, db, now) => {
+  /** FR-OT-05 / EX-01: COD orders only, inside the hidden change-of-mind window. No refund. */
+  cancelCodOrder(orderId: string, input: { reason: CancelReason; note?: string }, opts: MutateOptions): OpResult {
+    return this.mutate(orderId, { ...opts, staleMessage: MESSAGES.codConfirmed }, (o, db, now) => {
       if (o.status === 'Cancelled') throw new BusinessError('Đơn hàng đã được hủy trước đó');
-      if (!canCustomerCancel(o, now)) throw new BusinessError(MESSAGES.cancelConflict);
-      this.assertRefundChoice(o, input.refund);
+      if (!canCancelCod(o, now)) throw new BusinessError(MESSAGES.codConfirmed);
       const nowIso = now.toISOString();
-      const cause = o.status === 'Pending_Review' ? 'Customer_Pending_Review' : 'Customer_In_Window';
-      let next = withCancellation(o, this.customerActor(o), cause, false, `Khách hủy đơn: ${CANCEL_REASON_LABELS[input.reason]}`, nowIso, {
+      const next = withCancellation(o, this.customerActor(o), 'Customer_In_Window', false, `Khách hủy đơn: ${CANCEL_REASON_LABELS[input.reason]}`, nowIso, {
         reason: input.reason,
         note: input.note,
       });
-      next = withRefund(next, 'S1', input.refund, nowIso).order;
       this.releaseStock(db, next, nowIso);
-      this.risk.reportCancellation(db, next, cause, false, nowIso);
-      this.notifier.notify(db, next, 'Đơn hàng đã hủy', isPrepaid(next) ? 'Yêu cầu hoàn tiền đang chờ xác nhận.' : 'Đơn đã được đóng.', nowIso);
+      this.risk.reportCancellation(db, next, 'Customer_In_Window', false, nowIso);
+      this.notifier.notify(db, next, 'Đơn hàng đã hủy', 'Đơn thanh toán khi nhận hàng đã được hủy, không phát sinh phí.', nowIso);
+      return next;
+    });
+  }
+
+  /** FR-OT-19 / EX-15: prepaid orders ask CSKH; the order is held in the same transaction. */
+  requestCancel(orderId: string, input: { reason: CancelReason; note?: string }, opts: MutateOptions): OpResult {
+    return this.mutate(orderId, opts, (o, db, now) => {
+      if (isOnHold(o)) throw new BusinessError(MESSAGES.requestExists);
+      if (!canRequestCancel(o)) throw new BusinessError(MESSAGES.inProduction);
+      const nowIso = now.toISOString();
+      const slaDueAt = addWorkingDays(now, DELIVERY_CONFIG.cancelRequestSlaDays, DELIVERY_CONFIG.holidays);
+      slaDueAt.setHours(now.getHours(), now.getMinutes(), 0, 0);
+      const request = {
+        id: newId('cr'),
+        reason: input.reason,
+        note: input.note?.trim() || undefined,
+        status: 'Pending' as const,
+        slaDueAt: slaDueAt.toISOString(),
+        createdAt: nowIso,
+      };
+      const next = withLog(
+        { ...o, cancelRequests: [...o.cancelRequests, request] },
+        o.status,
+        o.status,
+        this.customerActor(o),
+        `Khách gửi yêu cầu hủy đơn: ${CANCEL_REASON_LABELS[input.reason]}`,
+        nowIso,
+      );
+      this.notifier.notify(db, next, 'Đã gửi yêu cầu hủy đơn', `CSKH sẽ phản hồi trước ${formatFullDate(request.slaDueAt)}. Đơn được tạm giữ trong thời gian này.`, nowIso);
+      return next;
+    });
+  }
+
+  /** Customer withdraws a pending request: the hold is released. */
+  withdrawCancelRequest(orderId: string, opts: MutateOptions): OpResult {
+    return this.mutate(orderId, opts, (o, _db, now) => {
+      const r = pendingCancelRequest(o);
+      if (!r) throw new BusinessError('Yêu cầu hủy đã có kết quả, không thể rút lại');
+      const nowIso = now.toISOString();
+      return withLog(
+        { ...o, cancelRequests: o.cancelRequests.map((x) => (x.id === r.id ? { ...x, status: 'Withdrawn' as const, decidedAt: nowIso } : x)) },
+        o.status,
+        o.status,
+        this.customerActor(o),
+        'Khách rút lại yêu cầu hủy đơn',
+        nowIso,
+      );
+    });
+  }
+
+  /**
+   * CSKH decides (FR-OT-19). Accept: Cancelled + RefundRequest S1 (customer picks bank or
+   * voucher in the refund progress block). Reject: reason required, hold time added to EDD
+   * unless CSKH answered after slaDueAt (EX-16).
+   */
+  decideCancelRequest(orderId: string, accept: boolean, reason: string, actor: Actor): OpResult {
+    if (actor.type !== 'CustomerService') return fail({ message: 'Chỉ nhân viên CSKH được xử lý yêu cầu hủy' });
+    return this.mutate(orderId, {}, (o, db, now) => {
+      const r = pendingCancelRequest(o);
+      if (!r) throw new BusinessError(MESSAGES.handledByOther);
+      if (!accept && !reason.trim()) throw new BusinessError('Từ chối bắt buộc nhập lý do hiển thị cho khách');
+      const nowIso = now.toISOString();
+      const decided = { ...r, status: accept ? ('Accepted' as const) : ('Rejected' as const), decidedAt: nowIso, decidedBy: actor.id, decisionReason: reason.trim() || undefined };
+      const withDecision: Order = { ...o, cancelRequests: o.cancelRequests.map((x) => (x.id === r.id ? decided : x)) };
+
+      if (accept) {
+        let next = withCancellation(withDecision, actor, 'Customer_Request_Accepted', false, `CSKH chấp nhận yêu cầu hủy: ${CANCEL_REASON_LABELS[r.reason]}`, nowIso, {
+          reason: r.reason,
+          note: r.note,
+        });
+        next = withRefund(next, 'S1', undefined, nowIso).order;
+        this.releaseStock(db, next, nowIso);
+        this.risk.reportCancellation(db, next, 'Customer_Request_Accepted', false, nowIso);
+        this.notifier.notify(db, next, 'Yêu cầu hủy đã được chấp nhận', 'Vui lòng chọn cách nhận hoàn tiền trong chi tiết đơn.', nowIso);
+        return next;
+      }
+
+      const overdue = now.getTime() > new Date(r.slaDueAt).getTime();
+      const held = overdue ? 0 : workingDaysBetween(r.createdAt, nowIso);
+      const edd = shiftEdd(o.earliestEDD, o.latestEDD, held);
+      const next = withLog(
+        { ...withDecision, earliestEDD: edd.earliest, latestEDD: edd.latest },
+        o.status,
+        o.status,
+        actor,
+        `CSKH từ chối yêu cầu hủy: ${reason.trim()}${held > 0 ? ` (ngày giao dự kiến lùi ${held} ngày làm việc)` : ''}`,
+        nowIso,
+      );
+      this.notifier.notify(db, next, 'Yêu cầu hủy không được chấp nhận', `${reason.trim()}. Đơn tiếp tục được xử lý.`, nowIso);
       return next;
     });
   }
@@ -307,7 +411,7 @@ export class OrderTrackingService {
     const current = this.orders().find((o) => o.id === orderId);
     if (!current) return fail({ message: 'Không tìm thấy đơn hàng' });
     const ticket = this.complaints.createTicket(current, input.issueType);
-    if (ticket.error) return fail({ message: ticket.error.message, code: 'EPIC6' });
+    if (ticket.error) return fail({ message: ticket.error.message, code: 'CSKH' });
 
     return this.mutate(orderId, opts, (o, db, now) => {
       if (!canReportIssue(o, now)) {
@@ -361,7 +465,7 @@ export class OrderTrackingService {
   requestRedelivery(orderId: string, opts: MutateOptions): OpResult {
     const current = this.orders().find((o) => o.id === orderId);
     if (!current) return fail({ message: 'Không tìm thấy đơn hàng' });
-    const fee = faultParty(current) === 'Customer' ? redeliveryFee(current.zone) : 0;
+    const fee = faultParty(current) === 'Customer' ? redeliveryFee(current) : 0;
     if (!canRequestRedelivery(current, this.clock.now())) return fail({ message: MESSAGES.staleOrder });
     const paid = this.payment.confirmRedeliveryFee(fee);
     if (paid.error) return fail({ message: paid.error.message });
@@ -370,14 +474,13 @@ export class OrderTrackingService {
       if (!canRequestRedelivery(o, now)) throw new BusinessError(MESSAGES.staleOrder);
       const nowIso = now.toISOString();
       const edd = computeEdd({
-        placedAt: now,
+        confirmedAt: now,
         hasCustomItem: o.hasCustomItem,
-        zone: o.zone,
         tier: o.shippingTier,
+        transitDays: o.shipping.transitDays,
         handling: DELIVERY_CONFIG.redeliveryHandlingDays,
-        applyCancelWindow: false,
       });
-      const next = withTransition(o, 'Ready_for_Pickup', this.customerActor(o), fee > 0 ? `Khách yêu cầu giao lại, đã trả cước ${fee.toLocaleString('vi-VN')} đ (${paid.data})` : 'Khách yêu cầu giao lại (miễn phí)', nowIso);
+      const next = withTransition(o, 'Ready_for_Pickup', this.customerActor(o), fee > 0 ? `Khách yêu cầu giao lại, đã trả cước ${formatVnd(fee)} (${paid.data})` : 'Khách yêu cầu giao lại (miễn phí)', nowIso);
       return {
         ...next,
         redeliveryUsed: true,
@@ -429,6 +532,7 @@ export class OrderTrackingService {
     return this.mutate(orderId, opts, (o, db, now) => {
       if (o.status === 'Cancelled') throw new BusinessError(MESSAGES.cancelledByCustomer);
       if (o.status !== 'Pending_Review') throw new BusinessError(MESSAGES.handledByOther);
+      if (isOnHold(o)) throw new BusinessError(MESSAGES.onHold);
       const nowIso = now.toISOString();
       const round = o.moderationReviews.length + 1;
       const review = {
@@ -442,7 +546,11 @@ export class OrderTrackingService {
       };
       const withReview = { ...o, moderationReviews: [...o.moderationReviews, review] };
       if (decision === 'Approved') {
-        return withTransition(withReview, 'In_Production', actor, `Duyệt thiết kế vòng ${round}, đưa vào mẻ in`, nowIso);
+        // v8: approval confirms the order ("Đã xác nhận"); the 16:00 batch moves it to In_Production.
+        return {
+          ...withTransition(withReview, 'Pending_Confirmation', actor, `Duyệt bản thiết kế vòng ${round}, chờ chốt mẻ`, nowIso),
+          confirmedAt: nowIso,
+        };
       }
       if (!detail.violationGroup || !detail.reason?.trim()) throw new BusinessError('Chọn nhóm vi phạm và nhập lý do');
       const next = {
@@ -478,9 +586,13 @@ export class OrderTrackingService {
         const groups: Record<string, number> = {};
         let count = 0;
         db.orders = db.orders.map((o) => {
-          const eligibleAt = new Date(o.createdAt).getTime() + DELIVERY_CONFIG.cancelWindowMinutes * 60_000;
+          // Approved custom orders confirmed before the cut-off, not held by a cancel request.
           const eligible =
-            o.status === 'Pending_Confirmation' && o.hasCustomItem && !o.requiresModeration && eligibleAt <= cutoff.getTime();
+            o.status === 'Pending_Confirmation' &&
+            o.hasCustomItem &&
+            !!o.confirmedAt &&
+            new Date(o.confirmedAt).getTime() <= cutoff.getTime() &&
+            !isOnHold(o);
           if (!eligible) return o;
           count++;
           o.items.filter((i) => i.isCustom).forEach((i) => (groups[i.phoneModel] = (groups[i.phoneModel] ?? 0) + i.quantity));
@@ -499,16 +611,17 @@ export class OrderTrackingService {
   markPacked(orderId: string, actor: Actor, opts: MutateOptions = {}): OpResult {
     return this.mutate(orderId, opts, (o, _db, now) => {
       if (o.status === 'Cancelled') throw new BusinessError(MESSAGES.cancelledByCustomer);
+      if (isOnHold(o)) throw new BusinessError(MESSAGES.onHold);
       if (o.status === 'Pending_Confirmation') {
-        if (o.hasCustomItem) throw new BusinessError('Đơn có hàng Custom phải qua mẻ in trước khi đóng gói');
-        const opensAt = new Date(o.createdAt).getTime() + DELIVERY_CONFIG.cancelWindowMinutes * 60_000;
-        if (now.getTime() < opensAt) {
-          const mins = Math.ceil((opensAt - now.getTime()) / 60_000);
-          throw new BusinessError(`Đơn còn trong cửa sổ hủy, mở khóa sau ${mins} phút (chỉ hiển thị nội bộ)`);
+        if (o.hasCustomItem) throw new BusinessError('Đơn có hàng thiết kế theo yêu cầu phải qua mẻ in trước khi đóng gói');
+        if (!isConfirmed(o, now)) {
+          const mins = Math.ceil((new Date(o.confirmDueAt!).getTime() - now.getTime()) / 60_000);
+          throw new BusinessError(`Đơn COD còn trong thời gian đổi ý, mở khóa sau ${mins} phút (chỉ hiển thị nội bộ)`);
         }
       }
       const reason = o.status === 'In_Production' ? (o.items.some((i) => !i.isCustom) ? 'QC đạt, đóng gói chung một kiện' : 'QC đạt, đóng gói xong') : 'Đóng gói hàng có sẵn';
-      return withTransition(o, 'Ready_for_Pickup', actor, reason, now.toISOString());
+      const next = withTransition(o, 'Ready_for_Pickup', actor, reason, now.toISOString());
+      return { ...next, confirmedAt: o.confirmedAt ?? o.confirmDueAt ?? now.toISOString() };
     });
   }
 
@@ -666,16 +779,16 @@ export class OrderTrackingService {
     const late = withVoucher(next, 'Late_Delivery', value.late, nowIso);
     next = late.order;
     this.loyalty.requestVoucher(db, next, 'Late_Delivery', value.late, late.voucher.code, nowIso);
-    if (value.fastSurcharge > 0) {
-      const fast = withVoucher(next, 'Fast_Surcharge', value.fastSurcharge, nowIso);
+    if (value.expressSurcharge > 0) {
+      const fast = withVoucher(next, 'Express_Surcharge', value.expressSurcharge, nowIso);
       next = fast.order;
-      this.loyalty.requestVoucher(db, next, 'Fast_Surcharge', value.fastSurcharge, fast.voucher.code, nowIso);
+      this.loyalty.requestVoucher(db, next, 'Express_Surcharge', value.expressSurcharge, fast.voucher.code, nowIso);
     }
     this.notifier.notify(db, next, 'Xin lỗi vì giao trễ', 'Bạn nhận được voucher bảo đảm giao đúng hạn trong chi tiết đơn.', nowIso);
     return withLog(next, o.status, o.status, { type: 'System', id: 'edd-guarantee' }, 'Giao trễ so với ngày dự kiến, cấp voucher bảo đảm', nowIso);
   }
 
-  // ------------------------------------------------------------------ Epic 6 results
+  // ------------------------------------------------------------------ CSKH & Khiếu nại results
 
   /** UC-OT-08 / FR-OT-16 for Return_Requested orders. */
   applyComplaintResult(orderId: string, resolution: Resolution, note: string, actor: Actor, voucherValue = 30_000): OpResult {
@@ -692,12 +805,11 @@ export class OrderTrackingService {
 
       if (resolution === 'Reprint') {
         const edd = computeEdd({
-          placedAt: now,
+          confirmedAt: now,
           hasCustomItem: o.hasCustomItem,
-          zone: o.zone,
           tier: o.shippingTier,
+          transitDays: o.shipping.transitDays,
           handling: o.hasCustomItem ? undefined : DELIVERY_CONFIG.redeliveryHandlingDays,
-          applyCancelWindow: false,
         });
         next = withTransition(
           { ...next, deliveredAt: undefined, autoCompleteAt: undefined, frozenAt: undefined, earliestEDD: edd.earliest, latestEDD: edd.latest, previousStatus: undefined },
@@ -891,7 +1003,7 @@ export class OrderTrackingService {
       const current = db.orders[idx];
       if (opts.opKey && db.idempotencyKeys.includes(opts.opKey)) return current;
       if (opts.expectedUpdatedAt && opts.expectedUpdatedAt !== current.updatedAt) {
-        throw new BusinessError(current.status === 'Cancelled' ? MESSAGES.cancelledByCustomer : MESSAGES.staleOrder);
+        throw new BusinessError(current.status === 'Cancelled' ? MESSAGES.cancelledByCustomer : (opts.staleMessage ?? MESSAGES.staleOrder));
       }
       const next = { ...fn(current, db, now), updatedAt: now.toISOString() };
       db.orders[idx] = next;

@@ -34,7 +34,7 @@ export class RedeliveryDialog {
   private opKey = '';
 
   protected readonly party = computed(() => faultParty(this.order()));
-  protected readonly fee = computed(() => (this.party() === 'Customer' ? redeliveryFee(this.order().zone) : 0));
+  protected readonly fee = computed(() => (this.party() === 'Customer' ? redeliveryFee(this.order()) : 0));
   protected readonly feeLabel = computed(() => formatVnd(this.fee()));
   protected readonly reason = computed(() => {
     const o = this.order();

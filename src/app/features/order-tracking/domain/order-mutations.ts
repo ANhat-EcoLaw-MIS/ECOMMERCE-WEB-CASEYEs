@@ -97,7 +97,7 @@ export function withRefund(
 
 const VOUCHER_PREFIX: Record<VoucherKind, string> = {
   Late_Delivery: 'TRE',
-  Fast_Surcharge: 'NHANH',
+  Express_Surcharge: 'HOATOC',
   Store_Credit: 'HOAN',
   Complaint_Compensation: 'DENBU',
 };
@@ -136,7 +136,7 @@ export function withCancellation(
 
 /**
  * Closes a failed delivery (second failure, or warehouse hold expired): Cancelled, refund per
- * Table 3.4 (3a/3b; 3c refunds nothing), destruction record for Custom goods.
+ * Table 3.4 (3a/3b; 3c refunds nothing), destruction record for custom-design goods.
  */
 export function finalizeFailedDelivery(
   o: Order,
@@ -154,7 +154,7 @@ export function finalizeFailedDelivery(
       : 'Delivery_Failed_Carrier_Or_Shop';
   let next = withCancellation(o, actor, cause, customerFault, reasonText, nowIso);
   if (o.hasCustomItem) {
-    next = { ...next, destruction: { createdAt: nowIso, note: 'Tiêu hủy hàng Custom có biên bản (bảo mật dữ liệu khách)' } };
+    next = { ...next, destruction: { createdAt: nowIso, note: 'Tiêu hủy hàng thiết kế theo yêu cầu có biên bản (bảo mật dữ liệu khách)' } };
   }
   const situation = failedDeliveryRefundSituation(o);
   let refund: RefundRequest | null = null;

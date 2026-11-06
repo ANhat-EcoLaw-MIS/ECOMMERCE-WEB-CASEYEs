@@ -14,7 +14,7 @@ import { Clock } from './clock';
 import { IntegrationBus, LoyaltyService, NotificationService, RiskProfileService } from './integrations';
 import { OrderRepository, OrderTrackingDb } from './order.repository';
 
-export type JobId = 'job0' | 'job1' | 'job2' | 'job3' | 'job4' | 'retry';
+export type JobId = 'job1' | 'job2' | 'job3' | 'job4' | 'retry';
 
 export interface JobRun {
   readonly job: JobId;
@@ -23,15 +23,13 @@ export interface JobRun {
 }
 
 export const JOB_LABELS: Record<JobId, string> = {
-  job0: 'Job 0 · Chuyển Pending_Review (mỗi 5 phút)',
   job1: 'Job 1 · Tự hoàn thành sau 72 giờ (mỗi giờ)',
   job2: 'Job 2 · Hết hạn lưu kho 14 ngày (mỗi giờ)',
-  job3: 'Job 3 · Quá hạn sửa thiết kế 7 ngày (mỗi giờ)',
+  job3: 'Job 3 · Quá hạn chỉnh sửa thiết kế 7 ngày (mỗi giờ)',
   job4: 'Job 4 · Chưa có tài khoản nhận hoàn 7 ngày (mỗi giờ)',
   retry: 'Gửi lại hàng đợi sự kiện (retry queue)',
 };
 
-const MIN = 60_000;
 const DAY = 86_400_000;
 
 /**
@@ -66,7 +64,7 @@ export class ScheduledJobs {
   }
 
   runAll(): JobRun[] {
-    return (['job0', 'job1', 'job2', 'job3', 'job4', 'retry'] as const).map((j) => this.run(j));
+    return (['job1', 'job2', 'job3', 'job4', 'retry'] as const).map((j) => this.run(j));
   }
 
   private step(job: JobId, o: Order, db: OrderTrackingDb, now: Date, out: string[]): Order {
@@ -75,12 +73,6 @@ export class ScheduledJobs {
     const cfg = DELIVERY_CONFIG;
 
     switch (job) {
-      case 'job0': {
-        const due = new Date(o.createdAt).getTime() + cfg.cancelWindowMinutes * MIN;
-        if (o.status !== 'Pending_Confirmation' || !o.requiresModeration || t <= due) return o;
-        out.push(`${o.orderCode}: Pending_Confirmation → Pending_Review`);
-        return { ...withTransition(o, 'Pending_Review', SYSTEM, 'Hết cửa sổ hủy, chuyển hậu kiểm thiết kế', nowIso), reviewQueuedAt: nowIso };
-      }
       case 'job1': {
         if (o.status !== 'Delivered' || o.frozenAt || !o.autoCompleteAt || new Date(o.autoCompleteAt).getTime() > t) return o;
         const next = { ...withTransition(o, 'Completed', SYSTEM, 'Tự động hoàn thành sau 72 giờ kể từ khi giao', nowIso), reviewInvitePending: true };

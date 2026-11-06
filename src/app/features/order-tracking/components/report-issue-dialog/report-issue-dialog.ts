@@ -33,7 +33,7 @@ interface Evidence {
 }
 
 /**
- * UC-OT-04. Stands in for the Epic 6 complaint form (prefilled with order, design and
+ * UC-OT-04. Stands in for the CSKH & Khiếu nại complaint form (prefilled with order, design and
  * delivery log). The form keeps its content when sending fails (EX-07, EX-12).
  */
 @Component({

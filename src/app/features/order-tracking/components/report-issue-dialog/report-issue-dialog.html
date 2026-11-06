@@ -1,6 +1,6 @@
 <app-ot-modal [open]="open()" title="Báo sự cố" (closed)="closed.emit()">
   <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
-    <!-- Prefilled context sent to Epic 6 -->
+    <!-- Prefilled context sent to CSKH & Khiếu nại -->
     <div class="rounded-xl border border-line bg-surface p-4 text-sm">
       <p class="font-semibold text-ink">Đơn {{ order().orderCode }}</p>
       <p class="text-ink-soft">

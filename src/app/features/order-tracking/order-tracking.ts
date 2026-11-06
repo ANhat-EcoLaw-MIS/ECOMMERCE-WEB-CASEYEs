@@ -5,7 +5,7 @@ import { ORDER_TABS, OrderTab, matchesTab } from './domain/timeline';
 import { OrderStatus } from './models/order-tracking.model';
 import { OrderTrackingService } from './services/order-tracking.service';
 
-/** FR-OT-03 "Lịch sử đơn hàng": entry page of Epic 5 (Profile's tab links here). */
+/** FR-OT-03 "Lịch sử đơn hàng": entry page of Quản lý đơn hàng (Profile's tab links here). */
 @Component({
   selector: 'app-order-tracking',
   imports: [RouterLink, OrderCard],

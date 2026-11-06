@@ -1,8 +1,9 @@
-import { PaymentMethod, ShippingTier, Zone } from './order-tracking.model';
+import { PaymentMethod, ShippingQuote, ShippingTier } from './order-tracking.model';
 
 /**
- * Contract Payment calls when an order is placed (OrderTrackingService.receiveHandoff).
- * Until Payment exists, the Demo Console builds this object the same way Checkout will.
+ * Contract Thanh toán calls when an order is placed (OrderTrackingService.receiveHandoff).
+ * Shipping fee, transit days and Hỏa tốc eligibility come from Thanh toán (FR-P-06, 07).
+ * Until Checkout exists, the Demo Console builds this object the same way Checkout will.
  */
 export interface OrderHandoff {
   readonly orderCode?: string;
@@ -14,8 +15,8 @@ export interface OrderHandoff {
   };
   readonly payerName: string;
   readonly shippingAddress: string;
-  readonly zone: Zone;
   readonly shippingTier: ShippingTier;
+  readonly shipping: ShippingQuote;
   readonly paymentMethod: PaymentMethod;
   /** Set when the QR transfer was confirmed (prepaid orders). */
   readonly paymentTxnRef?: string;
@@ -30,6 +31,7 @@ export interface OrderHandoffItem {
   readonly productName: string;
   readonly phoneModel: string;
   readonly baseSku: string;
+  /** true = thiết kế theo yêu cầu (CUSTOM), false = hàng có sẵn (IN_STOCK). */
   readonly isCustom: boolean;
   readonly quantity: number;
   readonly unitPrice: number;

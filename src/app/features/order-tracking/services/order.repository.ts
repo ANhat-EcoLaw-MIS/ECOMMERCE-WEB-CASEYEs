@@ -9,9 +9,9 @@ import {
 } from '../models/order-tracking.model';
 import { SyncChannel } from './sync-channel';
 
-/** Everything Epic 5 persists. Mirrors docs/epic5-order-tracking-migration.sql. */
+/** Everything Quản lý đơn hàng persists. Mirrors docs/order-management-migration.sql. */
 export interface OrderTrackingDb {
-  readonly version: 1;
+  readonly version: 2;
   orders: Order[];
   consents: PolicyConsent[];
   webhookEvents: WebhookEvent[];
@@ -25,7 +25,7 @@ export interface OrderTrackingDb {
 
 export function emptyDb(): OrderTrackingDb {
   return {
-    version: 1,
+    version: 2,
     orders: [],
     consents: [],
     webhookEvents: [],
@@ -54,7 +54,7 @@ export abstract class OrderRepository {
   abstract reset(): void;
 }
 
-const STORAGE_KEY = 'casecraft.ot.db.v1';
+const STORAGE_KEY = 'casecraft.ot.db.v2';
 const MAX_KEYS = 500;
 
 export class LocalStorageOrderRepository extends OrderRepository {
@@ -93,7 +93,7 @@ export class LocalStorageOrderRepository extends OrderRepository {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return emptyDb();
       const parsed = JSON.parse(raw) as OrderTrackingDb;
-      return parsed.version === 1 ? { ...emptyDb(), ...parsed } : emptyDb();
+      return parsed.version === 2 ? { ...emptyDb(), ...parsed } : emptyDb();
     } catch {
       return emptyDb();
     }
