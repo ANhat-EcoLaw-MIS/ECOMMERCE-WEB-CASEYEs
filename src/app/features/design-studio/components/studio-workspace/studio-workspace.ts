@@ -43,6 +43,19 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly stickers = STICKERS_LIST;
   protected readonly bgPresets = BG_PRESETS;
 
+  // Sticker Search & Filter
+  protected readonly activeStickerCategory = signal<'all' | 'y2k' | 'cute' | 'creative'>('all');
+  protected readonly stickerSearch = signal<string>('');
+  protected readonly filteredStickers = computed(() => {
+    const cat = this.activeStickerCategory();
+    const q = this.stickerSearch().trim().toLowerCase();
+    return this.stickers.filter((s) => {
+      const matchCat = cat === 'all' || s.category === cat;
+      const matchQuery = !q || s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q);
+      return matchCat && matchQuery;
+    });
+  });
+
   // Text inputs
   protected readonly textInput = signal<string>('Good vibes');
   protected readonly selectedFont = signal<string>('Plus Jakarta Sans');
@@ -498,9 +511,11 @@ export class StudioWorkspace implements OnDestroy {
     }
   }
 
-  protected applyPresetText(content: string, size: number, bold: boolean): void {
+  protected applyPresetText(content: string, size: number, bold: boolean, color = '#433075', font = 'Plus Jakarta Sans'): void {
     this.isTextBold.set(bold);
-    this.state.addText(content, this.selectedFont(), this.selectedColor(), size);
+    this.selectedColor.set(color);
+    this.selectedFont.set(font);
+    this.state.addText(content, font, color, size);
   }
 
   // --- Save & Naming Flow (Issue 13 & 14) ---
