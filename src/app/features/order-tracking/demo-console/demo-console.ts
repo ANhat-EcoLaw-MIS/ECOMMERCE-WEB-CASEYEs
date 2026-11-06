@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -29,6 +29,8 @@ import { DemoRole, DemoSettings } from '../services/demo-settings';
 import { OrderRepository } from '../services/order.repository';
 import { OrderTrackingService } from '../services/order-tracking.service';
 import { JOB_LABELS, JobId, ScheduledJobs } from '../services/scheduled-jobs';
+import { clearEvents, readEvents } from '../services/tracker';
+import { buildInsights } from './insights';
 
 interface ActivityEntry {
   readonly at: string;
@@ -45,7 +47,7 @@ const HOUR = 3_600_000;
  */
 @Component({
   selector: 'app-demo-console',
-  imports: [DatePipe, RouterLink, ReactiveFormsModule, StatusBadge, PolicyConsent],
+  imports: [DatePipe, JsonPipe, RouterLink, ReactiveFormsModule, StatusBadge, PolicyConsent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-console.html',
 })
@@ -151,6 +153,16 @@ export class DemoConsole {
   protected readonly webhookLog = computed(() => [...this.db().webhookEvents].reverse().slice(0, 15));
   protected readonly outbound = computed(() => [...this.db().outbound].reverse().slice(0, 15));
   protected readonly activity = signal<readonly ActivityEntry[]>([]);
+  /** P2: refreshed on demand (events live in localStorage, written by the customer tab). */
+  private readonly eventsTick = signal(0);
+  protected readonly insights = computed(() => {
+    this.eventsTick();
+    return buildInsights(readEvents(), this.service.orders());
+  });
+  protected readonly recentEvents = computed(() => {
+    this.eventsTick();
+    return readEvents().slice(-12).reverse();
+  });
   protected readonly lastEventId = signal<{ orderId: string; type: ShipmentEventType; eventId: string; cause?: FailureCause } | null>(null);
   protected readonly openOrdersCheck = signal<string | null>(null);
 
@@ -346,6 +358,15 @@ export class DemoConsole {
         ? 'canDeleteAccount = true: không còn đơn chưa khép.'
         : `canDeleteAccount = false: ${r.openOrders.map((o) => `${o.orderCode} (${o.status})`).join(', ')}`,
     );
+  }
+
+  protected refreshInsights(): void {
+    this.eventsTick.update((n) => n + 1);
+  }
+
+  protected clearInsights(): void {
+    clearEvents();
+    this.refreshInsights();
   }
 
   protected resetData(): void {
