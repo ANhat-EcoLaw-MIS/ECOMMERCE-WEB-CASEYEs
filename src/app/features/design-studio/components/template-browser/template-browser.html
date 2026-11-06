@@ -8,7 +8,11 @@
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mb-3.5 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-sm text-brand-800">📂</span>
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-800">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+            </span>
             <div>
               <h3 class="font-display text-sm font-bold text-ink">Bản thiết kế của bạn (My Designs)</h3>
               <p class="text-[11px] text-ink-soft">Tiếp tục hoàn thiện các mẫu ốp lưng bạn đã lưu trước đó</p>
@@ -82,7 +86,10 @@
       <div class="space-y-4">
         <div class="flex items-center gap-2">
           <span class="inline-flex items-center gap-1.5 rounded-pill bg-brand-100 px-3 py-1 text-xs font-bold text-brand-800">
-            ✦ AI Gợi ý mẫu
+            <svg class="h-3.5 w-3.5 text-brand-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            </svg>
+            AI Gợi ý mẫu
             <span class="rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-black text-brand-900">F13</span>
           </span>
         </div>
@@ -101,7 +108,9 @@
 
         <!-- Decorative note -->
         <div class="inline-flex items-center gap-2.5 rounded-2xl border border-brand-200/80 bg-white/90 px-4 py-2.5 shadow-soft backdrop-blur-sm">
-          <span class="text-base">💡</span>
+          <svg class="h-4 w-4 text-brand-800 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           <p class="text-xs font-medium text-ink-soft">
             Để AI giúp bạn biến ý tưởng thành chiếc ốp hoàn hảo!
           </p>
@@ -142,7 +151,12 @@
               </svg>
               <span>Đang tìm...</span>
             } @else {
-              <span>✦ Gợi ý cho tôi</span>
+              <span class="flex items-center gap-1.5">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                <span>Gợi ý cho tôi</span>
+              </span>
               <span class="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-black">F11</span>
             }
           </button>

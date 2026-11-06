@@ -86,12 +86,12 @@
     </button>
 
     <!-- Bottom Quick Actions: Undo, Redo, Shortcuts (Width-constrained, ZERO horizontal scrollbar) -->
-    <div class="mt-auto flex flex-col items-center gap-2 pb-2 w-full shrink-0">
+    <div class="mt-auto flex flex-col items-center gap-2 pb-2 w-full shrink-0 overflow-hidden">
       <div class="mx-auto h-px w-8 bg-line/80 rounded-full"></div>
 
-      <div class="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface-alt p-1 shadow-2xs w-[72px]">
+      <div class="flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface-alt p-1 shadow-2xs w-[68px]">
         <button type="button" (click)="state.undo()" [disabled]="!state.canUndo()"
-          class="flex h-7 w-7 items-center justify-center rounded-lg text-ink-soft hover:bg-white hover:text-brand-800 hover:shadow-2xs active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+          class="flex h-6.5 w-6.5 items-center justify-center rounded-lg text-ink-soft hover:bg-white hover:text-brand-800 hover:shadow-2xs active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
           title="Hoàn tác (Ctrl+Z)">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v6h6M3 13L9 7M3 13a9 9 0 103-7.7"/>
@@ -99,7 +99,7 @@
         </button>
 
         <button type="button" (click)="state.redo()" [disabled]="!state.canRedo()"
-          class="flex h-7 w-7 items-center justify-center rounded-lg text-ink-soft hover:bg-white hover:text-brand-800 hover:shadow-2xs active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+          class="flex h-6.5 w-6.5 items-center justify-center rounded-lg text-ink-soft hover:bg-white hover:text-brand-800 hover:shadow-2xs active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
           title="Làm lại (Ctrl+Y)">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7v6h-6M21 13l-6-6M21 13a9 9 0 11-3-7.7"/>
@@ -108,9 +108,13 @@
       </div>
 
       <button type="button" (click)="showShortcutsModal.set(true)"
-        class="flex h-7 w-7 items-center justify-center rounded-xl border border-line/70 bg-white text-ink-soft shadow-2xs hover:border-brand-400 hover:text-brand-800 active:scale-95 cursor-pointer transition-all"
+        class="flex h-7 w-[68px] items-center justify-center gap-1 rounded-xl border border-line/70 bg-white text-[10px] font-semibold text-ink-soft shadow-2xs hover:border-brand-400 hover:text-brand-800 active:scale-95 cursor-pointer transition-all"
         title="Bảng phím tắt (Figma/Canva style)">
-        <span class="text-xs">⌨️</span>
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2.5"/>
+          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" stroke-linecap="round"/>
+        </svg>
+        <span>Phím tắt</span>
       </button>
     </div>
   </aside>
@@ -167,8 +171,11 @@
         <p class="text-xs font-bold text-brand-800">Bấm hoặc kéo thả ảnh</p>
         <p class="mt-0.5 text-[10px] text-ink-soft">PNG, JPG · tối đa 10MB</p>
       </div>
-      <div class="rounded-xl border border-amber-100 bg-amber-50 p-2.5 text-[10px] text-amber-700 leading-relaxed">
-        💡 Ảnh tải lên có thể được kiểm duyệt trước khi sản xuất.
+      <div class="rounded-xl border border-amber-100 bg-amber-50 p-2.5 text-[10px] text-amber-700 leading-relaxed flex items-center gap-1.5">
+        <svg class="h-3.5 w-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Ảnh tải lên có thể được kiểm duyệt trước khi sản xuất.</span>
       </div>
       @if (state.uploads().length > 0) {
       <div class="border-t border-line pt-3">
@@ -471,7 +478,9 @@
             <span>{{ item.layer.name }}</span>
             }
             } @else {
-            <span class="text-xs">🎨</span>
+            <svg class="h-3.5 w-3.5 text-brand-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 4 4 0 014-4c.7 0 1.37.18 1.95.5.39.22.88.22 1.28 0A4.004 4.004 0 0116 13a4 4 0 014 4 4 4 0 01-4 4H7z"/>
+            </svg>
             }
           </div>
           <span class="truncate flex-1 text-xs" [title]="getLayerDisplayTitle(item.layer)">
@@ -592,7 +601,10 @@
       <button type="button" (click)="showShortcutsModal.set(true)"
         class="flex items-center gap-1.5 rounded-full border border-line bg-white/90 px-3 py-1 shadow-soft backdrop-blur-sm text-[11px] font-semibold text-ink hover:text-brand-800 hover:border-brand-400 transition-colors cursor-pointer"
         title="Danh sách phím tắt Canva (Bấm ?)">
-        <span>⌨️</span>
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2.5"/>
+          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" stroke-linecap="round"/>
+        </svg>
         <span class="hidden sm:inline">Phím tắt</span>
         <span class="rounded bg-brand-100 px-1 text-[9px] font-bold text-brand-800">?</span>
       </button>
@@ -601,40 +613,63 @@
     <!-- Phone Mockup Canvas (Supports Bleed Overflow View) -->
     <div class="relative transition-transform duration-200" [style.transform]="'scale(' + state.zoom() / 100 + ')'">
 
-      <!-- Contextual floating toolbar (Floats directly above selected element like Canva) -->
+      <!-- Contextual Formatting Toolbar (Pinned cleanly above phone mockup, NEVER obscuring the case design) -->
       @if (state.selectedLayer(); as sel) {
       <div (click)="$event.stopPropagation()"
-        class="pointer-events-auto absolute z-50 flex items-center gap-1.5 rounded-full border border-line bg-white/95 px-3 py-1.5 shadow-lift backdrop-blur-xl whitespace-nowrap transition-all duration-75"
-        [style.left.%]="sel.x" [style.top.%]="sel.y" [style.transform]="getToolbarTransform(sel)">
-        @if (sel.type === 'text') {
-        <select [value]="sel.fontFamily" (change)="updateProperty('fontFamily', $event)"
-          class="rounded-lg border border-line bg-surface px-2 py-1 text-xs text-ink outline-none">
-          @for (f of fonts; track f) { <option [value]="f">{{ f }}</option> }
-        </select>
-        <input type="number" min="12" max="120" [value]="sel.fontSize" (input)="updateProperty('fontSize', $event)"
-          class="w-12 rounded-lg border border-line bg-surface px-1.5 py-1 text-xs text-ink text-center" />
-        <input type="color" [value]="sel.textColor" (input)="updateProperty('textColor', $event)"
-          class="h-6 w-7 cursor-pointer rounded border border-line p-0.5" title="Màu chữ" />
+        class="pointer-events-auto absolute -top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-2xl border border-line/90 bg-white/95 px-3 py-1.5 shadow-lift backdrop-blur-xl whitespace-nowrap transition-all duration-150 animate-fade-in"
+        style="box-shadow: 0 16px 36px -6px rgba(67, 48, 117, 0.16), 0 6px 14px -3px rgba(0,0,0,0.08);">
 
-        <!-- Canva-style Text Bold -->
+        <!-- ── Typography Controls (Text Layer) ── -->
+        @if (sel.type === 'text') {
+        <!-- Font Family Dropdown with custom chevron -->
+        <div class="relative flex items-center">
+          <select [value]="sel.fontFamily" (change)="updateProperty('fontFamily', $event)"
+            class="appearance-none rounded-xl border border-line bg-surface-alt/80 hover:bg-white pl-2.5 pr-7 py-1 text-xs font-semibold text-ink cursor-pointer focus:border-brand-500 focus:outline-none transition-all">
+            @for (f of fonts; track f) { <option [value]="f">{{ f }}</option> }
+          </select>
+          <svg class="pointer-events-none absolute right-2 h-3 w-3 text-ink-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+
+        <!-- Font Size Stepper [-] [24] [+] -->
+        <div class="flex items-center rounded-xl border border-line bg-surface-alt/70 p-0.5">
+          <button type="button" (click)="adjustFontSize(sel.id, -2)"
+            class="h-6 w-6 rounded-lg flex items-center justify-center text-ink-soft hover:bg-white hover:text-ink text-xs font-bold transition-all cursor-pointer"
+            title="Giảm cỡ chữ">−</button>
+          <input type="number" min="10" max="120" [value]="sel.fontSize" (input)="updateProperty('fontSize', $event)"
+            class="w-8 bg-transparent text-center font-mono text-xs font-bold text-ink outline-none border-none p-0" />
+          <button type="button" (click)="adjustFontSize(sel.id, 2)"
+            class="h-6 w-6 rounded-lg flex items-center justify-center text-ink-soft hover:bg-white hover:text-ink text-xs font-bold transition-all cursor-pointer"
+            title="Tăng cỡ chữ">+</button>
+        </div>
+
+        <!-- Text Color Swatch -->
+        <label class="relative flex h-7 w-7 items-center justify-center rounded-xl border border-line p-0.5 cursor-pointer hover:scale-105 transition-transform shadow-2xs"
+          [style.background]="sel.textColor" title="Màu chữ">
+          <input type="color" [value]="sel.textColor" (input)="updateProperty('textColor', $event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+          <span class="sr-only">Màu chữ</span>
+        </label>
+
+        <!-- Bold (B) -->
         <button type="button" (click)="toggleTextBold(sel.id)"
-          class="flex h-6 w-6 items-center justify-center rounded font-bold text-xs cursor-pointer transition-colors"
+          class="flex h-7 w-7 items-center justify-center rounded-lg font-bold text-xs cursor-pointer transition-colors"
           [class]="sel.fontWeight === 'bold' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
           title="Chữ đậm (B)">
           B
         </button>
 
-        <!-- Canva-style Text Italic -->
+        <!-- Italic (I) -->
         <button type="button" (click)="toggleTextItalic(sel.id)"
-          class="flex h-6 w-6 items-center justify-center rounded font-serif italic text-xs cursor-pointer transition-colors"
+          class="flex h-7 w-7 items-center justify-center rounded-lg font-serif italic text-xs cursor-pointer transition-colors"
           [class]="sel.fontStyle === 'italic' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
           title="Chữ nghiêng (I)">
           I
         </button>
 
-        <!-- Canva-style Text Align Cycle -->
+        <!-- Align Cycle -->
         <button type="button" (click)="cycleTextAlign(sel.id)"
-          class="flex h-6 w-6 items-center justify-center rounded text-xs text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer transition-colors"
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-xs text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer transition-colors"
           [title]="'Căn chữ: ' + (sel.textAlign || 'center')">
           @if (sel.textAlign === 'left') {
           <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -651,38 +686,32 @@
           }
         </button>
 
-        <!-- Canva-style Text Effects Dropdown -->
-        <select [value]="sel.textEffect || 'none'" (change)="onTextEffectChange(sel.id, $event)"
-          class="rounded-lg border border-line bg-surface px-1.5 py-1 text-xs text-ink outline-none"
-          title="Hiệu ứng chữ (Canva Text Effects)">
-          <option value="none">Fx: Chuẩn</option>
-          <option value="shadow">Fx: Đổ bóng</option>
-          <option value="neon">Fx: Neon sáng</option>
-          <option value="hollow">Fx: Viền rỗng</option>
-          <option value="lift">Fx: Nổi 3D</option>
-        </select>
-
-        <div class="h-4 w-px bg-line"></div>
+        <div class="h-4 w-px bg-line/80"></div>
         }
 
-        <!-- Canva-style Image Filters Dropdown -->
+        <!-- ── Image Filter Controls (Image Layer) ── -->
         @if (sel.type === 'image') {
-        <select [value]="sel.imageFilter || 'none'" (change)="onImageFilterChange(sel.id, $event)"
-          class="rounded-lg border border-line bg-surface px-1.5 py-1 text-xs text-ink outline-none"
-          title="Bộ lọc màu ảnh">
-          <option value="none">Bộ lọc: Gốc</option>
-          <option value="grayscale">Trắng đen (B&W)</option>
-          <option value="sepia">Cổ điển (Sepia)</option>
-          <option value="warm">Ấm áp (Warm)</option>
-          <option value="cool">Mát mẻ (Cool)</option>
-          <option value="vivid">Rực rỡ (Vivid)</option>
-        </select>
-        <div class="h-4 w-px bg-line"></div>
+        <div class="relative flex items-center">
+          <select [value]="sel.imageFilter || 'none'" (change)="onImageFilterChange(sel.id, $event)"
+            class="appearance-none rounded-xl border border-line bg-surface-alt/80 hover:bg-white pl-2.5 pr-7 py-1 text-xs font-semibold text-ink cursor-pointer focus:border-brand-500 focus:outline-none transition-all"
+            title="Bộ lọc màu ảnh">
+            <option value="none">Bộ lọc: Gốc</option>
+            <option value="grayscale">Trắng đen (B&W)</option>
+            <option value="sepia">Cổ điển (Sepia)</option>
+            <option value="warm">Ấm áp (Warm)</option>
+            <option value="cool">Mát mẻ (Cool)</option>
+            <option value="vivid">Rực rỡ (Vivid)</option>
+          </select>
+          <svg class="pointer-events-none absolute right-2 h-3 w-3 text-ink-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+        <div class="h-4 w-px bg-line/80"></div>
         }
 
-        <!-- Canva-style Flip Controls (Horizontal & Vertical) -->
+        <!-- ── Layer Geometry Controls: Flip H, Flip V, Align Center ── -->
         <button type="button" (click)="toggleFlipH(sel.id)"
-          class="flex h-6 w-6 items-center justify-center rounded text-xs cursor-pointer transition-colors"
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-xs cursor-pointer transition-colors"
           [class]="sel.flipH ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
           title="Lật ảnh ngang (Flip Horizontal)">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -691,7 +720,7 @@
           </svg>
         </button>
         <button type="button" (click)="toggleFlipV(sel.id)"
-          class="flex h-6 w-6 items-center justify-center rounded text-xs cursor-pointer transition-colors"
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-xs cursor-pointer transition-colors"
           [class]="sel.flipV ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
           title="Lật ảnh dọc (Flip Vertical)">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -702,25 +731,26 @@
 
         <!-- Center in Canvas -->
         <button type="button" (click)="alignCenter(sel.id, 'both')"
-          class="flex h-6 w-6 items-center justify-center rounded text-xs text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer transition-colors"
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-xs text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer transition-colors"
           title="Căn chính giữa canvas">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m-9-9h18" />
           </svg>
         </button>
 
-        <div class="h-4 w-px bg-line"></div>
+        <div class="h-4 w-px bg-line/80"></div>
 
-        <label class="flex items-center gap-1 text-xs text-ink-soft">
+        <!-- Opacity Slider -->
+        <label class="flex items-center gap-1.5 text-xs font-semibold text-ink-soft px-1">
           <span>Mờ:</span>
           <input type="range" min="10" max="100" [value]="sel.opacity * 100" (input)="updateProperty('opacity', $event)"
-            class="w-14 accent-brand-800" />
+            class="w-14 accent-brand-800 cursor-pointer" />
         </label>
 
         @if (sel.cropTop || sel.cropBottom || sel.cropLeft || sel.cropRight) {
-        <div class="h-4 w-px bg-line"></div>
+        <div class="h-4 w-px bg-line/80"></div>
         <button type="button" (click)="resetCrop(sel.id)"
-          class="flex items-center gap-1 rounded-lg bg-purple-50 px-2 py-0.5 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
+          class="flex items-center gap-1 rounded-lg bg-purple-50 px-2 py-1 text-xs font-bold text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
           title="Khôi phục lại kích thước ảnh ban đầu chưa cắt xén">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -730,11 +760,11 @@
         </button>
         }
 
-        <div class="h-4 w-px bg-line"></div>
+        <div class="h-4 w-px bg-line/80"></div>
 
         <!-- Lock / Unlock Layer (Canva Lock) -->
         <button type="button" (click)="state.toggleLayerLock(sel.id)"
-          class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer"
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer transition-colors"
           [title]="sel.isLocked ? 'Mở khóa layer' : 'Khóa layer (Lock)'">
           @if (sel.isLocked) {
           <svg class="h-3.5 w-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -749,16 +779,20 @@
           }
         </button>
 
+        <!-- Duplicate Layer (Ctrl+D) -->
         <button type="button" (click)="state.duplicateLayer(sel.id)"
-          class="rounded-lg p-1 text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer"
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-ink-soft hover:bg-brand-50 hover:text-brand-800 cursor-pointer transition-colors"
           title="Nhân đôi (Ctrl+D)">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke-width="2"/>
           </svg>
         </button>
+
+        <!-- Delete Layer (Delete) -->
         <button type="button" (click)="state.removeLayer(sel.id)"
-          class="rounded-lg p-1 text-red-500 hover:bg-red-50 cursor-pointer" title="Xóa (Delete)">
+          class="flex h-7 w-7 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 cursor-pointer transition-colors"
+          title="Xóa phần tử (Delete / Backspace)">
           <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -787,11 +821,9 @@
             <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none"
               [style.textAlign]="layer.textAlign || 'center'" [style.width.px]="(layer.width / 100) * 300"
               [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
-              [style.color]="layer.textEffect === 'hollow' ? 'transparent' : layer.textColor"
+              [style.color]="layer.textColor"
               [style.fontWeight]="layer.fontWeight ?? 'bold'" [style.fontStyle]="layer.fontStyle ?? 'normal'"
-              [style.textDecoration]="layer.textDecoration ?? 'none'"
-              [style.textShadow]="getTextShadow(layer.textEffect, layer.textColor)"
-              [style.webkitTextStroke]="layer.textEffect === 'hollow' ? '1.5px ' + layer.textColor : 'none'">{{
+              [style.textDecoration]="layer.textDecoration ?? 'none'">{{
               layer.content }}</div>
             }
             @if (layer.type === 'sticker') {
@@ -870,126 +902,215 @@
       </div>
       }
 
-      <!-- Case Viewport (Inner elements at 100% normal opacity, strictly clipped to phone frame) -->
-      <div id="case-viewport"
-        class="relative z-20 h-[632px] w-[300px] overflow-hidden rounded-[50px] transition-all duration-200"
-        [style.boxShadow]="'0 0 0 6px ' + caseStrokeColor() + ', 0 25px 60px -12px rgba(67, 48, 117, 0.28), 0 12px 24px -6px rgba(0, 0, 0, 0.12)'"
-        [style.background]="state.caseBg()">
+      <!-- ══════════════════════════════════════════════════════════════════
+           PHOTOREALISTIC SMARTPHONE STUDIO MOCKUP
+           (Precision Titanium Chassis, Antenna Joints, Side Buttons,
+            Signature Casetify Impact Bumper & Multi-Coated Sapphire Optics)
+      ══════════════════════════════════════════════════════════════════ -->
+      <div class="relative p-[11px] rounded-[60px] transition-all duration-200"
+        style="background: linear-gradient(155deg, #3d414a 0%, #1e2026 50%, #121317 100%);
+               box-shadow: 0 35px 80px -15px rgba(15, 23, 42, 0.45), 0 15px 30px -8px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 2px rgba(0, 0, 0, 0.7);">
 
-        <!-- Polycarbonate Glass Specular Reflection Highlight -->
-        <div class="pointer-events-none absolute inset-0 z-30 opacity-40 mix-blend-overlay"
-          style="background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 32%, transparent 55%);">
-        </div>
-        <div class="pointer-events-none absolute inset-0 z-30 rounded-[50px] ring-1 ring-inset ring-white/35"></div>
+        <!-- Hardware Titanium Buttons (Peeking from side rails - Back View: Power on Left, Volume on Right) -->
+        <!-- Left Side: Power / Lock Button -->
+        <div class="pointer-events-none absolute -left-[3px] top-[155px] h-[60px] w-[3px] rounded-l-sm bg-[#52525b] shadow-[-1px_0_2px_rgba(0,0,0,0.5)]"></div>
 
-        <!-- ── Canva Smart Snap Guidelines (Center Snapping Lines) ── -->
-        @if (snapGuideX()) {
-        <div
-          class="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-pink-500 z-50 shadow-[0_0_8px_rgba(236,72,153,0.9)] animate-fade-in flex flex-col justify-between items-center py-3">
-          <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
-            GIỮA</span>
-          <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
-            GIỮA</span>
-        </div>
-        }
-        @if (snapGuideY()) {
-        <div
-          class="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-pink-500 z-50 shadow-[0_0_8px_rgba(236,72,153,0.9)] animate-fade-in flex justify-between items-center px-3">
-          <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
-            GIỮA</span>
-          <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
-            GIỮA</span>
-        </div>
-        }
+        <!-- Right Side: Action Button + Volume Up/Down -->
+        <div class="pointer-events-none absolute -right-[3px] top-[105px] h-[22px] w-[3px] rounded-r-sm bg-[#52525b] shadow-[1px_0_2px_rgba(0,0,0,0.5)]"></div>
+        <div class="pointer-events-none absolute -right-[3px] top-[140px] h-[44px] w-[3px] rounded-r-sm bg-[#52525b] shadow-[1px_0_2px_rgba(0,0,0,0.5)]"></div>
+        <div class="pointer-events-none absolute -right-[3px] top-[195px] h-[44px] w-[3px] rounded-r-sm bg-[#52525b] shadow-[1px_0_2px_rgba(0,0,0,0.5)]"></div>
 
-        <!-- ── Dynamic Camera Cutout per Model (Aligned with 3D GLB Models) ── -->
-        @if (state.selectedModel().id === 'galaxy-s24') {
-        <!-- Samsung Galaxy S24: 3 distinct vertical camera circles with dynamic stroke bezel ring -->
-        <div class="pointer-events-none absolute z-20 flex flex-col gap-3.5 items-center p-1"
-          [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent">
-          <div
-            class="h-9 w-9 rounded-full bg-[#111] ring-2 transition-all duration-200 flex items-center justify-center shadow-lg"
-            [style.--tw-ring-color]="caseStrokeColor()" [style.boxShadow]="'0 0 0 2px ' + caseStrokeColor()">
-            <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
-          </div>
-          <div
-            class="h-9 w-9 rounded-full bg-[#111] ring-2 transition-all duration-200 flex items-center justify-center shadow-lg"
-            [style.--tw-ring-color]="caseStrokeColor()" [style.boxShadow]="'0 0 0 2px ' + caseStrokeColor()">
-            <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
-          </div>
-          <div
-            class="h-9 w-9 rounded-full bg-[#111] ring-2 transition-all duration-200 flex items-center justify-center shadow-lg"
-            [style.--tw-ring-color]="caseStrokeColor()" [style.boxShadow]="'0 0 0 2px ' + caseStrokeColor()">
-            <span class="h-4 w-4 rounded-full bg-radial from-[#38bdf8]/50 to-[#0369a1] ring-1 ring-cyan-400/40"></span>
-          </div>
-          <!-- Small flash -->
-          <div class="absolute -right-3 top-2 h-2.5 w-2.5 rounded-full bg-[#fef08a] ring-1 ring-white/60"></div>
-        </div>
-        } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
-        <!-- Xiaomi 14 Ultra: Large Leica circular camera bump with dynamic stroke bezel ring -->
-        <div
-          class="pointer-events-none absolute z-20 rounded-full bg-[#18181b] ring-4 transition-all duration-200 p-2 shadow-2xl flex items-center justify-center"
-          [style.--tw-ring-color]="caseStrokeColor()" [style.boxShadow]="'0 0 0 4px ' + caseStrokeColor()"
-          [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
-          [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
-          <div class="grid grid-cols-2 gap-3 place-items-center">
-            <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
-            <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
-            <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
-            <span class="h-8 w-8 rounded-full bg-radial from-[#38bdf8]/40 to-[#0a0a0a] ring-2 ring-[#52525b]"></span>
-          </div>
-          <span class="absolute text-[8px] font-bold text-amber-500/80 tracking-widest uppercase">LEICA</span>
-        </div>
-        } @else {
-        <!-- Apple iPhone Pro: Realistic 3-lens Squircle Module with dynamic stroke bezel ring -->
-        <div
-          class="pointer-events-none absolute z-20 rounded-[36px] bg-[#1a1b22]/95 shadow-xl ring-[6px] backdrop-blur-md transition-all duration-200"
-          [style.--tw-ring-color]="caseStrokeColor()"
-          [style.boxShadow]="'0 0 0 6px ' + caseStrokeColor() + ', 0 10px 25px rgba(0,0,0,0.35)'"
-          [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
-          [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent">
+        <!-- Chassis Antenna Bands -->
+        <div class="pointer-events-none absolute -left-[2px] top-[75px] h-[3px] w-[2px] bg-[#27272a]"></div>
+        <div class="pointer-events-none absolute -right-[2px] top-[75px] h-[3px] w-[2px] bg-[#27272a]"></div>
+        <div class="pointer-events-none absolute -left-[2px] bottom-[75px] h-[3px] w-[2px] bg-[#27272a]"></div>
+        <div class="pointer-events-none absolute -right-[2px] bottom-[75px] h-[3px] w-[2px] bg-[#27272a]"></div>
 
-          <!-- Lens 1 (Top-Left: Main 48MP) -->
+        <!-- Case Viewport (Inner elements at 100% normal opacity, strictly clipped to phone frame) -->
+        <div id="case-viewport"
+          class="relative z-20 h-[632px] w-[300px] overflow-hidden rounded-[50px] transition-all duration-200"
+          [style.boxShadow]="'0 0 0 5px ' + caseStrokeColor() + ', 0 10px 20px -5px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.45), inset 0 -1px 2px rgba(0,0,0,0.2)'"
+          [style.background]="state.caseBg()">
+
+          <!-- Polycarbonate Glass Specular Reflection Highlight -->
+          <div class="pointer-events-none absolute inset-0 z-30 opacity-40 mix-blend-overlay"
+            style="background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.12) 28%, transparent 52%);">
+          </div>
+          <div class="pointer-events-none absolute inset-0 z-30 rounded-[50px] ring-1 ring-inset ring-white/30"></div>
+
+          <!-- ── Canva Smart Snap Guidelines (Center Snapping Lines) ── -->
+          @if (snapGuideX()) {
           <div
-            class="absolute left-[11%] top-[11%] h-[42px] w-[42px] rounded-full bg-[#0a0a0d] ring-2 ring-[#404352] flex items-center justify-center shadow-md">
-            <div
-              class="h-6 w-6 rounded-full bg-radial from-[#2a3045] to-[#04060a] ring-1 ring-[#1e2330] flex items-center justify-center">
-              <span class="h-2 w-2 rounded-full bg-[#1e40af]/60"></span>
+            class="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-pink-500 z-50 shadow-[0_0_8px_rgba(236,72,153,0.9)] animate-fade-in flex flex-col justify-between items-center py-3">
+            <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
+              GIỮA</span>
+            <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
+              GIỮA</span>
+          </div>
+          }
+          @if (snapGuideY()) {
+          <div
+            class="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-0.5 bg-pink-500 z-50 shadow-[0_0_8px_rgba(236,72,153,0.9)] animate-fade-in flex justify-between items-center px-3">
+            <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
+              GIỮA</span>
+            <span class="rounded bg-pink-600 px-1.5 py-0.5 text-[8px] font-black text-white shadow-xs tracking-wider">CĂN
+              GIỮA</span>
+          </div>
+          }
+
+          <!-- ── Dynamic Camera Cutout per Model (Aligned 1:1 with 3D GLB Models) ── -->
+          @if (state.selectedModel().id === 'galaxy-s24') {
+          <!-- Samsung Galaxy S24: 3 distinct vertical camera circles with dynamic gunmetal bezel ring & obsidian lenses -->
+          <div class="pointer-events-none absolute z-20 flex flex-col gap-3.5 items-center p-1"
+            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent">
+            <div class="h-10 w-10 rounded-full flex items-center justify-center"
+              style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                     box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.25);">
+              <div class="h-[32px] w-[32px] rounded-full border border-[#27272a] flex items-center justify-center overflow-hidden"
+                style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);">
+                <span class="h-2.5 w-2.5 rounded-full bg-[#020203] ring-1 ring-white/10"></span>
+              </div>
             </div>
-          </div>
-
-          <!-- Lens 2 (Bottom-Left: Ultra-Wide) -->
-          <div
-            class="absolute left-[11%] bottom-[11%] h-[42px] w-[42px] rounded-full bg-[#0a0a0d] ring-2 ring-[#404352] flex items-center justify-center shadow-md">
-            <div
-              class="h-6 w-6 rounded-full bg-radial from-[#2a3045] to-[#04060a] ring-1 ring-[#1e2330] flex items-center justify-center">
-              <span class="h-2 w-2 rounded-full bg-[#1e40af]/60"></span>
+            <div class="h-10 w-10 rounded-full flex items-center justify-center"
+              style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                     box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.25);">
+              <div class="h-[32px] w-[32px] rounded-full border border-[#27272a] flex items-center justify-center overflow-hidden"
+                style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);">
+                <span class="h-2.5 w-2.5 rounded-full bg-[#020203] ring-1 ring-white/10"></span>
+              </div>
             </div>
-          </div>
-
-          <!-- Lens 3 (Middle-Right: Telephoto) -->
-          <div
-            class="absolute right-[11%] top-1/2 -translate-y-1/2 h-[42px] w-[42px] rounded-full bg-[#0a0a0d] ring-2 ring-[#404352] flex items-center justify-center shadow-md">
-            <div
-              class="h-6 w-6 rounded-full bg-radial from-[#2a3045] to-[#04060a] ring-1 ring-[#1e2330] flex items-center justify-center">
-              <span class="h-2 w-2 rounded-full bg-[#1e40af]/60"></span>
+            <div class="h-10 w-10 rounded-full flex items-center justify-center"
+              style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                     box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.25);">
+              <div class="h-[32px] w-[32px] rounded-full border border-[#27272a] flex items-center justify-center overflow-hidden"
+                style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);">
+                <span class="h-2.5 w-2.5 rounded-full bg-[#020203] ring-1 ring-white/10"></span>
+              </div>
             </div>
+            <!-- Small frosted flash -->
+            <div class="absolute -right-3 top-2 h-3 w-3 rounded-full bg-slate-200 ring-1 ring-white/60 shadow-xs"></div>
           </div>
-
-          <!-- True Tone Flash (Top-Right) -->
+          } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
+          <!-- Xiaomi 14 Ultra: Large Leica circular camera bump with knurled bezel ring & 4 optical lenses -->
           <div
-            class="absolute right-[19%] top-[15%] h-[15px] w-[15px] rounded-full bg-radial from-[#fef08a] to-[#ca8a04] ring-1 ring-white/50 shadow-xs">
+            class="pointer-events-none absolute z-20 rounded-full transition-all duration-200 p-2.5 flex items-center justify-center"
+            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent"
+            style="background: linear-gradient(145deg, #22242a 0%, #141417 70%, #09090b 100%);
+                   box-shadow: 0 18px 36px -6px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.2), 0 0 0 2px #c09d3b;
+                   border: 2px solid #3f3f46;">
+            <div class="grid grid-cols-2 gap-3.5 place-items-center">
+              <span class="h-9 w-9 rounded-full flex items-center justify-center shadow-lg"
+                style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 1px solid #27272a;">
+                <span class="h-6 w-6 rounded-full block" style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);"></span>
+              </span>
+              <span class="h-9 w-9 rounded-full flex items-center justify-center shadow-lg"
+                style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 1px solid #27272a;">
+                <span class="h-6 w-6 rounded-full block" style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);"></span>
+              </span>
+              <span class="h-9 w-9 rounded-full flex items-center justify-center shadow-lg"
+                style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 1px solid #27272a;">
+                <span class="h-6 w-6 rounded-full block" style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);"></span>
+              </span>
+              <span class="h-9 w-9 rounded-full flex items-center justify-center shadow-lg"
+                style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 1px solid #27272a;">
+                <span class="h-6 w-6 rounded-full block" style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);"></span>
+              </span>
+            </div>
+            <span class="absolute font-mono text-[7px] font-black text-amber-300 tracking-[0.25em] uppercase select-none drop-shadow-xs">LEICA SUMMILUX</span>
           </div>
-
-          <!-- LiDAR Sensor (Bottom-Right) -->
+          } @else {
+          <!-- Apple iPhone Pro: Photorealistic Matte Obsidian Camera Module (Aligned 1:1 with 3D model) -->
           <div
-            class="absolute right-[21%] bottom-[16%] h-[13px] w-[13px] rounded-full bg-[#050507] ring-1 ring-[#374151]">
-          </div>
+            class="pointer-events-none absolute z-20 rounded-[34px] transition-all duration-200"
+            [style.left.%]="cameraCutout().xPercent" [style.top.%]="cameraCutout().yPercent"
+            [style.width.%]="cameraCutout().widthPercent" [style.height.%]="cameraCutout().heightPercent"
+            style="background: linear-gradient(145deg, #22242a 0%, #151619 50%, #0d0e11 100%);
+                   box-shadow: 0 10px 22px -3px rgba(0, 0, 0, 0.5), 0 3px 6px -1px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.7);
+                   border: 1px solid rgba(255, 255, 255, 0.08);">
 
-          <!-- Microphone hole -->
-          <div class="absolute right-[8%] top-[68%] h-1.5 w-1.5 rounded-full bg-[#111]"></div>
-        </div>
-        }
+            <!-- Subtle Matte Plateau Bevel Rim -->
+            <div class="absolute inset-[2px] rounded-[32px] border border-white/5 pointer-events-none"></div>
+
+            <!-- ── Lens 1: Top-Left (Main 48MP Wide) ── -->
+            <div class="absolute left-[10%] top-[12%] h-[46px] w-[46px] rounded-full flex items-center justify-center"
+              style="background: conic-gradient(from 45deg, #32353e, #1c1d22, #292b32, #16171b, #32353e);
+                     box-shadow: 0 5px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.25);">
+              <div class="h-[39px] w-[39px] rounded-full border border-[#272930] flex items-center justify-center shadow-inner"
+                style="background: #111215;">
+                <div class="relative h-[31px] w-[31px] rounded-full overflow-hidden flex items-center justify-center"
+                  style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);
+                         box-shadow: inset 0 2px 4px rgba(0,0,0,0.85);">
+                  <span class="h-3 w-3 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                    <span class="h-1 w-1 rounded-full bg-black"></span>
+                  </span>
+                  <span class="absolute top-1 left-2 h-2.5 w-4 rounded-full opacity-15 transform -rotate-25 pointer-events-none"
+                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Lens 2: Bottom-Left (Ultra-Wide 12MP) ── -->
+            <div class="absolute left-[10%] bottom-[12%] h-[46px] w-[46px] rounded-full flex items-center justify-center"
+              style="background: conic-gradient(from 45deg, #32353e, #1c1d22, #292b32, #16171b, #32353e);
+                     box-shadow: 0 5px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.25);">
+              <div class="h-[39px] w-[39px] rounded-full border border-[#272930] flex items-center justify-center shadow-inner"
+                style="background: #111215;">
+                <div class="relative h-[31px] w-[31px] rounded-full overflow-hidden flex items-center justify-center"
+                  style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);
+                         box-shadow: inset 0 2px 4px rgba(0,0,0,0.85);">
+                  <span class="h-3 w-3 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                    <span class="h-1 w-1 rounded-full bg-black"></span>
+                  </span>
+                  <span class="absolute top-1 left-2 h-2.5 w-4 rounded-full opacity-15 transform -rotate-25 pointer-events-none"
+                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Lens 3: Middle-Right (Telephoto 5x Periscope) ── -->
+            <div class="absolute right-[10%] top-1/2 -translate-y-1/2 h-[46px] w-[46px] rounded-full flex items-center justify-center"
+              style="background: conic-gradient(from 45deg, #32353e, #1c1d22, #292b32, #16171b, #32353e);
+                     box-shadow: 0 5px 12px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.25);">
+              <div class="h-[39px] w-[39px] rounded-full border border-[#272930] flex items-center justify-center shadow-inner"
+                style="background: #111215;">
+                <div class="relative h-[31px] w-[31px] rounded-full overflow-hidden flex items-center justify-center"
+                  style="background: radial-gradient(circle at 40% 35%, #24262e 0%, #121316 55%, #050607 100%);
+                         box-shadow: inset 0 2px 4px rgba(0,0,0,0.85);">
+                  <span class="h-3 w-3 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                    <span class="h-1 w-1 rounded-full bg-black"></span>
+                  </span>
+                  <span class="absolute top-1 left-2 h-2.5 w-4 rounded-full opacity-15 transform -rotate-25 pointer-events-none"
+                    style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Dual-LED True Tone Flash (Frosted Silver/White, 1:1 with 3D model) ── -->
+            <div class="absolute right-[18%] top-[14%] h-[20px] w-[20px] rounded-full flex items-center justify-center"
+              style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);
+                     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4);">
+              <div class="h-[15px] w-[15px] rounded-full flex items-center justify-center overflow-hidden border border-white/40"
+                style="background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 55%, #94a3b8 100%);
+                       box-shadow: inset 0 1px 2px rgba(0,0,0,0.15);">
+                <div class="h-[6px] w-[6px] rounded-full bg-white shadow-[0_0_3px_rgba(255,255,255,0.8)]"></div>
+              </div>
+            </div>
+
+            <!-- ── Optical LiDAR Scanner (Matte Black Sensor) ── -->
+            <div class="absolute right-[20%] bottom-[15%] h-[18px] w-[18px] rounded-full flex items-center justify-center"
+              style="background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
+                     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.15);">
+              <div class="h-[13px] w-[13px] rounded-full overflow-hidden"
+                style="background: radial-gradient(circle at 40% 40%, #18181b 0%, #09090b 60%, #000000 100%);
+                       box-shadow: inset 0 1.5px 3px rgba(0,0,0,0.9);">
+              </div>
+            </div>
+
+            <!-- ── Rear Precision Microphone Pinhole ── -->
+            <div class="absolute right-[13%] top-[38%] h-[4px] w-[4px] rounded-full bg-[#050608] shadow-[inset_0_1px_1px_rgba(0,0,0,0.9),0_0.5px_0.5px_rgba(255,255,255,0.15)]"></div>
+          </div>
+          }
 
 
 
@@ -1012,11 +1133,9 @@
             <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none"
               [style.textAlign]="layer.textAlign || 'center'" [style.width.px]="(layer.width / 100) * 300"
               [style.fontFamily]="layer.fontFamily" [style.fontSize.px]="layer.fontSize"
-              [style.color]="layer.textEffect === 'hollow' ? 'transparent' : layer.textColor"
+              [style.color]="layer.textColor"
               [style.fontWeight]="layer.fontWeight ?? 'bold'" [style.fontStyle]="layer.fontStyle ?? 'normal'"
-              [style.textDecoration]="layer.textDecoration ?? 'none'"
-              [style.textShadow]="getTextShadow(layer.textEffect, layer.textColor)"
-              [style.webkitTextStroke]="layer.textEffect === 'hollow' ? '1.5px ' + layer.textColor : 'none'">{{
+              [style.textDecoration]="layer.textDecoration ?? 'none'">{{
               layer.content }}</div>
             }
             @if (layer.type === 'sticker') {
@@ -1099,8 +1218,9 @@
         </div>
         }
         }
-      </div>
-    </div>
+      </div> <!-- Closes #case-viewport -->
+      </div> <!-- Closes Smartphone Chassis Wrapper -->
+    </div> <!-- Closes Phone Mockup Canvas zoom container -->
 
 
 
@@ -1153,7 +1273,10 @@
         class="flex flex-col items-center justify-center p-5 text-center text-xs text-ink-soft h-full w-full bg-white/70 backdrop-blur-xs">
         <div
           class="mb-2.5 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 shadow-xs">
-          <span class="text-2xl">📱</span>
+          <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <rect x="5" y="2" width="14" height="20" rx="3" stroke-width="2"/>
+            <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </div>
         <p class="font-display font-bold text-ink text-xs mb-1">Chưa hỗ trợ Preview 3D</p>
         <p class="text-[10px] text-ink-soft leading-relaxed max-w-[170px]">
@@ -1179,7 +1302,12 @@
     <div class="mt-2 text-center px-3">
       <span
         class="inline-flex items-center gap-1 text-[10px] text-amber-800 font-semibold bg-amber-50 border border-amber-200/80 rounded-full px-3 py-1 shadow-xs">
-        <span>ℹ️</span> Ốp lưng được in chuẩn theo phôi 2D
+        <svg class="h-3 w-3 text-amber-700 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" stroke-width="2"/>
+          <line x1="12" y1="16" x2="12" y2="12" stroke-width="2"/>
+          <line x1="12" y1="8" x2="12.01" y2="8" stroke-width="2"/>
+        </svg>
+        Ốp lưng được in chuẩn theo phôi 2D
       </span>
     </div>
     }
@@ -1221,7 +1349,9 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-800 text-xs shadow-2xs">
-              🛡️
+              <svg class="h-3.5 w-3.5 text-brand-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
             </span>
             <div>
               <p class="text-xs font-bold text-ink">Polycarbonate Ultra-Defense</p>
@@ -1250,7 +1380,12 @@
         <div class="border-t border-line/70 pt-2.5 flex items-center justify-between">
           <div>
             <p class="text-[9.5px] font-semibold text-ink-soft">Đồng giá in hoàn thiện</p>
-            <p class="text-[8.5px] font-medium text-emerald-600">✓ Đổi mới 1:1 trong 30 ngày</p>
+            <p class="text-[8.5px] font-medium text-emerald-600 flex items-center gap-1">
+              <svg class="h-2.5 w-2.5 inline text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Đổi mới 1:1 trong 30 ngày</span>
+            </p>
           </div>
           <div class="text-right">
             <span class="font-display text-sm font-black text-brand-800 tracking-tight">250.000₫</span>
@@ -1340,11 +1475,18 @@
   <span>{{ toast.message }}</span>
   @if (toast.showCartLink) {
   <a routerLink="/cart"
-    class="rounded-pill bg-white px-3 py-1 text-[11px] font-black text-brand-900 transition hover:bg-brand-100">
-    Xem giỏ hàng →
+    class="flex items-center gap-1 rounded-pill bg-white px-3 py-1 text-[11px] font-black text-brand-900 transition hover:bg-brand-100">
+    <span>Xem giỏ hàng</span>
+    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+    </svg>
   </a>
   }
-  <button type="button" (click)="dismissToast()" class="text-white/60 hover:text-white cursor-pointer ml-1">✕</button>
+  <button type="button" (click)="dismissToast()" class="text-white/60 hover:text-white cursor-pointer ml-1 p-0.5 rounded-full hover:bg-white/10" title="Đóng">
+    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
 </div>
 }
 
@@ -1397,9 +1539,12 @@
 
     <div class="mt-6 flex flex-col gap-2">
       <button type="button" (click)="onGuestLoginClick()"
-        class="w-full rounded-pill py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow cursor-pointer"
+        class="w-full flex items-center justify-center gap-1.5 rounded-pill py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow cursor-pointer"
         style="background: var(--grad-primary)">
-        Đăng nhập / Đăng ký ngay →
+        <span>Đăng nhập / Đăng ký ngay</span>
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
       </button>
       <button type="button" (click)="closeAuthModal()"
         class="w-full rounded-pill border border-line py-2 text-xs font-semibold text-ink-soft hover:bg-surface hover:text-ink cursor-pointer transition-colors">
@@ -1429,7 +1574,9 @@
     <div
       class="my-3.5 rounded-xl bg-surface p-2.5 text-xs text-ink-soft flex items-center justify-center gap-3 border border-line">
       <span>Gốc: <strong>{{ resizeNoticeInfo()?.originalSizeMb }} MB</strong></span>
-      <span class="text-brand-800 font-bold">➔</span>
+      <svg class="h-3 w-3 text-brand-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
       <span class="text-emerald-600 font-bold">Tối ưu: ~{{ resizeNoticeInfo()?.optimizedSizeMb }} MB</span>
     </div>
     <label
@@ -1489,9 +1636,24 @@
       </div>
     </div>
     <ul class="mb-4 space-y-2 rounded-xl bg-surface p-3 text-xs text-ink-soft">
-      <li class="flex items-center gap-2">✓ Ảnh không xâm phạm quyền sở hữu trí tuệ hoặc hình ảnh bên thứ ba.</li>
-      <li class="flex items-center gap-2">✓ Không chứa nội dung đồi trụy, thù địch hoặc bị pháp luật cấm.</li>
-      <li class="flex items-center gap-2">✓ Bạn hoàn toàn chịu trách nhiệm trước pháp luật về nội dung ảnh.</li>
+      <li class="flex items-center gap-2">
+        <svg class="h-3.5 w-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Ảnh không xâm phạm quyền sở hữu trí tuệ hoặc hình ảnh bên thứ ba.</span>
+      </li>
+      <li class="flex items-center gap-2">
+        <svg class="h-3.5 w-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Không chứa nội dung đồi trụy, thù địch hoặc bị pháp luật cấm.</span>
+      </li>
+      <li class="flex items-center gap-2">
+        <svg class="h-3.5 w-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>Bạn hoàn toàn chịu trách nhiệm trước pháp luật về nội dung ảnh.</span>
+      </li>
     </ul>
     <label class="flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors"
       [class]="consentError() ? 'border-red-400 bg-red-50/50' : 'border-line hover:bg-surface'">
@@ -1502,7 +1664,11 @@
         này</span>
     </label>
     @if (consentError()) {
-    <p class="mt-2 text-[11px] font-bold text-red-600">⚠️ Bạn cần tích chọn xác nhận cam kết để tiếp tục sử dụng ảnh.
+    <p class="mt-2 text-[11px] font-bold text-red-600 flex items-center gap-1.5">
+      <svg class="h-3.5 w-3.5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <span>Bạn cần tích chọn xác nhận cam kết để tiếp tục sử dụng ảnh.</span>
     </p>
     }
 
@@ -1536,14 +1702,23 @@
     (click)="$event.stopPropagation()">
     <div class="flex items-center justify-between pb-3 border-b border-line">
       <div class="flex items-center gap-2">
-        <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-100 text-base">⌨️</span>
+        <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2.5"/>
+            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" stroke-linecap="round"/>
+          </svg>
+        </span>
         <div>
           <h3 class="font-display text-sm font-bold text-ink">Phím tắt thiết kế kiểu Canva</h3>
           <p class="text-[10px] text-ink-soft">Tăng tốc thao tác chỉnh sửa ốp lưng</p>
         </div>
       </div>
       <button type="button" (click)="showShortcutsModal.set(false)"
-        class="rounded-lg p-1.5 text-ink-soft hover:bg-surface hover:text-ink cursor-pointer">✕</button>
+        class="rounded-lg p-1.5 text-ink-soft hover:bg-surface hover:text-ink cursor-pointer" title="Đóng">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
     </div>
 
     <div class="mt-4 space-y-2 max-h-[60vh] overflow-y-auto pr-1">
@@ -1566,7 +1741,7 @@
             class="rounded border border-line bg-surface-alt px-1.5 py-0.5 font-mono text-[11px] font-bold text-red-600 shadow-xs">Delete</kbd>
           <span class="text-ink-soft">/</span>
           <kbd
-            class="rounded border border-line bg-surface-alt px-1.5 py-0.5 font-mono text-[11px] font-bold text-red-600 shadow-xs">⌫</kbd>
+            class="rounded border border-line bg-surface-alt px-1.5 py-0.5 font-mono text-[11px] font-bold text-red-600 shadow-xs">Backspace</kbd>
         </div>
       </div>
 

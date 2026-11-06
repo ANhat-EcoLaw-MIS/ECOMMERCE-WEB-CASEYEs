@@ -212,7 +212,7 @@ export class StudioWorkspace implements OnDestroy {
     if (!layer) return;
     this.state.updateLayer(layerId, { flipH: !layer.flipH });
     this.trigger3dTextureSync(true);
-    this.showToast(!layer.flipH ? '↔️ Đã lật ngang' : 'Đã khôi phục hướng ngang');
+    this.showToast(!layer.flipH ? 'Đã lật ngang' : 'Đã khôi phục hướng ngang');
   }
 
   protected toggleFlipV(layerId: string): void {
@@ -220,7 +220,7 @@ export class StudioWorkspace implements OnDestroy {
     if (!layer) return;
     this.state.updateLayer(layerId, { flipV: !layer.flipV });
     this.trigger3dTextureSync(true);
-    this.showToast(!layer.flipV ? '↕️ Đã lật dọc' : 'Đã khôi phục hướng dọc');
+    this.showToast(!layer.flipV ? 'Đã lật dọc' : 'Đã khôi phục hướng dọc');
   }
 
   // Canva-style Center Alignment
@@ -230,7 +230,7 @@ export class StudioWorkspace implements OnDestroy {
     if (axis === 'y' || axis === 'both') patch.y = 50;
     this.state.updateLayer(layerId, patch);
     this.trigger3dTextureSync(true);
-    this.showToast('🎯 Đã căn giữa canvas');
+    this.showToast('Đã căn giữa canvas');
   }
 
   // Canva-style Text Style Toggles
@@ -277,10 +277,10 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly gradientType = signal<'linear' | 'radial'>('linear');
 
   protected readonly gradientAnglePresets = [
-    { label: 'Dọc ⬇️', angle: 180 },
-    { label: 'Chéo ↘️', angle: 135 },
-    { label: 'Ngang ➡️', angle: 90 },
-    { label: 'Chéo ↗️', angle: 45 },
+    { label: 'Dọc (180°)', angle: 180 },
+    { label: 'Chéo (135°)', angle: 135 },
+    { label: 'Ngang (90°)', angle: 90 },
+    { label: 'Góc (45°)', angle: 45 },
   ];
 
   protected readonly curatedGradients = [
@@ -369,6 +369,15 @@ export class StudioWorkspace implements OnDestroy {
 
   protected setTextEffect(layerId: string, effect: string): void {
     this.state.updateLayer(layerId, { textEffect: effect } as any);
+    this.trigger3dTextureSync(true);
+  }
+
+  protected adjustFontSize(layerId: string, delta: number): void {
+    const layer = this.state.layers().find((l) => l.id === layerId);
+    if (!layer || layer.type !== 'text') return;
+    const current = (layer as any).fontSize || 24;
+    const next = Math.max(10, Math.min(120, current + delta));
+    this.state.updateLayer(layerId, { fontSize: next } as any);
     this.trigger3dTextureSync(true);
   }
 
@@ -521,7 +530,7 @@ export class StudioWorkspace implements OnDestroy {
   // --- Save & Naming Flow (Issue 13 & 14) ---
   protected onSaveDesign(): void {
     if (!this.state.hasLayers()) {
-      this.showToast('⚠️ Canvas đang trống: Hãy thêm ít nhất một phần tử trước khi lưu.');
+      this.showToast('Canvas đang trống: Hãy thêm ít nhất một phần tử trước khi lưu.');
       return;
     }
 
@@ -599,7 +608,7 @@ export class StudioWorkspace implements OnDestroy {
       this.state.savedDesigns.update((list) => [newDesign, ...list]);
     }
 
-    this.showToast(`✓ Đã lưu thiết kế "${currentName}" thành công!`, 3500, false);
+    this.showToast(`Đã lưu thiết kế "${currentName}" thành công!`, 3500, false);
   }
 
   private startAutoSaveTimer(): void {
@@ -634,12 +643,12 @@ export class StudioWorkspace implements OnDestroy {
   protected onAddToCart(): void {
     if (this.state.designStatus() === 'REJECTED') {
       this.showToast(
-        '⚠️ Bản thiết kế này đang ở trạng thái từ chối do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa trước khi đặt mua.'
+        'Bản thiết kế này đang ở trạng thái từ chối do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa trước khi đặt mua.'
       );
       return;
     }
     if (!this.state.hasLayers()) {
-      this.showToast('⚠️ Canvas đang trống: Hãy thêm ít nhất một phần tử trước khi thêm vào giỏ.');
+      this.showToast('Canvas đang trống: Hãy thêm ít nhất một phần tử trước khi thêm vào giỏ.');
       return;
     }
 
@@ -653,7 +662,7 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    this.showToast('✓ Đã thêm thiết kế vào giỏ hàng thành công!', 4000, true);
+    this.showToast('Đã thêm thiết kế vào giỏ hàng thành công!', 4000, true);
   }
 
   protected dismissToast(): void {
@@ -709,7 +718,7 @@ export class StudioWorkspace implements OnDestroy {
         });
 
         localStorage.removeItem('caseyes_guest_draft');
-        this.showToast('✓ Đã tự động đồng bộ bản thiết kế từ phiên khách vãng lai vào tài khoản của bạn!');
+        this.showToast('Đã tự động đồng bộ bản thiết kế từ phiên khách vãng lai vào tài khoản của bạn!');
       }
     } catch {
       // Bỏ qua lỗi parse nếu có
@@ -958,14 +967,14 @@ export class StudioWorkspace implements OnDestroy {
   private processFile(file: File): void {
     const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      this.showToast('⚠️ Hệ thống chỉ hỗ trợ định dạng PNG, JPG và WEBP.');
+      this.showToast('Hệ thống chỉ hỗ trợ định dạng PNG, JPG và WEBP.');
       return;
     }
 
     // Auto-resize and optimize images larger than 10MB with modal notice
     if (file.size > 10 * 1024 * 1024) {
       const originalSizeMb = (file.size / (1024 * 1024)).toFixed(1);
-      this.showToast(`⏳ Đang tối ưu dung lượng ảnh (${originalSizeMb} MB)...`, 3000);
+      this.showToast(`Đang tối ưu dung lượng ảnh (${originalSizeMb} MB)...`, 3000);
 
       this.compressAndResizeImage(file)
         .then(({ dataUrl, optimizedSize }) => {
@@ -989,7 +998,7 @@ export class StudioWorkspace implements OnDestroy {
                 this.state.isLowResModalOpen.set(true);
               } else {
                 this.proceedWithUpload(uploadObj);
-                this.showToast(`✓ Đã tối ưu ảnh "${file.name}" (~${optimizedSizeMb} MB) chuẩn in.`);
+                this.showToast(`Đã tối ưu ảnh "${file.name}" (~${optimizedSizeMb} MB) chuẩn in.`);
               }
               return;
             }
@@ -1005,7 +1014,7 @@ export class StudioWorkspace implements OnDestroy {
           img.src = dataUrl;
         })
         .catch(() => {
-          this.showToast('⚠️ Không thể tối ưu ảnh. Vui lòng chọn ảnh khác.');
+          this.showToast('Không thể tối ưu ảnh. Vui lòng chọn ảnh khác.');
         });
       return;
     }
@@ -1426,7 +1435,7 @@ export class StudioWorkspace implements OnDestroy {
 
       if (shouldDelete) {
         this.state.removeLayer(draggedId);
-        this.showToast('🗑️ Đã xóa phần tử ra khỏi canvas', 2500);
+        this.showToast('Đã xóa phần tử ra khỏi canvas', 2500);
         this.isDragInDeleteZone.set(false);
         this.activeDrag = null;
         return;
@@ -1463,7 +1472,7 @@ export class StudioWorkspace implements OnDestroy {
       event.preventDefault();
       if (selId) {
         this.state.duplicateLayer(selId);
-        this.showToast('✓ Đã nhân đôi phần tử (Ctrl+D)');
+        this.showToast('Đã nhân đôi phần tử (Ctrl+D)');
       }
       return;
     }
@@ -1473,7 +1482,7 @@ export class StudioWorkspace implements OnDestroy {
       event.preventDefault();
       if (this.state.canUndo()) {
         this.state.undo();
-        this.showToast('↩️ Hoàn tác (Undo)');
+        this.showToast('Hoàn tác (Undo)');
       }
       return;
     }
@@ -1486,7 +1495,7 @@ export class StudioWorkspace implements OnDestroy {
       event.preventDefault();
       if (this.state.canRedo()) {
         this.state.redo();
-        this.showToast('↪️ Làm lại (Redo)');
+        this.showToast('Làm lại (Redo)');
       }
       return;
     }
@@ -1496,7 +1505,7 @@ export class StudioWorkspace implements OnDestroy {
       if (selId && (!selLayer || !selLayer.isLocked)) {
         event.preventDefault();
         this.state.removeLayer(selId);
-        this.showToast('🗑️ Đã xóa phần tử (Delete)');
+        this.showToast('Đã xóa phần tử (Delete)');
       }
       return;
     }
@@ -1531,13 +1540,13 @@ export class StudioWorkspace implements OnDestroy {
       if (event.key === 't' || event.key === 'T') {
         event.preventDefault();
         this.selectTool('txt');
-        this.showToast('✍️ Đã mở công cụ Chữ (T)');
+        this.showToast('Đã mở công cụ Chữ (T)');
         return;
       }
       if (event.key === 's' || event.key === 'S') {
         event.preventDefault();
         this.selectTool('stk');
-        this.showToast('✨ Đã mở thư viện Sticker (S)');
+        this.showToast('Đã mở thư viện Sticker (S)');
         return;
       }
     }
