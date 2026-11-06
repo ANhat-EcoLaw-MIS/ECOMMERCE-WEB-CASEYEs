@@ -162,6 +162,9 @@ export interface CancellationRecord {
 
 export interface Review {
   readonly stars: number;
+  /** Structured topics tapped by the customer (P1-15), comparable across designs and models. */
+  readonly tags: readonly string[];
+  readonly photoNames: readonly string[];
   readonly comment: string;
   readonly createdAt: string;
 }

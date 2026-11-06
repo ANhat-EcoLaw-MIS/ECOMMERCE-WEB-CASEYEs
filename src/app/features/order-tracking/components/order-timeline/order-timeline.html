@@ -1,15 +1,18 @@
 @let v = view();
 <div [class.opacity-50]="v.dimmed" [class.grayscale]="v.dimmed" [attr.aria-disabled]="v.dimmed || null">
-  <ol class="relative grid gap-2" [style.grid-template-columns]="'repeat(' + v.steps.length + ', minmax(0, 1fr))'" aria-label="Tiến độ đơn hàng">
-    <!-- connector line behind the nodes -->
-    <div aria-hidden="true" class="absolute left-[calc(100%/var(--n)/2)] right-[calc(100%/var(--n)/2)] top-5 h-1 rounded-full bg-line" [style.--n]="v.steps.length">
-      <div class="h-full rounded-full bg-(image:--grad-primary) transition-[width] duration-500 motion-reduce:transition-none" [style.width.%]="progress()"></div>
-    </div>
-
+  <!--
+    Vertical on mobile, horizontal from md (P1-8). The connector to the next step is drawn
+    with ::before (Tailwind before:), coloured when this step is done.
+  -->
+  <ol class="flex flex-col md:grid" [style.grid-template-columns]="'repeat(' + v.steps.length + ', minmax(0, 1fr))'" aria-label="Tiến độ đơn hàng">
     @for (step of v.steps; track step.key) {
-      <li class="relative flex flex-col items-center gap-1.5 text-center" [attr.aria-current]="step.state === 'current' ? 'step' : null">
+      <li
+        class="relative flex gap-3 pb-6 last:pb-0 before:absolute before:left-5 before:top-10 before:bottom-0 before:w-0.5 before:-translate-x-1/2 last:before:hidden md:flex-col md:items-center md:gap-1.5 md:pb-0 md:text-center md:before:left-1/2 md:before:top-5 md:before:bottom-auto md:before:h-1 md:before:w-full md:before:translate-x-0 md:before:-translate-y-1/2"
+        [class]="step.state === 'done' ? 'before:bg-brand-800' : 'before:bg-line'"
+        [attr.aria-current]="step.state === 'current' ? 'step' : null"
+      >
         <span
-          class="grid size-10 place-items-center rounded-full border-2 text-sm font-bold transition-colors"
+          class="relative z-10 grid size-10 shrink-0 place-items-center rounded-full border-2 text-sm font-bold transition-colors"
           [class.border-brand-800]="step.state !== 'upcoming'"
           [class.bg-brand-800]="step.state === 'done'"
           [class.text-white]="step.state === 'done'"
@@ -25,16 +28,25 @@
             {{ $index + 1 }}
           }
         </span>
-        <span class="text-xs font-semibold sm:text-sm" [class.text-ink]="step.state !== 'upcoming'" [class.text-ink-soft]="step.state === 'upcoming'">
-          {{ step.label }}
+        <span class="flex min-w-0 flex-col pt-2 md:pt-0">
+          <span class="text-sm font-semibold" [class.text-ink]="step.state !== 'upcoming'" [class.text-ink-soft]="step.state === 'upcoming'">
+            {{ step.label }}
+            <span class="sr-only">({{ step.state === 'done' ? 'đã xong' : step.state === 'current' ? 'bước hiện tại' : 'chưa tới' }})</span>
+          </span>
+          @if (step.at) {
+            <span class="text-xs text-ink-soft">{{ step.at | date: 'HH:mm dd/MM' }}</span>
+          }
+          @if (step.state === 'current') {
+            <span class="mt-0.5 text-xs text-brand-800 md:hidden">{{ v.caption }}</span>
+          }
         </span>
-        @if (step.at) {
-          <span class="text-[11px] text-ink-soft">{{ step.at | date: 'HH:mm dd/MM' }}</span>
-        }
       </li>
     }
   </ol>
-  <p class="mt-5 rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
+  <p class="mt-5 hidden rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900 md:block">
     <span class="font-semibold">Hiện tại:</span> {{ v.caption }}
   </p>
+  @if (v.dimmed) {
+    <p class="mt-3 text-sm font-semibold text-ink md:hidden">{{ v.caption }}</p>
+  }
 </div>

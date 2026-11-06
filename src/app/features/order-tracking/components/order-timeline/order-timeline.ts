@@ -16,11 +16,5 @@ export class OrderTimeline {
   private readonly clock = inject(Clock);
 
   protected readonly view = computed(() => buildTimeline(this.order(), this.clock.nowSignal()));
-  protected readonly progress = computed(() => {
-    const steps = this.view().steps;
-    const idx = steps.findIndex((s) => s.state === 'current');
-    const last = steps.length - 1;
-    if (steps.every((s) => s.state === 'done')) return 100;
-    return idx <= 0 ? 0 : Math.round((idx / last) * 100);
-  });
+
 }

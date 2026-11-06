@@ -391,10 +391,12 @@ export class OrderTrackingService {
     });
   }
 
-  submitReview(orderId: string, stars: number, comment: string): OpResult {
+  submitReview(orderId: string, input: { stars: number; tags?: readonly string[]; comment?: string; photoNames?: readonly string[] }): OpResult {
     return this.mutate(orderId, {}, (o, _db, now) => {
       if (o.status !== 'Completed' || o.review) throw new BusinessError('Đơn hàng không thể đánh giá');
-      return { ...o, review: { stars, comment: comment.trim(), createdAt: now.toISOString() }, reviewInvitePending: false };
+      if (input.stars < 1 || input.stars > 5) throw new BusinessError('Vui lòng chọn từ 1 đến 5 sao');
+      const review = { stars: input.stars, tags: [...(input.tags ?? [])], photoNames: [...(input.photoNames ?? [])], comment: (input.comment ?? '').trim(), createdAt: now.toISOString() };
+      return { ...o, review, reviewInvitePending: false };
     });
   }
 

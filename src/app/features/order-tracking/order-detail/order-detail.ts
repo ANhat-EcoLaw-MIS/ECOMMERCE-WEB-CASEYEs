@@ -4,25 +4,25 @@ import { RouterLink } from '@angular/router';
 import { NotificationManager } from '../../../shared/ui/notification/notification.manager';
 import { PhoneCaseMock } from '../../../shared/ui/phone-case-mock/phone-case-mock';
 import { CancelDialog, CANCEL_REASONS, CancelMode } from '../components/cancel-dialog/cancel-dialog';
-import { ISSUE_TYPES, ReportIssueDialog } from '../components/report-issue-dialog/report-issue-dialog';
+import { CancelRequestPanel } from '../components/cancel-request-panel/cancel-request-panel';
+import { NotificationBell } from '../components/notification-bell/notification-bell';
 import { OrderTimeline } from '../components/order-timeline/order-timeline';
 import { OtModal } from '../components/ot-modal/ot-modal';
 import { RedeliveryDialog } from '../components/redelivery-dialog/redelivery-dialog';
-import { CancelRequestPanel } from '../components/cancel-request-panel/cancel-request-panel';
 import { RefundProgress } from '../components/refund-progress/refund-progress';
-import { ReviewDialog } from '../components/review-dialog/review-dialog';
+import { ISSUE_TYPES, ReportIssueDialog } from '../components/report-issue-dialog/report-issue-dialog';
+import { ReviewCard } from '../components/review-card/review-card';
 import { StatusBadge } from '../components/status-badge/status-badge';
 import { BTN_GHOST, BTN_PRIMARY, BTN_SECONDARY, simulateLatency } from '../components/ui';
 import { DELIVERY_CONFIG, FAILURE_CAUSES, FAULT_PARTY_LABELS, SHIPPING_TIER_LABELS } from '../config/delivery-config';
 import { STATUS_META, TONE_CLASSES } from '../config/status-style';
-import { formatDayLabel, formatShortDate, toDateKey } from '../domain/calendar';
+import { addDaysIso, formatDayLabel, formatFullDate, toDateKey } from '../domain/calendar';
+import { DetailIntent } from '../domain/actions';
 import {
   canCancelAfterFailure,
   canCancelCod,
-  canRequestCancel,
-  isOnHold,
-  isPrepaid,
   canReportIssue,
+  canRequestCancel,
   canRequestRedelivery,
   canResubmitDesign,
   complaintWindowExpired,
@@ -30,13 +30,15 @@ import {
   faultParty,
   hasOpenTicket,
   isMixed,
+  isPrepaid,
   orderTotal,
 } from '../domain/order-rules';
 import { formatVnd } from '../domain/shipping-fee';
 import { statusLabel } from '../domain/timeline';
-import { ActorType } from '../models/order-tracking.model';
+import { ActorType, OrderItem } from '../models/order-tracking.model';
 import { Clock } from '../services/clock';
 import { OrderTrackingService } from '../services/order-tracking.service';
+import { track } from '../services/tracker';
 
 const ACTOR_LABELS: Record<ActorType, string> = {
   Customer: 'Bạn',
@@ -47,7 +49,17 @@ const ACTOR_LABELS: Record<ActorType, string> = {
   CustomerService: 'Chăm sóc khách hàng',
 };
 
-/** UC-OT-01 detail view (FR-OT-01..04, 13, 18) with the customer actions of UC-OT-02..05. */
+/** "Bạn cần làm gì?" banner content (P1-6): one sentence + one button. */
+interface Todo {
+  readonly text: string;
+  readonly button: string;
+  readonly intent: DetailIntent;
+}
+
+/**
+ * UC-OT-01 detail view. Reading order follows the customer's questions (P1-5):
+ * what must I do → where is my order and when will it arrive → what did I order → help.
+ */
 @Component({
   selector: 'app-order-detail',
   imports: [
@@ -60,9 +72,10 @@ const ACTOR_LABELS: Record<ActorType, string> = {
     CancelDialog,
     ReportIssueDialog,
     RedeliveryDialog,
-    ReviewDialog,
+    ReviewCard,
     RefundProgress,
     CancelRequestPanel,
+    NotificationBell,
   ],
   templateUrl: './order-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,6 +83,8 @@ const ACTOR_LABELS: Record<ActorType, string> = {
 export class OrderDetail {
   /** Route param (withComponentInputBinding). */
   readonly orderCode = input.required<string>();
+  /** Deep link from the order card / notifications (`?action=`). */
+  readonly action = input<string>();
 
   private readonly service = inject(OrderTrackingService);
   private readonly clock = inject(Clock);
@@ -79,14 +94,10 @@ export class OrderDetail {
   protected readonly btnSecondary = BTN_SECONDARY;
   protected readonly btnGhost = BTN_GHOST;
   protected readonly formatVnd = formatVnd;
-  protected readonly formatShortDate = formatShortDate;
   protected readonly actorLabels = ACTOR_LABELS;
   protected readonly tierLabels = SHIPPING_TIER_LABELS;
   protected readonly fixDays = DELIVERY_CONFIG.designFixDeadlineDays;
-
-  protected starsText(n: number): string {
-    return '★'.repeat(n);
-  }
+  protected readonly todoBox = `flex flex-col gap-3 rounded-card border p-4 sm:flex-row sm:items-center sm:justify-between ${TONE_CLASSES.warning.box}`;
 
   protected readonly order = computed(() => {
     const o = this.service.findByCode(decodeURIComponent(this.orderCode()));
@@ -94,27 +105,25 @@ export class OrderDetail {
   });
   private readonly now = computed(() => this.clock.nowSignal());
 
-  // dialogs
+  // dialogs and panels
   protected readonly cancelMode = signal<CancelMode | null>(null);
   protected readonly issueOpen = signal(false);
   protected readonly redeliveryOpen = signal(false);
-  protected readonly reviewOpen = signal(false);
   protected readonly confirmOpen = signal(false);
+  protected readonly lightbox = signal<OrderItem | null>(null);
+  protected readonly paymentOpen = signal(false);
   protected readonly busy = signal(false);
-  private reviewInviteShown = false;
+  private viewedCode = '';
+  private intentHandled = false;
 
-  // derived state for buttons (UI hint; the service re-checks every rule)
+  // derived state (UI hint; the service re-checks every rule)
   protected readonly meta = computed(() => STATUS_META[this.order()!.status]);
   protected readonly infoBox = computed(() => `rounded-card border p-5 ${TONE_CLASSES[this.meta().tone].box}`);
+  protected readonly label = computed(() => statusLabel(this.order()!, this.now()));
   protected readonly mixed = computed(() => isMixed(this.order()!));
   protected readonly total = computed(() => orderTotal(this.order()!));
-  protected readonly label = computed(() => statusLabel(this.order()!, this.now()));
-  /** COD inside the hidden window: direct cancel (FR-OT-05). */
   protected readonly canCancelCod = computed(() => canCancelCod(this.order()!, this.now()));
-  /** Prepaid before production: "Yêu cầu hủy đơn" to CSKH (FR-OT-19). */
   protected readonly canRequestCancel = computed(() => canRequestCancel(this.order()!));
-  protected readonly onHold = computed(() => isOnHold(this.order()!));
-  /** Prepaid order already in production: explain instead of a button (P0-4). */
   protected readonly cannotCancelNote = computed(() => {
     const o = this.order()!;
     return isPrepaid(o) && ['In_Production', 'Ready_for_Pickup', 'In_Transit'].includes(o.status);
@@ -124,6 +133,10 @@ export class OrderDetail {
   protected readonly lastRejection = computed(() => this.order()!.moderationReviews.filter((r) => r.decision === 'Rejected').at(-1));
   protected readonly canConfirm = computed(() => this.order()!.status === 'Delivered' && !hasOpenTicket(this.order()!));
   protected readonly canReport = computed(() => canReportIssue(this.order()!, this.now()));
+  protected readonly reportDeadline = computed(() => {
+    const d = this.order()!.deliveredAt;
+    return d ? formatFullDate(addDaysIso(d, DELIVERY_CONFIG.complaintWindowDays)) : '';
+  });
   protected readonly reportExpired = computed(() => complaintWindowExpired(this.order()!, this.now()));
   protected readonly openTicket = computed(() => this.order()!.tickets.find((t) => t.open));
   protected readonly closedTickets = computed(() => this.order()!.tickets.filter((t) => !t.open));
@@ -135,6 +148,9 @@ export class OrderDetail {
     const p = faultParty(o);
     return o.failureCause && p ? { cause: FAILURE_CAUSES[o.failureCause].label, party: FAULT_PARTY_LABELS[p] } : null;
   });
+  protected readonly refundNeedsCustomer = computed(() =>
+    this.order()!.refunds.some((r) => (r.status === 'Pending_Approval' && !r.refundMethod) || r.status === 'Refund_Pending_Retry'),
+  );
   protected readonly cancelReasonLabel = computed(() => {
     const c = this.order()!.cancellation;
     if (!c) return '';
@@ -149,42 +165,100 @@ export class OrderDetail {
       Warehouse_Hold_Expired: 'Giao thất bại quá hạn lưu kho',
     }[c.cause];
   });
-  protected readonly showEdd = computed(() => !['Cancelled', 'Delivery_Failed', 'Refunded'].includes(this.order()!.status));
+
+  /** P1-6: the one thing the customer must do, if any. */
+  protected readonly todo = computed<Todo | null>(() => {
+    const o = this.order()!;
+    if (o.status === 'Action_Required' && this.canResubmit() && o.rejectedAt) {
+      const due = formatFullDate(addDaysIso(o.rejectedAt, DELIVERY_CONFIG.designFixDeadlineDays));
+      return { text: `Thiết kế của bạn chưa đạt chính sách nội dung. Chỉnh sửa trước ${due} để đơn tiếp tục được in.`, button: 'Chỉnh sửa thiết kế', intent: 'edit-design' };
+    }
+    if (o.status === 'Delivery_Failed' && o.warehouseHold && !o.warehouseHold.disputed && this.canRedeliver()) {
+      return { text: `Giao hàng chưa thành công. Hàng được giữ đến ${formatFullDate(o.warehouseHold.expiresAt)}, hãy chọn cách giao lại.`, button: 'Chọn cách giao lại', intent: 'redeliver' };
+    }
+    if (this.refundNeedsCustomer()) {
+      return { text: 'Shop cần thông tin để hoàn tiền cho bạn: nhập tài khoản hoặc chọn nhận voucher.', button: 'Cung cấp thông tin nhận hoàn', intent: 'refund' };
+    }
+    return null;
+  });
+
+  /** Mobile fixed bar (P1-5): the single primary action of the current state. */
+  protected readonly mobileAction = computed<Todo | null>(() => {
+    const t = this.todo();
+    if (t) return t;
+    return this.canConfirm() ? { text: '', button: 'Đã nhận được hàng', intent: 'received' } : null;
+  });
+
+  protected readonly showEdd = computed(() => !['Cancelled', 'Delivery_Failed', 'Refunded', 'Completed'].includes(this.order()!.status));
   protected readonly edd = computed(() => {
     const o = this.order()!;
     const handling = o.hasCustomItem ? DELIVERY_CONFIG.handlingDays.custom : DELIVERY_CONFIG.handlingDays.stock;
     const t = o.shipping.transitDays;
     const express = o.shippingTier === 'Express';
+    const sameDay = o.earliestEDD === toDateKey(new Date(o.confirmedAt ?? o.confirmDueAt ?? o.createdAt));
     return {
       express,
-      range: express || o.earliestEDD === o.latestEDD
-        ? formatDayLabel(o.earliestEDD)
-        : `${formatDayLabel(o.earliestEDD)} – ${formatDayLabel(o.latestEDD)}`,
-      handling: `${handling.min}–${handling.max} ngày làm việc`,
-      shipping: `${t.min === t.max ? t.min : `${t.min}–${t.max}`} ngày`,
-      expressLine: o.earliestEDD === toDateKey(new Date(o.confirmedAt ?? o.confirmDueAt ?? o.createdAt)) ? 'Giao trong ngày' : 'Giao trong ngày làm việc kế tiếp',
-      adjusted: o.redeliveryUsed || o.qcReprintCount > 0 || o.tickets.some((t) => t.resolution === 'Reprint'),
+      title: o.status === 'Delivered' ? 'Đã giao' : express ? (sameDay ? 'Giao trong hôm nay' : 'Giao ngày làm việc kế tiếp') : 'Dự kiến giao',
+      range: express || o.earliestEDD === o.latestEDD ? formatDayLabel(o.earliestEDD) : `${formatDayLabel(o.earliestEDD)} – ${formatDayLabel(o.latestEDD)}`,
+      why: express
+        ? `Đơn Hỏa tốc xác nhận trước ${String(DELIVERY_CONFIG.expressCutoff.hour).padStart(2, '0')}:00 ngày làm việc được giao trong ngày, sau giờ này giao ngày làm việc kế tiếp.`
+        : `Xử lý & in ${handling.min}–${handling.max} ngày làm việc (Thứ 2–Thứ 6) + vận chuyển ${t.min === t.max ? t.min : `${t.min}–${t.max}`} ngày (Thứ 2–Thứ 7, theo địa chỉ của bạn).`,
+      adjusted: o.redeliveryUsed || o.qcReprintCount > 0 || o.tickets.some((t) => t.resolution === 'Reprint') || o.cancelRequests.some((r) => r.status === 'Rejected'),
     };
   });
   protected readonly logs = computed(() => [...this.order()!.logs].reverse());
 
   constructor() {
-    // UC-OT-09 step 6: invite to review the first time the order is opened after auto-completion.
     effect(() => {
       const o = this.order();
-      if (!o || this.reviewInviteShown) return;
-      if (o.status === 'Completed' && o.reviewInvitePending && !o.review) {
-        this.reviewInviteShown = true;
-        untracked(() => this.reviewOpen.set(true));
-      }
+      if (!o || o.orderCode === this.viewedCode) return;
+      this.viewedCode = o.orderCode;
+      untracked(() => track('order_detail_viewed', { status: o.status, orderType: o.hasCustomItem ? (isMixed(o) ? 'mixed' : 'custom') : 'stock' }, o.orderCode));
     });
+    // Deep links: open the right dialog once (card buttons, notifications).
+    effect(() => {
+      const intent = this.action() as DetailIntent | undefined;
+      const o = this.order();
+      if (!o || !intent || this.intentHandled) return;
+      this.intentHandled = true;
+      untracked(() => this.runIntent(intent));
+    });
+  }
+
+  protected runIntent(intent: DetailIntent): void {
+    switch (intent) {
+      case 'received':
+        if (this.canConfirm()) this.confirmOpen.set(true);
+        break;
+      case 'redeliver':
+        if (this.canRedeliver()) this.redeliveryOpen.set(true);
+        break;
+      case 'edit-design':
+        if (this.canResubmit()) void this.resubmit();
+        break;
+      case 'refund':
+        document.getElementById('refund-progress')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        break;
+    }
+  }
+
+  protected openCancel(mode: CancelMode): void {
+    if (mode === 'cod' || mode === 'request') track('cancel_clicked', { kind: mode }, this.order()!.orderCode);
+    this.cancelMode.set(mode);
+  }
+
+  protected openLightbox(item: OrderItem): void {
+    track('design_preview_opened', {}, this.order()!.orderCode);
+    this.lightbox.set(item);
+  }
+
+  protected onWhy(event: Event): void {
+    if ((event.target as HTMLDetailsElement).open) track('edd_why_opened', {}, this.order()!.orderCode);
   }
 
   protected issueLabel(key: string): string {
     return ISSUE_TYPES.find((t) => t.key === key)?.label ?? key;
   }
-
-
 
   protected resolutionLabel(r: string | undefined): string {
     return r ? { Reprint: 'In lại / gửi lại miễn phí', Voucher: 'Voucher đền bù', Refund: 'Hoàn tiền 100%', Rejected: 'Từ chối' }[r] ?? r : 'Đã xử lý';
@@ -205,9 +279,8 @@ export class OrderDetail {
       this.toast.show({ variant: 'warning', title: 'Chưa thể xác nhận', message: r.error.message });
       return;
     }
-    this.toast.show({ variant: 'functional', title: 'Đơn hàng đã hoàn tất', message: 'Cảm ơn bạn đã mua sắm tại CasEYE\'s!' });
-    this.reviewInviteShown = true;
-    this.reviewOpen.set(true);
+    track('received_confirmed', {}, this.order()!.orderCode);
+    this.toast.show({ variant: 'functional', title: 'Đơn hàng đã hoàn tất', message: "Cảm ơn bạn đã mua sắm tại CasEYE's! Bạn có thể đánh giá sản phẩm ngay bên dưới." });
   }
 
   protected async resubmit(): Promise<void> {
@@ -219,7 +292,7 @@ export class OrderDetail {
     this.toast.show(
       r.error
         ? { variant: 'warning', title: 'Chưa gửi lại được', message: r.error.message }
-        : { variant: 'functional', title: 'Đã gửi lại thiết kế', message: 'Nhân viên sẽ kiểm tra lại bản thiết kế mới.' },
+        : { variant: 'functional', title: 'Đã gửi lại thiết kế', message: 'Nhân viên sẽ kiểm tra lại bản thiết kế mới. (Mô phỏng: Design Studio chưa có trang chỉnh sửa.)' },
     );
   }
 }

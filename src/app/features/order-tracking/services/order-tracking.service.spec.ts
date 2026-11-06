@@ -234,7 +234,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
     ok(service.applyComplaintResult(o.id, 'Rejected', 'Đúng mẫu đã đặt', CSKH));
     expect(Math.abs(new Date(get(o.id).autoCompleteAt!).getTime() - autoAt - 20 * HOUR)).toBeLessThan(1000);
     ok(service.confirmReceived(o.id, {}));
-    ok(service.submitReview(o.id, 5, 'Đẹp'));
+    ok(service.submitReview(o.id, { stars: 5, tags: ['Đúng màu'], comment: 'Đẹp' }));
     expect(get(o.id).review?.stars).toBe(5);
   });
 
