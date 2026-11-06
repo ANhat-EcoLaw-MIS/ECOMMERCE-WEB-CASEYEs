@@ -1,21 +1,60 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { POLICY_HIGHLIGHTS, POLICY_SECTIONS, POLICY_VERSION } from '../config/order-policy';
+import { track } from '../services/tracker';
 
-/** FR-OT-17: full order policy owned by Quản lý đơn hàng (Checkout links here from its consent tick). */
+/**
+ * FR-OT-17 / P1-17: full order policy owned by Quản lý đơn hàng. Summary first, sticky table of
+ * contents (dropdown on mobile), each section an accordion reachable by #id from pop-ups.
+ */
 @Component({
   selector: 'app-order-policy',
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-policy.html',
+  host: { '(window:hashchange)': 'openFromHash()' },
 })
 export class OrderPolicy {
   protected readonly version = POLICY_VERSION;
   protected readonly highlights = POLICY_HIGHLIGHTS;
   protected readonly sections = POLICY_SECTIONS;
+  /** First section open by default; a #hash opens its section. */
+  protected readonly open = signal<ReadonlySet<string>>(new Set([POLICY_SECTIONS[0].id]));
 
-  protected scrollTo(id: string): void {
+  constructor() {
+    queueMicrotask(() => this.openFromHash());
+  }
+
+  protected isOpen(id: string): boolean {
+    return this.open().has(id);
+  }
+
+  protected toggle(id: string, event: Event): void {
+    const opened = (event.target as HTMLDetailsElement).open;
+    this.open.update((s) => {
+      const next = new Set(s);
+      if (opened) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+    if (opened) track('policy_section_opened', { section: id });
+  }
+
+  protected goTo(id: string): void {
+    this.open.update((s) => new Set([...s, id]));
+    history.replaceState(null, '', `${location.pathname}#${id}`);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    queueMicrotask(() => document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }));
+    track('policy_section_opened', { section: id });
+  }
+
+  protected onSelect(event: Event): void {
+    const id = (event.target as HTMLSelectElement).value;
+    if (id) this.goTo(id);
+  }
+
+  protected openFromHash(): void {
+    const id = location.hash.slice(1);
+    if (id && this.sections.some((s) => s.id === id)) this.goTo(id);
   }
 }

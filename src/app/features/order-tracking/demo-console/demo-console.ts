@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { PolicyConsent } from '../components/policy-consent/policy-consent';
 import { StatusBadge } from '../components/status-badge/status-badge';
 import { BTN_GHOST, BTN_PRIMARY, BTN_SECONDARY, FIELD, LABEL } from '../components/ui';
 import { DELIVERY_CONFIG, FAILURE_CAUSES, FAULT_PARTY_LABELS, VIOLATION_GROUPS } from '../config/delivery-config';
@@ -44,7 +45,7 @@ const HOUR = 3_600_000;
  */
 @Component({
   selector: 'app-demo-console',
-  imports: [DatePipe, RouterLink, ReactiveFormsModule, StatusBadge],
+  imports: [DatePipe, RouterLink, ReactiveFormsModule, StatusBadge, PolicyConsent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './demo-console.html',
 })
@@ -106,6 +107,9 @@ export class DemoConsole {
   private readonly createValue = toSignal(this.createForm.valueChanges, { initialValue: this.createForm.getRawValue() });
   /** COD and Hỏa tốc only for stock-only orders; Hỏa tốc only where Thanh toán supports it. */
   protected readonly codAllowed = computed(() => this.createValue().template === 'stock');
+  protected readonly templateHasCustom = computed(() => this.createValue().template !== 'stock');
+  /** Policy version ticked in the consent box (P1-18); creating an order requires it. */
+  protected readonly consent = signal<string | null>(null);
   protected readonly expressAllowed = computed(
     () => this.createValue().template === 'stock' && DEMO_ADDRESSES[this.createValue().address ?? 'near'].expressFee > 0,
   );
@@ -223,6 +227,7 @@ export class DemoConsole {
     const v = this.createForm.getRawValue();
     const paymentMethod = v.template === 'stock' ? v.paymentMethod : 'QR_Transfer';
     const tier: ShippingTier = this.expressAllowed() ? v.tier : 'Standard';
+    if (!this.consent()) return this.log(false, 'Cần tick đồng ý chính sách đơn hàng trước khi đặt (như Checkout)');
     const r = this.factory.create({ ...v, paymentMethod, tier });
     if (r.error) return this.log(false, r.error.message);
     this.selectedId.set(r.data.id);

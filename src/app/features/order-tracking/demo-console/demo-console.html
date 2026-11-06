@@ -102,7 +102,10 @@
               Vào mẻ {{ formatShortDate(p.edd.batchDate) }} · Xử lý {{ formatShortDate(p.edd.processingFrom) }}–{{ formatShortDate(p.edd.processingTo) }} · <b>EDD {{ formatShortDate(p.edd.earliest) }} – {{ formatShortDate(p.edd.latest) }}</b>
             }
           </div>
-          <button type="submit" [class]="btnPrimary" class="sm:col-span-2">Tạo đơn (ghi PolicyConsent)</button>
+          <div class="sm:col-span-2">
+            <app-policy-consent [hasCustom]="templateHasCustom()" (accepted)="consent.set($event)" />
+          </div>
+          <button type="submit" [class]="btnPrimary" class="sm:col-span-2" [disabled]="!consent()">Tạo đơn (ghi PolicyConsent)</button>
         </form>
       </article>
 
