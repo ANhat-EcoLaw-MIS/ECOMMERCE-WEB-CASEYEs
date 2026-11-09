@@ -1,0 +1,62 @@
+// Template Browser Custom Effects & Cloudscape Animations
+
+.cloud-bubble {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.4) 70%, transparent 100%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.dreamy-gradient-bg {
+  background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 25%, #e0e7ff 55%, #f8f7ff 80%, #ffffff 100%);
+}
+
+.card-cloud-bg {
+  background: radial-gradient(circle at 50% 35%, #f3e8ff 0%, #ede9fe 40%, #e0e7ff 75%, #f5f3ff 100%);
+}
+
+.preview-case-shadow {
+  box-shadow: 0 16px 36px -8px rgba(67, 48, 117, 0.28), 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.case-bezel {
+  border: 2.5px solid #141416;
+  border-radius: 26px;
+}
+
+.mini-case-bezel {
+  border: 1.5px solid #18181b;
+  border-radius: 12px;
+}
+
+// 3D Tilt & Floating Animation for 3D Preview
+@keyframes floatCase {
+  0%, 100% {
+    transform: translateY(0px) rotateY(-8deg) rotateX(4deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateY(8deg) rotateX(-4deg);
+  }
+}
+
+.animate-float-case {
+  animation: floatCase 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+// Sparkle pulse
+@keyframes sparklePulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.animate-sparkle {
+  animation: sparklePulse 3s ease-in-out infinite;
+}

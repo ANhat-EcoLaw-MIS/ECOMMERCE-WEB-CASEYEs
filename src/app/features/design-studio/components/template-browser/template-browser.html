@@ -1,74 +1,188 @@
-<section class="min-h-screen" style="background: linear-gradient(180deg, #f6f3fe 0%, #fafafa 40%, #ffffff 100%);">
+<section class="min-h-screen dreamy-gradient-bg relative overflow-hidden" (click)="closeCardMenu()">
+
+  <!-- Subtle Dreamy Cloud Highlights in Background -->
+  <div class="cloud-bubble w-96 h-96 -top-20 -left-20 bg-purple-200/50"></div>
+  <div class="cloud-bubble w-[32rem] h-[32rem] top-40 -right-40 bg-indigo-100/60"></div>
+  <div class="cloud-bubble w-80 h-80 top-[40rem] -left-20 bg-pink-100/40"></div>
 
   <!-- ══════════════════════════════════════════════════════
-       SECTION 0: MY DESIGNS (Chỉ hiển thị khi đã đăng nhập - Issue 8)
+       SECTION 0: MY DESIGNS (Tiếp tục chỉnh sửa hoặc tạo mới)
   ══════════════════════════════════════════════════════ -->
-  @if (isLoggedIn() && myDesigns().length > 0) {
-    <div class="border-b border-line bg-white/70 py-6 backdrop-blur-md">
+  @if (myDesigns().length > 0) {
+    <div class="border-b border-purple-100/70 bg-white/60 py-5 backdrop-blur-md relative z-20">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-3.5 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-800">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+
+        <!-- My Designs Section Header -->
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-100 text-brand-800 shadow-xs">
+              <svg class="h-4.5 w-4.5 text-purple-700" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="7" height="7" rx="2" />
+                <rect x="14" y="3" width="7" height="7" rx="2" />
+                <rect x="3" y="14" width="7" height="7" rx="2" />
+                <rect x="14" y="14" width="7" height="7" rx="2" />
               </svg>
             </span>
             <div>
-              <h3 class="font-display text-sm font-bold text-ink">Bản thiết kế của bạn (My Designs)</h3>
-              <p class="text-[11px] text-ink-soft">Tiếp tục hoàn thiện các mẫu ốp lưng bạn đã lưu trước đó</p>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-sm sm:text-base font-bold text-ink">My Designs</h3>
+                <span class="rounded-pill bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-800">
+                  {{ myDesigns().length }}
+                </span>
+              </div>
+              <p class="text-[11px] sm:text-xs text-ink-soft">Tiếp tục chỉnh sửa hoặc tạo thiết kế mới</p>
             </div>
           </div>
-          <span class="rounded-pill bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-800">
-            {{ myDesigns().length }} bản vẽ
-          </span>
+
+          <!-- "Xem tất cả →" (Chỉ hiện khi vượt quá 4 designs theo yêu cầu) -->
+          @if (hasMoreMyDesigns()) {
+            <button
+              type="button"
+              (click)="openAllDesignsModal()"
+              class="group inline-flex items-center gap-1 text-xs font-bold text-brand-800 hover:text-purple-950 transition-colors cursor-pointer py-1.5 px-3 rounded-full hover:bg-purple-100/80"
+              title="Xem danh sách đầy đủ tất cả các bản thiết kế của bạn"
+            >
+              <span>Xem tất cả</span>
+              <svg class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          }
         </div>
 
-        <!-- Horizontal scroll carousel -->
-        <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
-          @for (item of myDesigns(); track item.id) {
+        <!-- My Designs Cards Grid (Tối đa 4 card hiển thị trực tiếp) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          @for (item of displayedMyDesigns(); track item.id) {
             <div
               (click)="onContinueSavedDesign(item)"
-              class="group relative flex w-72 shrink-0 cursor-pointer items-center gap-3 rounded-2xl border border-line bg-surface-alt p-3 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-lift"
+              class="group relative flex items-center gap-3.5 rounded-2xl border border-purple-100/80 bg-white/90 p-3 shadow-soft backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-lift cursor-pointer"
             >
-              <!-- Mini phone case preview -->
+              <!-- Mini Phone Case Thumbnail -->
               <div
-                class="relative flex h-20 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-line shadow-xs"
+                class="mini-case-bezel relative flex h-20 w-12 shrink-0 items-center justify-center overflow-hidden shadow-xs"
                 [style.background]="item.bg"
               >
-                <!-- Mini camera bump -->
-                <div class="absolute left-1 top-1 h-5 w-4 rounded-[4px] bg-black/75"></div>
-                @if (item.thumbnailText) {
+                <!-- Mini Camera Island Bump -->
+                <div class="absolute left-1 top-1 h-5 w-4 rounded-[4px] bg-[#121316] border border-[#2a2d34] flex flex-col justify-around p-0.5 shadow-xs z-10">
+                  <div class="flex gap-0.5">
+                    <span class="h-1 w-1 rounded-full bg-[#1e2027] ring-0.5 ring-slate-600"></span>
+                    <span class="h-0.8 w-0.8 rounded-full bg-amber-300"></span>
+                  </div>
+                  <span class="h-1.2 w-1.2 rounded-full bg-[#1e2027] ring-0.5 ring-slate-600"></span>
+                </div>
+
+                <!-- Thumbnail Artwork or Text -->
+                @if (item.thumbnailType === 'dreamy-sky') {
+                  <div class="absolute inset-0 flex flex-col items-center justify-end pb-2">
+                    <span class="text-xs">☁️</span>
+                    <span class="text-[8px] font-extrabold text-white drop-shadow-xs">Sky</span>
+                  </div>
+                } @else if (item.thumbnailType === 'sakura') {
+                  <div class="absolute inset-0 flex flex-col items-center justify-end pb-2">
+                    <span class="text-xs">🌸</span>
+                    <span class="text-[8px] font-extrabold text-pink-700">Sakura</span>
+                  </div>
+                } @else if (item.thumbnailType === 'cat') {
+                  <div class="absolute inset-0 flex flex-col items-center justify-end pb-2">
+                    <span class="text-xs">🐱</span>
+                    <span class="text-[8px] font-extrabold text-ink">Cat</span>
+                  </div>
+                } @else if (item.thumbnailType === 'mountain') {
+                  <div class="absolute inset-0 flex flex-col items-center justify-end pb-2">
+                    <span class="text-xs">🏔️</span>
+                    <span class="text-[8px] font-extrabold text-white">Peak</span>
+                  </div>
+                } @else if (item.thumbnailType === 'starry') {
+                  <div class="absolute inset-0 flex flex-col items-center justify-end pb-2">
+                    <span class="text-xs">🌙</span>
+                    <span class="text-[8px] font-extrabold text-white">Starry</span>
+                  </div>
+                } @else if (item.thumbnailText) {
                   <span class="px-0.5 text-center text-[7px] font-bold text-white drop-shadow-xs line-clamp-2">
                     {{ item.thumbnailText }}
                   </span>
                 }
               </div>
 
-              <!-- Metadata -->
+              <!-- Design Metadata -->
               <div class="min-w-0 flex-1">
-                <h4 class="font-display text-xs font-bold text-ink truncate group-hover:text-brand-800">
+                <h4 class="font-display text-xs font-bold text-ink truncate group-hover:text-brand-800 transition-colors">
                   {{ item.name }}
                 </h4>
-                <p class="text-[10px] text-ink-soft truncate">{{ item.modelName }}</p>
-                <div class="mt-1 flex items-center gap-1.5">
-                  <span class="rounded-pill bg-brand-100 px-1.5 py-0.2 text-[9px] font-semibold text-brand-800">
-                    Bản thiết kế
-                  </span>
-                  <span class="text-[9px] text-ink-soft">{{ item.savedAt }}</span>
+                <p class="text-[11px] text-ink-soft truncate">{{ item.modelName }}</p>
+                <div class="mt-1 flex items-center gap-1 text-[10px] text-ink-soft/80">
+                  <svg class="h-3 w-3 text-purple-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="truncate">{{ item.savedAt }}</span>
                 </div>
               </div>
 
-              <!-- Delete action button -->
-              <button
-                type="button"
-                (click)="onDeleteSavedDesign(item, $event)"
-                class="rounded-full p-1 text-ink-soft opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 cursor-pointer"
-                title="Xóa bản vẽ này"
-              >
-                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              <!-- Three Dots Context Menu Button (⋮) -->
+              <div class="relative">
+                <button
+                  type="button"
+                  (click)="toggleCardMenu(item.id, $event)"
+                  class="rounded-full p-1.5 text-ink-soft hover:bg-purple-100/70 hover:text-brand-800 transition-colors cursor-pointer"
+                  title="Tùy chọn bản thiết kế"
+                >
+                  <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="5" r="1.75" />
+                    <circle cx="12" cy="12" r="1.75" />
+                    <circle cx="12" cy="19" r="1.75" />
+                  </svg>
+                </button>
+
+                <!-- Context Menu Dropdown -->
+                @if (activeMenuDesignId() === item.id) {
+                  <div
+                    class="absolute right-0 top-8 z-30 w-44 rounded-xl border border-line bg-white p-1.5 shadow-lift animate-fade-in text-xs font-medium text-ink"
+                    (click)="$event.stopPropagation()"
+                  >
+                    <button
+                      type="button"
+                      (click)="onContinueSavedDesign(item)"
+                      class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-purple-50 hover:text-brand-800 transition-colors cursor-pointer"
+                    >
+                      <svg class="h-3.5 w-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                      <span>Tiếp tục chỉnh sửa</span>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="duplicateSavedDesign(item, $event)"
+                      class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-purple-50 hover:text-brand-800 transition-colors cursor-pointer"
+                    >
+                      <svg class="h-3.5 w-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <span>Nhân bản thiết kế</span>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="startRenameDesign(item, $event)"
+                      class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left hover:bg-purple-50 hover:text-brand-800 transition-colors cursor-pointer"
+                    >
+                      <svg class="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span>Đổi tên</span>
+                    </button>
+                    <div class="my-1 border-t border-line/60"></div>
+                    <button
+                      type="button"
+                      (click)="onDeleteSavedDesign(item, $event)"
+                      class="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <svg class="h-3.5 w-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Xóa bản vẽ này</span>
+                    </button>
+                  </div>
+                }
+              </div>
             </div>
           }
         </div>
@@ -77,267 +191,469 @@
   }
 
   <!-- ══════════════════════════════════════════════════════
-       SECTION 1: HERO – AI Recommendation Section
+       SECTION 1: HERO – AI RECOMMENDATION & PROMPT INPUT
   ══════════════════════════════════════════════════════ -->
-  <div class="mx-auto max-w-7xl px-4 pb-10 pt-10 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-16">
+  <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12 z-10">
+    <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
 
-      <!-- Left: headline -->
-      <div class="space-y-4">
-        <div class="flex items-center gap-2">
-          <span class="inline-flex items-center gap-1.5 rounded-pill bg-brand-100 px-3 py-1 text-xs font-bold text-brand-800">
-            <svg class="h-3.5 w-3.5 text-brand-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-            </svg>
-            AI Gợi ý mẫu
-            <span class="rounded bg-brand-200 px-1.5 py-0.5 text-[10px] font-black text-brand-900">F13</span>
-          </span>
+      <!-- Left Column: Confident Headline with Hand-Drawn Doodle & Sparkle -->
+      <div class="lg:col-span-6 space-y-4">
+
+        <!-- AI Pill Tag -->
+        <div class="inline-flex items-center gap-1.5 rounded-full bg-purple-100/90 px-3.5 py-1 text-xs font-bold text-brand-800 shadow-xs backdrop-blur-xs">
+          <svg class="h-3.5 w-3.5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+          <span>AI gợi ý mẫu</span>
+          <span class="rounded bg-purple-200/80 px-1.5 py-0.2 text-[10px] font-black text-purple-900">F13</span>
         </div>
 
-        <h1 class="font-display text-4xl font-extrabold leading-tight text-ink md:text-5xl">
+        <!-- Main Headline -->
+        <h1 class="font-display text-4xl sm:text-5xl font-extrabold leading-[1.15] text-ink tracking-tight">
           Bạn muốn một chiếc<br>
-          <span style="background: var(--grad-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-            Ốp lưng
+          <span class="relative inline-block mt-1">
+            <span class="bg-gradient-to-r from-purple-700 via-indigo-600 to-pink-500 bg-clip-text text-transparent font-extrabold">
+              ốp lưng
+            </span>
+            <!-- Hand-drawn wave underline doodle -->
+            <svg class="absolute -bottom-2.5 left-0 w-full h-3.5 text-purple-400" viewBox="0 0 120 16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+              <path d="M4 10 C 25 3, 45 15, 65 9 C 85 3, 100 15, 116 8"/>
+            </svg>
+            <!-- Golden star sparkle -->
+            <span class="absolute -top-3 -right-6 text-amber-400 text-xl animate-sparkle">✦</span>
           </span><br>
           như thế nào?
         </h1>
 
-        <p class="max-w-md text-sm leading-relaxed text-ink-soft">
-          Mô tả sở thích, phong cách, màu sắc… và để AI tạo ra những gợi ý phù hợp nhất cho chiếc ốp lưng của bạn.
+        <!-- Subtitle -->
+        <p class="max-w-md text-sm sm:text-base leading-relaxed text-ink-soft">
+          Hãy mô tả ý tưởng của bạn, chúng tôi sẽ gợi ý những mẫu thiết kế phù hợp nhất cho bạn!
         </p>
 
-        <!-- Decorative note -->
-        <div class="inline-flex items-center gap-2.5 rounded-2xl border border-brand-200/80 bg-white/90 px-4 py-2.5 shadow-soft backdrop-blur-sm">
-          <svg class="h-4 w-4 text-brand-800 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p class="text-xs font-medium text-ink-soft">
-            Để AI giúp bạn biến ý tưởng thành chiếc ốp hoàn hảo!
-          </p>
+        <!-- Current Active Device Switcher Indicator -->
+        <div class="pt-2 flex items-center gap-2">
+          <div class="inline-flex items-center gap-2 rounded-full border border-purple-200/80 bg-white/80 px-3.5 py-1 text-xs text-ink shadow-xs backdrop-blur-xs">
+            <span class="inline-block h-2 w-2 rounded-full" [class]="state.selectedModel().has3dModel ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+            <span class="text-ink-soft">Đang chọn:</span>
+            <span class="font-display font-bold text-ink">{{ state.selectedModel().name }}</span>
+            <span class="text-purple-300">•</span>
+            <a
+              routerLink="/design-studio/select-model"
+              class="font-semibold text-brand-800 hover:text-purple-950 transition-colors cursor-pointer flex items-center gap-1 hover:underline"
+              title="Đổi sang dòng điện thoại khác"
+            >
+              <span>Đổi máy</span>
+              <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- Right: Textarea card -->
-      <div class="rounded-card border border-line bg-white p-6 shadow-soft">
-        <div class="relative">
-          <textarea
-            id="ai-prompt-textarea"
-            rows="5"
-            [value]="aiPrompt()"
-            (input)="onPromptInput($event)"
-            (keydown.ctrl.enter)="onAiSearch()"
-            maxlength="100"
-            placeholder="Ví dụ: Ốp lưng màu pastel, hoa anh đào, phong cách tối giản, phù hợp cho iPhone 15 Pro…"
-            class="w-full resize-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-soft/50 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400/20"
-          ></textarea>
-          <span class="absolute bottom-3 right-3 text-[11px] text-ink-soft/60">
-            {{ aiPrompt().length }}/100
-          </span>
-        </div>
+      <!-- Right Column: Prominent AI Prompt Box -->
+      <div class="lg:col-span-6">
+        <div class="rounded-[28px] border border-purple-100/90 bg-white p-6 sm:p-7 shadow-[0_12px_40px_rgba(112,85,200,0.08)] transition-shadow hover:shadow-[0_16px_48px_rgba(112,85,200,0.12)]">
 
-        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <!-- Primary CTA -->
-          <button
-            type="button"
-            [disabled]="!aiPrompt().trim() || isAiSearching()"
-            (click)="onAiSearch()"
-            class="inline-flex flex-1 items-center justify-center gap-2 rounded-pill px-6 py-3 font-display text-sm font-bold text-white transition-all cursor-pointer"
-            [style]="(aiPrompt().trim() && !isAiSearching()) ? 'background:var(--grad-primary);box-shadow:var(--shadow-soft)' : 'background:#d4c8fa;cursor:not-allowed'"
-          >
-            @if (isAiSearching()) {
-              <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          <!-- Textarea with icon & character counter -->
+          <div class="relative">
+            <div class="flex items-start gap-2.5">
+              <svg class="h-4.5 w-4.5 text-purple-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
-              <span>Đang tìm...</span>
-            } @else {
-              <span class="flex items-center gap-1.5">
+              <textarea
+                id="ai-prompt-textarea"
+                rows="4"
+                [value]="aiPrompt()"
+                (input)="onPromptInput($event)"
+                (keydown.control.enter)="onAiSearch()"
+                maxlength="200"
+                placeholder="Ví dụ: ốp lưng màu pastel, hoa anh đào, phong cách tối giản, phù hợp cho iPhone 15 Pro..."
+                class="w-full resize-none border-none bg-transparent p-0 text-sm sm:text-base text-ink placeholder:text-ink-soft/45 focus:outline-none focus:ring-0"
+              ></textarea>
+            </div>
+
+            <!-- Counter -->
+            <div class="mt-2 flex justify-end">
+              <span class="text-[11px] font-medium text-ink-soft/60">
+                {{ aiPrompt().length }}/200
+              </span>
+            </div>
+          </div>
+
+          <!-- Primary CTA Button (Radiant blue-to-purple gradient pill) -->
+          <div class="mt-4 flex flex-col sm:flex-row items-center gap-3">
+            <button
+              type="button"
+              (click)="onAiSearch()"
+              [disabled]="!aiPrompt().trim() || isAiSearching()"
+              class="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-full py-3.5 px-6 font-display text-sm font-bold text-white shadow-md transition-all duration-200 cursor-pointer"
+              [style]="aiPrompt().trim() && !isAiSearching()
+                ? 'background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #3b82f6 100%); box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);'
+                : 'background: #d4c8fa; cursor: not-allowed; opacity: 0.8;'"
+            >
+              @if (isAiSearching()) {
+                <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                <span>Đang phân tích ý tưởng...</span>
+              } @else {
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
                 <span>Gợi ý cho tôi</span>
-              </span>
-              <span class="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-black">F11</span>
-            }
-          </button>
+                <span class="rounded bg-white/25 px-1.5 py-0.5 text-[10px] font-black">F13</span>
+              }
+            </button>
 
-          <!-- Retry -->
-          <button
-            type="button"
-            (click)="onRetry()"
-            class="inline-flex items-center justify-center gap-1.5 rounded-pill border border-line px-5 py-3 text-sm font-medium text-ink-soft transition-all hover:border-brand-400 hover:text-brand-800 cursor-pointer"
-          >
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            Gợi ý lại
-            <span class="rounded bg-line px-1.5 py-0.5 text-[10px] font-black text-ink-soft">F16</span>
-          </button>
+            <!-- Reset / Gợi ý lại Button -->
+            @if (aiPrompt().trim()) {
+              <button
+                type="button"
+                (click)="onRetry()"
+                class="rounded-full border border-purple-200 px-4 py-3.5 text-xs font-semibold text-ink-soft hover:bg-purple-50 hover:text-brand-800 transition-colors cursor-pointer"
+                title="Xóa tìm kiếm và đặt lại"
+              >
+                Đặt lại
+              </button>
+            }
+          </div>
+
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- No-Results fallback -->
+  <!-- Fallback Alert if AI finds no exact match -->
   @if (showNoResults()) {
-    <div class="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
-      <div class="rounded-card border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-        <div class="mb-3 flex items-center gap-2 font-semibold">
-          <svg class="h-4 w-4 text-amber-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <span>Không tìm thấy mẫu phù hợp với "<em>{{ aiPrompt() }}</em>". Có thể bạn sẽ thích:</span>
-        </div>
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          @for (tpl of trendingTemplates(); track tpl.id) {
-            <button
-              type="button"
-              (click)="onDesignTemplate(tpl)"
-              class="flex flex-col items-center rounded-xl border border-amber-200 bg-white p-3 text-center transition-all hover:border-brand-400 hover:shadow-soft cursor-pointer"
-            >
-              <div class="mb-2 h-12 w-12 rounded-xl" [style.background]="tpl.gradient"></div>
-              <span class="text-xs font-bold text-ink">{{ tpl.name }}</span>
-            </button>
-          }
+    <div class="mx-auto max-w-7xl px-4 pb-4 sm:px-6 lg:px-8 animate-fade-in">
+      <div class="rounded-2xl border border-amber-200 bg-amber-50/90 p-4 text-xs sm:text-sm text-amber-900 shadow-xs">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <svg class="h-4 w-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Chưa tìm thấy mẫu chính xác với <strong>"{{ aiPrompt() }}"</strong>. Dưới đây là các mẫu đang được yêu thích nhất:</span>
+          </div>
+          <button type="button" (click)="onRetry()" class="font-bold underline hover:text-amber-950 cursor-pointer">
+            Xem tất cả
+          </button>
         </div>
       </div>
     </div>
   }
 
   <!-- ══════════════════════════════════════════════════════
-       SECTION 2: Template Grid Section (Không hiển thị giá từng mẫu)
+       SECTION 2: CATEGORY FILTER TABS
   ══════════════════════════════════════════════════════ -->
-  <div class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-
-    <!-- Section header + filter pills -->
-    <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3 flex-wrap">
-        <div class="flex items-center gap-2">
-          <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-100 text-brand-800">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 4 4 0 014-4h4a4 4 0 014 4 4 4 0 01-4 4H7zM7 21h10a4 4 0 004-4v-1a4 4 0 00-4-4h-2m-8 0V5a2 2 0 012-2h4a2 2 0 012 2v8" />
-            </svg>
-          </span>
-          <h2 class="font-display text-base font-bold text-ink">
-            Kho mẫu thiết kế
-            <span class="ml-1 rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">F13s</span>
-          </h2>
-        </div>
-
-        <!-- Sleek Model Selector Pill matching Canvas Design (Static label + Switch action) -->
-        <div class="inline-flex items-center gap-2 rounded-pill border border-line bg-surface-alt px-3.5 py-1 text-xs text-ink shadow-xs transition-all hover:border-brand-300">
-          <span class="inline-block h-2 w-2 rounded-full" [class]="state.selectedModel().has3dModel ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-          <span class="text-ink-soft">Dòng máy:</span>
-          <span class="font-display font-bold text-ink tracking-wide">{{ state.selectedModel().name }}</span>
-
-          @if (!state.selectedModel().has3dModel) {
-            <span class="rounded bg-amber-100 border border-amber-200 px-1.5 py-0.2 text-[9px] font-bold text-amber-800">Chưa hỗ trợ 3D</span>
-          }
-
-          <span class="text-line">•</span>
-          <a
-            routerLink="/design-studio/select-model"
-            class="font-semibold text-brand-800 hover:text-brand-950 transition-colors cursor-pointer flex items-center gap-1 hover:underline"
-            title="Đổi sang dòng điện thoại khác"
-          >
-            <span>Đổi dòng máy</span>
-            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </a>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 overflow-x-auto scrollbar-none">
-        @for (style of styles; track style.id) {
-          <button
-            type="button"
-            (click)="selectStyle(style.id)"
-            class="whitespace-nowrap rounded-pill px-3 py-1.5 text-xs font-medium transition-all cursor-pointer"
-            [class]="selectedStyle() === style.id
-              ? 'bg-brand-800 text-white shadow-soft'
-              : 'border border-line bg-white text-ink-soft hover:bg-brand-50 hover:text-brand-800'"
-          >{{ style.name }}</button>
-        }
-      </div>
-    </div>
-
-    <!-- Cards grid: 4-col on lg, 2-col on sm -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-      @for (tpl of filteredTemplates(); track tpl.id; let i = $index) {
-        <div
-          class="group relative flex flex-col overflow-hidden rounded-card border bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
-          [class]="tpl.isBlankCanvas ? 'border-brand-400 bg-linear-to-b from-brand-50/30 to-white' : 'border-line'"
+  <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-center flex-wrap gap-2 sm:gap-2.5">
+      @for (cat of categories; track cat.id) {
+        <button
+          type="button"
+          (click)="selectCategory(cat.id)"
+          class="inline-flex items-center gap-1.5 rounded-full px-4 sm:px-5 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer"
+          [class]="activeCategory() === cat.id
+            ? 'bg-brand-800 text-white shadow-soft scale-105'
+            : 'border border-purple-100 bg-white/90 text-ink-soft hover:bg-purple-50 hover:text-brand-800 hover:border-brand-300 shadow-2xs'"
         >
-          <!-- Phone preview area -->
+          @if (cat.id === 'all') {
+            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+          }
+          <span>{{ cat.name }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SECTION 3: TEMPLATE GRID (8 Mẫu thiết kế chuẩn ảnh)
+  ══════════════════════════════════════════════════════ -->
+  <div id="template-grid-section" class="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+      @for (tpl of filteredTemplates(); track tpl.id) {
+        <div
+          class="group relative flex flex-col rounded-[24px] border border-purple-100/80 bg-white p-3.5 shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lift hover:border-brand-300"
+        >
+
+          <!-- Top Phone Case Mockup Container -->
           <div
-            class="relative flex items-center justify-center overflow-hidden"
-            style="aspect-ratio: 9/14;"
-            [style.background]="tpl.gradient"
+            class="card-cloud-bg relative flex h-72 sm:h-80 w-full items-center justify-center overflow-hidden rounded-[20px] transition-transform duration-300 group-hover:scale-[1.01]"
           >
-            <div class="absolute inset-0 bg-black/5 opacity-0 transition-opacity group-hover:opacity-100"></div>
-
-            <!-- Phone case shape -->
-            <div
-              class="relative z-10 flex h-[72%] w-[52%] flex-col items-center justify-end rounded-[22%/14%] border-2 pb-4 shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
-              [class]="tpl.isBlankCanvas ? 'border-line bg-white' : 'border-white/40 bg-white/15'"
+            <!-- Category Tag Pill (Top Left) -->
+            <span
+              class="absolute left-3 top-3 z-30 rounded-md px-2.5 py-0.5 text-[10px] font-bold text-white shadow-xs backdrop-blur-xs"
+              [style.background]="tpl.tagColor"
             >
-              <!-- Camera block -->
-              <div
-                class="absolute left-[12%] top-[5%] h-[20%] w-[28%] rounded-[25%] shadow-inner"
-                [class]="tpl.isBlankCanvas ? 'bg-line/80' : 'bg-black/75'"
-              ></div>
+              {{ tpl.tagLabel }}
+            </span>
 
-              <!-- Tag text -->
-              @if (tpl.tagText) {
-                <p class="px-2 text-center font-display text-xs font-extrabold leading-tight text-white"
-                   style="text-shadow:0 2px 8px rgba(0,0,0,0.6);">{{ tpl.tagText }}</p>
+            <!-- Favorite Heart Toggle (Top Right) -->
+            <button
+              type="button"
+              (click)="toggleFavorite(tpl.id, $event)"
+              class="absolute right-3 top-3 z-30 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 border border-purple-100 text-ink-soft backdrop-blur-xs transition-transform hover:scale-110 active:scale-95 cursor-pointer shadow-xs"
+              [title]="isFavorite(tpl.id) ? 'Bỏ yêu thích' : 'Lưu vào yêu thích'"
+            >
+              <svg
+                class="h-4 w-4 transition-colors"
+                [class.text-red-500]="isFavorite(tpl.id)"
+                [class.fill-red-500]="isFavorite(tpl.id)"
+                [class.text-slate-400]="!isFavorite(tpl.id)"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+
+            <!-- Realistic 2D Phone Case Mockup with Camera Island -->
+            <div
+              class="case-bezel preview-case-shadow relative h-[84%] w-[58%] overflow-hidden bg-white flex flex-col justify-between"
+              [style.background]="tpl.gradient"
+            >
+              <!-- Obsidian Matte Camera Module (Chamfered Bevel & Triple Lenses) -->
+              <div class="absolute left-[7%] top-[5%] z-20 h-[26%] w-[38%] rounded-[12px] bg-[#121316] border border-[#2a2d34] shadow-md flex flex-col justify-around p-1">
+                <!-- Lens 1 (Top Left) & True Tone Flash (Top Right) -->
+                <div class="flex items-center justify-between">
+                  <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
+                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                  </div>
+                  <!-- Dual Flash -->
+                  <div class="h-2 w-2 rounded-full bg-[#fef08a] ring-1 ring-slate-400/50 shadow-[0_0_4px_#fef08a]"></div>
+                </div>
+
+                <!-- Lens 2 (Middle Left) & Lens 3 (Right) & LiDAR -->
+                <div class="flex items-center justify-between">
+                  <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
+                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                  </div>
+                  <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
+                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                  </div>
+                </div>
+
+                <!-- LiDAR Sensor Dot -->
+                <div class="flex justify-end pr-0.5">
+                  <div class="h-1.5 w-1.5 rounded-full bg-[#090a0d] ring-0.5 ring-slate-600"></div>
+                </div>
+              </div>
+
+              <!-- Artwork Backplate Renderings -->
+              @if (tpl.artType === 'dreamy-kitten') {
+                <div class="absolute inset-0 flex flex-col items-center justify-end pb-6 select-none pointer-events-none">
+                  <!-- Fluffy Cloud with Smiling Kittens -->
+                  <div class="relative flex flex-col items-center">
+                    <div class="flex items-center -space-x-2">
+                      <!-- Kitty Cloud 1 -->
+                      <div class="relative flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-xs">
+                        <div class="absolute -top-1.5 left-1 h-3 w-3 rotate-[-20deg] rounded-t-sm bg-white border-t border-pink-200"></div>
+                        <div class="absolute -top-1.5 right-1 h-3 w-3 rotate-[20deg] rounded-t-sm bg-white border-t border-pink-200"></div>
+                        <div class="flex flex-col items-center mt-1">
+                          <div class="flex gap-2">
+                            <span class="text-[7px] text-pink-400 font-bold">^</span>
+                            <span class="text-[7px] text-pink-400 font-bold">^</span>
+                          </div>
+                          <div class="flex gap-1.5 -mt-0.5">
+                            <span class="h-1 w-1.5 rounded-full bg-pink-300"></span>
+                            <span class="h-1 w-1.5 rounded-full bg-pink-300"></span>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Kitty Cloud 2 -->
+                      <div class="relative flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-xs">
+                        <div class="absolute -top-1 left-0.5 h-2.5 w-2.5 rotate-[-20deg] rounded-t-sm bg-white"></div>
+                        <div class="absolute -top-1 right-0.5 h-2.5 w-2.5 rotate-[20deg] rounded-t-sm bg-white"></div>
+                        <div class="flex flex-col items-center mt-0.5">
+                          <div class="flex gap-1.5">
+                            <span class="text-[6px] text-pink-400 font-bold">^</span>
+                            <span class="text-[6px] text-pink-400 font-bold">^</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Puffy Cloud Base -->
+                    <div class="h-5 w-20 rounded-full bg-white shadow-xs -mt-2"></div>
+                  </div>
+                </div>
+              } @else if (tpl.artType === 'sakura-bloom') {
+                <div class="absolute inset-0 flex flex-col justify-end p-2 select-none pointer-events-none">
+                  <svg viewBox="0 0 100 140" class="w-full h-full opacity-90">
+                    <path d="M10,130 Q40,90 35,50 T70,10" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <path d="M35,60 Q60,50 85,45" stroke="#78350f" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="35" cy="50" r="8" fill="#fda4af" />
+                    <circle cx="35" cy="50" r="4" fill="#fb7185" />
+                    <circle cx="70" cy="20" r="9" fill="#fda4af" />
+                    <circle cx="70" cy="20" r="4" fill="#f43f5e" />
+                    <circle cx="55" cy="45" r="7" fill="#fbcfe8" />
+                    <circle cx="80" cy="45" r="8" fill="#fda4af" />
+                    <circle cx="20" cy="80" r="7" fill="#fbcfe8" />
+                    <circle cx="45" cy="110" r="5" fill="#fbcfe8" opacity="0.8"/>
+                    <circle cx="75" cy="90" r="6" fill="#fda4af" opacity="0.8"/>
+                  </svg>
+                </div>
+              } @else if (tpl.artType === 'mountain-escape') {
+                <div class="absolute inset-0 flex flex-col justify-end select-none pointer-events-none">
+                  <svg viewBox="0 0 100 140" class="w-full h-full">
+                    <polygon points="10,95 50,25 90,95" fill="#0284c7" />
+                    <polygon points="50,25 38,48 50,42 62,48" fill="#ffffff" />
+                    <polygon points="35,100 70,45 100,100" fill="#0369a1" />
+                    <polygon points="70,45 62,60 70,55 78,60" fill="#ffffff" />
+                    <polygon points="-10,120 25,65 60,120" fill="#0f766e" />
+                    <rect x="0" y="105" width="100" height="35" fill="#0284c7" opacity="0.75"/>
+                    <ellipse cx="50" cy="115" rx="40" ry="3" fill="#38bdf8" opacity="0.6"/>
+                  </svg>
+                </div>
+              } @else if (tpl.artType === 'minimal-cat') {
+                <div class="absolute inset-0 flex flex-col items-center justify-end pb-8 select-none pointer-events-none">
+                  <!-- Floating Heart -->
+                  <span class="text-xs text-red-500 mb-1">♥</span>
+                  <!-- Cat Line Art Outline -->
+                  <svg viewBox="0 0 60 70" class="w-12 h-14" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- Ears and Head -->
+                    <path d="M18 35 L20 18 L28 26 Q30 25 32 26 L40 18 L42 35" />
+                    <!-- Body Back Contour -->
+                    <path d="M18 35 Q14 55 18 64 Q30 66 42 64 Q46 55 42 35" />
+                    <!-- Tail -->
+                    <path d="M40 60 Q52 56 48 46" stroke-width="2.2" />
+                  </svg>
+                </div>
+              } @else if (tpl.artType === 'anime-girl') {
+                <div class="absolute inset-0 flex flex-col items-center justify-end pb-4 select-none pointer-events-none">
+                  <div class="relative flex flex-col items-center">
+                    <!-- Hair Halo -->
+                    <div class="h-16 w-16 rounded-full bg-indigo-400/80 flex items-center justify-center shadow-inner">
+                      <!-- Face silhouette -->
+                      <div class="h-11 w-11 rounded-full bg-[#fef3c7] flex flex-col items-center justify-center">
+                        <div class="flex gap-2">
+                          <span class="h-1.5 w-1.5 rounded-full bg-indigo-900"></span>
+                          <span class="h-1.5 w-1.5 rounded-full bg-indigo-900"></span>
+                        </div>
+                        <span class="h-1 w-2 rounded-full bg-pink-300 mt-1"></span>
+                      </div>
+                    </div>
+                    <!-- Body shoulders -->
+                    <div class="h-8 w-18 rounded-t-2xl bg-indigo-600 -mt-2"></div>
+                  </div>
+                </div>
+              } @else if (tpl.artType === 'abstract-waves') {
+                <div class="absolute inset-0 flex flex-col justify-end select-none pointer-events-none">
+                  <svg viewBox="0 0 100 140" class="w-full h-full">
+                    <path d="M-20,30 Q40,10 50,60 T120,40 L120,150 L-20,150 Z" fill="#fed7aa" />
+                    <path d="M-20,60 Q30,40 60,90 T120,70 L120,150 L-20,150 Z" fill="#fbcfe8" />
+                    <path d="M-20,90 Q40,70 70,110 T120,100 L120,150 L-20,150 Z" fill="#ddd6fe" />
+                    <path d="M-20,115 Q30,100 60,130 T120,120 L120,150 L-20,150 Z" fill="#bae6fd" />
+                  </svg>
+                </div>
+              } @else if (tpl.artType === 'dino-friend') {
+                <div class="absolute inset-0 flex flex-col items-center justify-end pb-5 select-none pointer-events-none">
+                  <!-- Cute Chibi Dino -->
+                  <div class="relative flex flex-col items-center">
+                    <!-- Back Spines -->
+                    <div class="absolute -left-1 top-2 flex flex-col gap-1">
+                      <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+                      <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+                      <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+                    </div>
+                    <!-- Dino Head & Body -->
+                    <div class="h-14 w-12 rounded-[16px] bg-[#86efac] border border-[#4ade80] flex flex-col items-center justify-center p-1 shadow-xs">
+                      <div class="flex gap-2">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-950"></span>
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-950"></span>
+                      </div>
+                      <div class="h-1 w-2 rounded-full bg-pink-400 mt-1"></div>
+                      <div class="h-4 w-7 rounded-full bg-[#bbf7d0] mt-1.5"></div>
+                    </div>
+                    <!-- Flowers on Ground -->
+                    <div class="flex gap-2 mt-1">
+                      <span class="text-[8px]">🌼</span>
+                      <span class="text-[8px]">🌸</span>
+                    </div>
+                  </div>
+                </div>
+              } @else if (tpl.artType === 'starry-night') {
+                <div class="absolute inset-0 flex flex-col items-center justify-between p-3 select-none pointer-events-none">
+                  <div class="flex justify-end w-full pr-1 pt-1">
+                    <span class="text-amber-300 text-base drop-shadow-[0_0_8px_#fde047]">🌙</span>
+                  </div>
+                  <div class="flex flex-col items-center pb-3">
+                    <span class="text-white/80 text-xs">☁️</span>
+                    <span class="text-white text-[9px] font-extrabold tracking-widest mt-1">STARRY</span>
+                  </div>
+                </div>
+              } @else if (tpl.artType === 'that-girl-era') {
+                <div class="absolute inset-0 flex flex-col items-center justify-center px-2 select-none pointer-events-none">
+                  <p class="font-display text-center text-xs font-black tracking-wider text-pink-600 drop-shadow-xs">
+                    THAT GIRL<br>ERA
+                  </p>
+                </div>
               } @else if (tpl.isBlankCanvas) {
-                <span class="px-2 text-center font-display text-[10px] font-bold text-ink-soft">
-                  + Bắt đầu vẽ
-                </span>
+                <div class="absolute inset-0 flex flex-col items-center justify-center p-2 select-none pointer-events-none text-center">
+                  <span class="text-2xl text-purple-400 mb-1">＋</span>
+                  <span class="font-display text-[10px] font-bold text-ink-soft">Tự vẽ từ số 0</span>
+                </div>
+              }
+
+              <!-- Tag Text Fallback (if any) -->
+              @if (tpl.tagText && tpl.artType !== 'dreamy-kitten' && tpl.artType !== 'sakura-bloom' && tpl.artType !== 'minimal-cat' && tpl.artType !== 'starry-night') {
+                <div class="absolute bottom-3 left-0 right-0 text-center px-1 z-10">
+                  <span class="font-display text-[9px] font-black uppercase text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                    {{ tpl.tagText }}
+                  </span>
+                </div>
               }
             </div>
-
-            <!-- Style tags top-left -->
-            <div class="absolute left-2 top-2 flex flex-wrap gap-1">
-              @for (tag of tpl.tags; track tag) {
-                <span class="rounded-pill px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm"
-                      [style.background]="tag.color">{{ tag.label }}</span>
-              }
-            </div>
-
-            @if (tpl.isTrending) {
-              <span class="absolute right-2 top-2 rounded-pill bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm flex items-center gap-1">
-                <svg class="h-3 w-3 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 23c-4.97 0-9-4.03-9-9 0-4.97 4.03-9 9-9 .63 0 1.25.07 1.84.2-1.28 1.44-2.07 3.32-2.07 5.39 0 4.41 3.59 8 8 8 .53 0 1.05-.05 1.55-.16C20.44 20.89 16.54 23 12 23zM13.5 1.07C14.75 3.39 15.5 6.1 15.5 9c0 1.04-.1 2.06-.29 3.04C16.14 11.4 17 10.3 17 9c0-3.31-2.69-6-6-6-.54 0-1.06.07-1.56.2 1.34-1.2 3.08-1.99 5.06-2.13z"/>
-                </svg>
-                <span>Trending</span>
-              </span>
-            } @else if (tpl.isBlankCanvas) {
-              <span class="absolute right-2 top-2 rounded-pill bg-brand-800 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">Phôi Trắng</span>
-            }
           </div>
 
-          <!-- Card body -->
-          <div class="flex flex-1 flex-col gap-2 p-3.5">
-            <h4 class="font-display text-sm font-bold leading-tight text-ink">{{ tpl.name }}</h4>
-            <p class="line-clamp-2 text-xs leading-relaxed text-ink-soft">{{ tpl.description }}</p>
+          <!-- Card Body / Meta Information -->
+          <div class="mt-3 flex flex-1 flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <h4 class="font-display text-sm font-bold text-ink truncate group-hover:text-brand-800 transition-colors">
+                  {{ tpl.name }}
+                </h4>
+              </div>
 
-            <!-- Card Action Footer (Không hiện giá theo yêu cầu, tập trung hoàn toàn vào nút thiết kế) -->
-            <div class="mt-auto pt-2.5 border-t border-line/60">
+              <!-- Rating & Reviews -->
+              <div class="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
+                <span class="text-amber-400">★</span>
+                <span class="font-bold text-ink">{{ tpl.rating }}</span>
+                <span>({{ tpl.reviews }})</span>
+              </div>
+
+              <!-- Price -->
+              <div class="mt-1 text-sm font-extrabold text-brand-800">
+                {{ tpl.price | number:'1.0-0' }}đ
+              </div>
+            </div>
+
+            <!-- Card Action Footer: "Xem trước 3D" Pill Button -->
+            <div class="mt-3.5 pt-2 border-t border-purple-50">
               <button
                 type="button"
-                (click)="onDesignTemplate(tpl)"
-                class="w-full inline-flex items-center justify-center gap-1.5 rounded-pill bg-brand-800 px-4 py-2 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 hover:shadow-glow cursor-pointer"
+                (click)="openPreview3d(tpl, $event)"
+                class="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-purple-200/90 bg-purple-50/50 py-2 px-3 text-xs font-bold text-brand-800 transition-all hover:bg-brand-800 hover:text-white hover:border-brand-800 cursor-pointer shadow-2xs"
               >
-                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                <!-- 3D Cube Icon -->
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
                 </svg>
-                <span>Thiết kế mẫu này</span>
+                <span>Xem trước 3D</span>
               </button>
             </div>
           </div>
+
         </div>
       }
 
@@ -345,11 +661,314 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       CONFIRM DELETE SAVED DESIGN MODAL (Custom Popup Modal)
+       MODAL 1: "XEM TẤT CẢ" MY DESIGNS POPUP (Khi click Xem tất cả)
+  ══════════════════════════════════════════════════════ -->
+  @if (showAllDesignsModal()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/60 backdrop-blur-md animate-fade-in"
+      (click)="closeAllDesignsModal()"
+    >
+      <div
+        class="w-full max-w-4xl max-h-[88vh] rounded-3xl border border-purple-100 bg-white shadow-2xl flex flex-col overflow-hidden"
+        (click)="$event.stopPropagation()"
+      >
+
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-purple-100/80 px-6 py-4.5 bg-purple-50/40">
+          <div class="flex items-center gap-3">
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-brand-800">
+              <svg class="h-5 w-5 text-purple-700" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="7" height="7" rx="2" />
+                <rect x="14" y="3" width="7" height="7" rx="2" />
+                <rect x="3" y="14" width="7" height="7" rx="2" />
+                <rect x="14" y="14" width="7" height="7" rx="2" />
+              </svg>
+            </span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-base font-bold text-ink">Tất cả bản thiết kế của tôi</h3>
+                <span class="rounded-pill bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-900">
+                  {{ myDesigns().length }} bản vẽ
+                </span>
+              </div>
+              <p class="text-xs text-ink-soft">Xem lại, chỉnh sửa hoặc quản lý toàn bộ các bản thiết kế của bạn</p>
+            </div>
+          </div>
+
+          <!-- Close Modal Button -->
+          <button
+            type="button"
+            (click)="closeAllDesignsModal()"
+            class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+            title="Đóng cửa sổ"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Search Bar within Modal -->
+        <div class="border-b border-purple-100/60 px-6 py-3 bg-white">
+          <div class="relative">
+            <svg class="h-4 w-4 text-purple-400 absolute left-3.5 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              [value]="searchMyDesignQuery()"
+              (input)="onSearchMyDesignsInput($event)"
+              placeholder="Tìm theo tên bản vẽ hoặc dòng điện thoại..."
+              class="w-full rounded-full border border-purple-200/80 bg-purple-50/30 pl-10 pr-4 py-2 text-xs text-ink placeholder:text-ink-soft/50 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400/20"
+            />
+          </div>
+        </div>
+
+        <!-- Modal Body (Grid of all designs) -->
+        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin">
+          @if (filteredModalDesigns().length === 0) {
+            <div class="py-12 text-center text-ink-soft">
+              <p class="text-sm">Không tìm thấy bản thiết kế nào phù hợp với từ khóa.</p>
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              @for (item of filteredModalDesigns(); track item.id) {
+                <div
+                  class="group relative flex flex-col rounded-2xl border border-purple-100/90 bg-white p-3.5 shadow-soft hover:shadow-lift hover:border-brand-300 transition-all"
+                >
+                  <div class="flex items-center gap-3">
+                    <!-- Mini Case Mockup -->
+                    <div
+                      class="mini-case-bezel relative flex h-20 w-12 shrink-0 items-center justify-center overflow-hidden shadow-xs cursor-pointer"
+                      [style.background]="item.bg"
+                      (click)="onContinueSavedDesign(item)"
+                    >
+                      <div class="absolute left-1 top-1 h-5 w-4 rounded-[4px] bg-[#121316] border border-[#2a2d34] flex flex-col justify-around p-0.5">
+                        <span class="h-1 w-1 rounded-full bg-slate-600"></span>
+                        <span class="h-1 w-1 rounded-full bg-slate-600"></span>
+                      </div>
+                      @if (item.thumbnailType === 'dreamy-sky') {
+                        <span class="text-[9px]">☁️</span>
+                      } @else if (item.thumbnailType === 'sakura') {
+                        <span class="text-[9px]">🌸</span>
+                      } @else if (item.thumbnailType === 'cat') {
+                        <span class="text-[9px]">🐱</span>
+                      } @else if (item.thumbnailType === 'mountain') {
+                        <span class="text-[9px]">🏔️</span>
+                      } @else if (item.thumbnailType === 'starry') {
+                        <span class="text-[9px]">🌙</span>
+                      } @else if (item.thumbnailText) {
+                        <span class="px-0.5 text-center text-[7px] font-bold text-white drop-shadow-xs truncate">
+                          {{ item.thumbnailText }}
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Meta -->
+                    <div class="min-w-0 flex-1">
+                      <h4 class="font-display text-xs font-bold text-ink truncate group-hover:text-brand-800">
+                        {{ item.name }}
+                      </h4>
+                      <p class="text-[11px] text-ink-soft truncate">{{ item.modelName }}</p>
+                      <span class="inline-block mt-1 text-[10px] text-purple-700 font-medium">
+                        {{ item.savedAt }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Actions Footer in Card -->
+                  <div class="mt-3.5 pt-2 border-t border-purple-50 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      (click)="onContinueSavedDesign(item)"
+                      class="flex-1 rounded-full bg-brand-800 py-1.5 px-3 text-center text-xs font-bold text-white hover:bg-brand-600 transition-colors cursor-pointer"
+                    >
+                      Chỉnh sửa
+                    </button>
+                    <button
+                      type="button"
+                      (click)="duplicateSavedDesign(item, $event)"
+                      class="rounded-full p-1.5 text-ink-soft hover:bg-purple-50 hover:text-brand-800 transition-colors cursor-pointer"
+                      title="Nhân bản thiết kế"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="startRenameDesign(item, $event)"
+                      class="rounded-full p-1.5 text-ink-soft hover:bg-purple-50 hover:text-brand-800 transition-colors cursor-pointer"
+                      title="Đổi tên"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="onDeleteSavedDesign(item, $event)"
+                      class="rounded-full p-1.5 text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Xóa bản vẽ này"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-between border-t border-purple-100/80 px-6 py-3.5 bg-purple-50/30">
+          <button
+            type="button"
+            (click)="createNewDesign()"
+            class="inline-flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-xs font-bold text-brand-800 hover:bg-purple-100 transition-colors cursor-pointer"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Tạo thiết kế mới</span>
+          </button>
+
+          <button
+            type="button"
+            (click)="closeAllDesignsModal()"
+            class="rounded-full bg-brand-800 px-6 py-2 text-xs font-bold text-white hover:bg-brand-900 transition-colors cursor-pointer"
+          >
+            Đóng
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL 2: 3D PREVIEW MODAL (Khi click Xem trước 3D)
+  ══════════════════════════════════════════════════════ -->
+  @if (preview3dTemplate(); as activeTpl) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/65 backdrop-blur-md animate-fade-in"
+      (click)="closePreview3d()"
+    >
+      <div
+        class="w-full max-w-lg rounded-3xl border border-purple-100 bg-white p-6 shadow-2xl flex flex-col text-center"
+        (click)="$event.stopPropagation()"
+      >
+
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-purple-100">
+          <div class="flex items-center gap-2">
+            <span class="rounded-pill bg-purple-100 px-2.5 py-1 text-xs font-bold text-brand-800 flex items-center gap-1">
+              <svg class="h-3.5 w-3.5 text-purple-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+              </svg>
+              <span>Xem trước 3D</span>
+            </span>
+            <span class="font-display text-sm font-bold text-ink">{{ activeTpl.name }}</span>
+          </div>
+
+          <button
+            type="button"
+            (click)="closePreview3d()"
+            class="rounded-full p-1.5 text-ink-soft hover:bg-purple-100 hover:text-ink cursor-pointer"
+          >
+            <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 3D Floating Case Stage -->
+        <div class="my-6 flex items-center justify-center py-4 bg-purple-50/50 rounded-2xl relative overflow-hidden">
+          <div class="animate-float-case">
+            <div
+              class="case-bezel preview-case-shadow h-72 w-44 overflow-hidden bg-white flex flex-col justify-between relative"
+              [style.background]="activeTpl.gradient"
+            >
+              <!-- Camera bump -->
+              <div class="absolute left-[7%] top-[5%] z-20 h-[26%] w-[38%] rounded-[12px] bg-[#121316] border border-[#2a2d34] flex flex-col justify-around p-1 shadow-md">
+                <div class="flex items-center justify-between">
+                  <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
+                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                  </div>
+                  <div class="h-2 w-2 rounded-full bg-[#fef08a] ring-1 ring-slate-400"></div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
+                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                  </div>
+                  <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
+                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Artwork Label -->
+              <div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
+                <span class="font-display text-xs font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                  {{ activeTpl.name }}
+                </span>
+                <span class="text-[10px] font-semibold text-white/90 drop-shadow-xs">
+                  {{ state.selectedModel().name }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Specifications & Pricing Summary -->
+        <div class="grid grid-cols-3 gap-2 py-3 border-y border-purple-100 text-xs text-ink">
+          <div>
+            <span class="text-[10px] text-ink-soft block">Dòng máy</span>
+            <span class="font-bold">{{ state.selectedModel().name }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-ink-soft block">Đánh giá</span>
+            <span class="font-bold text-amber-500">★ {{ activeTpl.rating }}</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-ink-soft block">Giá chuẩn</span>
+            <span class="font-bold text-brand-800">{{ activeTpl.price | number:'1.0-0' }}đ</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex gap-3">
+          <button
+            type="button"
+            (click)="closePreview3d()"
+            class="flex-1 rounded-full border border-purple-200 py-3 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
+          >
+            Đóng
+          </button>
+          <button
+            type="button"
+            (click)="onDesignTemplate(activeTpl)"
+            class="flex-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-800 py-3 text-xs font-bold text-white shadow-soft hover:bg-brand-600 transition-colors cursor-pointer"
+          >
+            <span>Dùng mẫu này & Vào Studio</span>
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL 3: CONFIRM DELETE SAVED DESIGN MODAL
   ══════════════════════════════════════════════════════ -->
   @if (designToDelete(); as target) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div class="w-full max-w-sm rounded-card border border-line bg-surface-alt p-6 shadow-lift text-center">
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/60 backdrop-blur-sm animate-fade-in">
+      <div class="w-full max-w-sm rounded-3xl border border-line bg-white p-6 shadow-2xl text-center">
         <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-red-600">
           <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -363,16 +982,55 @@
           <button
             type="button"
             (click)="cancelDelete()"
-            class="flex-1 rounded-pill border border-line py-2.5 text-xs font-semibold text-ink hover:bg-surface transition-colors cursor-pointer"
+            class="flex-1 rounded-full border border-line py-2.5 text-xs font-semibold text-ink hover:bg-purple-50 transition-colors cursor-pointer"
           >
             Hủy bỏ
           </button>
           <button
             type="button"
             (click)="confirmDelete()"
-            class="flex-1 rounded-pill bg-red-600 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-red-700 transition-colors cursor-pointer"
+            class="flex-1 rounded-full bg-red-600 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-red-700 transition-colors cursor-pointer"
           >
             Xác nhận xóa
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL 4: RENAME SAVED DESIGN MODAL
+  ══════════════════════════════════════════════════════ -->
+  @if (designToRename(); as target) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/60 backdrop-blur-sm animate-fade-in">
+      <div class="w-full max-w-sm rounded-3xl border border-purple-100 bg-white p-6 shadow-2xl text-left">
+        <h3 class="font-display text-base font-bold text-ink">Đổi tên bản thiết kế</h3>
+        <p class="mt-1 text-xs text-ink-soft">Nhập tên mới cho bản thiết kế của bạn</p>
+
+        <div class="mt-4">
+          <input
+            type="text"
+            [value]="renameInput()"
+            (input)="renameInput.set($any($event.target).value)"
+            class="w-full rounded-xl border border-purple-200 px-3.5 py-2 text-xs text-ink focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400/20"
+            placeholder="Tên bản thiết kế..."
+          />
+        </div>
+
+        <div class="mt-5 flex gap-2.5">
+          <button
+            type="button"
+            (click)="cancelRename()"
+            class="flex-1 rounded-full border border-line py-2 text-xs font-semibold text-ink hover:bg-purple-50 transition-colors cursor-pointer"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            (click)="confirmRename()"
+            class="flex-1 rounded-full bg-brand-800 py-2 text-xs font-bold text-white hover:bg-brand-900 transition-colors cursor-pointer"
+          >
+            Lưu tên mới
           </button>
         </div>
       </div>
