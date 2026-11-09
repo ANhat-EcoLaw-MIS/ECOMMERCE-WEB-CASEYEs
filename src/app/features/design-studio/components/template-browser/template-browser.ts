@@ -345,7 +345,7 @@ export class TemplateBrowser {
 
   // 3D View Controls
   protected readonly viewMode = signal<'3d' | '2d'>('3d');
-  protected readonly isAutoRotate = signal<boolean>(true);
+  protected readonly isAutoRotate = signal<boolean>(false);
 
   // Reviews State
   protected readonly reviewsMap = signal<Record<string, TemplateReview[]>>(INITIAL_REVIEWS);
@@ -528,10 +528,14 @@ export class TemplateBrowser {
     if (event) event.stopPropagation();
     this.previewTemplate.set(template);
     this.viewMode.set('3d');
-    this.isAutoRotate.set(true);
+    this.isAutoRotate.set(false);
     this.userReviewText.set('');
     this.userRating.set(5);
     this.reviewSubmittedSuccess.set(false);
+    setTimeout(() => {
+      this.syncTemplate3dTexture(template);
+      this.reset3dView();
+    }, 150);
   }
 
   protected closePreviewModal(): void {
@@ -541,11 +545,669 @@ export class TemplateBrowser {
 
   protected toggleViewMode(mode: '3d' | '2d'): void {
     this.viewMode.set(mode);
+    if (mode === '3d' && this.previewTemplate()) {
+      setTimeout(() => {
+        this.syncTemplate3dTexture(this.previewTemplate()!);
+        this.reset3dView();
+      }, 150);
+    }
+  }
+
+  protected onModalModelViewerLoad(): void {
+    if (this.previewTemplate()) {
+      this.syncTemplate3dTexture(this.previewTemplate()!);
+      this.reset3dView();
+    }
+  }
+
+  protected reset3dView(): void {
+    const mv = document.querySelector('#modalTemplateViewer, model-viewer') as any;
+    if (mv) {
+      mv.cameraOrbit = '0deg 85deg 105%';
+      if (typeof mv.resetTurntableRotation === 'function') {
+        mv.resetTurntableRotation();
+      }
+      if (typeof mv.jumpCameraToGoal === 'function') {
+        mv.jumpCameraToGoal();
+      }
+    }
   }
 
   protected toggleAutoRotate(): void {
     this.isAutoRotate.update((v) => !v);
   }
+
+  /**
+   * Đồng bộ ốp lưng mẫu lên mô hình 3D WebGL (Chuẩn Canvas Studio)
+   * Renders background, artwork, camera punch hole and bumper, then injects Three.js texture
+   */
+  private syncTemplate3dTexture(template: TemplateCard): void {
+    if (typeof document === 'undefined') return;
+    const mv = document.querySelector('#modalTemplateViewer, model-viewer') as any;
+    if (!mv || !mv.model) return;
+
+    const W = 600;
+    const H = 1264;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 1. Draw Background Gradient / Color
+    const bg = template.gradient || '#FFFFFF';
+    if (bg.includes('gradient')) {
+      const colorMatches = bg.match(/#[a-fA-F0-9]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/g);
+      if (colorMatches && colorMatches.length >= 2) {
+        const angleMatch = bg.match(/(\d+)deg/);
+        const angle = angleMatch ? parseInt(angleMatch[1], 10) : 180;
+        const rad = ((angle - 90) * Math.PI) / 180;
+        const cx = W / 2;
+        const cy = H / 2;
+        const length = Math.sqrt(W * W + H * H) / 2;
+        const x0 = cx - Math.cos(rad) * length;
+        const y0 = cy - Math.sin(rad) * length;
+        const x1 = cx + Math.cos(rad) * length;
+        const y1 = cy + Math.sin(rad) * length;
+
+        const linGrad = ctx.createLinearGradient(x0, y0, x1, y1);
+        colorMatches.forEach((col, idx) => {
+          linGrad.addColorStop(idx / (colorMatches.length - 1), col);
+        });
+        ctx.fillStyle = linGrad;
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#FAFAFA');
+        grad.addColorStop(1, '#ECE6FD');
+        ctx.fillStyle = grad;
+      }
+    } else {
+      const lower = bg.toLowerCase();
+      ctx.fillStyle = (lower === '#ffffff' || lower === '#fff' || lower === '#fafafa') ? '#f3f3f6' : bg;
+    }
+
+    // Clip to case silhouette
+    ctx.beginPath();
+    if ((ctx as any).roundRect) {
+      (ctx as any).roundRect(0, 0, W, H, [100, 100, 100, 100]);
+    } else {
+      ctx.rect(0, 0, W, H);
+    }
+    ctx.fill();
+    ctx.clip();
+
+    // 2. Draw Artwork on Canvas according to artType
+    this.drawTemplateArtworkToCanvas(ctx, template, W, H);
+
+    // 3. Punch Camera Cutout cleanly matching model
+    const model = this.state.selectedModel();
+    const cam = model.safeZoneMask.cameraCutout;
+    const camX = (cam.xPercent / 100) * W;
+    const camY = (cam.yPercent / 100) * H;
+    const camW = (cam.widthPercent / 100) * W;
+    const camH = (cam.heightPercent / 100) * H;
+    const camRadius = cam.borderRadius * 2;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    if (model.id === 'galaxy-s24') {
+      const cx = camX + camW / 2;
+      const r = camW * 0.42;
+      ctx.arc(cx, camY + r + 4, r, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH * 0.5, r, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH - r - 4, r, 0, Math.PI * 2);
+    } else if (model.id === 'xiaomi-14-ultra') {
+      const cx = W / 2;
+      const cy = camY + camH / 2;
+      const r = camW / 2;
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    } else {
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(camX, camY, camW, camH, [camRadius, camRadius, camRadius, camRadius]);
+      } else {
+        ctx.rect(camX, camY, camW, camH);
+      }
+    }
+    ctx.fill();
+    ctx.restore();
+
+    // 4. Bumper Rim Stroke
+    ctx.save();
+    ctx.lineWidth = 18;
+    ctx.strokeStyle = '#18181b';
+    ctx.beginPath();
+    if ((ctx as any).roundRect) {
+      (ctx as any).roundRect(9, 9, W - 18, H - 18, [92, 92, 92, 92]);
+    } else {
+      ctx.rect(9, 9, W - 18, H - 18);
+    }
+    ctx.stroke();
+
+    // Camera Bezel Ring
+    ctx.lineWidth = 22;
+    ctx.strokeStyle = '#18181b';
+    ctx.beginPath();
+    if (model.id === 'galaxy-s24') {
+      const cx = camX + camW / 2;
+      const r = camW * 0.42;
+      ctx.arc(cx, camY + r + 4, r + 2, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH * 0.5, r + 2, 0, Math.PI * 2);
+      ctx.arc(cx, camY + camH - r - 4, r + 2, 0, Math.PI * 2);
+    } else if (model.id === 'xiaomi-14-ultra') {
+      const cx = W / 2;
+      const cy = camY + camH / 2;
+      const r = camW / 2;
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+    } else {
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(camX, camY, camW, camH, [camRadius, camRadius, camRadius, camRadius]);
+      } else {
+        ctx.rect(camX, camY, camW, camH);
+      }
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // 5. Inject Three.js Texture & Meshes into <model-viewer>
+    const sceneSymbol = Object.getOwnPropertySymbols(mv).find((s) => s.toString().includes('scene'));
+    const scene = sceneSymbol ? mv[sceneSymbol] : null;
+
+    if (scene) {
+      let backMesh: any = null;
+      let sampleMesh: any = null;
+      let foundTex: any = null;
+
+      scene.traverse((o: any) => {
+        if (o.isMesh) {
+          if (!sampleMesh && o.name !== 'CaseOverlayMesh') sampleMesh = o;
+          if (o.material?.map && !foundTex) foundTex = o.material.map;
+          if (
+            o.name === 'wLfSXtbwRlBrwof' ||
+            o.material?.name === 'oZRkkORNzkufnGD' ||
+            o.material?.name === 'glass' ||
+            o.name?.toLowerCase().includes('back')
+          ) {
+            backMesh = o;
+          }
+          if (o.name === 'IykfmVvLplTsTEW' || o.material?.name === 'PaletteMaterial004') {
+            o.visible = false;
+          }
+        }
+      });
+
+      if (!backMesh && sampleMesh) backMesh = sampleMesh;
+
+      if (backMesh && sampleMesh) {
+        const MeshConstructor = sampleMesh.constructor;
+        const MaterialConstructor = sampleMesh.material.constructor;
+        const BufferGeometryConstructor = sampleMesh.geometry.constructor;
+        const BufferAttributeConstructor = sampleMesh.geometry.attributes.position.constructor;
+        const TexConstructor = foundTex?.constructor;
+
+        if (TexConstructor) {
+          const glCvs = document.createElement('canvas');
+          glCvs.width = W;
+          glCvs.height = H;
+          const glCtx = glCvs.getContext('2d');
+          if (glCtx) {
+            glCtx.translate(W, H);
+            glCtx.scale(-1, -1);
+            glCtx.drawImage(canvas, 0, 0);
+
+            const tex = new TexConstructor(glCvs);
+            if ('colorSpace' in tex) tex.colorSpace = 'srgb';
+            if ('encoding' in tex) (tex as any).encoding = 3001;
+            tex.needsUpdate = true;
+
+            const hw = 3.90;
+            const hh = 8.00;
+            const z = 0.425;
+
+            const positions = new Float32Array([
+              -hw, -hh, z,
+               hw, -hh, z,
+               hw,  hh, z,
+              -hw,  hh, z
+            ]);
+            const uvs = new Float32Array([
+              1, 1,
+              0, 1,
+              0, 0,
+              1, 0
+            ]);
+            const indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
+            const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]);
+
+            const geo = new BufferGeometryConstructor();
+            geo.setAttribute('position', new BufferAttributeConstructor(positions, 3));
+            geo.setAttribute('uv', new BufferAttributeConstructor(uvs, 2));
+            geo.setAttribute('normal', new BufferAttributeConstructor(normals, 3));
+            geo.setIndex(new BufferAttributeConstructor(indices, 1));
+
+            let overlay = backMesh.parent.getObjectByName('CaseOverlayMesh');
+            if (!overlay) {
+              const mat = new MaterialConstructor();
+              mat.map = tex;
+              mat.transparent = true;
+              mat.side = 2;
+              mat.roughness = 0.88;
+              mat.metalness = 0.0;
+
+              overlay = new MeshConstructor(geo, mat);
+              overlay.name = 'CaseOverlayMesh';
+              overlay.scale.copy(backMesh.scale);
+              backMesh.parent.add(overlay);
+            } else {
+              overlay.geometry = geo;
+              if (overlay.material) {
+                overlay.material.map = tex;
+                overlay.material.transparent = true;
+                overlay.material.roughness = 0.88;
+                overlay.material.metalness = 0.0;
+                overlay.material.needsUpdate = true;
+              }
+            }
+
+            // CaseExtrusionBumper
+            const rOut = 1.20;
+            const hwIn = 3.74;
+            const hhIn = 7.85;
+            const rIn = 1.05;
+            const zBack = 0.435;
+            const zFront = -0.52;
+            const segmentsPerCorner = 12;
+            const N = segmentsPerCorner * 4;
+
+            const generatePoints = (wVal: number, hVal: number, rVal: number) => {
+              const pts: { x: number; y: number }[] = [];
+              const corners = [
+                { cx: wVal - rVal, cy: hVal - rVal, startAngle: 0, endAngle: Math.PI / 2 },
+                { cx: -wVal + rVal, cy: hVal - rVal, startAngle: Math.PI / 2, endAngle: Math.PI },
+                { cx: -wVal + rVal, cy: -hVal + rVal, startAngle: Math.PI, endAngle: Math.PI * 1.5 },
+                { cx: wVal - rVal, cy: -hVal + rVal, startAngle: Math.PI * 1.5, endAngle: Math.PI * 2 }
+              ];
+              for (const c of corners) {
+                for (let i = 0; i < segmentsPerCorner; i++) {
+                  const theta = c.startAngle + (i / segmentsPerCorner) * (c.endAngle - c.startAngle);
+                  pts.push({
+                    x: c.cx + rVal * Math.cos(theta),
+                    y: c.cy + rVal * Math.sin(theta)
+                  });
+                }
+              }
+              return pts;
+            };
+
+            const ptsOut = generatePoints(hw, hh, rOut);
+            const ptsIn = generatePoints(hwIn, hhIn, rIn);
+            const bumperPos: number[] = [];
+            const bumperIndices: number[] = [];
+
+            for (let i = 0; i < N; i++) bumperPos.push(ptsOut[i].x, ptsOut[i].y, zBack);
+            for (let i = 0; i < N; i++) bumperPos.push(ptsOut[i].x, ptsOut[i].y, zFront);
+            for (let i = 0; i < N; i++) bumperPos.push(ptsIn[i].x, ptsIn[i].y, zBack);
+
+            for (let i = 0; i < N; i++) {
+              const next = (i + 1) % N;
+              bumperIndices.push(i, N + i, next);
+              bumperIndices.push(next, N + i, N + next);
+            }
+            for (let i = 0; i < N; i++) {
+              const next = (i + 1) % N;
+              bumperIndices.push(2 * N + i, i, 2 * N + next);
+              bumperIndices.push(2 * N + next, i, next);
+            }
+
+            const bumperGeo = new BufferGeometryConstructor();
+            bumperGeo.setAttribute('position', new BufferAttributeConstructor(new Float32Array(bumperPos), 3));
+            bumperGeo.setIndex(new BufferAttributeConstructor(new Uint16Array(bumperIndices), 1));
+            bumperGeo.computeVertexNormals();
+
+            let bumper = backMesh.parent.getObjectByName('CaseExtrusionBumper');
+            if (!bumper) {
+              const bumperMat = new MaterialConstructor();
+              bumperMat.color.set('#18181b');
+              bumperMat.roughness = 0.85;
+              bumperMat.metalness = 0.1;
+              bumperMat.side = 2;
+
+              bumper = new MeshConstructor(bumperGeo, bumperMat);
+              bumper.name = 'CaseExtrusionBumper';
+              bumper.scale.copy(backMesh.scale);
+              backMesh.parent.add(bumper);
+            } else {
+              bumper.geometry = bumperGeo;
+              if (bumper.material) {
+                bumper.material.color.set('#18181b');
+                bumper.material.needsUpdate = true;
+              }
+            }
+
+            if (scene) {
+              scene.isDirty = true;
+              if (typeof scene.queueRender === 'function') {
+                scene.queueRender();
+                requestAnimationFrame(() => {
+                  if (typeof scene.queueRender === 'function') scene.queueRender();
+                });
+              }
+            }
+            return;
+          }
+        }
+      }
+    }
+
+    // Fallback: ModelViewer createTexture API
+    const targetMat = mv.model?.materials?.find(
+      (m: any) =>
+        m.name === 'oZRkkORNzkufnGD' ||
+        m.name === 'glass' ||
+        m.name === 'back' ||
+        m.name?.toLowerCase().includes('case')
+    );
+    if (targetMat?.pbrMetallicRoughness?.baseColorTexture) {
+      mv.createTexture(canvas.toDataURL('image/png')).then((texture: any) => {
+        targetMat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
+        targetMat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
+        if (scene) {
+          scene.isDirty = true;
+          if (typeof scene.queueRender === 'function') scene.queueRender();
+        }
+      });
+    }
+  }
+
+  /**
+   * Vẽ tác phẩm đặc trưng của từng Template lên Canvas 2D phục vụ 3D Texture
+   */
+  private drawTemplateArtworkToCanvas(
+    ctx: CanvasRenderingContext2D,
+    template: TemplateCard,
+    W: number,
+    H: number
+  ): void {
+    const art = template.artType;
+
+    if (art === 'dreamy-kitten') {
+      ctx.save();
+      // Fluffy clouds at bottom
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(W * 0.5, H * 0.85, 170, 0, Math.PI * 2);
+      ctx.arc(W * 0.28, H * 0.88, 130, 0, Math.PI * 2);
+      ctx.arc(W * 0.72, H * 0.88, 130, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Kitten 1 (Left)
+      const catX = W * 0.42;
+      const catY = H * 0.75;
+      ctx.beginPath();
+      ctx.arc(catX, catY, 78, 0, Math.PI * 2);
+      ctx.fill();
+      // Ears
+      ctx.beginPath();
+      ctx.moveTo(catX - 65, catY - 40);
+      ctx.lineTo(catX - 35, catY - 115);
+      ctx.lineTo(catX - 5, catY - 60);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(catX + 5, catY - 60);
+      ctx.lineTo(catX + 35, catY - 115);
+      ctx.lineTo(catX + 65, catY - 40);
+      ctx.fill();
+      // Pink inner ears
+      ctx.fillStyle = '#fbcfe8';
+      ctx.beginPath();
+      ctx.moveTo(catX - 52, catY - 45);
+      ctx.lineTo(catX - 35, catY - 98);
+      ctx.lineTo(catX - 15, catY - 58);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(catX + 15, catY - 58);
+      ctx.lineTo(catX + 35, catY - 98);
+      ctx.lineTo(catX + 52, catY - 45);
+      ctx.fill();
+      // Eyes ^ ^
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.arc(catX - 25, catY - 5, 14, Math.PI, 0, false);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(catX + 25, catY - 5, 14, Math.PI, 0, false);
+      ctx.stroke();
+      // Blush
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(catX - 38, catY + 16, 11, 0, Math.PI * 2);
+      ctx.arc(catX + 38, catY + 16, 11, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Kitten 2 (Right)
+      const cat2X = W * 0.63;
+      const cat2Y = H * 0.78;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cat2X, cat2Y, 65, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cat2X - 50, cat2Y - 30);
+      ctx.lineTo(cat2X - 28, cat2Y - 90);
+      ctx.lineTo(cat2X, cat2Y - 45);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cat2X, cat2Y - 45);
+      ctx.lineTo(cat2X + 28, cat2Y - 90);
+      ctx.lineTo(cat2X + 50, cat2Y - 30);
+      ctx.fill();
+      ctx.restore();
+    } else if (art === 'sakura-bloom') {
+      ctx.save();
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(W * 0.1, H * 0.96);
+      ctx.quadraticCurveTo(W * 0.45, H * 0.65, W * 0.35, H * 0.36);
+      ctx.quadraticCurveTo(W * 0.3, H * 0.16, W * 0.75, H * 0.08);
+      ctx.stroke();
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(W * 0.38, H * 0.46);
+      ctx.quadraticCurveTo(W * 0.62, H * 0.38, W * 0.86, H * 0.32);
+      ctx.stroke();
+      const blossoms = [
+        { x: W * 0.35, y: H * 0.36, r: 38 },
+        { x: W * 0.75, y: H * 0.15, r: 42 },
+        { x: W * 0.58, y: H * 0.33, r: 34 },
+        { x: W * 0.84, y: H * 0.33, r: 38 },
+        { x: W * 0.22, y: H * 0.6, r: 32 },
+        { x: W * 0.48, y: H * 0.22, r: 30 },
+        { x: W * 0.68, y: H * 0.46, r: 28 },
+      ];
+      for (const b of blossoms) {
+        ctx.fillStyle = '#fda4af';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f43f5e';
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    } else if (art === 'mountain-escape') {
+      ctx.save();
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(W * 0.1, H * 0.72);
+      ctx.lineTo(W * 0.5, H * 0.22);
+      ctx.lineTo(W * 0.9, H * 0.72);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(W * 0.5, H * 0.22);
+      ctx.lineTo(W * 0.38, H * 0.4);
+      ctx.lineTo(W * 0.5, H * 0.35);
+      ctx.lineTo(W * 0.62, H * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#0369a1';
+      ctx.beginPath();
+      ctx.moveTo(W * 0.35, H * 0.75);
+      ctx.lineTo(W * 0.7, H * 0.36);
+      ctx.lineTo(W, H * 0.75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#0f766e';
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.85);
+      ctx.lineTo(W * 0.25, H * 0.52);
+      ctx.lineTo(W * 0.6, H * 0.85);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(0, H * 0.78, W, H * 0.22);
+      ctx.restore();
+    } else if (art === 'minimal-cat') {
+      ctx.save();
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold 52px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('♥', W / 2, H * 0.54);
+      ctx.strokeStyle = '#18181b';
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      const cX = W / 2;
+      const cY = H * 0.75;
+      ctx.beginPath();
+      ctx.moveTo(cX - 70, cY - 80);
+      ctx.lineTo(cX - 60, cY - 170);
+      ctx.lineTo(cX - 20, cY - 130);
+      ctx.quadraticCurveTo(cX, cY - 135, cX + 20, cY - 130);
+      ctx.lineTo(cX + 60, cY - 170);
+      ctx.lineTo(cX + 70, cY - 80);
+      ctx.quadraticCurveTo(cX + 90, cY + 40, cX + 65, cY + 90);
+      ctx.quadraticCurveTo(cX, cY + 100, cX - 65, cY + 90);
+      ctx.quadraticCurveTo(cX - 90, cY + 40, cX - 70, cY - 80);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cX + 55, cY + 70);
+      ctx.quadraticCurveTo(cX + 120, cY + 50, cX + 100, cY - 10);
+      ctx.stroke();
+      ctx.restore();
+    } else if (art === 'anime-girl') {
+      ctx.save();
+      ctx.fillStyle = '#6366f1';
+      ctx.beginPath();
+      ctx.arc(W / 2, H * 0.65, 135, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fef3c7';
+      ctx.beginPath();
+      ctx.arc(W / 2, H * 0.67, 88, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#312e81';
+      ctx.beginPath();
+      ctx.arc(W / 2 - 36, H * 0.67, 14, 0, Math.PI * 2);
+      ctx.arc(W / 2 + 36, H * 0.67, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#f472b6';
+      ctx.beginPath();
+      ctx.arc(W / 2 - 42, H * 0.71, 12, 0, Math.PI * 2);
+      ctx.arc(W / 2 + 42, H * 0.71, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#4f46e5';
+      ctx.beginPath();
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(W / 2 - 82, H * 0.76, 164, 140, [32, 32, 0, 0]);
+      } else {
+        ctx.rect(W / 2 - 82, H * 0.76, 164, 140);
+      }
+      ctx.fill();
+      ctx.restore();
+    } else if (art === 'abstract-waves') {
+      ctx.save();
+      const colors = ['#fed7aa', '#fbcfe8', '#ddd6fe', '#bae6fd'];
+      const waveHeights = [H * 0.35, H * 0.52, H * 0.7, H * 0.85];
+      colors.forEach((col, idx) => {
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(0, waveHeights[idx]);
+        ctx.bezierCurveTo(W * 0.35, waveHeights[idx] - 90, W * 0.65, waveHeights[idx] + 110, W, waveHeights[idx] - 40);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+      });
+      ctx.restore();
+    } else if (art === 'dino-friend') {
+      ctx.save();
+      const dX = W / 2;
+      const dY = H * 0.74;
+      ctx.fillStyle = '#facc15';
+      [-75, -40, -5].forEach((offset) => {
+        ctx.beginPath();
+        ctx.arc(dX - 76, dY + offset, 16, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.fillStyle = '#86efac';
+      ctx.beginPath();
+      if ((ctx as any).roundRect) {
+        (ctx as any).roundRect(dX - 72, dY - 115, 144, 185, [52, 52, 42, 42]);
+      } else {
+        ctx.rect(dX - 72, dY - 115, 144, 185);
+      }
+      ctx.fill();
+      ctx.fillStyle = '#064e3b';
+      ctx.beginPath();
+      ctx.arc(dX - 25, dY - 60, 12, 0, Math.PI * 2);
+      ctx.arc(dX + 25, dY - 60, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#bbf7d0';
+      ctx.beginPath();
+      ctx.ellipse(dX, dY + 15, 46, 56, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (art === 'starry-night') {
+      ctx.save();
+      ctx.fillStyle = '#fde047';
+      ctx.shadowColor = '#fde047';
+      ctx.shadowBlur = 30;
+      ctx.beginPath();
+      ctx.arc(W * 0.76, H * 0.28, 55, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#4c1d95';
+      ctx.beginPath();
+      ctx.arc(W * 0.72, H * 0.26, 48, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.beginPath();
+      ctx.arc(W * 0.5, H * 0.72, 90, 0, Math.PI * 2);
+      ctx.arc(W * 0.35, H * 0.75, 70, 0, Math.PI * 2);
+      ctx.arc(W * 0.65, H * 0.75, 70, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 32px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('STARRY', W / 2, H * 0.83);
+      ctx.restore();
+    } else if (art === 'that-girl-era') {
+      ctx.save();
+      ctx.fillStyle = '#db2777';
+      ctx.font = '900 48px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('THAT GIRL', W / 2, H * 0.65);
+      ctx.fillText('ERA', W / 2, H * 0.72);
+      ctx.restore();
+    }
+  }
+
 
   // --- User Review Submission ---
   protected setUserRating(star: number): void {

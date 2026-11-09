@@ -66,7 +66,7 @@
                 <div class="absolute left-1 top-1 h-5 w-4 rounded-[4px] bg-[#121316] border border-[#2a2d34] flex flex-col justify-around p-0.5 shadow-xs z-10">
                   <div class="flex gap-0.5">
                     <span class="h-1 w-1 rounded-full bg-[#1e2027] ring-0.5 ring-slate-600"></span>
-                    <span class="h-0.8 w-0.8 rounded-full bg-amber-300"></span>
+                    <span class="h-0.8 w-0.8 rounded-full bg-slate-300"></span>
                   </div>
                   <span class="h-1.2 w-1.2 rounded-full bg-[#1e2027] ring-0.5 ring-slate-600"></span>
                 </div>
@@ -439,25 +439,72 @@
               class="case-bezel preview-case-shadow relative h-[84%] w-[58%] overflow-hidden bg-white flex flex-col justify-between"
               [style.background]="tpl.gradient"
             >
-              <!-- Obsidian Matte Camera Module (Chamfered Bevel & Triple Lenses) -->
-              <div class="absolute left-[7%] top-[5%] z-20 h-[26%] w-[38%] rounded-[12px] bg-[#121316] border border-[#2a2d34] shadow-md flex flex-col justify-around p-1">
-                <div class="flex items-center justify-between">
-                  <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
-                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                  </div>
-                  <div class="h-2 w-2 rounded-full bg-[#fef08a] ring-1 ring-slate-400/50 shadow-[0_0_4px_#fef08a]"></div>
+              <!-- Photorealistic Obsidian Camera Module (Khử sạch 100% màu vàng/xanh cartoon, chuẩn Canvas) -->
+              <div
+                class="pointer-events-none absolute left-[7%] top-[5%] z-20 h-[24%] w-[42%] rounded-[14px] select-none overflow-hidden"
+                style="background: linear-gradient(145deg, #1e2025 0%, #121316 50%, #0a0b0d 100%);
+                       box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.6), inset 0 0.5px 1px rgba(255, 255, 255, 0.12), inset 0 -0.5px 1px rgba(0, 0, 0, 0.8);
+                       border: 1px solid rgba(255, 255, 255, 0.08);"
+              >
+                <div class="absolute inset-[1px] rounded-[13px] border border-white/5 pointer-events-none"></div>
+
+                <!-- Laser Text -->
+                <div class="absolute top-[2px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                  <span class="font-mono text-[4px] font-bold tracking-[0.1em] text-slate-500/80 uppercase">
+                    CASEYE LABS
+                  </span>
                 </div>
-                <div class="flex items-center justify-between">
-                  <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
-                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                  </div>
-                  <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
-                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+
+                <!-- Lens 1 (Top-Left) -->
+                <div class="absolute left-[8%] top-[18%] h-5 w-5 rounded-full flex items-center justify-center z-10"
+                  style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                         box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
+                  <div class="h-4 w-4 rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                    <div class="relative h-3 w-3 rounded-full overflow-hidden flex items-center justify-center"
+                      style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                      <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
+                        <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div class="flex justify-end pr-0.5">
-                  <div class="h-1.5 w-1.5 rounded-full bg-[#090a0d] ring-0.5 ring-slate-600"></div>
+
+                <!-- Lens 2 (Bottom-Left) -->
+                <div class="absolute left-[8%] bottom-[12%] h-5 w-5 rounded-full flex items-center justify-center z-10"
+                  style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                         box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
+                  <div class="h-4 w-4 rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                    <div class="relative h-3 w-3 rounded-full overflow-hidden flex items-center justify-center"
+                      style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                      <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
+                        <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
+
+                <!-- Lens 3 (Middle-Right) -->
+                <div class="absolute right-[8%] top-1/2 -translate-y-1/2 h-5 w-5 rounded-full flex items-center justify-center z-10"
+                  style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                         box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
+                  <div class="h-4 w-4 rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                    <div class="relative h-3 w-3 rounded-full overflow-hidden flex items-center justify-center"
+                      style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                      <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
+                        <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Frosted Silver Flash (Khử màu vàng) -->
+                <div class="absolute right-[14%] top-[16%] h-2.5 w-2.5 rounded-full flex items-center justify-center z-10"
+                  style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);">
+                  <div class="h-1.5 w-1.5 rounded-full bg-slate-100 shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
+                </div>
+
+                <!-- Optical LiDAR Scanner -->
+                <div class="absolute right-[16%] bottom-[14%] h-2 w-2 rounded-full overflow-hidden bg-[#18181b] z-10 border border-black/40"></div>
               </div>
 
               <!-- Artwork Backplate Renderings -->
@@ -924,80 +971,319 @@
               </button>
             </div>
 
-            <!-- Stage Display -->
-            <div class="relative w-full h-[360px] sm:h-[400px] flex items-center justify-center my-3">
+            <!-- Stage Display (Chuẩn Studio Canvas: Background Lavender sang trọng & 3D WebGL đồng bộ 1:1) -->
+            <div
+              class="relative w-full h-[400px] flex items-center justify-center my-3 rounded-2xl overflow-hidden shadow-inner border border-purple-100"
+              style="background: radial-gradient(circle at 50% 35%, #e3dbfa 0%, #cec2f0 100%);"
+            >
 
               @if (viewMode() === '3d') {
-                <!-- REAL INTERACTIVE 3D WEBGL MODEL (Google Model Viewer) -->
+                <!-- REAL INTERACTIVE 3D WEBGL MODEL (Đồng bộ Texture Ốp Lưng Chuẩn Canvas Studio) -->
                 <model-viewer
+                  #modalModelViewer
+                  id="modalTemplateViewer"
                   [src]="current3dModelUrl()"
                   [attr.src]="current3dModelUrl()"
-                  alt="3D Phone Case"
-                  [attr.auto-rotate]="isAutoRotate() ? '' : null"
+                  [alt]="'Mô hình 3D ' + activeTpl.name"
                   camera-controls
-                  rotation-per-second="24deg"
-                  shadow-intensity="1.4"
-                  shadow-softness="0.6"
-                  exposure="1.0"
-                  camera-orbit="0deg 75deg 105%"
-                  min-camera-orbit="auto auto 50%"
-                  max-camera-orbit="auto auto 200%"
+                  camera-orbit="0deg 85deg 105%"
+                  tone-mapping="neutral"
+                  shadow-intensity="1.2"
+                  shadow-softness="0.8"
+                  exposure="0.75"
                   touch-action="pan-y"
-                  style="width: 100%; height: 100%; min-height: 360px;"
+                  (load)="onModalModelViewerLoad()"
+                  [attr.auto-rotate]="isAutoRotate() ? '' : null"
+                  rotation-per-second="24deg"
+                  style="width: 100%; height: 100%; outline: none; filter: contrast(1.18) brightness(0.96) saturate(1.08);"
                 >
                   <!-- 3D Poster / Loading Placeholder -->
-                  <div slot="poster" class="flex flex-col items-center justify-center h-full gap-2">
+                  <div slot="poster" class="flex flex-col items-center justify-center h-full gap-2 text-ink-soft">
                     <div class="h-6 w-6 animate-spin rounded-full border-2 border-brand-800 border-t-transparent"></div>
-                    <span class="text-xs text-ink-soft">Đang tải mô hình 3D...</span>
+                    <span class="text-xs font-semibold">Đang nạp mô hình 3D & ốp lưng...</span>
                   </div>
                 </model-viewer>
 
-                <!-- Floating 3D Interaction Hint & Auto Rotate Toggle -->
-                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none px-2">
-                  <span class="rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-xs flex items-center gap-1 shadow-xs">
-                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                <!-- Floating 3D Interaction Bar (Ăn theo Preview Panel trong Canvas) -->
+                <div class="absolute bottom-2.5 inset-x-2 flex items-center justify-center gap-2 pointer-events-auto z-20">
+                  <span class="rounded-full bg-white/95 border border-purple-200/80 px-3 py-1 text-[11px] font-bold text-ink-soft shadow-soft flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5 text-brand-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    <span>Kéo chuột để xoay 360°</span>
+                    <span>Giữ chuột xoay 360°</span>
                   </span>
 
                   <button
                     type="button"
+                    (click)="reset3dView()"
+                    class="rounded-full bg-white/95 border border-purple-200/80 px-2.5 py-1 text-[11px] font-bold text-brand-800 hover:bg-purple-50 shadow-soft cursor-pointer transition-colors"
+                  >
+                    Mặt lưng
+                  </button>
+
+                  <button
+                    type="button"
                     (click)="toggleAutoRotate()"
-                    class="pointer-events-auto rounded-full bg-white/90 border border-purple-200 px-2.5 py-1 text-[10px] font-bold text-brand-800 hover:bg-purple-50 shadow-xs cursor-pointer"
+                    class="rounded-full bg-white/95 border border-purple-200/80 px-2.5 py-1 text-[11px] font-bold text-purple-700 hover:bg-purple-50 shadow-soft cursor-pointer transition-colors"
                   >
                     {{ isAutoRotate() ? 'Dừng xoay' : '↺ Tự xoay' }}
                   </button>
                 </div>
 
               } @else {
-                <!-- 2D Detail Presentation -->
-                <div class="animate-float-case">
+                <!-- 2D Photorealistic Studio Phone Case (Copy 1:1 Cấu trúc Phone Chassis & Camera Quang học từ Canvas) -->
+                <div class="animate-float-case flex items-center justify-center p-2">
                   <div
-                    class="case-bezel preview-case-shadow h-72 w-44 overflow-hidden bg-white flex flex-col justify-between relative"
-                    [style.background]="activeTpl.gradient"
+                    class="relative p-[7px] rounded-[50px] select-none transition-all duration-200"
+                    style="background: linear-gradient(155deg, #3d414a 0%, #1e2026 50%, #121317 100%);
+                           box-shadow: 0 28px 65px -12px rgba(15, 23, 42, 0.45), 0 12px 24px -8px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 2px rgba(0, 0, 0, 0.7);"
                   >
-                    <div class="absolute left-[7%] top-[5%] z-20 h-[26%] w-[38%] rounded-[12px] bg-[#121316] border border-[#2a2d34] flex flex-col justify-around p-1 shadow-md">
-                      <div class="flex items-center justify-between">
-                        <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
-                          <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                        </div>
-                        <div class="h-2 w-2 rounded-full bg-[#fef08a] ring-1 ring-slate-400"></div>
-                      </div>
-                      <div class="flex items-center justify-between">
-                        <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
-                          <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                        </div>
-                        <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
-                          <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                        </div>
-                      </div>
-                    </div>
+                    <!-- Titanium Side Buttons (Power on Left, Volume on Right - Khớp chuẩn Canvas) -->
+                    <div class="pointer-events-none absolute -left-[2.5px] top-[95px] h-[38px] w-[2.5px] rounded-l-sm bg-[#52525b]"></div>
+                    <div class="pointer-events-none absolute -right-[2.5px] top-[65px] h-[15px] w-[2.5px] rounded-r-sm bg-[#52525b]"></div>
+                    <div class="pointer-events-none absolute -right-[2.5px] top-[88px] h-[28px] w-[2.5px] rounded-r-sm bg-[#52525b]"></div>
+                    <div class="pointer-events-none absolute -right-[2.5px] top-[125px] h-[28px] w-[2.5px] rounded-r-sm bg-[#52525b]"></div>
 
-                    <div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
-                      <span class="font-display text-xs font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                        {{ activeTpl.name }}
-                      </span>
+                    <!-- Case Viewport -->
+                    <div
+                      class="relative z-20 h-[360px] w-[172px] overflow-hidden rounded-[42px] transition-all flex flex-col justify-between"
+                      style="box-shadow: 0 0 0 4.5px #18181b, 0 10px 22px -5px rgba(0,0,0,0.35);"
+                      [style.background]="activeTpl.gradient"
+                    >
+                      <!-- Polycarbonate Specular Highlight -->
+                      <div
+                        class="pointer-events-none absolute inset-0 z-30 opacity-40 mix-blend-overlay"
+                        style="background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.12) 28%, transparent 52%);"
+                      ></div>
+                      <div class="pointer-events-none absolute inset-0 z-30 rounded-[42px] ring-1 ring-inset ring-white/30"></div>
+
+                      <!-- Photorealistic Obsidian Camera Module (Khử sạch 100% màu vàng/xanh cartoon, chuẩn Canvas) -->
+                      <div
+                        class="pointer-events-none absolute z-20 rounded-[28px] select-none overflow-hidden"
+                        style="left: 7.33%; top: 4.43%; width: 44%; height: 21%;
+                               background: linear-gradient(145deg, #1e2025 0%, #121316 50%, #0a0b0d 100%);
+                               box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.6), 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.8);
+                               border: 1.5px solid rgba(255, 255, 255, 0.07);"
+                      >
+                        <div class="absolute inset-[2px] rounded-[26px] border border-white/5 pointer-events-none"></div>
+
+                        <!-- Laser-Engraved Rim Text -->
+                        <div class="absolute top-[3px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                          <span class="font-mono text-[5px] font-bold tracking-[0.14em] text-slate-500/80 uppercase">
+                            • CASEYE LABS •
+                          </span>
+                        </div>
+                        <div class="absolute bottom-[3px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                          <span class="font-mono text-[4.5px] font-semibold tracking-[0.12em] text-slate-500/80 uppercase">
+                            2.5M DROP TESTED
+                          </span>
+                        </div>
+
+                        <!-- Lens 1 (Top-Left) -->
+                        <div class="absolute left-[10%] top-[14%] h-[30px] w-[30px] rounded-full flex items-center justify-center z-10"
+                          style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                                 box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
+                          <div class="h-[25px] w-[25px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                            <div class="relative h-[19px] w-[19px] rounded-full overflow-hidden flex items-center justify-center"
+                              style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                              <span class="h-2 w-2 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                                <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
+                              </span>
+                              <span class="absolute top-0.5 left-1 h-1.5 w-2.5 rounded-full opacity-25 -rotate-25 pointer-events-none"
+                                style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Lens 2 (Bottom-Left) -->
+                        <div class="absolute left-[10%] bottom-[14%] h-[30px] w-[30px] rounded-full flex items-center justify-center z-10"
+                          style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                                 box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
+                          <div class="h-[25px] w-[25px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                            <div class="relative h-[19px] w-[19px] rounded-full overflow-hidden flex items-center justify-center"
+                              style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                              <span class="h-2 w-2 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                                <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Lens 3 (Middle-Right) -->
+                        <div class="absolute right-[10%] top-1/2 -translate-y-1/2 h-[30px] w-[30px] rounded-full flex items-center justify-center z-10"
+                          style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                                 box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
+                          <div class="h-[25px] w-[25px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                            <div class="relative h-[19px] w-[19px] rounded-full overflow-hidden flex items-center justify-center"
+                              style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                              <span class="h-2 w-2 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                                <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Frosted Silver Flash (Khử màu vàng) -->
+                        <div class="absolute right-[18%] top-[14%] h-[13px] w-[13px] rounded-full flex items-center justify-center z-10"
+                          style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);">
+                          <div class="h-[8px] w-[8px] rounded-full flex items-center justify-center overflow-hidden border border-white/30"
+                            style="background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 55%, #94a3b8 100%);">
+                            <div class="h-[3px] w-[3px] rounded-full bg-white shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
+                          </div>
+                        </div>
+
+                        <!-- LiDAR Scanner -->
+                        <div class="absolute right-[20%] bottom-[15%] h-[11px] w-[11px] rounded-full flex items-center justify-center z-10"
+                          style="background: linear-gradient(135deg, #27272a 0%, #18181b 100%);">
+                          <div class="h-[7px] w-[7px] rounded-full overflow-hidden bg-[#09090b]"></div>
+                        </div>
+
+                        <!-- Pinholes -->
+                        <div class="absolute left-[48%] top-[14%] h-[2.5px] w-[2.5px] rounded-full bg-[#050608] z-10"></div>
+                        <div class="absolute right-[10%] top-[39%] h-[2.5px] w-[2.5px] rounded-full bg-[#050608] z-10"></div>
+                      </div>
+
+                      <!-- ── Artwork Rendering trên 2D (Chuẩn xác 100% theo mẫu) ── -->
+                      @if (activeTpl.artType === 'dreamy-kitten') {
+                        <div class="absolute inset-0 flex flex-col items-center justify-end pb-8 select-none pointer-events-none">
+                          <div class="relative flex flex-col items-center">
+                            <div class="flex items-center -space-x-2">
+                              <div class="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-xs">
+                                <div class="absolute -top-2 left-1 h-3.5 w-3.5 rotate-[-20deg] rounded-t-sm bg-white border-t border-pink-200"></div>
+                                <div class="absolute -top-2 right-1 h-3.5 w-3.5 rotate-[20deg] rounded-t-sm bg-white border-t border-pink-200"></div>
+                                <div class="flex flex-col items-center mt-1">
+                                  <div class="flex gap-2.5">
+                                    <span class="text-[8px] text-pink-400 font-bold">^</span>
+                                    <span class="text-[8px] text-pink-400 font-bold">^</span>
+                                  </div>
+                                  <div class="flex gap-2 -mt-0.5">
+                                    <span class="h-1.5 w-2 rounded-full bg-pink-300"></span>
+                                    <span class="h-1.5 w-2 rounded-full bg-pink-300"></span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="relative flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-xs">
+                                <div class="absolute -top-1.5 left-0.5 h-3 w-3 rotate-[-20deg] rounded-t-sm bg-white"></div>
+                                <div class="absolute -top-1.5 right-0.5 h-3 w-3 rotate-[20deg] rounded-t-sm bg-white"></div>
+                                <div class="flex flex-col items-center mt-0.5">
+                                  <div class="flex gap-2">
+                                    <span class="text-[7px] text-pink-400 font-bold">^</span>
+                                    <span class="text-[7px] text-pink-400 font-bold">^</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="h-6 w-24 rounded-full bg-white shadow-xs -mt-2"></div>
+                          </div>
+                        </div>
+                      } @else if (activeTpl.artType === 'sakura-bloom') {
+                        <div class="absolute inset-0 flex flex-col justify-end p-2 select-none pointer-events-none">
+                          <svg viewBox="0 0 100 140" class="w-full h-full opacity-90">
+                            <path d="M10,130 Q40,90 35,50 T70,10" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            <path d="M35,60 Q60,50 85,45" stroke="#78350f" stroke-width="2" fill="none" stroke-linecap="round"/>
+                            <circle cx="35" cy="50" r="8" fill="#fda4af" />
+                            <circle cx="35" cy="50" r="4" fill="#fb7185" />
+                            <circle cx="70" cy="20" r="9" fill="#fda4af" />
+                            <circle cx="70" cy="20" r="4" fill="#f43f5e" />
+                            <circle cx="55" cy="45" r="7" fill="#fbcfe8" />
+                            <circle cx="80" cy="45" r="8" fill="#fda4af" />
+                            <circle cx="20" cy="80" r="7" fill="#fbcfe8" />
+                          </svg>
+                        </div>
+                      } @else if (activeTpl.artType === 'mountain-escape') {
+                        <div class="absolute inset-0 flex flex-col justify-end select-none pointer-events-none">
+                          <svg viewBox="0 0 100 140" class="w-full h-full">
+                            <polygon points="10,95 50,25 90,95" fill="#0284c7" />
+                            <polygon points="50,25 38,48 50,42 62,48" fill="#ffffff" />
+                            <polygon points="35,100 70,45 100,100" fill="#0369a1" />
+                            <polygon points="70,45 62,60 70,55 78,60" fill="#ffffff" />
+                            <polygon points="-10,120 25,65 60,120" fill="#0f766e" />
+                            <rect x="0" y="105" width="100" height="35" fill="#0284c7" opacity="0.75"/>
+                          </svg>
+                        </div>
+                      } @else if (activeTpl.artType === 'minimal-cat') {
+                        <div class="absolute inset-0 flex flex-col items-center justify-end pb-10 select-none pointer-events-none">
+                          <span class="text-sm text-red-500 mb-1.5">♥</span>
+                          <svg viewBox="0 0 60 70" class="w-14 h-16" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 35 L20 18 L28 26 Q30 25 32 26 L40 18 L42 35" />
+                            <path d="M18 35 Q14 55 18 64 Q30 66 42 64 Q46 55 42 35" />
+                            <path d="M40 60 Q52 56 48 46" stroke-width="2.2" />
+                          </svg>
+                        </div>
+                      } @else if (activeTpl.artType === 'anime-girl') {
+                        <div class="absolute inset-0 flex flex-col items-center justify-end pb-6 select-none pointer-events-none">
+                          <div class="relative flex flex-col items-center">
+                            <div class="h-20 w-20 rounded-full bg-indigo-400/80 flex items-center justify-center shadow-inner">
+                              <div class="h-14 w-14 rounded-full bg-[#fef3c7] flex flex-col items-center justify-center">
+                                <div class="flex gap-2.5">
+                                  <span class="h-2 w-2 rounded-full bg-indigo-900"></span>
+                                  <span class="h-2 w-2 rounded-full bg-indigo-900"></span>
+                                </div>
+                                <span class="h-1.5 w-3 rounded-full bg-pink-300 mt-1"></span>
+                              </div>
+                            </div>
+                            <div class="h-10 w-22 rounded-t-2xl bg-indigo-600 -mt-3"></div>
+                          </div>
+                        </div>
+                      } @else if (activeTpl.artType === 'abstract-waves') {
+                        <div class="absolute inset-0 flex flex-col justify-end select-none pointer-events-none">
+                          <svg viewBox="0 0 100 140" class="w-full h-full">
+                            <path d="M-20,30 Q40,10 50,60 T120,40 L120,150 L-20,150 Z" fill="#fed7aa" />
+                            <path d="M-20,60 Q30,40 60,90 T120,70 L120,150 L-20,150 Z" fill="#fbcfe8" />
+                            <path d="M-20,90 Q40,70 70,110 T120,100 L120,150 L-20,150 Z" fill="#ddd6fe" />
+                            <path d="M-20,115 Q30,100 60,130 T120,120 L120,150 L-20,150 Z" fill="#bae6fd" />
+                          </svg>
+                        </div>
+                      } @else if (activeTpl.artType === 'dino-friend') {
+                        <div class="absolute inset-0 flex flex-col items-center justify-end pb-8 select-none pointer-events-none">
+                          <div class="relative flex flex-col items-center">
+                            <div class="absolute -left-1.5 top-2 flex flex-col gap-1.5">
+                              <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+                              <span class="h-2 w-2 rounded-full bg-amber-400"></span>
+                            </div>
+                            <div class="h-16 w-14 rounded-[18px] bg-[#86efac] border border-[#4ade80] flex flex-col items-center justify-center p-1 shadow-xs">
+                              <div class="flex gap-2.5">
+                                <span class="h-2 w-2 rounded-full bg-emerald-950"></span>
+                                <span class="h-2 w-2 rounded-full bg-emerald-950"></span>
+                              </div>
+                              <div class="h-1.5 w-2.5 rounded-full bg-pink-400 mt-1"></div>
+                              <div class="h-5 w-8 rounded-full bg-[#bbf7d0] mt-2"></div>
+                            </div>
+                            <div class="flex gap-2 mt-1.5">
+                              <span class="text-[9px]">🌼</span>
+                              <span class="text-[9px]">🌸</span>
+                            </div>
+                          </div>
+                        </div>
+                      } @else if (activeTpl.artType === 'starry-night') {
+                        <div class="absolute inset-0 flex flex-col items-center justify-between p-4 select-none pointer-events-none">
+                          <div class="flex justify-end w-full pr-1 pt-1">
+                            <span class="text-amber-300 text-lg drop-shadow-[0_0_8px_#fde047]">🌙</span>
+                          </div>
+                          <div class="flex flex-col items-center pb-4">
+                            <span class="text-white/80 text-sm">☁️</span>
+                            <span class="text-white text-[10px] font-extrabold tracking-widest mt-1">STARRY</span>
+                          </div>
+                        </div>
+                      } @else if (activeTpl.artType === 'that-girl-era') {
+                        <div class="absolute inset-0 flex flex-col items-center justify-center px-2 select-none pointer-events-none">
+                          <p class="font-display text-center text-sm font-black tracking-wider text-pink-600 drop-shadow-xs">
+                            THAT GIRL<br>ERA
+                          </p>
+                        </div>
+                      } @else if (activeTpl.isBlankCanvas) {
+                        <div class="absolute inset-0 flex flex-col items-center justify-center p-3 select-none pointer-events-none text-center">
+                          <div class="h-12 w-12 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-brand-800 text-2xl font-black shadow-xs mb-2 animate-pulse">
+                            ＋
+                          </div>
+                          <span class="font-display text-xs font-black text-brand-800 uppercase tracking-wider">
+                            Tự vẽ từ số 0
+                          </span>
+                          <span class="text-[10px] text-ink-soft mt-0.5">
+                            Phôi ốp trắng trơn
+                          </span>
+                        </div>
+                      }
                     </div>
                   </div>
                 </div>
