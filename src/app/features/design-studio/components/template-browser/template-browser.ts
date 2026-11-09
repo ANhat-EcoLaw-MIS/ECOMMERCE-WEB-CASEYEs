@@ -1,9 +1,27 @@
 import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
+
+// Dynamically import @google/model-viewer for rich WebGL 3D rendering in browser
+if (typeof window !== 'undefined') {
+  import('@google/model-viewer').catch((err) => {
+    console.warn('Google Model Viewer dynamic import warning:', err);
+  });
+}
+
+export interface TemplateReview {
+  id: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number; // 1 to 5 stars
+  date: string;
+  deviceModel: string;
+  comment: string;
+  isVerifiedBuyer: boolean;
+}
 
 export interface TemplateCard {
   id: string;
@@ -15,11 +33,13 @@ export interface TemplateCard {
   gradient: string;
   tagText: string;
   description: string;
+  detailedDescription: string;
   tagLabel: string;
   tagColor: string;
   rating: number;
   reviews: string;
-  price: number;
+  reviewCount: number;
+  hashtags: string[];
   isTrending: boolean;
   isBlankCanvas?: boolean;
   artType:
@@ -36,7 +56,7 @@ export interface TemplateCard {
 }
 
 export const TEMPLATE_CATALOG: TemplateCard[] = [
-  // 1. Dreamy Kitten (#pastel) - Top row card 1 in mockup
+  // 1. Dreamy Kitten (#pastel)
   {
     id: 'tpl-001',
     name: 'Dreamy Kitten',
@@ -47,15 +67,18 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: 'linear-gradient(180deg, #93c5fd 0%, #c4b5fd 40%, #fbcfe8 100%)',
     tagText: 'DREAMY VIBES',
     description: 'Mây hồng pastel bồng bềnh cùng những chú mèo con đáng yêu mỉm cười.',
+    detailedDescription:
+      'Thiết kế Dreamy Kitten mang đến bầu không khí mộng mơ với những đám mây pastel bồng bềnh và chú mèo con ngọt ngào. Sử dụng công nghệ in UV đa lớp chống trầy xước, phôi ốp Polycarbonate tiêu chuẩn với viền TPU đệm khí 4 góc giúp bảo vệ máy tối đa.',
     tagLabel: '#pastel',
     tagColor: '#a855f7',
     rating: 4.9,
     reviews: '1.2k',
-    price: 250000,
+    reviewCount: 1240,
+    hashtags: ['#pastel', '#cute', '#kitten', '#dreamy', '#catlover', '#pinksky', '#aesthetic'],
     isTrending: true,
     artType: 'dreamy-kitten',
   },
-  // 2. Sakura Bloom (#floral) - Top row card 2 in mockup
+  // 2. Sakura Bloom (#floral)
   {
     id: 'tpl-002',
     name: 'Sakura Bloom',
@@ -66,15 +89,18 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: 'linear-gradient(180deg, #fff1f2 0%, #fce7f3 40%, #fbcfe8 100%)',
     tagText: 'SAKURA BLOOM',
     description: 'Cành hoa anh đào Nhật Bản nở rộ trong trẻo, mang vẻ tươi mới mùa xuân.',
+    detailedDescription:
+      'Lấy cảm hứng từ những cành hoa anh đào nở rộ trong gió xuân Tokyo. Từng chi tiết cánh hoa được xử lý chuyển sắc tinh tế trên nền kem ánh hồng sang trọng, phù hợp cho phong cách nữ tính, thanh lịch.',
     tagLabel: '#floral',
     tagColor: '#ec4899',
     rating: 4.8,
     reviews: '956',
-    price: 250000,
+    reviewCount: 956,
+    hashtags: ['#floral', '#sakura', '#japan', '#cherryblossom', '#spring', '#aesthetic', '#pink'],
     isTrending: true,
     artType: 'sakura-bloom',
   },
-  // 3. Mountain Escape (#nature) - Top row card 3 in mockup
+  // 3. Mountain Escape (#nature)
   {
     id: 'tpl-003',
     name: 'Mountain Escape',
@@ -85,15 +111,18 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: 'linear-gradient(180deg, #7dd3fc 0%, #bae6fd 40%, #ecfeff 80%)',
     tagText: 'WILD & FREE',
     description: 'Dãy núi tuyết hùng vĩ soi bóng mặt hồ xanh biếc và rừng thông ngút ngàn.',
+    detailedDescription:
+      'Phong cảnh núi tuyết phản chiếu mặt hồ tĩnh lặng mang lại cảm giác bình yên và phóng khoáng. Gam màu xanh ngọc bích hòa quyện cùng bầu trời trong trẻo, tôn lên nét cá tính cho người yêu xê dịch.',
     tagLabel: '#nature',
     tagColor: '#10b981',
     rating: 4.9,
     reviews: '742',
-    price: 250000,
+    reviewCount: 742,
+    hashtags: ['#nature', '#mountain', '#alpine', '#lake', '#wanderlust', '#travel', '#freedom'],
     isTrending: false,
     artType: 'mountain-escape',
   },
-  // 4. Minimal Cat (#minimal) - Top row card 4 in mockup
+  // 4. Minimal Cat (#minimal)
   {
     id: 'tpl-004',
     name: 'Minimal Cat',
@@ -104,15 +133,18 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: '#FAF8F5',
     tagText: 'MINIMAL CAT',
     description: 'Nét vẽ chú mèo tối giản nhìn lên trái tim đỏ tinh tế trên nền kem ấm.',
+    detailedDescription:
+      'Nét vẽ một nét (continuous line art) tinh giản khắc họa chú mèo nhỏ ngước nhìn trái tim đỏ ấm áp. Nền kem Warm Ivory dịu mắt, phù hợp tuyệt đối với những tín đồ phong cách tối giản Bắc Âu.',
     tagLabel: '#minimal',
     tagColor: '#3b82f6',
     rating: 4.9,
     reviews: '1.1k',
-    price: 250000,
+    reviewCount: 1120,
+    hashtags: ['#minimal', '#lineart', '#cat', '#zen', '#cozy', '#modern', '#blackandwhite'],
     isTrending: true,
     artType: 'minimal-cat',
   },
-  // 5. Anime Girl (#anime) - Bottom row card 1 in mockup
+  // 5. Anime Girl (#anime)
   {
     id: 'tpl-005',
     name: 'Anime Girl',
@@ -123,15 +155,18 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: 'linear-gradient(180deg, #c7d2fe 0%, #a5b4fc 40%, #818cf8 100%)',
     tagText: 'KAWAII SOUL',
     description: 'Cô gái anime tóc xanh xinh xắn trong ánh sao lấp lánh huyền ảo.',
+    detailedDescription:
+      'Tác phẩm minh họa phong cách anime hiện đại với mái tóc xanh óng ánh và những hạt sao vũ trụ lung linh. Kỹ thuật in phủ bóng cục bộ tạo độ sâu quang học sống động dưới mọi góc nhìn.',
     tagLabel: '#anime',
     tagColor: '#6366f1',
     rating: 4.8,
     reviews: '933',
-    price: 250000,
+    reviewCount: 933,
+    hashtags: ['#anime', '#kawaii', '#manga', '#bluehair', '#aesthetic', '#otaku', '#cyber'],
     isTrending: true,
     artType: 'anime-girl',
   },
-  // 6. Abstract Waves (#abstract) - Bottom row card 2 in mockup
+  // 6. Abstract Waves (#abstract)
   {
     id: 'tpl-006',
     name: 'Abstract Waves',
@@ -142,15 +177,18 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: '#fffbeb',
     tagText: 'FLOW STATE',
     description: 'Dải lụa sóng pastel mềm mại uốn lượn phong cách retro aesthetic.',
+    detailedDescription:
+      'Những dải sóng pastel nhịp nhàng uốn lượn mang cảm hứng Retro Futurism kết hợp hơi thở hiện đại. Sự chuyển giao màu sắc mềm mại tạo nên vẻ ngoài thời thượng.',
     tagLabel: '#abstract',
     tagColor: '#f97316',
     rating: 4.7,
     reviews: '685',
-    price: 250000,
+    reviewCount: 685,
+    hashtags: ['#abstract', '#waves', '#retro', '#palette', '#modernart', '#flow', '#pastel'],
     isTrending: false,
     artType: 'abstract-waves',
   },
-  // 7. Dino Friend (#cute) - Bottom row card 3 in mockup
+  // 7. Dino Friend (#cute)
   {
     id: 'tpl-007',
     name: 'Dino Friend',
@@ -161,15 +199,18 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: '#f0fdf4',
     tagText: 'LITTLE DINO',
     description: 'Khủng long con màu xanh tinh nghịch mỉm cười giữa vườn hoa cúc.',
+    detailedDescription:
+      'Chú khủng long xanh lá mũm mĩm với nụ cười rạng rỡ giữa những đóa hoa cúc vàng. Năng lượng tích cực và đáng yêu sẽ đồng hành cùng bạn suốt cả ngày dài.',
     tagLabel: '#cute',
     tagColor: '#84cc16',
     rating: 4.9,
     reviews: '721',
-    price: 250000,
+    reviewCount: 721,
+    hashtags: ['#cute', '#dino', '#chibi', '#cartoon', '#green', '#happy', '#kawaii'],
     isTrending: true,
     artType: 'dino-friend',
   },
-  // 8. Starry Night (#sky) - Bottom row card 4 in mockup
+  // 8. Starry Night (#sky)
   {
     id: 'tpl-008',
     name: 'Starry Night',
@@ -180,11 +221,14 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: 'linear-gradient(180deg, #4f46e5 0%, #7c3aed 45%, #c084fc 100%)',
     tagText: 'MOONLIGHT',
     description: 'Bầu trời hoàng hôn tím mộng mơ với vầng trăng khuyết và mây bay.',
+    detailedDescription:
+      'Bầu trời đêm huyền ảo trong ánh trăng lưỡi liềm vàng kim và những dải mây tím bồng bềnh. Biểu tượng cho sự tĩnh lặng, sâu lắng và nguồn cảm hứng sáng tạo bất tận.',
     tagLabel: '#sky',
     tagColor: '#0ea5e9',
     rating: 4.8,
     reviews: '590',
-    price: 250000,
+    reviewCount: 590,
+    hashtags: ['#sky', '#night', '#moon', '#stars', '#cosmic', '#dreamy', '#purple'],
     isTrending: true,
     artType: 'starry-night',
   },
@@ -199,11 +243,14 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: 'linear-gradient(160deg, #fce7f3 0%, #f5d0fe 50%, #e0e7ff 100%)',
     tagText: 'THAT GIRL ERA',
     description: 'Kiểu chữ Typography thời thượng khẳng định phong cách hiện đại.',
+    detailedDescription:
+      'Thông điệp khẳng định bản thân đầy tự tin theo xu hướng "That Girl" với phông chữ serif thời trang và màu hồng cánh sen kiêu kỳ. Dành cho những cô nàng độc lập và phong cách.',
     tagLabel: '#typography',
     tagColor: '#d946ef',
     rating: 4.9,
     reviews: '820',
-    price: 250000,
+    reviewCount: 820,
+    hashtags: ['#typography', '#thatgirl', '#y2k', '#positive', '#vibe', '#aesthetic', '#pink'],
     isTrending: false,
     artType: 'that-girl-era',
   },
@@ -218,21 +265,59 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     gradient: '#FFFFFF',
     tagText: '',
     description: 'Bắt đầu từ phôi ốp trắng trơn. Tự do sáng tạo ảnh, chữ và sticker theo chất riêng.',
+    detailedDescription:
+      'Phôi ốp trắng tinh khôi chuẩn bị sẵn sàng cho sự sáng tạo không giới hạn của bạn. Hãy nạp lên Studio để thêm ảnh cá nhân, chèn chữ nghệ thuật và ghép những nhãn sticker yêu thích.',
     tagLabel: '#custom',
     tagColor: '#433075',
     rating: 5.0,
     reviews: '2.4k',
-    price: 220000,
+    reviewCount: 2400,
+    hashtags: ['#tự_thiết_kế', '#blank', '#diy', '#custom', '#minimal', '#canvas'],
     isTrending: false,
     isBlankCanvas: true,
     artType: 'blank',
   },
 ];
 
+const INITIAL_REVIEWS: Record<string, TemplateReview[]> = {
+  default: [
+    {
+      id: 'rev-1',
+      userName: 'Ngọc Linh',
+      rating: 5,
+      date: 'Hôm qua',
+      deviceModel: 'iPhone 15 Pro Max',
+      comment:
+        'Mẫu in ra thực tế màu sắc rất ngọt ngào, đường nét sắc sảo. Ốp ôm khít máy, bảo vệ viền camera nhô cao rất an tâm!',
+      isVerifiedBuyer: true,
+    },
+    {
+      id: 'rev-2',
+      userName: 'Quốc Huy',
+      rating: 5,
+      date: '3 ngày trước',
+      deviceModel: 'iPhone 15 Pro',
+      comment:
+        'Chất liệu ốp cứng cáp, bề mặt chống bám vân tay tốt. Đặt in hôm trước hôm sau đã nhận được hàng.',
+      isVerifiedBuyer: true,
+    },
+    {
+      id: 'rev-3',
+      userName: 'Thu Trang',
+      rating: 4,
+      date: '1 tuần trước',
+      deviceModel: 'iPhone 14',
+      comment: 'Đẹp xỉu luôn mn ơi, đúng gu pastel nhẹ nhàng. Sẽ tiếp tục ủng hộ CasEYE’s!',
+      isVerifiedBuyer: true,
+    },
+  ],
+};
+
 @Component({
   selector: 'app-template-browser',
   standalone: true,
   imports: [RouterLink, DecimalPipe],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './template-browser.html',
   styleUrl: './template-browser.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -256,8 +341,25 @@ export class TemplateBrowser {
   // Modal & Popup States
   protected readonly showAllDesignsModal = signal<boolean>(false);
   protected readonly searchMyDesignQuery = signal<string>('');
-  protected readonly preview3dTemplate = signal<TemplateCard | null>(null);
+  protected readonly previewTemplate = signal<TemplateCard | null>(null);
   protected readonly activeMenuDesignId = signal<string | null>(null);
+
+  // 3D View Controls
+  protected readonly viewMode = signal<'3d' | '2d'>('3d');
+  protected readonly isAutoRotate = signal<boolean>(true);
+
+  // Reviews State
+  protected readonly reviewsMap = signal<Record<string, TemplateReview[]>>(INITIAL_REVIEWS);
+  protected readonly currentTemplateReviews = computed(() => {
+    const tpl = this.previewTemplate();
+    if (!tpl) return [];
+    return this.reviewsMap()[tpl.id] || INITIAL_REVIEWS['default'];
+  });
+
+  // User Interactive Review Submission State
+  protected readonly userRating = signal<number>(5);
+  protected readonly userReviewText = signal<string>('');
+  protected readonly reviewSubmittedSuccess = signal<boolean>(false);
 
   // Delete & Rename Modals
   protected readonly designToDelete = signal<SavedDesignItem | null>(null);
@@ -269,6 +371,7 @@ export class TemplateBrowser {
 
   // Filter & Search Signals
   protected readonly activeCategory = signal<string>('all');
+  protected readonly activeHashtagFilter = signal<string | null>(null);
   protected readonly aiPrompt = signal<string>('');
   protected readonly isAiSearching = signal<boolean>(false);
   protected readonly showNoResults = signal<boolean>(false);
@@ -287,10 +390,15 @@ export class TemplateBrowser {
 
   protected readonly templates = TEMPLATE_CATALOG;
 
-  /** Filtered templates based on category and search */
+  /** Filtered templates based on category, hashtag and search */
   protected readonly filteredTemplates = computed(() => {
     const cat = this.activeCategory();
-    return this.templates.filter((t) => cat === 'all' || t.categories.includes(cat));
+    const tag = this.activeHashtagFilter();
+    return this.templates.filter((t) => {
+      const matchCat = cat === 'all' || t.categories.includes(cat);
+      const matchTag = !tag || t.hashtags.includes(tag) || t.tagLabel === tag;
+      return matchCat && matchTag;
+    });
   });
 
   /** Filtered designs inside the "Xem tất cả" Modal */
@@ -306,15 +414,30 @@ export class TemplateBrowser {
     );
   });
 
-  /** Trending templates for fallback recommendations */
-  protected readonly trendingTemplates = computed(() =>
-    this.templates.filter((t) => t.isTrending).slice(0, 4)
-  );
+  /** URL to 3D model for current phone model */
+  protected readonly current3dModelUrl = computed(() => {
+    const model = this.state.selectedModel();
+    return model?.model3dUrl || '/models/iphone-15-pro-max.glb';
+  });
 
-  // --- Category and Search Handlers ---
+  // --- Category and Hashtag Handlers ---
   protected selectCategory(catId: string): void {
     this.activeCategory.set(catId);
+    this.activeHashtagFilter.set(null);
     this.showNoResults.set(false);
+  }
+
+  protected filterByHashtag(tag: string): void {
+    this.closePreviewModal();
+    this.activeHashtagFilter.set(tag);
+    this.activeCategory.set('all');
+    // Scroll down to template grid
+    const target = document.getElementById('template-grid-section');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected clearHashtagFilter(): void {
+    this.activeHashtagFilter.set(null);
   }
 
   protected setPrompt(text: string): void {
@@ -380,6 +503,7 @@ export class TemplateBrowser {
     this.aiPrompt.set('');
     this.showNoResults.set(false);
     this.activeCategory.set('all');
+    this.activeHashtagFilter.set(null);
   }
 
   // --- Favorite Toggle ---
@@ -400,19 +524,74 @@ export class TemplateBrowser {
     return this.favoriteTemplates().has(templateId);
   }
 
-  // --- 3D Preview Modal ---
-  protected openPreview3d(template: TemplateCard, event?: MouseEvent): void {
+  // --- Detail & 3D Preview Modal ---
+  protected openDetailModal(template: TemplateCard, event?: MouseEvent): void {
     if (event) event.stopPropagation();
-    this.preview3dTemplate.set(template);
+    this.previewTemplate.set(template);
+    this.viewMode.set('3d');
+    this.isAutoRotate.set(true);
+    this.userReviewText.set('');
+    this.userRating.set(5);
+    this.reviewSubmittedSuccess.set(false);
   }
 
-  protected closePreview3d(): void {
-    this.preview3dTemplate.set(null);
+  protected closePreviewModal(): void {
+    this.previewTemplate.set(null);
+    this.reviewSubmittedSuccess.set(false);
+  }
+
+  protected toggleViewMode(mode: '3d' | '2d'): void {
+    this.viewMode.set(mode);
+  }
+
+  protected toggleAutoRotate(): void {
+    this.isAutoRotate.update((v) => !v);
+  }
+
+  // --- User Review Submission ---
+  protected setUserRating(star: number): void {
+    this.userRating.set(star);
+  }
+
+  protected onReviewTextInput(event: Event): void {
+    const target = event.target as HTMLTextAreaElement;
+    this.userReviewText.set(target.value);
+  }
+
+  protected onSubmitUserReview(): void {
+    const comment = this.userReviewText().trim();
+    if (!comment) return;
+
+    const tpl = this.previewTemplate();
+    if (!tpl) return;
+
+    const newRev: TemplateReview = {
+      id: 'rev-' + Date.now(),
+      userName: 'Bạn (Khách hàng)',
+      rating: this.userRating(),
+      date: 'Vừa xong',
+      deviceModel: this.state.selectedModel().name,
+      comment,
+      isVerifiedBuyer: true,
+    };
+
+    const currentList = this.reviewsMap()[tpl.id] || [...INITIAL_REVIEWS['default']];
+    this.reviewsMap.update((map) => ({
+      ...map,
+      [tpl.id]: [newRev, ...currentList],
+    }));
+
+    this.userReviewText.set('');
+    this.reviewSubmittedSuccess.set(true);
+
+    setTimeout(() => {
+      this.reviewSubmittedSuccess.set(false);
+    }, 4000);
   }
 
   // --- Template Loading / Creation ---
   protected onDesignTemplate(template: TemplateCard): void {
-    this.closePreview3d();
+    this.closePreviewModal();
     if (template.isBlankCanvas) {
       this.state.clearCanvas();
       this.state.caseBg.set('#FFFFFF');

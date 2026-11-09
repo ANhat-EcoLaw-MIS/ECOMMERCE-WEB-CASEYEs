@@ -1,4 +1,4 @@
-// Template Browser Custom Effects & Cloudscape Animations
+// Template Browser Custom Effects, 3D WebGL & Cloudscape Animations
 
 .cloud-bubble {
   position: absolute;
@@ -30,13 +30,25 @@
   border-radius: 12px;
 }
 
-// 3D Tilt & Floating Animation for 3D Preview
+// 3D Model Viewer styling
+model-viewer {
+  --poster-color: transparent;
+  outline: none !important;
+  cursor: grab;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// 3D Tilt & Floating Animation for 2D Fallback
 @keyframes floatCase {
   0%, 100% {
-    transform: translateY(0px) rotateY(-8deg) rotateX(4deg);
+    transform: translateY(0px) rotateY(-6deg) rotateX(3deg);
   }
   50% {
-    transform: translateY(-8px) rotateY(8deg) rotateX(-4deg);
+    transform: translateY(-8px) rotateY(6deg) rotateX(-3deg);
   }
 }
 

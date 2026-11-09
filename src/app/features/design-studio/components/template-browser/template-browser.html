@@ -346,7 +346,7 @@
   }
 
   <!-- ══════════════════════════════════════════════════════
-       SECTION 2: CATEGORY FILTER TABS
+       SECTION 2: CATEGORY FILTER TABS & ACTIVE HASHTAG BADGE
   ══════════════════════════════════════════════════════ -->
   <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-center flex-wrap gap-2 sm:gap-2.5">
@@ -355,7 +355,7 @@
           type="button"
           (click)="selectCategory(cat.id)"
           class="inline-flex items-center gap-1.5 rounded-full px-4 sm:px-5 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer"
-          [class]="activeCategory() === cat.id
+          [class]="activeCategory() === cat.id && !activeHashtagFilter()
             ? 'bg-brand-800 text-white shadow-soft scale-105'
             : 'border border-purple-100 bg-white/90 text-ink-soft hover:bg-purple-50 hover:text-brand-800 hover:border-brand-300 shadow-2xs'"
         >
@@ -370,11 +370,28 @@
           <span>{{ cat.name }}</span>
         </button>
       }
+
+      <!-- Active Hashtag Filter Clear Pill -->
+      @if (activeHashtagFilter(); as currentTag) {
+        <div class="inline-flex items-center gap-1.5 rounded-full bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-soft animate-fade-in">
+          <span>Đang lọc: {{ currentTag }}</span>
+          <button
+            type="button"
+            (click)="clearHashtagFilter()"
+            class="rounded-full p-0.5 hover:bg-white/20 transition-colors cursor-pointer"
+            title="Xóa bộ lọc hashtag"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      }
     </div>
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       SECTION 3: TEMPLATE GRID (8 Mẫu thiết kế chuẩn ảnh)
+       SECTION 3: TEMPLATE GRID (Đã bỏ giá tiền, thêm mô tả & nhãn)
   ══════════════════════════════════════════════════════ -->
   <div id="template-grid-section" class="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -424,16 +441,12 @@
             >
               <!-- Obsidian Matte Camera Module (Chamfered Bevel & Triple Lenses) -->
               <div class="absolute left-[7%] top-[5%] z-20 h-[26%] w-[38%] rounded-[12px] bg-[#121316] border border-[#2a2d34] shadow-md flex flex-col justify-around p-1">
-                <!-- Lens 1 (Top Left) & True Tone Flash (Top Right) -->
                 <div class="flex items-center justify-between">
                   <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
                     <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
                   </div>
-                  <!-- Dual Flash -->
                   <div class="h-2 w-2 rounded-full bg-[#fef08a] ring-1 ring-slate-400/50 shadow-[0_0_4px_#fef08a]"></div>
                 </div>
-
-                <!-- Lens 2 (Middle Left) & Lens 3 (Right) & LiDAR -->
                 <div class="flex items-center justify-between">
                   <div class="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d]">
                     <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
@@ -442,8 +455,6 @@
                     <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
                   </div>
                 </div>
-
-                <!-- LiDAR Sensor Dot -->
                 <div class="flex justify-end pr-0.5">
                   <div class="h-1.5 w-1.5 rounded-full bg-[#090a0d] ring-0.5 ring-slate-600"></div>
                 </div>
@@ -452,10 +463,8 @@
               <!-- Artwork Backplate Renderings -->
               @if (tpl.artType === 'dreamy-kitten') {
                 <div class="absolute inset-0 flex flex-col items-center justify-end pb-6 select-none pointer-events-none">
-                  <!-- Fluffy Cloud with Smiling Kittens -->
                   <div class="relative flex flex-col items-center">
                     <div class="flex items-center -space-x-2">
-                      <!-- Kitty Cloud 1 -->
                       <div class="relative flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-xs">
                         <div class="absolute -top-1.5 left-1 h-3 w-3 rotate-[-20deg] rounded-t-sm bg-white border-t border-pink-200"></div>
                         <div class="absolute -top-1.5 right-1 h-3 w-3 rotate-[20deg] rounded-t-sm bg-white border-t border-pink-200"></div>
@@ -470,7 +479,6 @@
                           </div>
                         </div>
                       </div>
-                      <!-- Kitty Cloud 2 -->
                       <div class="relative flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-xs">
                         <div class="absolute -top-1 left-0.5 h-2.5 w-2.5 rotate-[-20deg] rounded-t-sm bg-white"></div>
                         <div class="absolute -top-1 right-0.5 h-2.5 w-2.5 rotate-[20deg] rounded-t-sm bg-white"></div>
@@ -482,7 +490,6 @@
                         </div>
                       </div>
                     </div>
-                    <!-- Puffy Cloud Base -->
                     <div class="h-5 w-20 rounded-full bg-white shadow-xs -mt-2"></div>
                   </div>
                 </div>
@@ -498,8 +505,6 @@
                     <circle cx="55" cy="45" r="7" fill="#fbcfe8" />
                     <circle cx="80" cy="45" r="8" fill="#fda4af" />
                     <circle cx="20" cy="80" r="7" fill="#fbcfe8" />
-                    <circle cx="45" cy="110" r="5" fill="#fbcfe8" opacity="0.8"/>
-                    <circle cx="75" cy="90" r="6" fill="#fda4af" opacity="0.8"/>
                   </svg>
                 </div>
               } @else if (tpl.artType === 'mountain-escape') {
@@ -511,29 +516,21 @@
                     <polygon points="70,45 62,60 70,55 78,60" fill="#ffffff" />
                     <polygon points="-10,120 25,65 60,120" fill="#0f766e" />
                     <rect x="0" y="105" width="100" height="35" fill="#0284c7" opacity="0.75"/>
-                    <ellipse cx="50" cy="115" rx="40" ry="3" fill="#38bdf8" opacity="0.6"/>
                   </svg>
                 </div>
               } @else if (tpl.artType === 'minimal-cat') {
                 <div class="absolute inset-0 flex flex-col items-center justify-end pb-8 select-none pointer-events-none">
-                  <!-- Floating Heart -->
                   <span class="text-xs text-red-500 mb-1">♥</span>
-                  <!-- Cat Line Art Outline -->
                   <svg viewBox="0 0 60 70" class="w-12 h-14" fill="none" stroke="#18181b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- Ears and Head -->
                     <path d="M18 35 L20 18 L28 26 Q30 25 32 26 L40 18 L42 35" />
-                    <!-- Body Back Contour -->
                     <path d="M18 35 Q14 55 18 64 Q30 66 42 64 Q46 55 42 35" />
-                    <!-- Tail -->
                     <path d="M40 60 Q52 56 48 46" stroke-width="2.2" />
                   </svg>
                 </div>
               } @else if (tpl.artType === 'anime-girl') {
                 <div class="absolute inset-0 flex flex-col items-center justify-end pb-4 select-none pointer-events-none">
                   <div class="relative flex flex-col items-center">
-                    <!-- Hair Halo -->
                     <div class="h-16 w-16 rounded-full bg-indigo-400/80 flex items-center justify-center shadow-inner">
-                      <!-- Face silhouette -->
                       <div class="h-11 w-11 rounded-full bg-[#fef3c7] flex flex-col items-center justify-center">
                         <div class="flex gap-2">
                           <span class="h-1.5 w-1.5 rounded-full bg-indigo-900"></span>
@@ -542,7 +539,6 @@
                         <span class="h-1 w-2 rounded-full bg-pink-300 mt-1"></span>
                       </div>
                     </div>
-                    <!-- Body shoulders -->
                     <div class="h-8 w-18 rounded-t-2xl bg-indigo-600 -mt-2"></div>
                   </div>
                 </div>
@@ -557,15 +553,11 @@
                 </div>
               } @else if (tpl.artType === 'dino-friend') {
                 <div class="absolute inset-0 flex flex-col items-center justify-end pb-5 select-none pointer-events-none">
-                  <!-- Cute Chibi Dino -->
                   <div class="relative flex flex-col items-center">
-                    <!-- Back Spines -->
                     <div class="absolute -left-1 top-2 flex flex-col gap-1">
                       <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
                       <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
-                      <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
                     </div>
-                    <!-- Dino Head & Body -->
                     <div class="h-14 w-12 rounded-[16px] bg-[#86efac] border border-[#4ade80] flex flex-col items-center justify-center p-1 shadow-xs">
                       <div class="flex gap-2">
                         <span class="h-1.5 w-1.5 rounded-full bg-emerald-950"></span>
@@ -574,7 +566,6 @@
                       <div class="h-1 w-2 rounded-full bg-pink-400 mt-1"></div>
                       <div class="h-4 w-7 rounded-full bg-[#bbf7d0] mt-1.5"></div>
                     </div>
-                    <!-- Flowers on Ground -->
                     <div class="flex gap-2 mt-1">
                       <span class="text-[8px]">🌼</span>
                       <span class="text-[8px]">🌸</span>
@@ -603,19 +594,10 @@
                   <span class="font-display text-[10px] font-bold text-ink-soft">Tự vẽ từ số 0</span>
                 </div>
               }
-
-              <!-- Tag Text Fallback (if any) -->
-              @if (tpl.tagText && tpl.artType !== 'dreamy-kitten' && tpl.artType !== 'sakura-bloom' && tpl.artType !== 'minimal-cat' && tpl.artType !== 'starry-night') {
-                <div class="absolute bottom-3 left-0 right-0 text-center px-1 z-10">
-                  <span class="font-display text-[9px] font-black uppercase text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
-                    {{ tpl.tagText }}
-                  </span>
-                </div>
-              }
             </div>
           </div>
 
-          <!-- Card Body / Meta Information -->
+          <!-- Card Body: Tên, Mô tả, Đánh giá, Hashtags (ĐÃ BỎ GIÁ TIỀN HOÀN TOÀN) -->
           <div class="mt-3 flex flex-1 flex-col justify-between">
             <div>
               <div class="flex items-center justify-between gap-2">
@@ -624,32 +606,44 @@
                 </h4>
               </div>
 
+              <!-- Mô tả ngắn của mẫu -->
+              <p class="mt-1 text-xs text-ink-soft line-clamp-2 leading-relaxed">
+                {{ tpl.description }}
+              </p>
+
               <!-- Rating & Reviews -->
-              <div class="mt-1 flex items-center gap-1.5 text-xs text-ink-soft">
+              <div class="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
                 <span class="text-amber-400">★</span>
                 <span class="font-bold text-ink">{{ tpl.rating }}</span>
                 <span>({{ tpl.reviews }})</span>
               </div>
 
-              <!-- Price -->
-              <div class="mt-1 text-sm font-extrabold text-brand-800">
-                {{ tpl.price | number:'1.0-0' }}đ
+              <!-- Hashtags Preview on Card -->
+              <div class="mt-2 flex flex-wrap gap-1">
+                @for (tag of tpl.hashtags.slice(0, 3); track tag) {
+                  <span
+                    (click)="filterByHashtag(tag); $event.stopPropagation()"
+                    class="rounded bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
+                  >
+                    {{ tag }}
+                  </span>
+                }
               </div>
             </div>
 
-            <!-- Card Action Footer: "Xem trước 3D" Pill Button -->
+            <!-- Card Action Footer: Nút "Chi tiết mẫu" (Thay thế chữ "Xem trước 3D") -->
             <div class="mt-3.5 pt-2 border-t border-purple-50">
               <button
                 type="button"
-                (click)="openPreview3d(tpl, $event)"
-                class="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-purple-200/90 bg-purple-50/50 py-2 px-3 text-xs font-bold text-brand-800 transition-all hover:bg-brand-800 hover:text-white hover:border-brand-800 cursor-pointer shadow-2xs"
+                (click)="openDetailModal(tpl, $event)"
+                class="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-purple-200/90 bg-purple-50/60 py-2.5 px-3 text-xs font-bold text-brand-800 transition-all hover:bg-brand-800 hover:text-white hover:border-brand-800 cursor-pointer shadow-2xs"
               >
-                <!-- 3D Cube Icon -->
+                <!-- 3D Cube / Detail Icon -->
                 <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
                 </svg>
-                <span>Xem trước 3D</span>
+                <span>Chi tiết mẫu</span>
               </button>
             </div>
           </div>
@@ -849,108 +843,342 @@
   }
 
   <!-- ══════════════════════════════════════════════════════
-       MODAL 2: 3D PREVIEW MODAL (Khi click Xem trước 3D)
+       MODAL 2: CHI TIẾT MẪU & XEM TRƯỚC 3D THẬT (GOOGLE MODEL-VIEWER)
+       Tích hợp: Xem 3D xoay 360°, Mô tả chi tiết, Hashtags, & Đánh giá người dùng
   ══════════════════════════════════════════════════════ -->
-  @if (preview3dTemplate(); as activeTpl) {
+  @if (previewTemplate(); as activeTpl) {
     <div
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/65 backdrop-blur-md animate-fade-in"
-      (click)="closePreview3d()"
+      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-brand-950/70 backdrop-blur-md animate-fade-in"
+      (click)="closePreviewModal()"
     >
       <div
-        class="w-full max-w-lg rounded-3xl border border-purple-100 bg-white p-6 shadow-2xl flex flex-col text-center"
+        class="w-full max-w-4xl max-h-[92vh] rounded-[28px] border border-purple-100 bg-white shadow-2xl flex flex-col overflow-hidden text-left"
         (click)="$event.stopPropagation()"
       >
 
-        <!-- Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-purple-100">
-          <div class="flex items-center gap-2">
-            <span class="rounded-pill bg-purple-100 px-2.5 py-1 text-xs font-bold text-brand-800 flex items-center gap-1">
-              <svg class="h-3.5 w-3.5 text-purple-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-purple-100 bg-purple-50/40 shrink-0">
+          <div class="flex items-center gap-3">
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-brand-800 shadow-xs">
+              <svg class="h-4.5 w-4.5 text-purple-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
               </svg>
-              <span>Xem trước 3D</span>
             </span>
-            <span class="font-display text-sm font-bold text-ink">{{ activeTpl.name }}</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-base font-bold text-ink">{{ activeTpl.name }}</h3>
+                <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-800">
+                  {{ activeTpl.tagLabel }}
+                </span>
+              </div>
+              <p class="text-xs text-ink-soft">Mẫu thiết kế bởi {{ activeTpl.creator }}</p>
+            </div>
           </div>
 
+          <!-- Close Modal Button -->
           <button
             type="button"
-            (click)="closePreview3d()"
-            class="rounded-full p-1.5 text-ink-soft hover:bg-purple-100 hover:text-ink cursor-pointer"
+            (click)="closePreviewModal()"
+            class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+            title="Đóng cửa sổ"
           >
-            <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <!-- 3D Floating Case Stage -->
-        <div class="my-6 flex items-center justify-center py-4 bg-purple-50/50 rounded-2xl relative overflow-hidden">
-          <div class="animate-float-case">
-            <div
-              class="case-bezel preview-case-shadow h-72 w-44 overflow-hidden bg-white flex flex-col justify-between relative"
-              [style.background]="activeTpl.gradient"
-            >
-              <!-- Camera bump -->
-              <div class="absolute left-[7%] top-[5%] z-20 h-[26%] w-[38%] rounded-[12px] bg-[#121316] border border-[#2a2d34] flex flex-col justify-around p-1 shadow-md">
-                <div class="flex items-center justify-between">
-                  <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
-                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                  </div>
-                  <div class="h-2 w-2 rounded-full bg-[#fef08a] ring-1 ring-slate-400"></div>
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
-                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                  </div>
-                  <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
-                    <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
-                  </div>
-                </div>
-              </div>
+        <!-- Modal Body: 2 Columns Layout (Left: 3D Stage | Right: Details & Reviews) -->
+        <div class="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 min-h-0">
 
-              <!-- Artwork Label -->
-              <div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
-                <span class="font-display text-xs font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                  {{ activeTpl.name }}
-                </span>
-                <span class="text-[10px] font-semibold text-white/90 drop-shadow-xs">
-                  {{ state.selectedModel().name }}
-                </span>
+          <!-- Left Column (5/12): 3D Model WebGL Canvas & Controls -->
+          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/50 to-white flex flex-col items-center justify-between border-b lg:border-b-0 lg:border-r border-purple-100">
+
+            <!-- View Mode Switcher: 3D Model vs 2D Graphic -->
+            <div class="flex items-center gap-1 rounded-full bg-purple-100/80 p-1 shadow-2xs text-xs font-semibold">
+              <button
+                type="button"
+                (click)="toggleViewMode('3d')"
+                class="rounded-full px-3 py-1 transition-all cursor-pointer"
+                [class]="viewMode() === '3d' ? 'bg-white text-brand-800 shadow-xs' : 'text-ink-soft hover:text-brand-800'"
+              >
+                Mô hình 3D xoay
+              </button>
+              <button
+                type="button"
+                (click)="toggleViewMode('2d')"
+                class="rounded-full px-3 py-1 transition-all cursor-pointer"
+                [class]="viewMode() === '2d' ? 'bg-white text-brand-800 shadow-xs' : 'text-ink-soft hover:text-brand-800'"
+              >
+                Mặt lưng 2D
+              </button>
+            </div>
+
+            <!-- Stage Display -->
+            <div class="relative w-full h-[360px] sm:h-[400px] flex items-center justify-center my-3">
+
+              @if (viewMode() === '3d') {
+                <!-- REAL INTERACTIVE 3D WEBGL MODEL (Google Model Viewer) -->
+                <model-viewer
+                  [src]="current3dModelUrl()"
+                  [attr.src]="current3dModelUrl()"
+                  alt="3D Phone Case"
+                  [attr.auto-rotate]="isAutoRotate() ? '' : null"
+                  camera-controls
+                  rotation-per-second="24deg"
+                  shadow-intensity="1.4"
+                  shadow-softness="0.6"
+                  exposure="1.0"
+                  camera-orbit="0deg 75deg 105%"
+                  min-camera-orbit="auto auto 50%"
+                  max-camera-orbit="auto auto 200%"
+                  touch-action="pan-y"
+                  style="width: 100%; height: 100%; min-height: 360px;"
+                >
+                  <!-- 3D Poster / Loading Placeholder -->
+                  <div slot="poster" class="flex flex-col items-center justify-center h-full gap-2">
+                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-brand-800 border-t-transparent"></div>
+                    <span class="text-xs text-ink-soft">Đang tải mô hình 3D...</span>
+                  </div>
+                </model-viewer>
+
+                <!-- Floating 3D Interaction Hint & Auto Rotate Toggle -->
+                <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none px-2">
+                  <span class="rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-xs flex items-center gap-1 shadow-xs">
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                    <span>Kéo chuột để xoay 360°</span>
+                  </span>
+
+                  <button
+                    type="button"
+                    (click)="toggleAutoRotate()"
+                    class="pointer-events-auto rounded-full bg-white/90 border border-purple-200 px-2.5 py-1 text-[10px] font-bold text-brand-800 hover:bg-purple-50 shadow-xs cursor-pointer"
+                  >
+                    {{ isAutoRotate() ? 'Dừng xoay' : '↺ Tự xoay' }}
+                  </button>
+                </div>
+
+              } @else {
+                <!-- 2D Detail Presentation -->
+                <div class="animate-float-case">
+                  <div
+                    class="case-bezel preview-case-shadow h-72 w-44 overflow-hidden bg-white flex flex-col justify-between relative"
+                    [style.background]="activeTpl.gradient"
+                  >
+                    <div class="absolute left-[7%] top-[5%] z-20 h-[26%] w-[38%] rounded-[12px] bg-[#121316] border border-[#2a2d34] flex flex-col justify-around p-1 shadow-md">
+                      <div class="flex items-center justify-between">
+                        <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
+                          <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                        </div>
+                        <div class="h-2 w-2 rounded-full bg-[#fef08a] ring-1 ring-slate-400"></div>
+                      </div>
+                      <div class="flex items-center justify-between">
+                        <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
+                          <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                        </div>
+                        <div class="h-3.5 w-3.5 rounded-full bg-[#1b1d24] ring-1 ring-[#3b404d] flex items-center justify-center">
+                          <div class="h-1.5 w-1.5 rounded-full bg-[#050608]"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="absolute inset-0 flex flex-col items-center justify-end pb-8">
+                      <span class="font-display text-xs font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                        {{ activeTpl.name }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              }
+
+            </div>
+
+            <!-- Hardware Model Compatibility Badge -->
+            <div class="w-full flex items-center justify-center gap-1.5 text-xs text-ink-soft pt-1">
+              <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span>Dòng máy: <strong class="text-ink">{{ state.selectedModel().name }}</strong></span>
+            </div>
+
+          </div>
+
+          <!-- Right Column (7/12): Descriptions, Hashtags, Reviews & User Input -->
+          <div class="lg:col-span-7 p-6 space-y-6">
+
+            <!-- Section 1: Detailed Description -->
+            <div>
+              <h4 class="font-display text-xs font-extrabold text-ink uppercase tracking-wider text-purple-900">
+                Mô tả thiết kế
+              </h4>
+              <p class="mt-2 text-xs sm:text-sm text-ink-soft leading-relaxed">
+                {{ activeTpl.detailedDescription }}
+              </p>
+            </div>
+
+            <!-- Section 2: Hashtags & Theme Labels (Clickable) -->
+            <div>
+              <h4 class="font-display text-xs font-extrabold text-ink uppercase tracking-wider text-purple-900">
+                Nhãn & Hashtags chủ đề
+              </h4>
+              <div class="mt-2.5 flex flex-wrap gap-1.5">
+                @for (tag of activeTpl.hashtags; track tag) {
+                  <button
+                    type="button"
+                    (click)="filterByHashtag(tag)"
+                    class="rounded-full bg-purple-50 border border-purple-200/80 px-3 py-1 text-xs font-semibold text-purple-800 hover:bg-purple-600 hover:text-white transition-all cursor-pointer shadow-2xs"
+                    title="Bấm để lọc các mẫu có nhãn {{ tag }}"
+                  >
+                    {{ tag }}
+                  </button>
+                }
               </div>
             </div>
+
+            <!-- Section 3: Tech Specs Highlights -->
+            <div class="rounded-2xl border border-purple-100 bg-purple-50/40 p-3.5 text-xs text-ink space-y-2">
+              <div class="flex items-center gap-2 text-purple-900 font-bold">
+                <svg class="h-4 w-4 text-purple-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Chất lượng in ấn tiêu chuẩn CasEYE</span>
+              </div>
+              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-ink-soft">
+                <li class="flex items-center gap-1.5">
+                  <span class="text-emerald-500 font-bold">✓</span>
+                  <span>Chống sốc tiêu chuẩn quân đội 2.5m</span>
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <span class="text-emerald-500 font-bold">✓</span>
+                  <span>In nhiệt UV độ phân giải cao 300 DPI</span>
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <span class="text-emerald-500 font-bold">✓</span>
+                  <span>Viền TPU đệm khí bảo vệ camera nhô cao</span>
+                </li>
+                <li class="flex items-center gap-1.5">
+                  <span class="text-emerald-500 font-bold">✓</span>
+                  <span>Chống ố vàng & không bám vân tay</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Section 4: Đánh giá & Phản hồi từ người dùng -->
+            <div>
+              <div class="flex items-center justify-between border-b border-purple-100 pb-2">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-display text-xs font-extrabold text-ink uppercase tracking-wider text-purple-900">
+                    Đánh giá từ khách hàng
+                  </h4>
+                  <span class="rounded-full bg-purple-100 px-2 py-0.2 text-[11px] font-bold text-purple-900">
+                    ★ {{ activeTpl.rating }} ({{ currentTemplateReviews().length }} phản hồi)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Interactive User Review Form (Cho phép người dùng đánh giá) -->
+              <div class="mt-3.5 rounded-2xl border border-purple-200/90 bg-white p-3.5 shadow-2xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-ink">Viết đánh giá của bạn:</span>
+                  <!-- Clickable 5 Stars Picker -->
+                  <div class="flex items-center gap-1">
+                    @for (star of [1, 2, 3, 4, 5]; track star) {
+                      <button
+                        type="button"
+                        (click)="setUserRating(star)"
+                        class="text-base transition-transform hover:scale-125 cursor-pointer"
+                        [class.text-amber-400]="userRating() >= star"
+                        [class.text-slate-200]="userRating() < star"
+                        [title]="star + ' sao'"
+                      >
+                        ★
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="mt-2.5">
+                  <textarea
+                    rows="2"
+                    [value]="userReviewText()"
+                    (input)="onReviewTextInput($event)"
+                    placeholder="Chia sẻ cảm nhận về độ sắc nét, màu sắc hoặc chất liệu của mẫu này..."
+                    class="w-full resize-none rounded-xl border border-purple-100 bg-purple-50/20 p-2.5 text-xs text-ink placeholder:text-ink-soft/45 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400/20"
+                  ></textarea>
+                </div>
+
+                <div class="mt-2 flex items-center justify-between">
+                  @if (reviewSubmittedSuccess()) {
+                    <span class="text-[11px] font-bold text-emerald-600 animate-fade-in">
+                      ✓ Cảm ơn bạn! Đánh giá đã được đăng thành công.
+                    </span>
+                  } @else {
+                    <span class="text-[10px] text-ink-soft">
+                      Đánh giá của bạn sẽ hiển thị công khai cho mọi người
+                    </span>
+                  }
+
+                  <button
+                    type="button"
+                    (click)="onSubmitUserReview()"
+                    [disabled]="!userReviewText().trim()"
+                    class="rounded-full bg-brand-800 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Gửi đánh giá
+                  </button>
+                </div>
+              </div>
+
+              <!-- Customer Reviews List -->
+              <div class="mt-4 space-y-3">
+                @for (rev of currentTemplateReviews(); track rev.id) {
+                  <div class="rounded-xl border border-purple-50 bg-purple-50/20 p-3 text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-bold text-ink">{{ rev.userName }}</span>
+                        @if (rev.isVerifiedBuyer) {
+                          <span class="rounded bg-emerald-100 px-1.5 py-0.2 text-[9px] font-bold text-emerald-800">
+                            ✓ Đã mua hàng
+                          </span>
+                        }
+                      </div>
+                      <span class="text-[10px] text-ink-soft">{{ rev.date }}</span>
+                    </div>
+
+                    <div class="flex items-center gap-1 text-amber-400 text-xs">
+                      @for (s of [1, 2, 3, 4, 5]; track s) {
+                        <span>{{ rev.rating >= s ? '★' : '☆' }}</span>
+                      }
+                      <span class="text-[10px] text-ink-soft ml-1.5">Áp dụng cho {{ rev.deviceModel }}</span>
+                    </div>
+
+                    <p class="text-ink-soft text-[11px] leading-relaxed pt-0.5">
+                      {{ rev.comment }}
+                    </p>
+                  </div>
+                }
+              </div>
+            </div>
+
           </div>
+
         </div>
 
-        <!-- Specifications & Pricing Summary -->
-        <div class="grid grid-cols-3 gap-2 py-3 border-y border-purple-100 text-xs text-ink">
-          <div>
-            <span class="text-[10px] text-ink-soft block">Dòng máy</span>
-            <span class="font-bold">{{ state.selectedModel().name }}</span>
-          </div>
-          <div>
-            <span class="text-[10px] text-ink-soft block">Đánh giá</span>
-            <span class="font-bold text-amber-500">★ {{ activeTpl.rating }}</span>
-          </div>
-          <div>
-            <span class="text-[10px] text-ink-soft block">Giá chuẩn</span>
-            <span class="font-bold text-brand-800">{{ activeTpl.price | number:'1.0-0' }}đ</span>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="mt-6 flex gap-3">
+        <!-- Modal Bottom Sticky Actions Bar -->
+        <div class="flex items-center justify-between px-6 py-4 border-t border-purple-100 bg-white shrink-0">
           <button
             type="button"
-            (click)="closePreview3d()"
-            class="flex-1 rounded-full border border-purple-200 py-3 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
+            (click)="closePreviewModal()"
+            class="rounded-full border border-purple-200 px-5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
           >
             Đóng
           </button>
+
           <button
             type="button"
             (click)="onDesignTemplate(activeTpl)"
-            class="flex-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-800 py-3 text-xs font-bold text-white shadow-soft hover:bg-brand-600 transition-colors cursor-pointer"
+            class="inline-flex items-center gap-2 rounded-full bg-brand-800 px-6 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-600 hover:shadow-lift transition-all cursor-pointer"
           >
             <span>Dùng mẫu này & Vào Studio</span>
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
