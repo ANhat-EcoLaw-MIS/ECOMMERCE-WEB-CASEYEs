@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, viewChild, untracked } from '@angular/core';
 import { AuthModal } from '../../core/auth/auth-modal';
 import { Auth } from './auth';
+import {SupabaseAuthService} from '../../core/supabase/supabase-auth.service';
+import {NavigationEnd, Router} from '@angular/router';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {filter} from 'rxjs';
 
 @Component({
   selector: 'app-auth-dialog',
@@ -11,7 +15,7 @@ import { Auth } from './auth';
       #dialog
       (close)="modal.close()"
       (click)="onBackdropClick($event)"
-      class="m-auto w-full max-w-md rounded-card border border-line bg-surface-alt p-0 shadow-soft backdrop:bg-ink/40"
+      class="m-auto w-full max-w-md rounded-card border border-line bg-surface-alt p-0 shadow-soft"
     >
       @if (modal.mode(); as mode) {
         <div class="relative p-6 sm:p-8">
@@ -31,16 +35,26 @@ import { Auth } from './auth';
 export class AuthDialog {
   protected readonly modal = inject(AuthModal);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
-
+  private readonly auth=inject(SupabaseAuthService);
   constructor() {
     effect(() => {
       const el = this.dialog().nativeElement;
-      if (this.modal.mode()) {
-        if (!el.open) el.showModal();
-      } else if (el.open) {
-        el.close();
+      if (!this.modal.mode()) el.close();
+      else if (!el.open) el.showModal();
+    });
+
+    effect(() => {
+      const mode = this.modal.mode();
+      if (this.auth.isAuthenticated() && (mode === 'login' || mode === 'register')) {
+        untracked(() => this.modal.close());
       }
     });
+
+    inject(Router).events //edge case: the user has opened the modal but navigate to "/url"
+      .pipe(filter((e) => e instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe((e)=>{
+        if (e.urlAfterRedirects.startsWith('/auth')) this.modal.close();
+      });
   }
 
   /** Padding sits on the inner div, so a click that targets the dialog itself is the backdrop. */

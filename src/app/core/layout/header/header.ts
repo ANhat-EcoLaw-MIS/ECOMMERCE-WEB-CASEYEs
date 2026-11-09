@@ -82,4 +82,23 @@ export class Header {
       }
     })
   }
+
+  onSignOut(): void {
+    this.auth.signOut().then((r) => {
+      if (!r.error){
+        this.router.navigate(['/'])
+        this.notifications.show({
+          variant: "information",
+          title: "Thông tin",
+          message: "Đăng xuất thành công",
+        })
+      } else {
+        this.notifications.show({
+          variant: "error",
+          title: "Gặp chút lỗi rồi!",
+          message: `${r.error.code}: ${r.error.message} - Hãy liên hệ với chăm sóc khách hàng để được hỗ trợ sớm nhất.`,
+        })
+      }
+      })
+  }
 }
