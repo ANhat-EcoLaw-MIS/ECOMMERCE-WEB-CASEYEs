@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, Injector, afterNextRender, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { POLICY_HIGHLIGHTS, POLICY_SECTIONS, POLICY_VERSION } from '../config/order-policy';
 import { track } from '../services/tracker';
 
@@ -21,8 +21,13 @@ export class OrderPolicy {
   /** First section open by default; a #hash opens its section. */
   protected readonly open = signal<ReadonlySet<string>>(new Set([POLICY_SECTIONS[0].id]));
 
+  private readonly injector = inject(Injector);
+  private readonly route = inject(ActivatedRoute);
+
   constructor() {
-    queueMicrotask(() => this.openFromHash());
+    // Other modules link here with a fragment, e.g. routerLink="/order-tracking/chinh-sach"
+    // fragment="hoan-tien". Wait for the first render so the section exists before scrolling.
+    afterNextRender(() => this.openFromHash());
   }
 
   protected isOpen(id: string): boolean {
@@ -44,7 +49,11 @@ export class OrderPolicy {
     this.open.update((s) => new Set([...s, id]));
     history.replaceState(null, '', `${location.pathname}#${id}`);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    queueMicrotask(() => document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }));
+    // Scroll after the opened section is rendered, otherwise the position is wrong.
+    afterNextRender(
+      () => document.getElementById(id)?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }),
+      { injector: this.injector },
+    );
     track('policy_section_opened', { section: id });
   }
 
@@ -54,7 +63,7 @@ export class OrderPolicy {
   }
 
   protected openFromHash(): void {
-    const id = location.hash.slice(1);
+    const id = this.route.snapshot.fragment ?? location.hash.slice(1);
     if (id && this.sections.some((s) => s.id === id)) this.goTo(id);
   }
 }
