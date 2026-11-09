@@ -589,9 +589,16 @@
                   </p>
                 </div>
               } @else if (tpl.isBlankCanvas) {
-                <div class="absolute inset-0 flex flex-col items-center justify-center p-2 select-none pointer-events-none text-center">
-                  <span class="text-2xl text-purple-400 mb-1">＋</span>
-                  <span class="font-display text-[10px] font-bold text-ink-soft">Tự vẽ từ số 0</span>
+                <div class="absolute inset-0 flex flex-col items-center justify-center p-3 select-none pointer-events-none text-center">
+                  <div class="h-11 w-11 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-brand-800 text-2xl font-black shadow-xs mb-1.5 animate-pulse">
+                    ＋
+                  </div>
+                  <span class="font-display text-[11px] font-black text-brand-800 uppercase tracking-wider">
+                    Tự vẽ từ số 0
+                  </span>
+                  <span class="text-[9px] text-ink-soft mt-0.5">
+                    Phôi ốp trắng trơn
+                  </span>
                 </div>
               }
             </div>
@@ -631,20 +638,33 @@
               </div>
             </div>
 
-            <!-- Card Action Footer: Nút "Chi tiết mẫu" (Thay thế chữ "Xem trước 3D") -->
+            <!-- Card Action Footer: Nút Bắt đầu thiết kế (với mẫu trắng) hoặc Chi tiết mẫu -->
             <div class="mt-3.5 pt-2 border-t border-purple-50">
-              <button
-                type="button"
-                (click)="openDetailModal(tpl, $event)"
-                class="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-purple-200/90 bg-purple-50/60 py-2.5 px-3 text-xs font-bold text-brand-800 transition-all hover:bg-brand-800 hover:text-white hover:border-brand-800 cursor-pointer shadow-2xs"
-              >
-                <!-- 3D Cube / Detail Icon -->
-                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
-                </svg>
-                <span>Chi tiết mẫu</span>
-              </button>
+              @if (tpl.isBlankCanvas) {
+                <button
+                  type="button"
+                  (click)="onDesignTemplate(tpl)"
+                  class="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-800 py-2.5 px-3 text-xs font-bold text-white transition-all hover:bg-brand-900 shadow-soft cursor-pointer"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Bắt đầu thiết kế</span>
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  (click)="openDetailModal(tpl, $event)"
+                  class="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-purple-200/90 bg-purple-50/60 py-2.5 px-3 text-xs font-bold text-brand-800 transition-all hover:bg-brand-800 hover:text-white hover:border-brand-800 cursor-pointer shadow-2xs"
+                >
+                  <!-- 3D Cube / Detail Icon -->
+                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
+                  </svg>
+                  <span>Chi tiết mẫu</span>
+                </button>
+              }
             </div>
           </div>
 
@@ -817,18 +837,7 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="flex items-center justify-between border-t border-purple-100/80 px-6 py-3.5 bg-purple-50/30">
-          <button
-            type="button"
-            (click)="createNewDesign()"
-            class="inline-flex items-center gap-1.5 rounded-full border border-purple-300 bg-white px-4 py-2 text-xs font-bold text-brand-800 hover:bg-purple-100 transition-colors cursor-pointer"
-          >
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Tạo thiết kế mới</span>
-          </button>
-
+        <div class="flex items-center justify-end border-t border-purple-100/80 px-6 py-3.5 bg-purple-50/30">
           <button
             type="button"
             (click)="closeAllDesignsModal()"

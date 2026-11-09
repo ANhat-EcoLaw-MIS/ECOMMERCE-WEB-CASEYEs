@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
@@ -56,7 +55,30 @@ export interface TemplateCard {
 }
 
 export const TEMPLATE_CATALOG: TemplateCard[] = [
-  // 1. Dreamy Kitten (#pastel)
+  // 1. Phôi Trắng Tiêu Chuẩn (Mẫu đầu tiên - Tự thiết kế từ đầu theo yêu cầu)
+  {
+    id: 'tpl-blank',
+    name: 'Ốp Lưng Trắng Tiêu Chuẩn',
+    creator: 'CasEYE Studio',
+    category: 'minimalist',
+    categories: ['all', 'minimalist', 'cute', 'floral', 'nature', 'cartoon', 'typography', 'abstract'],
+    styleLabel: 'Tự vẽ từ đầu',
+    gradient: '#FFFFFF',
+    tagText: '+ TỰ THIẾT KẾ',
+    description: 'Bắt đầu từ phôi ốp trắng trơn. Tự do tải ảnh, gõ chữ và ghép sticker theo chất riêng của bạn.',
+    detailedDescription:
+      'Phôi ốp trắng tinh khôi chuẩn bị sẵn sàng cho sự sáng tạo không giới hạn của bạn. Bạn có thể tự do tải lên hình ảnh cá nhân, gõ chữ nghệ thuật với hàng trăm phông chữ và chèn những bộ sticker Y2K/Cute độc quyền theo phong cách riêng.',
+    tagLabel: '#tự_thiết_kế',
+    tagColor: '#433075',
+    rating: 5.0,
+    reviews: '2.4k',
+    reviewCount: 2400,
+    hashtags: ['#tự_thiết_kế', '#tự_vẽ', '#phôi_trắng', '#diy', '#custom', '#minimal'],
+    isTrending: false,
+    isBlankCanvas: true,
+    artType: 'blank',
+  },
+  // 2. Dreamy Kitten (#pastel)
   {
     id: 'tpl-001',
     name: 'Dreamy Kitten',
@@ -254,29 +276,6 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     isTrending: false,
     artType: 'that-girl-era',
   },
-  // 10. Phôi Trắng Tiêu Chuẩn (Tự vẽ từ số 0)
-  {
-    id: 'tpl-blank',
-    name: 'Ốp Lưng Trắng Tiêu Chuẩn',
-    creator: 'CasEYE Studio',
-    category: 'minimalist',
-    categories: ['minimalist', 'all'],
-    styleLabel: 'Tự vẽ từ số 0',
-    gradient: '#FFFFFF',
-    tagText: '',
-    description: 'Bắt đầu từ phôi ốp trắng trơn. Tự do sáng tạo ảnh, chữ và sticker theo chất riêng.',
-    detailedDescription:
-      'Phôi ốp trắng tinh khôi chuẩn bị sẵn sàng cho sự sáng tạo không giới hạn của bạn. Hãy nạp lên Studio để thêm ảnh cá nhân, chèn chữ nghệ thuật và ghép những nhãn sticker yêu thích.',
-    tagLabel: '#custom',
-    tagColor: '#433075',
-    rating: 5.0,
-    reviews: '2.4k',
-    reviewCount: 2400,
-    hashtags: ['#tự_thiết_kế', '#blank', '#diy', '#custom', '#minimal', '#canvas'],
-    isTrending: false,
-    isBlankCanvas: true,
-    artType: 'blank',
-  },
 ];
 
 const INITIAL_REVIEWS: Record<string, TemplateReview[]> = {
@@ -316,7 +315,7 @@ const INITIAL_REVIEWS: Record<string, TemplateReview[]> = {
 @Component({
   selector: 'app-template-browser',
   standalone: true,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './template-browser.html',
   styleUrl: './template-browser.scss',
