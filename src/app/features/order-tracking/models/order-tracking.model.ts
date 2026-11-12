@@ -1,3 +1,6 @@
+import type { PaymentMethod, ShippingQuote, ShippingTier } from '../../../shared/models/order-handoff.model';
+
+export type { PaymentMethod, ShippingQuote, ShippingTier };
 /**
  * Order Management domain model (BRD/SRD v8, Class Diagram 7.1).
  * The mock store keeps one aggregate per order; the SQL migration in
@@ -25,23 +28,9 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export type ActorType = 'Customer' | 'Operator' | 'Admin' | 'System' | 'Carrier' | 'CustomerService';
 
-export type PaymentMethod = 'COD' | 'QR_Transfer';
 export type PaymentStatus = 'Unpaid' | 'Paid';
 
-/** v8: Standard for every order; Hỏa tốc (Express) only for stock-only orders. */
-export type ShippingTier = 'Standard' | 'Express';
 
-/** Shipping data owned by Thanh toán (FR-P-06, 07), snapshotted into the order. */
-export interface ShippingQuote {
-  /** Amount the customer paid for shipping. */
-  readonly fee: number;
-  /** Standard fee for this address; basis for re-delivery and two-way costs (assumption A-04). */
-  readonly standardFee: number;
-  /** Extra paid for Hỏa tốc over Standard (0 for Standard). */
-  readonly expressSurcharge: number;
-  /** Transit days (Mon–Sat) for Standard; ignored for Hỏa tốc. */
-  readonly transitDays: { readonly min: number; readonly max: number };
-}
 
 export type CancelRequestStatus = 'Pending' | 'Accepted' | 'Rejected' | 'Withdrawn';
 
@@ -253,6 +242,8 @@ export interface Order {
   readonly paymentStatus: PaymentStatus;
   readonly paymentTxnRef?: string;
   readonly goodsTotal: number;
+  /** Voucher / points discount applied at checkout (Thanh toán). */
+  readonly discount?: number;
   /** Snapshot of Thanh toán's quote (fee, Standard fee, Hỏa tốc surcharge, transit days). */
   readonly shipping: ShippingQuote;
   readonly shippingTier: ShippingTier;

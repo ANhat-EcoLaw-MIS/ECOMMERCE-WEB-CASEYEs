@@ -17,7 +17,7 @@ import { twoWayShippingCost } from './shipping-fee';
 const DAY = 86_400_000;
 
 export function orderTotal(order: Order): number {
-  return order.goodsTotal + order.shipping.fee;
+  return Math.max(0, order.goodsTotal + order.shipping.fee - (order.discount ?? 0));
 }
 
 export function isPrepaid(order: Order): boolean {
@@ -148,7 +148,7 @@ export function refundAmountFor(
       return { amount: orderTotal(order), deductedFee: 0 };
     case 'S3b': {
       const fee = twoWayShippingCost(order);
-      return { amount: Math.max(0, order.goodsTotal - fee), deductedFee: fee };
+      return { amount: Math.max(0, order.goodsTotal - (order.discount ?? 0) - fee), deductedFee: fee };
     }
     case 'S3c':
       return null;

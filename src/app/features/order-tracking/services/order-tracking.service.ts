@@ -37,6 +37,7 @@ import {
 } from '../domain/order-rules';
 import { formatVnd, redeliveryFee } from '../domain/shipping-fee';
 import { OrderHandoff } from '../models/order-handoff.model';
+import { OrderIntake, OrderIntakeRequest } from '../../../shared/services/order-intake';
 import {
   CancelReason,
   FailureCause,
@@ -98,7 +99,7 @@ interface MutateOptions {
  * repository transaction, re-checks the rules against fresh data and appends OrderStatusLog.
  */
 @Injectable({ providedIn: 'root' })
-export class OrderTrackingService {
+export class OrderTrackingService implements OrderIntake {
   private readonly repo = inject(OrderRepository);
   private readonly clock = inject(Clock);
   private readonly demo = inject(DemoSettings);
@@ -149,6 +150,15 @@ export class OrderTrackingService {
    * Contract for Thanh toán (OrderHandoff). Validates BR-P-05/06 and the v8 routing:
    * custom (and mixed) orders start in Pending_Review; stock orders in Pending_Confirmation.
    */
+  /**
+   * OrderIntake port (shared/services/order-intake.ts) used by Thanh toán. The customer defaults to
+   * the signed-in user (or the demo customer when nobody is signed in).
+   */
+  placeOrder(request: OrderIntakeRequest): Result<{ readonly orderCode: string }> {
+    const r = this.receiveHandoff({ ...request, customer: request.customer ?? this.customer() });
+    return r.error ? r : ok({ orderCode: r.data.orderCode });
+  }
+
   receiveHandoff(h: OrderHandoff): OpResult {
     if (h.items.length === 0) return fail({ message: 'Đơn hàng không có sản phẩm' });
     const hasCustom = h.items.some((i) => i.isCustom);
@@ -193,6 +203,7 @@ export class OrderTrackingService {
         paymentStatus: isCod ? 'Unpaid' : 'Paid',
         paymentTxnRef: isCod ? undefined : (h.paymentTxnRef ?? this.payment.newTransactionRef()),
         goodsTotal,
+        discount: h.discount || undefined,
         shipping: h.shipping,
         shippingTier: h.shippingTier,
         hasCustomItem: hasCustom,

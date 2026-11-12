@@ -1,7 +1,9 @@
 import { DELIVERY_CONFIG } from './delivery-config';
 
 /** Version stored in every PolicyConsent (FR-OT-17). Bump when the text below changes. */
-export const POLICY_VERSION = 'CS-DH-2.0 (06/11/2026)';
+import { ORDER_POLICY_VERSION } from '../../../shared/policy/order-policy-ref';
+
+export const POLICY_VERSION = ORDER_POLICY_VERSION;
 
 const cfg = DELIVERY_CONFIG;
 const hhmm = (c: { hour: number; minute: number }) => `${String(c.hour).padStart(2, '0')}:${String(c.minute).padStart(2, '0')}`;

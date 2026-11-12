@@ -239,6 +239,10 @@
               <dd class="text-right text-ink">{{ formatVnd(o.goodsTotal) }}</dd>
               <dt class="text-ink-soft">Vận chuyển ({{ tierLabels[o.shippingTier] }})</dt>
               <dd class="text-right text-ink">{{ o.shipping.fee === 0 ? 'Miễn phí' : formatVnd(o.shipping.fee) }}</dd>
+              @if (o.discount) {
+                <dt class="text-ink-soft">Giảm giá</dt>
+                <dd class="text-right text-ink">−{{ formatVnd(o.discount) }}</dd>
+              }
               <dt class="border-t border-line pt-2 font-semibold text-ink">Tổng cộng</dt>
               <dd class="border-t border-line pt-2 text-right font-display font-bold text-brand-800">{{ formatVnd(total()) }}</dd>
               <dt class="text-ink-soft">Phương thức</dt>
