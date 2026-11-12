@@ -4,6 +4,10 @@ import { routes } from './app.routes';
 import {provideSupabase} from './core/supabase/supabase.provider';
 import {environment} from '../environments/environment';
 import { SupabaseAuthService } from './core/supabase/supabase-auth.service';
+import { OrderIntake } from './shared/services/order-intake';
+import { OrderTrackingService } from './features/order-tracking/services/order-tracking.service';
+import { CustomerOrderFeed } from './shared/services/customer-order-feed';
+import { OrderTrackingCustomerFeed } from './features/order-tracking/services/customer-order-feed.impl';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -11,5 +15,9 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideSupabase({url:environment.supabaseUrl, key:environment.supabaseKey}),
     provideAppInitializer(() => inject(SupabaseAuthService).init()),
+    // Thanh toán creates orders through this port; Quản lý đơn hàng implements it.
+    { provide: OrderIntake, useExisting: OrderTrackingService },
+    // Tài khoản reads the customer's orders through this port.
+    { provide: CustomerOrderFeed, useExisting: OrderTrackingCustomerFeed },
   ]
 };

@@ -1,12 +1,14 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ORDERS } from '../../models/account.model';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { CustomerOrderFeed } from '../../../../shared/services/customer-order-feed';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-orders-tab',
+  imports: [RouterLink],
   templateUrl: './orders-tab.html',
 })
 export class OrdersTab {
-  protected readonly orders = ORDERS;
-  // TODO: load orders from the database when an account orders query is available.
+  // Integration: real orders from Quản lý đơn hàng (was the static ORDERS mock).
+  protected readonly orders = inject(CustomerOrderFeed).orders;
 }
