@@ -4,37 +4,45 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    title:"CasEYE's",
-    loadComponent: () => import("./features/landing/landing").then((m) => m.Landing),
+    title: "CasEYE's",
+    loadComponent: () => import('./features/landing/landing').then((m) => m.Landing),
   },
   {
-    path:'design-studio',
-    pathMatch:'full',
-    loadChildren: ()=>import("./features/design-studio/design-studio.routes").then(m => m.DESIGN_STUDIO_ROUTES)
-  },
-  {
-    path:'cart',
+    path: 'design-studio',
     pathMatch: 'full',
-    loadChildren: ()=>import("./features/cart/cart.routes").then((m) => m.CART_ROUTES),
+    loadChildren: () =>
+      import('./features/design-studio/design-studio.routes').then((m) => m.DESIGN_STUDIO_ROUTES),
   },
   {
-    path:'shop',
+    path: 'cart',
     pathMatch: 'full',
-    loadChildren: ()=>import("./features/shop/shop.routes").then((m) => m.SHOP_ROUTES),
+    loadChildren: () => import('./features/cart/cart.routes').then((m) => m.CART_ROUTES),
   },
   {
-    path:'account',
+    path: 'checkout',
+    loadChildren: () =>
+      import('./features/checkout/checkout.routes').then((m) => m.CHECKOUT_ROUTES),
+  },
+  {
+    path: 'shop',
     pathMatch: 'full',
-    loadChildren:()=>import("./features/account/account.routes").then((m) => m.ACCOUNT_ROUTES),
+    loadChildren: () => import('./features/shop/shop.routes').then((m) => m.SHOP_ROUTES),
   },
   {
-    path:'customer-support',
+    path: 'account',
     pathMatch: 'full',
-    loadChildren:()=>import("./features/customer-support/customer-support.routes").then((m) => m.SUPPORT_ROUTES),
+    loadChildren: () =>
+      import('./features/account/account.routes').then((m) => m.ACCOUNT_ROUTES),
   },
   {
-    path:'**',
-    title:"Not found T~T",
-    loadComponent:()=>import("./core/not-found/not-found").then(m => m.NotFound)
-  }
+    path: 'customer-support',
+    pathMatch: 'full',
+    loadChildren: () =>
+      import('./features/customer-support/customer-support.routes').then((m) => m.SUPPORT_ROUTES),
+  },
+  {
+    path: '**',
+    title: 'Not found T~T',
+    loadComponent: () => import('./core/not-found/not-found').then((m) => m.NotFound),
+  },
 ];
