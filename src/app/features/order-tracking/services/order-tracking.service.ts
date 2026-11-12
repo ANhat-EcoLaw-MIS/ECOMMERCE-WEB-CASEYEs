@@ -155,7 +155,13 @@ export class OrderTrackingService implements OrderIntake {
    * the signed-in user (or the demo customer when nobody is signed in).
    */
   placeOrder(request: OrderIntakeRequest): Result<{ readonly orderCode: string }> {
-    const r = this.receiveHandoff({ ...request, customer: request.customer ?? this.customer() });
+    // createdAt is dropped: time rules (COD window, cut-offs) follow this module's clock, which the
+    // simulator can move; Checkout's wall-clock time would make them inconsistent.
+    const { recipient, createdAt: _ignored, ...handoff } = request;
+    const account = request.customer ?? this.customer();
+    // The order keeps the account id/email; name and phone are the delivery contact from checkout.
+    const customer = recipient ? { ...account, name: recipient.name, phone: recipient.phone } : account;
+    const r = this.receiveHandoff({ ...handoff, customer });
     return r.error ? r : ok({ orderCode: r.data.orderCode });
   }
 

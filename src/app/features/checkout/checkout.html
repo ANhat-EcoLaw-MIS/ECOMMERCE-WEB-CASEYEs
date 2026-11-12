@@ -479,7 +479,27 @@
                   </div>
                 </div>
 
-                <!-- Option 4: COD (Đã khóa) -->
+                <!-- Option 4: COD. Integration (BRD v8): allowed only when the cart has no custom design -->
+                @if (checkoutService.stockOnly()) {
+                <div
+                  class="payment-option payment-option--simple"
+                  [class.payment-option--active]="checkoutService.selectedPaymentType() === 'cod'"
+                  (click)="onPaymentSelect('cod')"
+                >
+                  <div class="payment-option__left">
+                    <div class="check-circle" [class.check-circle--active]="checkoutService.selectedPaymentType() === 'cod'">
+                      <span class="material-symbols-outlined">done</span>
+                    </div>
+                    <div class="cod-icon">
+                      <span class="material-symbols-outlined">local_atm</span>
+                    </div>
+                    <div>
+                      <div class="payment-option__title">Thanh toán khi nhận hàng (COD)</div>
+                      <p class="payment-option__desc">Trả tiền mặt cho shipper khi nhận hàng</p>
+                    </div>
+                  </div>
+                </div>
+                } @else {
                 <div class="payment-option payment-option--disabled">
                   <div class="payment-option__left">
                     <div class="check-circle check-circle--locked">
@@ -501,6 +521,7 @@
                     <span>Đơn có sản phẩm in theo yêu cầu cần thanh toán trước 100% để xưởng chế tác khuôn in UV độc bản.</span>
                   </div>
                 </div>
+                }
               </div>
             </section>
 

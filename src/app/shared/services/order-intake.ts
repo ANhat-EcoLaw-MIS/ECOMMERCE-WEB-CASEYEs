@@ -2,7 +2,11 @@ import { Result } from '../../core/supabase/supabase.types';
 import { OrderHandoff } from '../models/order-handoff.model';
 
 /** Checkout may leave the customer out: Quản lý đơn hàng fills it from the signed-in user. */
-export type OrderIntakeRequest = Omit<OrderHandoff, 'customer'> & { readonly customer?: OrderHandoff['customer'] };
+export type OrderIntakeRequest = Omit<OrderHandoff, 'customer'> & {
+  readonly customer?: OrderHandoff['customer'];
+  /** Recipient entered at checkout; shown as the delivery contact on the order. */
+  readonly recipient?: { readonly name: string; readonly phone: string };
+};
 
 /**
  * Port Thanh toán calls to create an order, so Checkout never imports the Order Tracking feature.

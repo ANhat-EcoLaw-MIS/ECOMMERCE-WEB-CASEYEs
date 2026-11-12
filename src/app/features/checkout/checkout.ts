@@ -377,10 +377,11 @@ export class Checkout implements OnInit, OnDestroy {
     const standard = this.checkoutService.shippingMethods().find((m) => m.id === 'standard') ?? method;
     const isExpress = method.id === 'express';
     const extras = order.giftPackage.enabled
-      ? [{ productName: order.giftPackage.title, phoneModel: '', baseSku: 'GIFT-HOLOGRAM', isCustom: false, quantity: 1, unitPrice: order.giftPrice }]
+      ? [{ productName: order.giftPackage.title, phoneModel: 'Quà tặng kèm', baseSku: 'GIFT-HOLOGRAM', isCustom: false, quantity: 1, unitPrice: order.giftPrice }]
       : [];
     return {
       payerName: order.address.fullName,
+      recipient: { name: order.address.fullName, phone: order.address.phone },
       shippingAddress: order.address.streetAddress,
       shippingTier: isExpress ? ('Express' as const) : ('Standard' as const),
       shipping: {
@@ -394,7 +395,6 @@ export class Checkout implements OnInit, OnDestroy {
       discount: order.discountAmount,
       policyVersion: ORDER_POLICY_VERSION,
       policyAcceptedAt: this.checkoutService.consentAcceptedAt() ?? new Date().toISOString(),
-      createdAt: order.createdAt,
       items: [
         ...order.items.map((i) => {
           const isCustom = i.productType !== 'IN_STOCK';

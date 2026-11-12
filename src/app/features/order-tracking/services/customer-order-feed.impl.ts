@@ -15,7 +15,7 @@ export class OrderTrackingCustomerFeed extends CustomerOrderFeed {
   readonly orders = computed<readonly CustomerOrderSummary[]>(() => {
     const now = this.clock.nowSignal();
     return this.service.myOrders().map((o) => {
-      const products = o.items.filter((i) => i.phoneModel);
+      const products = o.items.filter((i) => i.baseSku !== 'GIFT-HOLOGRAM');
       const first = products[0] ?? o.items[0];
       const more = products.length > 1 ? ` và ${products.length - 1} sản phẩm khác` : '';
       return {
