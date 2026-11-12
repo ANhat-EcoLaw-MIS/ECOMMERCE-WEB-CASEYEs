@@ -676,7 +676,13 @@
                   }
                 </div>
                 <p class="consent-text">
-                  Tôi xác nhận thiết kế in trên ốp đã chính xác dòng máy (<strong>iPhone 15 Pro Max</strong>) và đồng ý với điều khoản sản xuất hàng in độc bản theo yêu cầu.
+                  @if (checkoutService.hasCustom()) {
+                    Tôi xác nhận thiết kế in trên ốp đã chính xác dòng máy (<strong>{{ checkoutService.items()[0]?.device }}</strong>) và đồng ý với điều khoản sản xuất hàng in độc bản theo yêu cầu.
+                  } @else {
+                    Tôi đã đọc và đồng ý với chính sách đơn hàng.
+                  }
+                  <a [routerLink]="policyPath" target="_blank" rel="noopener" (click)="$event.stopPropagation()">Xem chính sách đơn hàng</a>
+                  (phiên bản {{ policyVersion }}).
                 </p>
               </div>
 
@@ -922,9 +928,25 @@
               <div class="pill-divider"></div>
               <span class="pill-paid-badge">
                 <span class="material-symbols-outlined">check_circle</span>
-                ĐÃ THANH TOÁN 100% (VIETQR)
+                @if (checkoutService.selectedPaymentType() === 'cod') {
+                  THANH TOÁN KHI NHẬN HÀNG
+                } @else {
+                  ĐÃ THANH TOÁN 100%
+                }
               </span>
             </div>
+            <!-- Integration: the order now lives in Quản lý đơn hàng -->
+            @if (placedOrderCode(); as code) {
+              <a class="btn-cta" [routerLink]="['/order-tracking', code]" style="margin-top: 1rem; display: inline-flex">
+                <span class="material-symbols-outlined">local_shipping</span>
+                Theo dõi đơn hàng
+              </a>
+            } @else if (placeOrderError(); as err) {
+              <p class="terms-error-message" role="alert" style="margin-top: 1rem">
+                <span class="material-symbols-outlined">warning</span>
+                <span>Chưa tạo được đơn: {{ err }}</span>
+              </p>
+            }
           </section>
 
           <!-- Quy trình 4 bước in UV -->

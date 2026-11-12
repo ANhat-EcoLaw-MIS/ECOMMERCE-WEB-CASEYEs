@@ -1,4 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { CartItem } from '../../../shared/models/cart.model';
 import {
   CheckoutOrder,
   CustomOrderItem,
@@ -68,6 +69,7 @@ export class CheckoutService {
       estimatedDelivery: calculateDeliveryRange(2, 4),
       description: 'Bao gồm 24h xưởng in UV + 1-2 ngày vận chuyển',
       price: 25000,
+      transitDays: { min: 1, max: 2 },
       available: true,
     },
     {
@@ -77,6 +79,7 @@ export class CheckoutService {
       estimatedDelivery: 'Giao nhanh trong 24 giờ',
       description: 'Chỉ áp dụng cho hàng có sẵn (không áp dụng cho đơn có ốp lưng Custom in theo yêu cầu)',
       price: 45000,
+      transitDays: { min: 0, max: 0 },
       available: false,
       disabledReason: 'Chỉ áp dụng cho hàng có sẵn',
     },
@@ -167,7 +170,13 @@ export class CheckoutService {
   });
 
   // --- Custom consent agreement ---
-  readonly designConfirmed = signal<boolean>(true);
+  // Integration (FR-OT-17): the customer must tick it themself; the time is stored as PolicyConsent.
+  readonly designConfirmed = signal<boolean>(false);
+  readonly consentAcceptedAt = signal<string | null>(null);
+
+  /** true when every item is hàng có sẵn: COD and Hỏa tốc are allowed (BRD v8). */
+  readonly stockOnly = computed(() => this.items().every((i) => i.productType === 'IN_STOCK'));
+  readonly hasCustom = computed(() => !this.stockOnly());
 
   // --- Current active order ---
   readonly currentOrder = signal<CheckoutOrder | null>(null);
@@ -239,6 +248,63 @@ export class CheckoutService {
 
   toggleDesignConfirmed(): void {
     this.designConfirmed.update((val) => !val);
+    this.consentAcceptedAt.set(this.designConfirmed() ? new Date().toISOString() : null);
+  }
+
+  /**
+   * Integration: load the shared cart (Design Studio / Shop) and apply the v8 rules:
+   * COD and Hỏa tốc only when the cart has no custom design.
+   */
+  loadFromCart(cart: readonly CartItem[]): void {
+    if (cart.length === 0) return;
+    this.items.set(
+      cart.map((c) => ({
+        id: c.id,
+        productType: c.productType,
+        baseSku: c.baseSku,
+        hasUploadedImage: c.hasUploadedImage,
+        contentPolicyAcceptedAt: c.contentPolicyAcceptedAt,
+        name: c.name,
+        tag: c.productType === 'CUSTOM' ? '#CustomDesign' : '#CoSan',
+        device: c.device,
+        material: c.material ?? 'Polycarbonate cao cấp',
+        edge: '',
+        surface: '',
+        quantity: c.quantity,
+        price: c.unitPrice,
+        imageUrl: c.previewUrl ?? '/logo.png',
+        resolutionText: c.productType === 'CUSTOM' ? 'Đã kiểm tra trong Design Studio' : 'Hàng có sẵn',
+        resolutionPercent: 100,
+        leadTime: c.productType === 'CUSTOM' ? 'Nhân viên duyệt thiết kế trước khi in' : 'Có sẵn trong kho',
+        designCode: c.designCode ?? c.id,
+      })),
+    );
+    this.applyCartRules();
+  }
+
+  private applyCartRules(): void {
+    const stockOnly = this.stockOnly();
+    this.shippingMethods.update((list) =>
+      list.map((m) =>
+        m.id === 'express'
+          ? { ...m, available: stockOnly, badge: stockOnly ? 'Nhanh nhất' : 'Tạm khóa', disabledReason: stockOnly ? undefined : 'Chỉ áp dụng cho hàng có sẵn' }
+          : m,
+      ),
+    );
+    this.paymentOptions.update((list) =>
+      list.map((p) =>
+        p.type === 'cod'
+          ? {
+              ...p,
+              enabled: stockOnly,
+              badge: stockOnly ? undefined : 'Tạm khóa',
+              description: stockOnly ? 'Trả tiền mặt cho shipper khi nhận hàng' : p.description,
+            }
+          : p,
+      ),
+    );
+    if (!stockOnly && this.selectedShippingId() === 'express') this.selectedShippingId.set('standard');
+    if (!stockOnly && this.selectedPaymentType() === 'cod') this.selectedPaymentType.set('vietqr');
   }
 
   applyVoucher(code: string): boolean {

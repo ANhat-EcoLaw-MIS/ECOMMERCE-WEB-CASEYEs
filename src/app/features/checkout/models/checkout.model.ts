@@ -21,6 +21,8 @@ export type PaymentSimulationMode = 'random' | 'always_success' | 'always_failed
 
 export interface ShippingMethod {
   id: 'standard' | 'express';
+  /** Integration (Quản lý đơn hàng computes the delivery date): transit days Mon–Sat. */
+  transitDays?: { min: number; max: number };
   name: string;
   badge: string;
   estimatedDelivery: string;
@@ -32,6 +34,12 @@ export interface ShippingMethod {
 
 export interface CustomOrderItem {
   id: string;
+  /** Integration: IN_STOCK (hàng có sẵn) or CUSTOM (thiết kế theo yêu cầu). Missing = CUSTOM. */
+  productType?: 'IN_STOCK' | 'CUSTOM';
+  /** Integration: blank/product SKU passed to Quản lý đơn hàng. */
+  baseSku?: string;
+  hasUploadedImage?: boolean;
+  contentPolicyAcceptedAt?: string;
   name: string;
   tag: string;
   device: string;

@@ -1,7 +1,11 @@
 import { Component, OnDestroy, OnInit, computed, inject, isDevMode, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { CartService } from '../../shared/services/cart.service';
+import { OrderIntake } from '../../shared/services/order-intake';
+import { ORDER_POLICY_PATH, ORDER_POLICY_VERSION } from '../../shared/policy/order-policy-ref';
+import { CheckoutOrder } from './models/checkout.model';
 import { CheckoutService } from './services/checkout.service';
 import { PaymentMethodType, PaymentSimulationMode } from './models/checkout.model';
 
@@ -19,13 +23,23 @@ interface AddressValidationErrors {
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',
 })
 export class Checkout implements OnInit, OnDestroy {
   readonly checkoutService = inject(CheckoutService);
   private readonly route = inject(ActivatedRoute);
+  private readonly cart = inject(CartService);
+  private readonly orderIntake = inject(OrderIntake);
+
+  // --- Integration with Quản lý đơn hàng ---
+  protected readonly policyPath = ORDER_POLICY_PATH;
+  protected readonly policyVersion = ORDER_POLICY_VERSION;
+  /** Code returned by Quản lý đơn hàng once the order is created (shown on the success screen). */
+  readonly placedOrderCode = signal<string | null>(null);
+  readonly placeOrderError = signal<string | null>(null);
+  private placedForOrderId: string | null = null;
 
   // --- Environment & Dev Dock Visibility (Ẩn công khai, chỉ mở khi nhấn trigger hoặc query param) ---
   readonly isDevMode = signal(isDevMode());
@@ -84,9 +98,12 @@ export class Checkout implements OnInit, OnDestroy {
 
   // --- Computed ---
   readonly giftCharsCount = computed(() => this.checkoutService.giftOption().message.length);
-  readonly orderCode = computed(() => this.checkoutService.currentOrder()?.orderCode ?? 'CE-89421');
+  readonly orderCode = computed(() => this.placedOrderCode() ?? this.checkoutService.currentOrder()?.orderCode ?? 'CE-89421');
 
   ngOnInit(): void {
+    // Integration: items come from the shared cart (Design Studio / Shop) when it is not empty.
+    this.checkoutService.loadFromCart(this.cart.items());
+
     // Cho phép mở nhanh từng bước qua query param nếu có: ?step=processing, ?step=success, ?step=failed
     // Hoặc kích hoạt Dev Tools qua ?dev=true / ?debug=true
     this.route.queryParams.subscribe((params) => {
@@ -132,6 +149,10 @@ export class Checkout implements OnInit, OnDestroy {
     if (this.autoProceedTimer) clearTimeout(this.autoProceedTimer);
 
     this.currentStep.set(step);
+
+    if (step === 'success') {
+      this.placeOrderOnce();
+    }
 
     if (step === 'processing') {
       this.startPaymentReconciliation();
@@ -331,8 +352,73 @@ export class Checkout implements OnInit, OnDestroy {
 
     setTimeout(() => {
       this.isSubmitting.set(false);
-      this.setStep('processing');
+      // COD has nothing to reconcile: the order is placed right away.
+      this.setStep(this.checkoutService.selectedPaymentType() === 'cod' ? 'success' : 'processing');
     }, 700);
+  }
+
+  /** Integration: hand the paid (or COD) order to Quản lý đơn hàng exactly once. */
+  private placeOrderOnce(): void {
+    const order = this.checkoutService.currentOrder();
+    if (!order || this.placedForOrderId === order.id) return;
+    this.placedForOrderId = order.id;
+    const result = this.orderIntake.placeOrder(this.toHandoff(order));
+    if (result.error) {
+      this.placeOrderError.set(result.error.message);
+      return;
+    }
+    this.placeOrderError.set(null);
+    this.placedOrderCode.set(result.data.orderCode);
+    this.cart.clear();
+  }
+
+  private toHandoff(order: CheckoutOrder) {
+    const method = order.shippingMethod;
+    const standard = this.checkoutService.shippingMethods().find((m) => m.id === 'standard') ?? method;
+    const isExpress = method.id === 'express';
+    const extras = order.giftPackage.enabled
+      ? [{ productName: order.giftPackage.title, phoneModel: '', baseSku: 'GIFT-HOLOGRAM', isCustom: false, quantity: 1, unitPrice: order.giftPrice }]
+      : [];
+    return {
+      payerName: order.address.fullName,
+      shippingAddress: order.address.streetAddress,
+      shippingTier: isExpress ? ('Express' as const) : ('Standard' as const),
+      shipping: {
+        fee: order.shippingFee,
+        standardFee: standard.price,
+        expressSurcharge: isExpress ? Math.max(0, method.price - standard.price) : 0,
+        transitDays: standard.transitDays ?? { min: 1, max: 2 },
+      },
+      paymentMethod: order.paymentMethod === 'cod' ? ('COD' as const) : ('QR_Transfer' as const),
+      paymentTxnRef: order.paymentMethod === 'cod' ? undefined : this.txnCode(),
+      discount: order.discountAmount,
+      policyVersion: ORDER_POLICY_VERSION,
+      policyAcceptedAt: this.checkoutService.consentAcceptedAt() ?? new Date().toISOString(),
+      createdAt: order.createdAt,
+      items: [
+        ...order.items.map((i) => {
+          const isCustom = i.productType !== 'IN_STOCK';
+          return {
+            productName: i.name,
+            phoneModel: i.device,
+            baseSku: i.baseSku ?? i.designCode,
+            isCustom,
+            quantity: i.quantity,
+            unitPrice: i.price,
+            imageUrl: i.imageUrl,
+            design: isCustom
+              ? {
+                  previewUrl: i.imageUrl,
+                  caption: i.name,
+                  hasUploadedImage: i.hasUploadedImage ?? false,
+                  contentPolicyAcceptedAt: i.contentPolicyAcceptedAt,
+                }
+              : undefined,
+          };
+        }),
+        ...extras,
+      ],
+    };
   }
 
   // --- Actions Màn 4: Failed / Retry ---
