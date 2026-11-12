@@ -3,17 +3,60 @@
   --color-brand-900: #2a1d4d;   /* deepest, for dark sections */
   --color-brand-800: #433075;   /* PRIMARY */
   --color-brand-600: #6a53b0;
-  --color-brand-400: #A58CF4;   /* ACCENT */
+  --color-brand-400: #a58cf4;   /* ACCENT */
   --color-brand-200: #d4c8fa;
   --color-brand-100: #ece6fd;
   --color-brand-50: #f6f3fe;
 
-  /* Neutrals */
-  --color-surface: #FAFAFA; /* page background */
-  --color-surface-alt: #FFFFFF; /* cards */
-  --color-ink: #0A0A0A; /* Jet black, main text */
-  --color-ink-soft: #52525b; /* secondary text */
-  --color-line: #e8e6ef; /* borders, dividers */
+  --color-primary: #2d185e;
+  --color-primary-container: #433075;
+  --color-on-primary-container: #b09be9;
+  --color-secondary: #664db0;
+  --color-secondary-container: #af96ff;
+
+  /* Neutrals & Surfaces */
+  --color-surface:     #FAFAFA; /* page background */
+  --color-surface-canvas: #FAFAFA;
+  --color-surface-card: #FFFFFF; /* cards */
+  --color-surface-alt: #FFFFFF;
+  --color-surface-bright: #fbf8ff;
+  --color-surface-dim: #dad9e4;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f4f2fd;
+  --color-surface-container: #efecf8;
+  --color-surface-container-high: #e9e7f2;
+  --color-surface-container-highest: #e3e1ec;
+  --color-surface-variant: #e3e1ec;
+
+  --color-on-surface: #1a1b23;
+  --color-on-surface-variant: #494550;
+  --color-ink:         #0A0A0A; /* Jet black, main text */
+  --color-ink-jet:     #0A0A0A;
+  --color-ink-soft:    #52525b; /* secondary text */
+  --color-line:        #e8e6ef; /* borders, dividers */
+  --color-line-border: #e8e6ef;
+  --color-outline:     #7a7581;
+  --color-outline-variant: #cac4d1;
+
+  /* State & Alerts */
+  --color-state-success: #16a34a;
+  --color-state-success-surface: #f0fdf4;
+  --color-state-warning: #d97706;
+  --color-state-warning-surface: #fffbeb;
+  --color-state-error: #dc2626;
+  --color-state-error-surface: #fef2f2;
+
+  /* Spacings */
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2rem;
+  --spacing-space-2xl: 3rem;
+  --spacing-gutter: 1rem;
+  --spacing-gutter-md: 1.5rem;
+  --spacing-gutter-lg: 2rem;
+
   /* Typography */
   --font-display: "Plus Jakarta Sans", "Sora", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;

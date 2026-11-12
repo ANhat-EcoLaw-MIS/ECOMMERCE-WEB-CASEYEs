@@ -17,6 +17,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/cart/cart.routes').then((m) => m.CART_ROUTES),
   },
   {
+    path: 'checkout',
+    loadChildren: () =>
+      import('./features/checkout/checkout.routes').then((m) => m.CHECKOUT_ROUTES),
+  },
+  {
     path: 'shop',
     loadChildren: () => import('./features/shop/shop.routes').then((m) => m.SHOP_ROUTES),
   },
