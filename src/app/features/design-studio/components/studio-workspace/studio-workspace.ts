@@ -25,6 +25,10 @@ import {
 import { StudioDraft } from '../../services/studio-draft';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 import { AuthModal } from '../../../../core/auth/auth-modal';
+import { CartService } from '../../../../shared/services/cart.service';
+import { StudioCatalogService } from '../../services/studio-catalog';
+import { CASE_MATERIALS } from '../../models/studio-domain.model';
+import { UNIFIED_STUDIO_PRICE } from '../../services/studio-state';
 
 @Component({
   selector: 'app-studio-workspace',
@@ -40,6 +44,10 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly draft = inject(StudioDraft);
   protected readonly auth = inject(SupabaseAuthService);
   protected readonly authModal = inject(AuthModal);
+  private readonly cart = inject(CartService);
+  private readonly catalog = inject(StudioCatalogService);
+  /** Small JPEG of the last rendered case texture, used as the cart / order preview (integration). */
+  private lastPreviewUrl: string | undefined;
   protected readonly stickers = STICKERS_LIST;
   protected readonly bgPresets = BG_PRESETS;
 
@@ -743,7 +751,40 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
+    this.addCurrentDesignToCart();
     this.showToast('Đã thêm thiết kế vào giỏ hàng thành công!', 4000, true);
+  }
+
+  /** Integration: push the design to the shared cart (read by Thanh toán). */
+  private addCurrentDesignToCart(): void {
+    const model = this.state.selectedModel();
+    const material = CASE_MATERIALS.find((m) => m.id === this.state.selectedMaterial());
+    const hasImage = this.state.layers().some((l) => l.type === 'image');
+    const name = this.state.designName();
+    this.cart.add({
+      productType: 'CUSTOM',
+      name: name === 'Thiết kế chưa đặt tên' ? `Ốp lưng thiết kế – ${model.name}` : name,
+      device: model.name,
+      baseSku: this.catalog.selectedSku()?.skuId ?? model.id,
+      unitPrice: UNIFIED_STUDIO_PRICE,
+      quantity: 1,
+      previewUrl: this.lastPreviewUrl,
+      material: material?.name,
+      hasUploadedImage: hasImage,
+      contentPolicyAcceptedAt: hasImage ? new Date().toISOString() : undefined,
+    });
+  }
+
+  private capturePreview(source: HTMLCanvasElement): void {
+    try {
+      const small = document.createElement('canvas');
+      small.width = 240;
+      small.height = Math.round((240 * source.height) / source.width);
+      small.getContext('2d')?.drawImage(source, 0, 0, small.width, small.height);
+      this.lastPreviewUrl = small.toDataURL('image/jpeg', 0.75);
+    } catch {
+      // Tainted canvas (cross-origin image): keep the previous preview.
+    }
   }
 
   protected dismissToast(): void {
@@ -2033,6 +2074,8 @@ export class StudioWorkspace implements OnDestroy {
     }
     ctx.stroke();
     ctx.restore();
+
+    this.capturePreview(canvas);
 
     // 2. Access Three.js Scene from <model-viewer>
     const sceneSymbol = Object.getOwnPropertySymbols(mv).find((s) =>

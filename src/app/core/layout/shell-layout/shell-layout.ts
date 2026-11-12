@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Footer } from '../footer/footer';
 import { Header } from '../header/header';
+import { CartService } from '../../../shared/services/cart.service';
 
 const EDITOR_PATH = '/design-studio/editor';
 const onEditor = (url: string): boolean => url.includes(EDITOR_PATH);
@@ -16,7 +17,7 @@ const onEditor = (url: string): boolean => url.includes(EDITOR_PATH);
 })
 export class ShellLayout {
   private readonly router = inject(Router);
-  protected readonly cartCount = signal(0);
+  protected readonly cartCount = inject(CartService).count;
 
   /** Design Studio canvas is full screen (like Canva/Figma): hide the site header and footer there. */
   protected readonly isCanvasEditor = toSignal(
