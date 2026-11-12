@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="tagGrad" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="purpleRing" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A58CF4"/>
+      <stop offset="100%" stop-color="#433075"/>
+    </linearGradient>
+    <filter id="tagShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#D97706" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <!-- Outer Ring Badge -->
+  <rect x="12" y="12" width="76" height="76" rx="22" fill="url(#purpleRing)" filter="url(#tagShadow)"/>
+  <!-- Inner Tag Body -->
+  <rect x="18" y="18" width="64" height="64" rx="16" fill="url(#tagGrad)"/>
+  <!-- Tag Hole -->
+  <circle cx="50" cy="30" r="4.5" fill="#433075"/>
+  <circle cx="50" cy="30" r="2.5" fill="#FFFFFF"/>
+  <!-- Label 250K -->
+  <text x="50" y="55" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="18" fill="#433075" text-anchor="middle">250K</text>
+  <text x="50" y="69" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="8.5" fill="#433075" text-anchor="middle" letter-spacing="1">ĐỒNG GIÁ</text>
+</svg>

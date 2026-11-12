@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <filter id="avoGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#15803D" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#avoGlow)">
+    <!-- Die Cut Outer Skin -->
+    <path d="M60 16 C40 16 34 35 34 50 C34 76 42 104 60 104 C78 104 86 76 86 50 C86 35 80 16 60 16 Z"
+          fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M60 18 C42 18 36 36 36 51 C36 76 44 102 60 102 C76 102 84 76 84 51 C84 36 78 18 60 18 Z" fill="#15803D"/>
+    <!-- Flesh -->
+    <path d="M60 25 C46 25 42 40 42 54 C42 74 48 96 60 96 C72 96 78 74 78 54 C78 40 74 25 60 25 Z" fill="#BBF7D0"/>
+    <!-- Seed -->
+    <circle cx="60" cy="70" r="16" fill="#854D0E"/>
+    <!-- Seed Face -->
+    <circle cx="55" cy="68" r="2.5" fill="#FFFFFF"/>
+    <circle cx="65" cy="68" r="2.5" fill="#FFFFFF"/>
+    <path d="M57 74 Q60 77 63 74" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <circle cx="51" cy="72" r="2" fill="#F43F5E" opacity="0.6"/>
+    <circle cx="69" cy="72" r="2" fill="#F43F5E" opacity="0.6"/>
+  </g>
+</svg>

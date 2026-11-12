@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="chGrad" x1="20" y1="40" x2="70" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FB7185"/>
+      <stop offset="60%" stop-color="#E11D48"/>
+      <stop offset="100%" stop-color="#881337"/>
+    </linearGradient>
+    <filter id="chGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#881337" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#chGlow)">
+    <circle cx="40" cy="80" r="24" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6"/>
+    <circle cx="80" cy="72" r="24" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6"/>
+    <path d="M40 76 C50 40 68 20 70 16 M80 68 C76 40 68 20 70 16" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+    <path d="M40 76 C50 40 68 20 70 16 M80 68 C76 40 68 20 70 16" stroke="#15803D" stroke-width="4" stroke-linecap="round"/>
+    <!-- Leaf -->
+    <path d="M70 16 C85 10 95 24 80 26 Z" fill="#22C55E"/>
+    <!-- Cherries -->
+    <circle cx="40" cy="80" r="20" fill="url(#chGrad)"/>
+    <circle cx="80" cy="72" r="20" fill="url(#chGrad)"/>
+    <ellipse cx="34" cy="74" rx="4" ry="7" fill="#FFFFFF" opacity="0.65" transform="rotate(-25 34 74)"/>
+    <ellipse cx="74" cy="66" rx="4" ry="7" fill="#FFFFFF" opacity="0.65" transform="rotate(-25 74 66)"/>
+  </g>
+</svg>

@@ -5,9 +5,11 @@
   Bỏ qua điều hướng
 </a>
 
-<app-header [cartCount]="cartCount()" (searchRequested)="onSearchRequested()" />
+@if (!isCanvasEditor()) {
+  <app-header [cartCount]="cartCount()" (searchRequested)="onSearchRequested()" />
+}
 
-<main id="main">
+<main id="main" [class.h-screen]="isCanvasEditor()" [class.overflow-hidden]="isCanvasEditor()">
   <router-outlet />
 </main>
 
@@ -20,4 +22,7 @@
   }
 </div>
 <app-auth-dialog/>
-<app-footer></app-footer>
+
+@if (!isCanvasEditor()) {
+  <app-footer></app-footer>
+}

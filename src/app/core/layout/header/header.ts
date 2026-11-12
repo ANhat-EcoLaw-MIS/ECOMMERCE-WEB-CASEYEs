@@ -13,10 +13,10 @@ import {AuthModal} from '../../auth/auth-modal';
   host: { '(window:keydown)': 'onKeydown($event)' },
 })
 export class Header {
-  private router=inject(Router);
-  protected readonly auth =inject(SupabaseAuthService);
-  private notifications=inject(NotificationManager);
-  private readonly authModal=inject(AuthModal);
+  private readonly router = inject(Router);
+  protected readonly auth = inject(SupabaseAuthService);
+  private readonly notifications = inject(NotificationManager);
+  private readonly authModal = inject(AuthModal);
   /** Number of items in the cart. Provided by the parent. */
   readonly cartCount = input(0);
 

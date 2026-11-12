@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="popGrad" x1="20" y1="60" x2="70" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+    <filter id="popGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#EF4444" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#popGlow)">
+    <path d="M22 102 L20 72 L64 54 L68 92 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+    <!-- Cone -->
+    <path d="M24 100 L22 74 L62 56 L66 90 Z" fill="url(#popGrad)"/>
+    <path d="M22 74 L62 56" stroke="#FEF08A" stroke-width="4"/>
+    <!-- Confetti Stars & Ribbons -->
+    <circle cx="82" cy="40" r="5" fill="#3B82F6"/>
+    <circle cx="95" cy="55" r="4" fill="#10B981"/>
+    <circle cx="70" cy="25" r="4" fill="#EC4899"/>
+    <path d="M85 20 Q95 28 88 36" stroke="#F59E0B" stroke-width="3" fill="none"/>
+    <path d="M60 16 Q72 12 70 24" stroke="#8B5CF6" stroke-width="3" fill="none"/>
+  </g>
+</svg>

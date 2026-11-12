@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="shieldGrad" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#A58CF4"/>
+      <stop offset="50%" stop-color="#6A53B0"/>
+      <stop offset="100%" stop-color="#433075"/>
+    </linearGradient>
+    <linearGradient id="shieldRim" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ECE6FD"/>
+      <stop offset="100%" stop-color="#2A1D4D"/>
+    </linearGradient>
+    <linearGradient id="glassGloss" x1="20" y1="20" x2="60" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="badgeShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#433075" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Outer Rim -->
+  <path d="M50 8 L85 24 C85 58 50 88 50 88 C50 88 15 58 15 24 Z" fill="url(#shieldRim)" filter="url(#badgeShadow)"/>
+  <!-- Inner Shield -->
+  <path d="M50 14 L80 28 C80 55 50 82 50 82 C50 82 20 55 20 28 Z" fill="url(#shieldGrad)"/>
+  <!-- Glass Reflection -->
+  <path d="M50 15 L78 28.5 C72 50 50 70 50 70 L50 15 Z" fill="url(#glassGloss)"/>
+  <!-- Star / Check Crest -->
+  <path d="M50 32 L53.5 42.5 L64.5 43 L56 50 L59 60.5 L50 54.5 L41 60.5 L44 50 L35.5 43 L46.5 42.5 Z" fill="#FFFFFF"/>
+  <circle cx="50" cy="48" r="4" fill="#A58CF4"/>
+</svg>
