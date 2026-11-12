@@ -209,3 +209,123 @@ npm ci
 ```bash
 npx ng build
 ```
+
+---
+
+# Giai đoạn B: kết quả (12/11/2026)
+
+Nhánh `integration/local`, chưa push.
+- `ng build` pass: chỉ còn cảnh báo cũ và vượt budget.
+- Test Order Tracking và Checkout pass.
+- `footer.spec`, `button.spec`, `account.spec`, `landing.spec`, `hero.spec` đã lỗi từ develop (spec cũ hoặc thiếu provider), không thuộc phần tích hợp.
+
+## B.1 Quyết định đã tự chốt
+
+| Mã | Quyết định | Lý do |
+|---|---|---|
+| MIS-02 | COD và Hỏa tốc **chỉ mở khi giỏ toàn hàng có sẵn**. Có hàng custom thì khóa, giữ nguyên lý do khóa của Checkout | Khớp BRD v8 và lý do "in độc bản" của Checkout. Hai bên không mâu thuẫn, chỉ khác phạm vi |
+| MIS-04 | `vietqr`/`momo`/`card` đều tính là **trả trước** → `QR_Transfer` khi sang đơn. Giữ nguyên UI Checkout | Order Tracking chỉ cần biết đơn trả trước hay COD |
+| MIS-05 | 12 mã BRD v8 là trạng thái chi tiết ở frontend. Đề xuất cách map sang enum DB 5 giá trị (xem B.4) | Không phải sửa code người khác |
+| MIS-06 | Thêm `ShippingMethod.transitDays`. Phụ phí Hỏa tốc = giá Hỏa tốc − giá Standard | Để Order Tracking tính được EDD |
+| MIS-07 | Giữ timeline 4 bước của Checkout (UI của bạn ấy), thêm nút **"Theo dõi đơn hàng"** | Không đổi giao diện function khác |
+| MIS-08 | Tab "Lịch sử mua hàng" đọc đơn thật qua port `CustomerOrderFeed` | Không import chéo feature |
+| MIS-09 | Design Studio → `CartService` dùng chung. Toast dẫn thẳng tới `/checkout` vì trang Giỏ hàng còn trống | Giữ luồng chạy được |
+| MIS-10 | Khu `/admin` + vai trò nhân viên **demo** (chọn ở `/admin/dang-nhap`) | Chưa có `profiles.role` |
+| MIS-11 | Dùng ô xác nhận sẵn có của Checkout, **bỏ tick sẵn**, thêm link chính sách và phiên bản, lưu `PolicyConsent` | Tick sẵn là dark pattern; cách này không đổi UI |
+| Giá | Giá hàng custom lấy từ Design Studio (250.000đ). 464.000đ của Checkout chỉ là dữ liệu mẫu khi giỏ trống | Design Studio là nơi định giá thiết kế |
+| Giờ | Đơn tạo từ Checkout lấy giờ theo đồng hồ của Order Tracking | Giữ đúng 30 phút đổi ý và giờ cắt khi demo có tua giờ |
+| Người nhận | Tên và SĐT trên đơn là người nhận nhập ở Checkout; id và email là của tài khoản | Đúng ngữ cảnh giao hàng |
+
+## B.2 Đã làm
+
+| Bước | Nội dung | Commit |
+|---|---|---|
+| Lớp dùng chung | `shared/models/cart.model.ts`, `order-handoff.model.ts`; `shared/services/cart.service.ts`, `order-intake.ts`, `customer-order-feed.ts`; `shared/policy/order-policy-ref.ts` | `adc2477`, `54cab32` |
+| Studio → Giỏ | `onAddToCart()` thêm `CartItem` (CUSTOM, dòng máy, SKU, giá, ảnh preview 240px, cờ ảnh tải lên); header hiện số món | `c16e79b` |
+| Giỏ → Thanh toán → Đơn | Checkout nạp giỏ, áp luật COD/Hỏa tốc, ô đồng ý bắt buộc, tạo đơn qua `OrderIntake`, xóa giỏ, thêm nút theo dõi đơn | `49eb38a`, `43407ec` |
+| Khu admin | `/admin/dang-nhap`, `AdminLayout` (sidebar + vai trò), `roleGuard`; `/admin/order-tracking` (nghiệp vụ) và `/admin/order-tracking/simulator` (mô phỏng) | `79babb6` |
+| Trang khách | Bỏ `?demo=1` khỏi guard; `/order-tracking/demo` chuyển sang simulator; "Khách demo" bật từ simulator | `79babb6` |
+| Tài khoản | Tab đơn đọc đơn thật, có link sang chi tiết và trạng thái trống | `54cab32` |
+
+## B.3 Kịch bản đã chạy trên web
+
+| Kịch bản | Kết quả |
+|---|---|
+| **Đơn custom trả trước:** giỏ → Checkout (COD/Hỏa tốc khóa, ô đồng ý chưa tick) → thanh toán → đơn "Đang kiểm tra thiết kế" → Operator duyệt → chốt mẻ → đóng gói → webhook giao → khách thấy "Đã giao" | Đạt |
+| **Đơn hàng có sẵn COD:** COD chọn được → đặt ngay, không qua đối soát → "Chờ xác nhận", có nút Hủy, không có đồng hồ đếm ngược | Đạt (sau khi sửa lỗi giờ) |
+| **Phân quyền:** chưa đăng nhập nhân viên mà vào `/admin/**` thì chuyển sang `/admin/dang-nhap`; trang Đơn hàng chỉ hiện thao tác của vai trò; trang nghiệp vụ không có webhook | Đạt |
+| **Route cũ:** `/order-tracking/demo?demo=1` → simulator (qua đăng nhập nhân viên) | Đạt |
+| Tab "Lịch sử mua hàng" | **Chưa kiểm trên web**: `/account` cần đăng nhập Supabase thật |
+| "Thêm vào giỏ" thật trong Design Studio | **Chưa kiểm trên web**: cần đăng nhập. Đã kiểm bằng giỏ giả lập có cùng cấu trúc |
+| Hủy / yêu cầu hủy; giao thất bại → giao lại; khiếu nại → hoàn tiền | Chưa chạy lại trên web lần này. Logic Order Tracking không đổi, test pass, các thao tác vẫn nằm ở admin như trước |
+
+## B.4 Còn chờ team quyết
+
+1. **MIS-12:** đồng hồ 15:00 ở màn lỗi thanh toán, ngược nguyên tắc "không hối thúc".
+2. **MIS-13:** Dev Dock và `?step=` của Checkout có chuyển sang `/admin` như Order Tracking không.
+3. **MIS-14:** chốt một hệ thông báo; hợp nhất các token trùng nghĩa.
+4. **MIS-19 / MIS-05 (migration):** đề xuất giữ enum 5 giá trị và thêm cột `status_detail` (12 mã):
+   - `pending` ← Pending_Review, Pending_Confirmation, Action_Required
+   - `confirmed` ← In_Production, Ready_for_Pickup
+   - `shipping` ← In_Transit, Delivery_Failed
+   - `delivered` ← Delivered, Completed, Return_Requested
+   - `cancelled` ← Cancelled, Refunded
+
+   Thêm bảng `cancel_requests`, `refund_requests`, `policy_consents` và các cột `shipping_tier`, `edd_earliest`/`edd_latest`, `confirmed_at`.
+5. **Checkout có bắt buộc đăng nhập không?** Hiện chưa đăng nhập vẫn vào được; khi đó đơn gán cho khách demo (nếu đang bật chế độ khách demo).
+6. **Ai làm Giỏ hàng, Mua sắm, CSKH, Ưu đãi** (xem quy trình giả định ở B.5).
+7. **Bundle:** initial 815 kB, budget 500 kB. Nguyên nhân là `app.config` nạp sẵn `OrderTrackingService` để bind port. Có thể đổi sang nạp lười nếu team cần.
+
+## B.5 Quy trình nghiệp vụ toàn hệ thống (phần còn trống là giả định)
+
+Phần có dấu `*` chưa có code.
+
+```
+Khách: Đăng ký/Đăng nhập (Tài khoản) → Trang chủ
+   ├─ Mua sắm*: xem hàng có sẵn theo dòng máy → "Thêm vào giỏ" (CartItem IN_STOCK)
+   └─ Design Studio: chọn máy → mẫu → thiết kế → kiểm duyệt từ khóa → "Thêm vào giỏ" (CartItem CUSTOM)
+        ↓
+   Giỏ hàng*: xem / sửa số lượng / xóa, tạm tính → "Thanh toán"
+        ↓
+   Thanh toán: địa chỉ, gói giao (Hỏa tốc chỉ cho hàng có sẵn), voucher/điểm*, phương thức
+               (COD chỉ cho hàng có sẵn), đồng ý chính sách
+               → trả trước thì đối soát, COD thì đặt ngay
+        ↓ OrderIntake.placeOrder (OrderHandoff)
+   Quản lý đơn hàng: đơn custom → Operator duyệt thiết kế → chốt mẻ 16:00 → in → đóng gói
+               → 3PL (webhook) → đã giao → 72 giờ báo sự cố → hoàn tất
+               · đơn COD: khách tự hủy trong thời gian đổi ý
+               · đơn trả trước: gửi yêu cầu hủy → CSKH
+               · giao thất bại → lưu kho 14 ngày → giao lại 1 lần, hoặc hủy + hoàn tiền
+        ↓ sự kiện
+   CSKH & Khiếu nại*: hàng chờ yêu cầu hủy (SLA 1 ngày làm việc); ticket từ "Báo sự cố"
+               (ảnh, mô tả) → kết quả trả về đơn: A in lại / B voucher / C hoàn 100% / D từ chối
+   Ưu đãi*: hoàn tất → cộng điểm; hủy/hoàn → thu hồi điểm; voucher bồi thường giao trễ
+        ↓
+   Admin: duyệt và ghi nhận chuyển khoản hoàn tiền (không tự động)
+        ↓
+   Tài khoản: lịch sử đơn (CustomerOrderFeed), điểm*, voucher*
+```
+
+| Function | Giả định nghiệp vụ | Điểm nối đã chuẩn bị |
+|---|---|---|
+| Mua sắm | Danh mục hàng có sẵn lấy từ bảng `products`/`phone_models` (đã có migration); tồn kho trừ khi đặt, trả lại khi hủy | `CartService.add({ productType: 'IN_STOCK', ... })`; Order Tracking đã phát sự kiện trả tồn kho khi hủy (mock `ShoppingService`) |
+| Giỏ hàng | Một giỏ cho cả site; hàng custom mỗi thiết kế số lượng 1; chưa đăng nhập vẫn giữ giỏ (localStorage), đến lúc thanh toán mới yêu cầu đăng nhập | `CartService` (`items`, `count`, `hasCustom`, `subtotal`); Checkout đã tự đọc giỏ |
+| CSKH & Khiếu nại | Hàng chờ yêu cầu hủy và ticket; quyết định trả về đơn | Hàm có sẵn trong `OrderTrackingService`: `decideCancelRequest`, `applyComplaintResult`, `resolveDispute`; trang admin gắn vào `ADMIN_NAV` |
+| Ưu đãi / Loyalty | Điểm tính theo giá trị đơn hoàn tất; thu hồi khi hủy/hoàn; voucher giao trễ 10%, tối đa 30k | Order Tracking đã phát sự kiện qua `LoyaltyService` (mock trong `integrations.ts`); Checkout đã có chỗ áp voucher |
+
+## Chạy bản tích hợp
+
+```bash
+npm ci
+```
+
+```bash
+npm start
+```
+
+| Muốn xem | Mở |
+|---|---|
+| Khách | `http://localhost:4200/` → Thiết kế → Thêm vào giỏ (cần đăng nhập) → `/checkout` → `/order-tracking` |
+| Khách không cần đăng nhập | Vào `/admin/order-tracking/simulator`, tick "Khách demo" |
+| Nhân viên | `http://localhost:4200/admin` → chọn vai trò Operator / CSKH / Admin |
+| Công cụ mô phỏng | `/admin/order-tracking/simulator`: tua giờ, webhook, tạo đơn mẫu, xóa dữ liệu |
