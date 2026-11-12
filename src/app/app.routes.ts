@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { ShellLayout } from './core/layout/shell-layout/shell-layout';
+import { AdminLayout } from './core/layout/admin-layout/admin-layout';
+import { roleGuard } from './core/auth/role-guard';
 
 export const routes: Routes = [
   {
@@ -8,6 +10,30 @@ export const routes: Routes = [
     title: "Thiết lập tài khoản | CasEYE's",
     loadChildren: () =>
       import('./features/account/onboarding/onboarding.routes').then((m) => m.ONBOARDING_ROUTES),
+  },
+  {
+    // Back office (staff only), separate from the customer ShellLayout.
+    path: 'admin',
+    children: [
+      {
+        path: 'dang-nhap',
+        title: "Đăng nhập nhân viên | CasEYE's",
+        loadComponent: () => import('./core/auth/staff-sign-in/staff-sign-in').then((m) => m.StaffSignIn),
+      },
+      {
+        path: '',
+        component: AdminLayout,
+        canActivate: [roleGuard()],
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'order-tracking' },
+          {
+            path: 'order-tracking',
+            loadChildren: () =>
+              import('./features/order-tracking/order-tracking.routes').then((m) => m.ORDER_TRACKING_ADMIN_ROUTES),
+          },
+        ],
+      },
+    ],
   },
   {
     path: '',

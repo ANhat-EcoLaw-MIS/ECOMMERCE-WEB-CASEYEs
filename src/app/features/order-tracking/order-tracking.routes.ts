@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
-import { customerGuard, demoGuard } from './order-tracking.guards';
+import { customerGuard } from './order-tracking.guards';
 
+/** Customer pages (ShellLayout). No demo tools here: they live in the admin area. */
 export const ORDER_TRACKING_ROUTES: Routes = [
   {
     path: '',
@@ -13,16 +14,28 @@ export const ORDER_TRACKING_ROUTES: Routes = [
     title: "Chính sách đơn hàng | CasEYE's",
     loadComponent: () => import('./order-policy/order-policy').then((m) => m.OrderPolicy),
   },
-  {
-    path: 'demo',
-    title: "Demo Console | CasEYE's",
-    canActivate: [demoGuard],
-    loadComponent: () => import('./demo-console/demo-console').then((m) => m.DemoConsole),
-  },
+  // Old Demo Console URL (also with ?demo=1) now goes to the admin simulator.
+  { path: 'demo', redirectTo: '/admin/order-tracking/simulator', pathMatch: 'full' },
   {
     path: ':orderCode',
     title: "Chi tiết đơn hàng | CasEYE's",
     canActivate: [customerGuard],
     loadComponent: () => import('./order-detail/order-detail').then((m) => m.OrderDetail),
+  },
+];
+
+/** Admin pages, mounted under /admin/order-tracking (AdminLayout + roleGuard). */
+export const ORDER_TRACKING_ADMIN_ROUTES: Routes = [
+  {
+    path: '',
+    title: "Quản lý đơn hàng | CasEYE's Admin",
+    data: { mode: 'ops' },
+    loadComponent: () => import('./demo-console/demo-console').then((m) => m.DemoConsole),
+  },
+  {
+    path: 'simulator',
+    title: "Mô phỏng đơn hàng | CasEYE's Admin",
+    data: { mode: 'simulator' },
+    loadComponent: () => import('./demo-console/demo-console').then((m) => m.DemoConsole),
   },
 ];

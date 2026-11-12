@@ -1,5 +1,5 @@
 import { DatePipe, JsonPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -27,7 +27,7 @@ import { Clock } from '../services/clock';
 import { DEMO_ADDRESSES, DEMO_TEMPLATES, DemoAddress, DemoOrderFactory, DemoTemplate, demoQuote } from '../services/demo-order-factory';
 import { DemoRole, DemoSettings } from '../services/demo-settings';
 import { OrderRepository } from '../services/order.repository';
-import { OrderTrackingService } from '../services/order-tracking.service';
+import { DEMO_CUSTOMER, OrderTrackingService } from '../services/order-tracking.service';
 import { JOB_LABELS, JobId, ScheduledJobs } from '../services/scheduled-jobs';
 import { clearEvents, readEvents } from '../services/tracker';
 import { buildInsights } from './insights';
@@ -59,6 +59,15 @@ export class DemoConsole {
   private readonly repo = inject(OrderRepository);
   protected readonly clock = inject(Clock);
   protected readonly demo = inject(DemoSettings);
+
+  /**
+   * Admin split (integration): 'ops' = real back-office work (/admin/order-tracking),
+   * 'simulator' = demo-only tools (/admin/order-tracking/simulator). Set from route data.
+   */
+  readonly mode = input<'ops' | 'simulator'>('ops');
+  protected readonly isOps = computed(() => this.mode() === 'ops');
+  protected readonly isSim = computed(() => this.mode() === 'simulator');
+  protected readonly demoCustomerName = DEMO_CUSTOMER.name;
 
   protected readonly btnPrimary = BTN_PRIMARY;
   protected readonly btnSecondary = BTN_SECONDARY;

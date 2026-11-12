@@ -1,0 +1,22 @@
+<main class="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
+  <section class="w-full max-w-md rounded-card border border-line bg-surface-alt p-6 shadow-soft">
+    <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">CasEYE's · Quản trị</p>
+    <h1 class="mt-1 font-display text-2xl font-extrabold text-ink">Đăng nhập nhân viên</h1>
+    <p class="mt-2 text-sm text-ink-soft">Bản demo: chọn vai trò để vào khu quản trị. Khi có tài khoản nhân viên thật, trang này dùng đăng nhập Supabase và vai trò trong hồ sơ.</p>
+    <ul class="mt-5 flex flex-col gap-3">
+      @for (r of roles; track r.key) {
+        <li>
+          <button
+            type="button"
+            (click)="signIn(r.key)"
+            class="flex min-h-14 w-full flex-col items-start rounded-xl border border-line px-4 py-3 text-left transition-colors hover:border-brand-600 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-400"
+          >
+            <span class="font-semibold text-ink">{{ r.label }}</span>
+            <span class="text-sm text-ink-soft">{{ r.hint }}</span>
+          </button>
+        </li>
+      }
+    </ul>
+    <a routerLink="/" class="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-brand-800 hover:underline">← Về trang khách</a>
+  </section>
+</main>
