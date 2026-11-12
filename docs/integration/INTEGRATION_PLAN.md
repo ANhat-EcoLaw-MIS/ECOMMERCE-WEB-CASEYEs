@@ -329,3 +329,21 @@ npm start
 | Khách không cần đăng nhập | Vào `/admin/order-tracking/simulator`, tick "Khách demo" |
 | Nhân viên | `http://localhost:4200/admin` → chọn vai trò Operator / CSKH / Admin |
 | Công cụ mô phỏng | `/admin/order-tracking/simulator`: tua giờ, webhook, tạo đơn mẫu, xóa dữ liệu |
+
+## B.6 Mâu thuẫn nghiệp vụ giữa các function (cần chốt)
+
+Đã chốt tạm trên nhánh tích hợp: xem B.1. Dưới đây là những điểm còn lại, theo thứ tự ảnh hưởng tới luồng khách.
+
+| # | Giữa | Mâu thuẫn | Đề xuất |
+|---|---|---|---|
+| C1 | Design Studio ↔ Order Tracking | **Hai lớp kiểm duyệt thiết kế.** Studio tự kiểm từ khóa cấm và có trạng thái `REJECTED`. Order Tracking có Operator duyệt từng thiết kế trước khi in. Khách có thể hiểu là "đã duyệt" từ lúc ở Studio | Studio = kiểm tự động trước khi thêm giỏ. Operator = duyệt in (bắt buộc). Studio đổi chữ thành "đã qua kiểm tra tự động" |
+| C2 | Thanh toán ↔ Order Tracking | Màn thành công của Checkout ghi "đang in UV" và vẽ tiến độ xưởng ngay sau khi đặt, trong khi đơn custom thực tế đang **chờ duyệt thiết kế** | Bỏ timeline ở Checkout hoặc đổi thành "Chờ duyệt thiết kế", dẫn sang Order Tracking |
+| C3 | Thanh toán ↔ Order Tracking | Tên và quy tắc Hỏa tốc: Checkout ghi "Hỏa tốc 24H"; BRD v8 là "Hỏa tốc" giao trong ngày, cắt đơn lúc 14:00 | Checkout đổi chữ, thêm giờ cắt 14:00 |
+| C4 | Thanh toán ↔ Ưu đãi | Voucher `CASEFIRST`/`VIP30` và "480 sao Cosmic Club" đang viết cứng trong Checkout. Ưu đãi chưa có, chưa rõ ai phát voucher và tính điểm | Ưu đãi sở hữu voucher/điểm; Checkout chỉ gọi kiểm tra mã |
+| C5 | Thanh toán ↔ Tài khoản | Checkout có sẵn địa chỉ mẫu cố định, trong khi Tài khoản có bảng `customer_addresses` | Checkout lấy địa chỉ mặc định của tài khoản |
+| C6 | Design Studio ↔ Thanh toán | Studio bắt đăng nhập mới cho thêm giỏ; Checkout không bắt đăng nhập | Chốt một chỗ: cho thêm giỏ khi chưa đăng nhập, bắt đăng nhập ở Thanh toán |
+| C7 | Thanh toán ↔ BRD | Gói quà Hologram + thiệp (25.000đ) không có trong BRD. Hiện được đưa vào đơn như một dòng "Quà tặng kèm" | Team xác nhận có giữ không |
+| C8 | Thanh toán ↔ Order Tracking | Màn lỗi thanh toán có đồng hồ 15 phút "giữ phôi và voucher"; Order Tracking cấm đếm ngược với khách | (MIS-12) |
+| C9 | Dùng chung | Ba hệ thông báo (notification, toast của Tài khoản, hộp thư của Order Tracking); email thật chưa có | (MIS-14) Chọn một hệ; email là dịch vụ chung phía server |
+| C10 | Tài khoản ↔ tất cả | Chưa có vai trò nhân viên thật; Admin/Operator/CSKH đang là vai trò demo | (MIS-10) Thêm `profiles.role` |
+| C11 | DB ↔ Order Tracking | `cancel_order` trong migration cho hủy mọi đơn `pending` (kể cả đã trả tiền); BRD v8 chỉ cho hủy COD trong thời gian đổi ý, đơn trả trước phải qua CSKH | (MIS-19) Sửa RPC theo BRD v8 |
