@@ -1,0 +1,45 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-brand-900/60 p-4 backdrop-blur-sm" (keydown.escape)="close()">
+  <section aria-labelledby="onboarding-modal-title" aria-modal="true" class="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-card border border-line bg-surface-alt p-6 shadow-lift sm:p-8" role="dialog">
+    <div class="mb-6 flex items-center justify-between border-b border-line pb-4">
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wider text-brand-800">CasEYE's Studio Setup</span>
+        <h2 class="font-display text-xl font-bold text-ink" id="onboarding-modal-title">Sở thích thiết kế ốp lưng của bạn</h2>
+      </div>
+      <button aria-label="Đóng" class="min-h-[44px] min-w-[44px] rounded-full text-xl text-ink-soft hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-brand-400" (click)="close()" type="button">×</button>
+    </div>
+    <form class="space-y-6" (ngSubmit)="save()" [formGroup]="form">
+      <div>
+        <label class="mb-1.5 block text-sm font-semibold text-ink" for="pref-device">Dòng điện thoại chính của bạn <span class="text-brand-800">*</span></label>
+        <select class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="deviceType" id="pref-device">
+          <option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option>
+          <option value="iPhone 15 Pro">iPhone 15 Pro</option>
+          <option value="Samsung S24 Ultra">Samsung S24 Ultra</option>
+          <option value="Samsung S24">Samsung S24</option>
+        </select>
+      </div>
+      <fieldset>
+        <legend class="mb-2 text-sm font-semibold text-ink">Phong cách thiết kế yêu thích</legend>
+        <div class="flex flex-wrap gap-2">
+          @for (style of styleOptions; track style) {
+            <label class="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-pill border border-line px-4 py-2 text-sm text-ink hover:border-brand-400">
+              <input [checked]="isStyleSelected(style)" (change)="onStyleChange(style, $event)" type="checkbox"/>
+              <span>{{ style }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+      <div>
+        <label class="mb-1.5 block text-sm font-semibold text-ink" for="pref-material">Chất liệu ốp lưng yêu thích</label>
+        <select class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="material" id="pref-material">
+          <option value="Chống sốc viền nhôm Matt">Chống sốc viền nhôm Matt</option>
+          <option value="Dẻo trong suốt TPU cao cấp">Dẻo trong suốt TPU cao cấp</option>
+          <option value="Ốp cứng nhám chống trầy">Ốp cứng nhám chống trầy</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-3 border-t border-line pt-5">
+        <button class="min-h-[44px] rounded-pill border border-line px-5 text-sm font-semibold text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-400" (click)="close()" type="button">Đóng</button>
+        <button class="min-h-[44px] rounded-pill bg-brand-800 px-6 text-sm font-semibold text-white shadow-soft hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-brand-400" type="submit">Lưu sở thích</button>
+      </div>
+    </form>
+  </section>
+</div>

@@ -1,4 +1,3 @@
-// acc: duc - mk: ducduc!1234
 import {
   ChangeDetectionStrategy,
   Component,
@@ -14,8 +13,9 @@ import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import type { Result } from '../../core/supabase/supabase.types';
-import type {AuthMode as Mode} from "../../core/auth/auth-modal"
+import { AuthModal, type AuthMode as Mode } from '../../core/auth/auth-modal';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { sanitizeReturnUrl } from '../../shared/utils/safe-return-url';
 
 const TEXT: Record<Mode, { title: string; submit: string }> = {
   login: { title: 'Đăng nhập', submit: 'Đăng nhập' },
@@ -77,6 +77,7 @@ export class Auth {
   readonly success = output<void>(); // login or register finished
   readonly modeChange = output<Mode>(); // user clicked "Đăng ký", "Quên mật khẩu"...
   private readonly auth = inject(SupabaseAuthService);
+  private readonly authModal = inject(AuthModal);
   private readonly router = inject(Router);
 
   readonly mode = input.required<Mode>(); // from route data
@@ -159,20 +160,26 @@ export class Auth {
   protected async submit(): Promise<void> {
     this.touched.set(ALL_TOUCHED); // reveal every problem at once
     if (Object.values(this.hints()).some(Boolean)) return;
+    const mode = this.mode();
     const { email, password } = this.form.getRawValue();
     this.start();
-    await this.finish(await this.request(email, password));
+    await this.finish(await this.request(mode, email, password), mode);
   }
 
   protected async google(): Promise<void> {
+    const mode = this.mode();
     this.start();
     let res: Result<object> = await this.auth.signIn(MOCK_GOOGLE);
-    if (res.error) res = await this.auth.signUp(MOCK_GOOGLE); // first time: create the account
-    await this.finish(res);
+    let signedUp = false;
+    if (res.error) {
+      res = await this.auth.signUp(MOCK_GOOGLE); // first time: create the account
+      signedUp = !res.error;
+    }
+    await this.finish(res, mode, mode === 'register' && signedUp);
   }
 
-  private request(email: string, password: string): Promise<Result<object>> {
-    switch (this.mode()) {
+  private request(mode: Mode, email: string, password: string): Promise<Result<object>> {
+    switch (mode) {
       case 'login':
         return this.auth.signIn({ email, password });
       case 'register':
@@ -184,19 +191,24 @@ export class Auth {
     }
   }
 
-  private async finish(res: Result<object>): Promise<void> {
+  private async finish(
+    res: Result<object>,
+    mode: Mode,
+    signupFlow = mode === 'register',
+  ): Promise<void> {
     this.loading.set(false);
     if (res.error) {
       this.error.set(ERRORS[res.error.message] ?? 'Đã có lỗi xảy ra. Vui lòng thử lại sau');
       return;
     }
-    switch (this.mode()) {
+    switch (mode) {
       case 'login':
         await this.leave(this.safeReturnUrl());
         break;
       case 'register': {
         const signedIn = 'session' in res.data && res.data.session !== null;
-        if (signedIn) await this.leave('/'); // '/onboarding' once you build it
+        if (signedIn && signupFlow) await this.leaveForOnboarding();
+        else if (signedIn) await this.leave(this.safeReturnUrl());
         else this.notice.set('Vui lòng kiểm tra email và nhấn vào liên kết để kích hoạt tài khoản.');
         break;
       }
@@ -220,5 +232,17 @@ export class Auth {
   private safeReturnUrl(): string {
     const url = this.returnUrl();
     return url?.startsWith('/') && !url.startsWith('//') ? url : '/';
+  }
+
+  private async leaveForOnboarding(): Promise<void> {
+    const rawReturnUrl = this.embedded()
+      ? this.authModal.signupReturnUrl()
+      : this.returnUrl();
+    const returnUrl = sanitizeReturnUrl(rawReturnUrl);
+    if (this.embedded()) this.authModal.close();
+    await this.router.navigateByUrl(
+      `/account/onboarding?returnUrl=${encodeURIComponent(returnUrl)}`,
+      { replaceUrl: true },
+    );
   }
 }

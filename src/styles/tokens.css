@@ -57,6 +57,19 @@
   --spacing-gutter-md: 1.5rem;
   --spacing-gutter-lg: 2rem;
 
+  /* From Onboarding */
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-success: #16a34a;
+  --color-success-bg: #f0fdf4;
+
+  /* Onboarding night surfaces */
+  --color-onboarding-deep: #120a24;
+  --color-onboarding-veil: #170d2c;
+  --color-onboarding-panel: #1b1133;
+  --color-onboarding-night: #1e1338;
+  --color-onboarding-carbon: #121118;
+
   /* Typography */
   --font-display: "Plus Jakarta Sans", "Sora", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;

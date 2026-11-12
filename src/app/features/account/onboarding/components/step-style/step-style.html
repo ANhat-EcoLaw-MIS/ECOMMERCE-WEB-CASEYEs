@@ -1,0 +1,49 @@
+<section aria-labelledby="style-heading" class="space-y-5">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <span class="text-[11px] font-bold uppercase tracking-wider text-brand-200">Bước 3 / 3</span>
+      <h3 id="style-heading" data-step-heading tabindex="-1" class="mt-1 font-display text-lg font-bold text-white focus:outline-none">
+        Phong cách thẩm mỹ yêu thích
+      </h3>
+      <p class="mt-1 text-xs leading-relaxed text-white/70">
+        Chọn cảm hứng hình ảnh bạn muốn CasEYE ưu tiên hiển thị.
+      </p>
+    </div>
+    <span class="shrink-0 text-xs text-white/70">Tùy chọn</span>
+  </div>
+
+  <div aria-label="Chọn phong cách thiết kế" class="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
+    @for (preset of presets(); track preset.key) {
+      <button
+        type="button"
+        [attr.aria-pressed]="selectedStyle() === preset.key"
+        [disabled]="busy()"
+        class="relative flex min-w-0 items-start gap-3.5 overflow-hidden rounded-2xl border p-4 text-left shadow-sm transition hover:border-brand-400 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+        [class.border-2]="selectedStyle() === preset.key"
+        [class.border-brand-400]="selectedStyle() === preset.key"
+        [class.bg-brand-50]="selectedStyle() === preset.key"
+        [class.border-line]="selectedStyle() !== preset.key"
+        [class.bg-white]="selectedStyle() !== preset.key"
+        [class.shadow-md]="selectedStyle() === preset.key"
+        (click)="selectStyle(preset.key)"
+      >
+        <span
+          aria-hidden="true"
+          class="grid size-10 shrink-0 place-items-center rounded-xl text-xl shadow-inner"
+          [class]="preset.iconClass"
+        >
+          {{ preset.icon }}
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="flex items-center justify-between gap-2">
+            <span class="truncate font-display text-sm font-bold text-ink">{{ preset.label }}</span>
+            @if (selectedStyle() === preset.key) {
+              <span aria-hidden="true" class="shrink-0 text-xs font-bold text-brand-600">✓</span>
+            }
+          </span>
+          <span class="mt-0.5 block truncate text-[11px] text-ink-soft">{{ preset.description }}</span>
+        </span>
+      </button>
+    }
+  </div>
+</section>

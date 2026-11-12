@@ -1,0 +1,13 @@
+<div aria-live="polite" class="pointer-events-none fixed right-5 top-5 z-50 flex flex-col gap-2" role="status">
+  @for (item of toast.toasts(); track item.id) {
+    <div
+      [class.border-brand-200]="item.type === 'success'"
+      [class.border-line]="item.type === 'info'"
+      [class.text-brand-800]="item.type === 'success'"
+      [class.text-ink]="item.type === 'info'"
+      class="pointer-events-auto flex items-center gap-2.5 rounded-xl border bg-surface-alt px-5 py-3 text-sm font-semibold shadow-lift">
+      <span [class.bg-brand-400]="item.type === 'info'" [class.bg-success]="item.type === 'success'" class="size-2 rounded-full"></span>
+      <span>{{ item.message }}</span>
+    </div>
+  }
+</div>

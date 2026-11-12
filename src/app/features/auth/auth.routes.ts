@@ -10,7 +10,7 @@ const page = (path: string, title: string, mode: string, guestOnly = true): Rout
 });
 
 export const AUTH_ROUTES: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '', pathMatch: 'full', redirectTo: 'login', title: 'Đăng nhập | CaseCraft' },
   page('login', 'Đăng nhập', 'login'),
   page('register', 'Đăng ký', 'register'),
   page('forgot-password', 'Quên mật khẩu', 'forgot'),
