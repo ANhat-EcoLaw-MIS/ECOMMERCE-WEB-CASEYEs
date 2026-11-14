@@ -105,6 +105,7 @@ export class StudioWorkspace implements OnDestroy {
   // Modals for First Save Naming & Guest Login (Issue 13 & 14)
   protected readonly showNamingModal = signal<boolean>(false);
   protected readonly namingInput = signal<string>('');
+  protected readonly isSavePromptingName = signal<boolean>(false);
   protected readonly showAuthModal = signal<boolean>(false);
   protected readonly guestActionType = signal<'save' | 'cart'>('save');
 
@@ -699,6 +700,17 @@ export class StudioWorkspace implements OnDestroy {
     this.state.addText(content, font, color, size);
   }
 
+  // --- Rename Modal Handler (Phục vụ riêng cho việc đổi tên thiết kế) ---
+  protected onOpenRenameModal(): void {
+    this.isSavePromptingName.set(false);
+    this.namingInput.set(
+      this.state.designName() === 'Thiết kế chưa đặt tên'
+        ? `Ốp lưng ${this.state.selectedModel().name}`
+        : this.state.designName()
+    );
+    this.showNamingModal.set(true);
+  }
+
   // --- Save & Naming Flow (Issue 13 & 14) ---
   protected onSaveDesign(): void {
     if (!this.state.hasLayers()) {
@@ -716,12 +728,10 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    if (this.state.isFirstSave()) {
-      this.namingInput.set(
-        this.state.designName() === 'Thiết kế chưa đặt tên'
-          ? `Ốp lưng ${this.state.selectedModel().name}`
-          : this.state.designName()
-      );
+    // Nếu chưa từng đặt tên riêng (vẫn là tên mặc định), hỏi tên khi bấm Lưu lần đầu
+    if (this.state.isFirstSave() && (this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName())) {
+      this.namingInput.set(`Ốp lưng ${this.state.selectedModel().name}`);
+      this.isSavePromptingName.set(true);
       this.showNamingModal.set(true);
     } else {
       this.performSave();
@@ -731,16 +741,34 @@ export class StudioWorkspace implements OnDestroy {
   protected confirmNaming(): void {
     const name = this.namingInput().trim();
     if (name) {
+      const oldName = this.state.designName();
       this.state.designName.set(name);
+
+      // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
+      this.state.savedDesigns.update((list) =>
+        list.map((d) => (d.name === oldName ? { ...d, name } : d))
+      );
+
+      // Cập nhật nháp localStorage
+      this.saveToGuestLocalStorage();
     }
-    this.state.isFirstSave.set(false);
     this.showNamingModal.set(false);
-    this.performSave();
-    this.startAutoSaveTimer();
+
+    // Phân định rõ ràng: Nếu mở từ nút "Lưu thiết kế" thì thực hiện lưu
+    if (this.isSavePromptingName()) {
+      this.isSavePromptingName.set(false);
+      this.state.isFirstSave.set(false);
+      this.performSave();
+      this.startAutoSaveTimer();
+    } else {
+      // Nếu mở từ nút "Đổi tên", CHỈ cập nhật tên và thông báo, KHÔNG lưu thiết kế trùng lặp
+      this.showToast(`Đã đổi tên thiết kế thành "${name || this.state.designName()}"!`);
+    }
   }
 
   protected closeNamingModal(): void {
     this.showNamingModal.set(false);
+    this.isSavePromptingName.set(false);
   }
 
   private performSave(): void {
