@@ -655,17 +655,28 @@ export class TemplateBrowser {
   protected readonly isCategoriesExpanded = signal<boolean>(false);
   protected readonly activeHashtagFilter = signal<string | null>(null);
 
-  // Categories matching the image tabs
+  // Categories matching the image tabs (Định dạng Hashtag #, đa dạng phong phú chủ đề)
   protected readonly categories = [
     { id: 'all', name: 'Tất cả' },
     { id: 'favorites', name: 'Đã thích ❤️' },
-    { id: 'floral', name: 'Hoa lá' },
-    { id: 'minimalist', name: 'Tối giản' },
-    { id: 'nature', name: 'Phong cảnh' },
-    { id: 'cartoon', name: 'Hoạt hình' },
-    { id: 'typography', name: 'Typography' },
-    { id: 'abstract', name: 'Abstract' },
-    { id: 'cute', name: 'Cute' },
+    { id: 'creators', name: '#Creators' },
+    { id: 'chibi', name: '#Chibi' },
+    { id: 'floral', name: '#Hoa_lá' },
+    { id: 'cute', name: '#Cute' },
+    { id: 'pastel', name: '#Pastel' },
+    { id: 'minimalist', name: '#Tối_giản' },
+    { id: 'nature', name: '#Phong_cảnh' },
+    { id: 'cartoon', name: '#Hoạt_hình' },
+    { id: 'typography', name: '#Typography' },
+    { id: 'abstract', name: '#Abstract' },
+    { id: 'aesthetic', name: '#Aesthetic' },
+    { id: 'cat', name: '#Mèo_con' },
+    { id: 'y2k', name: '#Y2K' },
+    { id: 'retro', name: '#Retro' },
+    { id: 'streetwear', name: '#Streetwear' },
+    { id: 'vintage', name: '#Vintage' },
+    { id: 'cyberpunk', name: '#Cyberpunk' },
+    { id: 'genz', name: '#GenZ' },
   ];
 
   protected readonly templates = TEMPLATE_CATALOG;
@@ -683,7 +694,17 @@ export class TemplateBrowser {
         matchCat = true;
       } else {
         const matchFavorites = cats.includes('favorites') && favs.has(t.id);
-        const matchOtherCats = cats.some((c) => c !== 'favorites' && t.categories.includes(c));
+        const matchOtherCats = cats.some((c) => {
+          if (c === 'favorites') return false;
+          // Match category id, hashtag or tagLabel
+          return (
+            t.categories.includes(c) ||
+            t.hashtags.some((h) => h.toLowerCase().includes(c.toLowerCase())) ||
+            (t.tagLabel && t.tagLabel.toLowerCase().includes(c.toLowerCase())) ||
+            (c === 'cat' && (t.name.toLowerCase().includes('cat') || t.name.toLowerCase().includes('mèo') || t.name.toLowerCase().includes('kitten'))) ||
+            (c === 'pastel' && (t.tagLabel === '#pastel' || t.hashtags.includes('#pastel')))
+          );
+        });
         matchCat = matchFavorites || matchOtherCats;
       }
 

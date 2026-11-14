@@ -72,3 +72,22 @@ model-viewer {
 .animate-sparkle {
   animation: sparklePulse 3s ease-in-out infinite;
 }
+
+// Chibi Peeker Animation for "Ốp Lưng Trắng Tiêu Chuẩn"
+.chibi-peeker {
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@media (hover: none) {
+  .chibi-peeker {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chibi-peeker {
+    transition: none !important;
+    animation: none !important;
+  }
+}

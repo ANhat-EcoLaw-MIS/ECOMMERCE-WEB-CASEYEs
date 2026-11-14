@@ -493,9 +493,27 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
       @for (tpl of filteredTemplates(); track tpl.id) {
-        <div
-          class="group relative flex flex-col rounded-[24px] border border-purple-100/80 bg-white p-3.5 shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lift hover:border-brand-300"
-        >
+        <!-- Card Container Wrapper with Chibi Peeker Animation (Hover Effect for Blank Case) -->
+        <div class="relative overflow-visible isolation-isolate group hover:z-30">
+          <!-- Chibi Peeker Animation (Chỉ xuất hiện khi hover vào card Ốp Lưng Trắng Tiêu Chuẩn) -->
+          @if (tpl.id === 'tpl-blank') {
+            <div
+              class="chibi-peeker pointer-events-none absolute top-1 left-full z-0 w-36 sm:w-40 select-none transition-all duration-400 ease-out transform -translate-x-full scale-90 opacity-0 group-hover:-translate-x-3 group-hover:-translate-y-3 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none"
+              style="filter: drop-shadow(0 10px 22px rgba(67, 48, 117, 0.26));"
+              aria-hidden="true"
+            >
+              <img
+                src="/assets/chibi-designer.webp"
+                alt="Tự thiết kế ngay!"
+                class="h-auto w-full object-contain pointer-events-none"
+                loading="lazy"
+              />
+            </div>
+          }
+
+          <div
+            class="relative z-10 flex flex-col rounded-[24px] border-2 border-purple-100/70 bg-white p-3.5 shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_40px_-8px_rgba(165,140,244,0.32)] hover:border-brand-400"
+          >
 
           <!-- Top Phone Case Mockup Container -->
           <div
@@ -772,6 +790,7 @@
             </div>
           </div>
 
+        </div>
         </div>
       } @empty {
         <div class="col-span-full py-16 text-center">
@@ -1363,8 +1382,8 @@
                 }
 
               } @else {
-                <!-- 2D Photorealistic Studio Phone Case (Proportional 1:1 with Canvas Studio, Sleek, Taller & Non-distorted) -->
-                <div class="animate-float-case flex items-center justify-center p-2 z-10">
+                <!-- 2D Photorealistic Studio Phone Case (To rõ, sắc nét, tràn khung modal chuẩn tỉ lệ) -->
+                <div class="animate-float-case flex items-center justify-center p-2 z-10 scale-120 sm:scale-125 origin-center transition-transform duration-300">
                   <div
                     class="relative p-[6px] rounded-[34px] select-none transition-all duration-200 shrink-0"
                     style="width: 190px; height: 388px;
