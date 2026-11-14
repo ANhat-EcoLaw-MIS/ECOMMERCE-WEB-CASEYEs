@@ -33,30 +33,22 @@ export interface StudioStickerItem {
 }
 
 export const STICKERS_LIST: StudioStickerItem[] = [
-  { id: 'y2k-heart', name: 'Trái tim Y2K', url: '/assets/stickers/y2k-heart.svg', category: 'y2k' },
-  { id: 'cyber-star', name: 'Ngôi sao Cyber', url: '/assets/stickers/cyber-star.svg', category: 'y2k' },
-  { id: 'sakura-blossom', name: 'Hoa anh đào', url: '/assets/stickers/sakura-blossom.svg', category: 'cute' },
-  { id: 'retro-smiley', name: 'Mặt cười Retro', url: '/assets/stickers/retro-smiley.svg', category: 'y2k' },
-  { id: 'pastel-rainbow', name: 'Cầu vồng Pastel', url: '/assets/stickers/pastel-rainbow.svg', category: 'cute' },
-  { id: 'hologram-butterfly', name: 'Bướm Hologram', url: '/assets/stickers/hologram-butterfly.svg', category: 'y2k' },
-  { id: 'glossy-strawberry', name: 'Dâu tây đỏ mọng', url: '/assets/stickers/glossy-strawberry.svg', category: 'cute' },
-  { id: 'magic-sparkles', name: 'Tia sáng lấp lánh', url: '/assets/stickers/magic-sparkles.svg', category: 'y2k' },
-  { id: 'cool-puppy', name: 'Cún Corgi ngầu', url: '/assets/stickers/cool-puppy.svg', category: 'cute' },
-  { id: 'crescent-moon', name: 'Trăng khuyết mơ màng', url: '/assets/stickers/crescent-moon.svg', category: 'cute' },
-  { id: 'lucky-clover', name: 'Cỏ 4 lá may mắn', url: '/assets/stickers/lucky-clover.svg', category: 'cute' },
-  { id: 'cyber-flame', name: 'Ngọn lửa Cyber', url: '/assets/stickers/cyber-flame.svg', category: 'y2k' },
-  { id: 'coquette-bow', name: 'Ruy băng Coquette', url: '/assets/stickers/coquette-bow.svg', category: 'cute' },
-  { id: 'happy-sunflower', name: 'Hoa hướng dương', url: '/assets/stickers/happy-sunflower.svg', category: 'cute' },
-  { id: 'dreamy-cloud', name: 'Mây bồng bềnh', url: '/assets/stickers/dreamy-cloud.svg', category: 'cute' },
-  { id: 'shooting-star', name: 'Sao băng vút bay', url: '/assets/stickers/shooting-star.svg', category: 'y2k' },
-  { id: 'neon-lightning', name: 'Tia sét Neon', url: '/assets/stickers/neon-lightning.svg', category: 'y2k' },
-  { id: 'kawaii-avocado', name: 'Quả bơ Kawaii', url: '/assets/stickers/kawaii-avocado.svg', category: 'cute' },
-  { id: 'twin-cherries', name: 'Cặp cherry bóng', url: '/assets/stickers/twin-cherries.svg', category: 'cute' },
-  { id: 'artist-palette', name: 'Bảng màu nghệ thuật', url: '/assets/stickers/artist-palette.svg', category: 'creative' },
-  { id: 'saturn-cosmos', name: 'Sao Thổ Cosmos', url: '/assets/stickers/saturn-cosmos.svg', category: 'y2k' },
-  { id: 'magical-unicorn', name: 'Kỳ lân cầu vồng', url: '/assets/stickers/magical-unicorn.svg', category: 'cute' },
-  { id: 'party-popper', name: 'Pháo giấy Party', url: '/assets/stickers/party-popper.svg', category: 'creative' },
-  { id: 'iced-coffee', name: 'Trà sữa Cà phê', url: '/assets/stickers/iced-coffee.svg', category: 'creative' },
+  // 6 Primary AI Cutout Elements từ kho caseye-ai-elements-only
+  { id: 'cloud-kittens', name: 'Mèo Mây Bồng Bềnh', url: '/assets/stickers/tpl-cloud-kittens-element.png', category: 'cute' },
+  { id: 'matcha-corgi', name: 'Cún Corgi Trà Sữa', url: '/assets/stickers/tpl-matcha-corgi-element.png', category: 'cute' },
+  { id: 'chrome-heart', name: 'Trái Tim Tráng Gương Y2K', url: '/assets/stickers/tpl-y2k-chrome-heart-element.png', category: 'y2k' },
+  { id: 'holo-butterfly', name: 'Bướm Hologram Vũ Trụ', url: '/assets/stickers/tpl-holo-butterfly-element.png', category: 'y2k' },
+  { id: 'retro-arcade', name: 'Máy Game Arcade 1998', url: '/assets/stickers/tpl-retro-arcade-element.png', category: 'creative' },
+  { id: 'botanical-garden', name: 'Vườn Thực Vật Lavender', url: '/assets/stickers/tpl-botanical-garden-element.png', category: 'creative' },
+
+  // Các Element AI Nghệ Thuật bổ sung
+  { id: 'baby-dino', name: 'Khủng Long Dã Ngoại', url: '/assets/stickers/tpl-baby-dino-element.png', category: 'cute' },
+  { id: 'tokyo-sakura', name: 'Cành Đào Tokyo Night', url: '/assets/stickers/tpl-tokyo-sakura-element.png', category: 'creative' },
+  { id: 'fuji-sunset', name: 'Núi Phú Sĩ Hoàng Hôn', url: '/assets/stickers/tpl-fuji-sunset-element.png', category: 'creative' },
+  { id: 'good-vibes', name: 'Manifesting Good Vibes', url: '/assets/stickers/tpl-good-vibes-element.png', category: 'y2k' },
+  { id: 'lucky-clover', name: 'Cỏ Bốn Lá May Mắn', url: '/assets/stickers/tpl-lucky-clover-element.png', category: 'creative' },
+  { id: 'amethyst-waves', name: 'Sóng Pha Lê Thạch Anh', url: '/assets/stickers/tpl-amethyst-waves-element.png', category: 'creative' },
+  { id: 'aura-gradient', name: 'Vòng Năng Lượng Aura', url: '/assets/stickers/tpl-aura-gradient-element.png', category: 'y2k' },
 ];
 
 export const BG_PRESETS = [

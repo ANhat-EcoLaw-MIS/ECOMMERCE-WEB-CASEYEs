@@ -256,24 +256,24 @@
     </div>
     }
 
-    <!-- ── Sticker panel (24 Mẫu Vector Gen-Z) ── -->
+    <!-- ── Sticker panel (Kho Element & Sticker AI Tách Nền Trong Suốt) ── -->
     @if (state.activeTool() === 'stk') {
     <div class="flex flex-col h-full space-y-2.5">
       <div class="flex items-center justify-between shrink-0">
-        <p class="drawer-section-title">Kho Sticker Gen-Z</p>
-        <span class="rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">
-          24 mẫu 3D
+        <p class="drawer-section-title">Kho Sticker & Element AI</p>
+        <span class="rounded-full bg-brand-100 px-2.5 py-0.5 text-[10px] font-black text-brand-800">
+          {{ stickers.length }} mẫu sắc nét
         </span>
       </div>
       <p class="text-[11px] text-ink-soft leading-tight shrink-0">
-        Sticker die-cut sắc nét chuẩn Gen-Z, viền trắng nổi bật, kéo thả tự do
+        Element đồ họa & sticker AI tách nền trong suốt sắc nét, viền mượt mà, kéo thả tự do
       </p>
-      <div class="grid grid-cols-4 gap-2 content-start auto-rows-max overflow-y-auto pr-1 flex-1 pb-4">
+      <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 content-start auto-rows-max overflow-y-auto pr-1 flex-1 pb-4">
         @for (s of stickers; track s.id) {
         <button type="button" (click)="onAddSticker(s)" [title]="s.name"
-          class="group relative flex aspect-square items-center justify-center rounded-2xl border border-line bg-surface p-2 transition-all hover:scale-108 hover:border-brand-400 hover:bg-white hover:shadow-soft cursor-pointer active:scale-95">
+          class="group relative flex aspect-square items-center justify-center rounded-2xl border border-line bg-surface p-2 transition-all hover:scale-105 hover:border-brand-400 hover:bg-white hover:shadow-soft cursor-pointer active:scale-95">
           <img [src]="s.url" [alt]="s.name"
-            class="h-10 w-10 object-contain drop-shadow-xs transition-transform group-hover:scale-115" />
+            class="h-14 w-14 object-contain drop-shadow-xs transition-transform group-hover:scale-110" />
         </button>
         }
       </div>
@@ -1347,8 +1347,8 @@
     </div>
 
     <!-- 3D WebGL Stage -->
-    <div class="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl mx-3 mt-2"
-      style="height: 270px; background: radial-gradient(circle at 50% 35%, #e3dbfa 0%, #cec2f0 100%);">
+    <div class="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl mx-3 mt-2 shadow-[inset_0_2px_12px_rgba(67,48,117,0.08)] border border-purple-200/50"
+      style="height: 270px; background: radial-gradient(ellipse at 50% 25%, #ffffff 0%, #f6f3fe 35%, #ece6fd 70%, #d8cdf8 100%);">
       @if (state.selectedModel().has3dModel && state.selectedModel().model3dUrl) {
       <model-viewer #modelViewer id="caseViewer" [src]="state.selectedModel().model3dUrl"
         [alt]="'Mô hình 3D ' + state.selectedModel().name" camera-controls camera-orbit="0deg 85deg 105%"

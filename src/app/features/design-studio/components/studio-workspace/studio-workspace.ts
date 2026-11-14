@@ -1857,9 +1857,40 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    // Draw Background (Supports any solid color, linear-gradient with any angle, and radial-gradient)
+    // 1. Clip to case silhouette matching 2D canvas frame radius (50px * 2)
+    ctx.save();
+    ctx.beginPath();
+    if ((ctx as any).roundRect) {
+      (ctx as any).roundRect(0, 0, W, H, [100, 100, 100, 100]);
+    } else {
+      ctx.rect(0, 0, W, H);
+    }
+    ctx.clip(); // Strictly clip all bleeding graphics to case silhouette for 3D & print
+
+    // 2. Draw Background (Supports image url, solid color, linear-gradient with any angle, and radial-gradient)
     const bg = this.state.caseBg();
-    if (bg.includes('gradient')) {
+    if (bg.includes('url(')) {
+      const match = bg.match(/url\(['"]?([^'"]+)['"]?\)/);
+      const imgUrl = match ? match[1] : '';
+      if (imgUrl) {
+        let bgImg = this.imageCache.get(imgUrl);
+        if (!bgImg) {
+          bgImg = new Image();
+          bgImg.crossOrigin = 'anonymous';
+          bgImg.onload = () => {
+            this.imageCache.set(imgUrl, bgImg!);
+            this.trigger3dTextureSync(true);
+          };
+          bgImg.src = imgUrl;
+        }
+        if (bgImg.complete && bgImg.naturalWidth > 0) {
+          ctx.drawImage(bgImg, 0, 0, W, H);
+        } else {
+          ctx.fillStyle = '#FAFAFA';
+          ctx.fillRect(0, 0, W, H);
+        }
+      }
+    } else if (bg.includes('gradient')) {
       const colorMatches = bg.match(/#[a-fA-F0-9]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/g);
       if (colorMatches && colorMatches.length >= 2) {
         if (bg.includes('radial-gradient')) {
@@ -1892,21 +1923,13 @@ export class StudioWorkspace implements OnDestroy {
         grad.addColorStop(1, '#ECE6FD');
         ctx.fillStyle = grad;
       }
+      ctx.fillRect(0, 0, W, H);
     } else {
       // Soften pure white slightly to prevent specular burnout/glare in 3D PBR
       const lower = bg.toLowerCase();
       ctx.fillStyle = (lower === '#ffffff' || lower === '#fff' || lower === '#fafafa') ? '#f3f3f6' : bg;
+      ctx.fillRect(0, 0, W, H);
     }
-
-    // Rounded case silhouette matching 2D canvas frame radius (50px * 2)
-    ctx.beginPath();
-    if ((ctx as any).roundRect) {
-      (ctx as any).roundRect(0, 0, W, H, [100, 100, 100, 100]);
-    } else {
-      ctx.rect(0, 0, W, H);
-    }
-    ctx.fill();
-    ctx.clip(); // Strictly clip all bleeding graphics to case silhouette for 3D & print
 
     // Draw Layers (Text, Stickers, Images)
     const layers = this.state.layers();
@@ -2128,6 +2151,7 @@ export class StudioWorkspace implements OnDestroy {
     }
     ctx.stroke();
     ctx.restore();
+    ctx.restore(); // Restore case clip context
 
     // 2. Access Three.js Scene from <model-viewer>
     const sceneSymbol = Object.getOwnPropertySymbols(mv).find((s) =>
