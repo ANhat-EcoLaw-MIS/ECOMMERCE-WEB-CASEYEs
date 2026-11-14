@@ -44,7 +44,7 @@
           <div><button type="button" (click)="cancelEnd()">Tiếp tục chat</button><button type="button" (click)="completeEnd()">Đã giải quyết · Xóa</button></div>
         </div>
       }
-      @if (!auth.loggedIn()) {
+      @if (!auth.isAuthenticated()) {
         <div class="chat-panel__notice">
           <strong>Đăng nhập để liên kết với đơn hàng</strong>
           <p>Đây là chat thử nghiệm trong bộ nhớ trình duyệt. Việc đồng bộ hội thoại với đơn hàng và ticket cần backend của nhóm.</p>

@@ -9,7 +9,7 @@ describe('Shop', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      // Integration: AuthState reads the Supabase session.
+      // Integration: Shop checks the real Supabase session.
       providers: [{ provide: SupabaseAuthService, useValue: { user: signal(null), isAuthenticated: signal(true), signOut: () => Promise.resolve({ data: null, error: null }) } }],
       imports: [Shop],
     }).compileComponents();

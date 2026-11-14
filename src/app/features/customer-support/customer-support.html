@@ -18,11 +18,11 @@
         <p>Hãy cho CasEYE’s biết mã đơn hàng và sự cố bạn gặp phải. Ảnh hoặc video sản phẩm sẽ giúp tụi mình kiểm tra nhanh và đề xuất hướng hỗ trợ phù hợp.</p>
       </div>
 
-      @if (!auth.loggedIn()) {
+      @if (!auth.isAuthenticated()) {
         <div class="login-callout">
           <strong>Bạn cần đăng nhập trước khi tạo khiếu nại</strong>
           <p>Vui lòng đăng nhập bằng tài khoản đặt hàng để chúng mình tìm đúng đơn và lưu tiến trình giải quyết cho bạn.</p>
-          <a routerLink="/auth/login?returnUrl=/customer-support">Đăng nhập để tiếp tục ↗</a>
+          <a routerLink="/auth/login" [queryParams]="{ returnUrl: '/customer-support' }">Đăng nhập để tiếp tục ↗</a>
         </div>
       }
 

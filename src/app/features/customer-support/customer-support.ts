@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { AuthState } from '../../core/auth-state/auth-state';
+import { Router, RouterLink } from '@angular/router';
+import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import { SupportChatState } from '../../core/support-chat/support-chat-state';
 
 type SupportTab = 'complaints' | 'faq' | 'policy';
@@ -14,7 +14,8 @@ type SupportTab = 'complaints' | 'faq' | 'policy';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CustomerSupport {
-  protected readonly auth = inject(AuthState);
+  protected readonly auth = inject(SupabaseAuthService);
+  private readonly router = inject(Router);
   private readonly chat = inject(SupportChatState);
 
   protected readonly activeTab = signal<SupportTab>('complaints');
@@ -66,7 +67,10 @@ export class CustomerSupport {
   }
 
   protected submitComplaint(): void {
-    if (!this.auth.requireLogin('/customer-support')) return;
+    if (!this.auth.isAuthenticated()) {
+      void this.router.navigate(['/auth/login'], { queryParams: { returnUrl: '/customer-support' } });
+      return;
+    }
     this.complaintSent.set(true);
   }
 }

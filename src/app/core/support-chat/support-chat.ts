@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthState } from '../auth-state/auth-state';
+import { SupabaseAuthService } from '../supabase/supabase-auth.service';
 import { SupportChatState } from './support-chat-state';
 
 @Component({
@@ -14,7 +14,7 @@ import { SupportChatState } from './support-chat-state';
 })
 export class SupportChat {
   protected readonly chat = inject(SupportChatState);
-  protected readonly auth = inject(AuthState);
+  protected readonly auth = inject(SupabaseAuthService);
   protected readonly draft = signal('');
   protected readonly confirmingEnd = signal(false);
 

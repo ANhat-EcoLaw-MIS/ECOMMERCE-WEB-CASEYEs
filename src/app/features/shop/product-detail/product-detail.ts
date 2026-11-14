@@ -3,7 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CartState } from '../../../core/cart-state/cart-state';
 import { CartDrawerState } from '../../../core/cart-state/cart-drawer-state';
-import { AuthState } from '../../../core/auth-state/auth-state';
+import { injectRequireLogin } from '../../../core/auth/require-login';
 import { Case3d } from '../../../shared/ui/case-3d/case-3d';
 import { MODELS, PRODUCTS, ACCESSORIES, productImage, type CatalogAccessory } from '../catalog';
 
@@ -12,7 +12,7 @@ export class ProductDetail {
   protected readonly route=inject(ActivatedRoute);
   private readonly cart=inject(CartState);
   private readonly drawer=inject(CartDrawerState);
-  private readonly auth=inject(AuthState);
+  private readonly requireLogin = injectRequireLogin();
   protected readonly productImage = productImage;
   protected readonly models=MODELS;
   protected readonly accessories=ACCESSORIES;
@@ -44,14 +44,14 @@ export class ProductDetail {
   protected decrease():void{this.quantity.update(v=>Math.max(1,v-1));}
   protected resetView():void{this.view.set('2d');this.galleryIndex.set(0);this.quantity.set(1);if(typeof window !== 'undefined') window.scrollTo({top:0,behavior:'smooth'});}
   protected addAccessory(item:CatalogAccessory):void{
-    if (!this.auth.requireLogin(`/shop/${this.product()?.id || 'bloom-club'}`)) return;
+    if (!this.requireLogin(`/shop/${this.product()?.id || 'bloom-club'}`)) return;
     this.cart.add({id:item.id,name:item.name,model:'Phụ kiện',finish:'Phụ kiện CasEYE’s (demo)',tone:'lilac',caption:'',unitPrice:item.price,quantity:1,stock:item.stock,custom:true,snapshot:item.image});
     this.notice.set('Đã thêm phụ kiện vào giỏ');
     this.drawer.show(true);
   }
   protected add():void{
     const p=this.product();if(!p || p.stock<1)return;
-    if(!this.auth.requireLogin(`/shop/${p.id}?model=${encodeURIComponent(this.model())}`))return;
+    if(!this.requireLogin(`/shop/${p.id}?model=${encodeURIComponent(this.model())}`))return;
     this.cart.add({id:p.id+':'+this.model()+':'+this.material(),name:p.name,model:this.model(),finish:this.material()+' · '+p.material,tone:p.tone,caption:p.caption,unitPrice:p.price,quantity:this.quantity(),stock:p.stock,custom:false});
     this.notice.set('Đã thêm vào giỏ hàng');this.drawer.show(true);
   }

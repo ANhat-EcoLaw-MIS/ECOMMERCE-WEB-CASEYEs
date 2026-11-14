@@ -30,7 +30,7 @@ export class CartState {
   readonly animationPulse = signal(0);
   readonly itemCount = computed(() => this.items().reduce((n, item) => n + item.quantity, 0));
   readonly subtotal = computed(() => this.items().reduce((n, item) => n + item.unitPrice * item.quantity, 0));
-  readonly shipping = computed(() => this.subtotal() === 0 || this.subtotal() >= 500000 ? 0 : 30000);
+  // No shipping fee here: Thanh toán (Checkout) owns shipping fees and delivery options.
   readonly hasStockIssues = computed(() => this.items().some((item) => item.quantity > item.stock));
 
   constructor() {

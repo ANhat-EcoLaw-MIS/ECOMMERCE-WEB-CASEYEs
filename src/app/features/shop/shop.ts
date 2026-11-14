@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OmniSearchState } from '../../core/search/omni-search-state';
 import { CartState } from '../../core/cart-state/cart-state';
-import { AuthState } from '../../core/auth-state/auth-state';
+import { injectRequireLogin } from '../../core/auth/require-login';
 import { CartDrawerState } from '../../core/cart-state/cart-drawer-state';
 import { Case3d } from '../../shared/ui/case-3d/case-3d';
 import { MODELS, PRODUCTS, productImage, type CatalogProduct } from './catalog';
@@ -10,12 +10,12 @@ import { MODELS, PRODUCTS, productImage, type CatalogProduct } from './catalog';
 @Component({ selector: 'app-shop', imports: [RouterLink, Case3d], styleUrl: './shop.scss', templateUrl: './shop.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class Shop {
   protected readonly cart = inject(CartState);
-  private readonly auth = inject(AuthState);
+  private readonly requireLogin = injectRequireLogin();
   private readonly drawer = inject(CartDrawerState);
   protected readonly omni = inject(OmniSearchState);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  protected openDrawer(): void { if (this.auth.requireLogin('/cart')) this.drawer.show(); }
+  protected openDrawer(): void { if (this.requireLogin('/cart')) this.drawer.show(); }
   protected readonly productImage = productImage;
   protected readonly products = PRODUCTS;
   protected readonly models = MODELS;
@@ -61,7 +61,7 @@ export class Shop {
   private readWishlist(): string[] { try { return JSON.parse(typeof localStorage !== 'undefined' ? localStorage.getItem('caseye_favorites') || '[]' : '[]'); } catch { return []; } }
   protected add(p: CatalogProduct, e?: MouseEvent): void {
     if (!p.stock) { this.toast.set('Mẫu này hiện hết hàng, bạn có thể xem mẫu khác nhé.'); return; }
-    if (!this.auth.requireLogin('/shop')) return;
+    if (!this.requireLogin('/shop')) return;
     this.cart.add({ id: p.id + ':' + this.model(), name: p.name, model: this.model(), finish:p.material, tone:p.tone, caption:p.caption, unitPrice:p.price, quantity:1, stock:p.stock, custom:false });
     this.toast.set(p.stock ? `${p.name} đã vào giỏ hàng ♡` : `${p.name} đã lưu trong giỏ — hiện hết hàng`);
     this.flyToCart(e);

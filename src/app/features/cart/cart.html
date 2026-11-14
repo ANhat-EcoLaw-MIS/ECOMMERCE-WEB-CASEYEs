@@ -15,10 +15,10 @@
       <a routerLink="/shop" class="cart-v5-continue">← Tiếp tục mua sắm</a>
       @if(cart.saved().length){<section class="cart-v5-saved"><h2>Đã lưu để mua sau</h2>@for(item of cart.saved();track item.id){<div><img [src]="item.custom && item.snapshot ? item.snapshot : productImage(item.id)" [alt]="item.name" (error)="onImageError($event)"/><strong>{{item.name}}</strong><button type="button" (click)="cart.moveToCart(item.id)">Chuyển vào giỏ</button><button type="button" (click)="cart.removeSaved(item.id)" aria-label="Xóa">✕</button></div>}</section>}
     </div><aside class="cart-v5-summary"><h2>Tóm tắt đơn hàng</h2>
-      <div><span>Tạm tính ({{cart.itemCount()}} sản phẩm)</span><strong>{{price(cart.subtotal())}}</strong></div><div><span>Vận chuyển</span><strong>{{cart.shipping()===0 ? 'Miễn phí' : price(cart.shipping())}}</strong></div>
+      <div><span>Tạm tính ({{cart.itemCount()}} sản phẩm)</span><strong>{{price(cart.subtotal())}}</strong></div><div><span>Vận chuyển</span><strong>Tính ở bước thanh toán</strong></div>
       @if(discount()){<div><span>Ưu đãi CASEYE10</span><strong>−{{price(discount())}}</strong></div>}
       <div class="cart-v5-coupon"><label for="promo">Mã ưu đãi</label><div><input id="promo" placeholder="Nhập mã CASEYE10" [value]="couponInput()" (input)="updateCoupon($event)"/><button type="button" (click)="appliedCoupon() ? removeCoupon() : applyCoupon()">{{appliedCoupon() ? 'Bỏ mã' : 'Áp dụng'}}</button></div>@if(couponMessage()){<p role="status">{{couponMessage()}}</p>}</div>
-      <div class="cart-v5-total"><span>Tổng cộng</span><strong>{{price(total())}}</strong></div>
+      <div class="cart-v5-total"><span>Tạm tính</span><strong>{{price(total())}}</strong></div>
       <label class="cart-v5-terms"><input type="checkbox" [checked]="acceptedTerms()" (change)="acceptedTerms.set(!acceptedTerms())"/><span>Tôi đồng ý với <button type="button" (click)="showTerms.set(!showTerms())">điều khoản sản phẩm cá nhân hóa</button>.</span></label>
       @if(showTerms()){<p class="cart-v5-terms-info">Vui lòng kiểm tra mẫu và dòng máy. Sau khi bắt đầu in, việc huỷ đơn có thể bị giới hạn. Chính sách cuối cùng do backend xác nhận.</p>}
       <button class="cart-v5-pay" type="button" [disabled]="cart.hasStockIssues()" (click)="checkout()">Tiến hành thanh toán →</button>

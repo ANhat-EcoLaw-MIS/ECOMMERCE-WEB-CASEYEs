@@ -15,7 +15,8 @@ export class Cart {
   protected readonly acceptedTerms = signal(false);
   protected readonly showTerms = signal(false);
   protected readonly discount = computed(() => this.appliedCoupon() ? Math.round(this.cart.subtotal() * .1) : 0);
-  protected readonly total = computed(() => this.cart.subtotal()-this.discount()+this.cart.shipping());
+  // Shipping is decided by Thanh toán (Checkout), not by the cart.
+  protected readonly total = computed(() => this.cart.subtotal()-this.discount());
   private readonly formatter = new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0});
   protected MathMin = Math.min;
   protected price(value:number):string{return this.formatter.format(value);}
