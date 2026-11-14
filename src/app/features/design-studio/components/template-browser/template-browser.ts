@@ -651,7 +651,8 @@ export class TemplateBrowser {
   protected readonly favoriteCount = computed(() => this.favoriteTemplates().size);
 
   // Filter & Search Signals
-  protected readonly activeCategory = signal<string>('all');
+  protected readonly selectedCategories = signal<string[]>(['all']);
+  protected readonly isCategoriesExpanded = signal<boolean>(false);
   protected readonly activeHashtagFilter = signal<string | null>(null);
 
   // Categories matching the image tabs
@@ -669,18 +670,24 @@ export class TemplateBrowser {
 
   protected readonly templates = TEMPLATE_CATALOG;
 
-  /** Filtered templates based on category, hashtag and search */
+  /** Filtered templates based on category (multi-select), hashtag and search */
   protected readonly filteredTemplates = computed(() => {
-    const cat = this.activeCategory();
+    const cats = this.selectedCategories();
     const tag = this.activeHashtagFilter();
     const favs = this.favoriteTemplates();
+
     return this.templates.filter((t) => {
-      if (cat === 'favorites') {
-        const isFav = favs.has(t.id);
-        const matchTag = !tag || t.hashtags.includes(tag) || t.tagLabel === tag;
-        return isFav && matchTag;
+      // 1. Check category criteria
+      let matchCat = false;
+      if (cats.includes('all')) {
+        matchCat = true;
+      } else {
+        const matchFavorites = cats.includes('favorites') && favs.has(t.id);
+        const matchOtherCats = cats.some((c) => c !== 'favorites' && t.categories.includes(c));
+        matchCat = matchFavorites || matchOtherCats;
       }
-      const matchCat = cat === 'all' || t.categories.includes(cat);
+
+      // 2. Check hashtag criteria
       const matchTag = !tag || t.hashtags.includes(tag) || t.tagLabel === tag;
       return matchCat && matchTag;
     });
@@ -767,16 +774,46 @@ export class TemplateBrowser {
     return null;
   }
 
-  // --- Category and Hashtag Handlers ---
-  protected selectCategory(catId: string): void {
-    this.activeCategory.set(catId);
+  // --- Category Multi-Select and Hashtag Handlers ---
+  protected isCategorySelected(catId: string): boolean {
+    return this.selectedCategories().includes(catId);
+  }
+
+  protected toggleCategory(catId: string): void {
     this.activeHashtagFilter.set(null);
+
+    // Rule: "khi chọn nhiều nút thì không được chọn cái tất cả nha"
+    if (catId === 'all') {
+      // Selecting "Tất cả" clears all specific categories
+      this.selectedCategories.set(['all']);
+      return;
+    }
+
+    const current = this.selectedCategories().filter((c) => c !== 'all');
+    const index = current.indexOf(catId);
+
+    if (index >= 0) {
+      current.splice(index, 1);
+      // If no categories left, revert to ['all']
+      if (current.length === 0) {
+        this.selectedCategories.set(['all']);
+      } else {
+        this.selectedCategories.set([...current]);
+      }
+    } else {
+      current.push(catId);
+      this.selectedCategories.set([...current]);
+    }
+  }
+
+  protected toggleExpandCategories(): void {
+    this.isCategoriesExpanded.update((v) => !v);
   }
 
   protected filterByHashtag(tag: string): void {
     this.closePreviewModal();
     this.activeHashtagFilter.set(tag);
-    this.activeCategory.set('all');
+    this.selectedCategories.set(['all']);
     // Scroll down to template grid
     const target = document.getElementById('template-grid-section');
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });

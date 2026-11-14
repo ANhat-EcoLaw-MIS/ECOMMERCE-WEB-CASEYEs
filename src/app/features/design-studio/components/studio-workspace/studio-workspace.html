@@ -551,14 +551,14 @@
   <main class="canvas-stage" (click)="onStageClick($event)" (wheel)="onStageWheel($event)"
     (pointermove)="onCanvasPointerMove($event)" (pointerup)="onCanvasPointerUp($event)">
 
-    <!-- Canvas top toolbar: design name + view mode toggle + zoom -->
-    <div class="absolute top-3 left-4 right-4 z-30 flex items-center justify-between gap-2">
-      <!-- Design name editable -->
+    <!-- Canvas top toolbar: design name + view mode toggle + zoom (Thanh cố định trên cùng chuẩn Canva/Figma, không bao giờ đè chữ hay overlap) -->
+    <div class="absolute top-0 left-0 right-0 z-30 flex items-center justify-between gap-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-white/85 backdrop-blur-md border-b border-line/60 shadow-2xs">
+      <!-- Design name editable (with smart truncate) -->
       <div
-        class="flex items-center gap-1.5 rounded-xl bg-white/80 px-3 py-1.5 shadow-soft backdrop-blur-sm border border-line">
-        <span class="text-xs font-bold text-ink">{{ state.designName() }}</span>
+        class="flex items-center gap-1 sm:gap-1.5 rounded-xl bg-surface/80 px-2 sm:px-3 py-1 shadow-2xs border border-line min-w-0 max-w-[110px] sm:max-w-[200px] shrink">
+        <span class="text-xs font-bold text-ink truncate block" [title]="state.designName()">{{ state.designName() }}</span>
         <button type="button" (click)="onSaveDesign()"
-          class="text-ink-soft hover:text-brand-800 transition-colors cursor-pointer" title="Đổi tên">
+          class="text-ink-soft hover:text-brand-800 transition-colors cursor-pointer shrink-0" title="Đổi tên">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -568,64 +568,69 @@
 
       <!-- View mode toggle (Radio buttons: Hiện tràn viền mờ 50% vs Chỉ hiện vùng in) -->
       <div
-        class="flex items-center rounded-full border border-line bg-white/90 p-1 shadow-soft backdrop-blur-sm text-[11px] font-semibold">
+        class="flex items-center rounded-full border border-line bg-surface/90 p-0.5 sm:p-1 shadow-2xs text-[10px] sm:text-[11px] font-semibold shrink-0">
         <button type="button" (click)="viewMode.set('bleed')"
-          class="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all cursor-pointer"
+          class="flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-all cursor-pointer"
           [class]="viewMode() === 'bleed' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:text-ink'"
           title="Xem toàn bộ phần tử (phần tràn ra ngoài ốp hiển thị mờ 50%)">
-          <span class="flex h-3 w-3 items-center justify-center rounded-full border"
+          <span class="flex h-2 w-2 sm:h-2.5 sm:w-2.5 items-center justify-center rounded-full border"
             [class]="viewMode() === 'bleed' ? 'border-white' : 'border-ink-soft/60'">
             @if (viewMode() === 'bleed') {
-            <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+            <span class="h-1 w-1 rounded-full bg-white"></span>
             }
           </span>
-          <span>Tràn viền (Mờ 50%)</span>
+          <span class="hidden sm:inline">Tràn viền (Mờ 50%)</span>
+          <span class="sm:hidden">Tràn viền</span>
         </button>
 
         <button type="button" (click)="viewMode.set('clipped')"
-          class="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all cursor-pointer"
+          class="flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-all cursor-pointer"
           [class]="viewMode() === 'clipped' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:text-ink'"
           title="Chỉ hiển thị phần nằm trong vùng in của ốp">
-          <span class="flex h-3 w-3 items-center justify-center rounded-full border"
+          <span class="flex h-2 w-2 sm:h-2.5 sm:w-2.5 items-center justify-center rounded-full border"
             [class]="viewMode() === 'clipped' ? 'border-white' : 'border-ink-soft/60'">
             @if (viewMode() === 'clipped') {
-            <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+            <span class="h-1 w-1 rounded-full bg-white"></span>
             }
           </span>
-          <span>Chỉ vùng in</span>
+          <span class="hidden sm:inline">Chỉ vùng in</span>
+          <span class="sm:hidden">Vùng in</span>
         </button>
       </div>
 
-      <!-- Zoom control (Touchpad or buttons) -->
-      <div
-        class="flex items-center gap-1 rounded-full border border-line bg-white/80 px-2 py-1 shadow-soft backdrop-blur-sm">
-        <button type="button" (click)="state.zoomOut()"
-          class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center cursor-pointer">−</button>
-        <span class="min-w-[36px] text-center font-mono text-xs font-bold text-ink">{{ state.zoom() }}%</span>
-        <button type="button" (click)="state.zoomIn()"
-          class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center cursor-pointer">+</button>
-      </div>
+      <!-- Right Controls: Zoom + Canva Shortcuts -->
+      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+        <!-- Zoom control -->
+        <div
+          class="flex items-center gap-0.5 sm:gap-1 rounded-full border border-line bg-surface/90 px-1 sm:px-2 py-0.5 shadow-2xs">
+          <button type="button" (click)="state.zoomOut()"
+            class="h-5 w-5 sm:h-6 sm:w-6 rounded-full text-ink hover:bg-brand-50 text-xs sm:text-sm font-bold flex items-center justify-center cursor-pointer">−</button>
+          <span class="min-w-[26px] sm:min-w-[34px] text-center font-mono text-[10px] sm:text-xs font-bold text-ink">{{ state.zoom() }}%</span>
+          <button type="button" (click)="state.zoomIn()"
+            class="h-5 w-5 sm:h-6 sm:w-6 rounded-full text-ink hover:bg-brand-50 text-xs sm:text-sm font-bold flex items-center justify-center cursor-pointer">+</button>
+        </div>
 
-      <!-- Canva Keyboard Shortcuts trigger -->
-      <button type="button" (click)="showShortcutsModal.set(true)"
-        class="flex items-center gap-1.5 rounded-full border border-line bg-white/90 px-3 py-1 shadow-soft backdrop-blur-sm text-[11px] font-semibold text-ink hover:text-brand-800 hover:border-brand-400 transition-colors cursor-pointer"
-        title="Danh sách phím tắt Canva (Bấm ?)">
-        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="2" y="4" width="20" height="16" rx="2.5"/>
-          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" stroke-linecap="round"/>
-        </svg>
-        <span class="hidden sm:inline">Phím tắt</span>
-        <span class="rounded bg-brand-100 px-1 text-[9px] font-bold text-brand-800">?</span>
-      </button>
+        <!-- Canva Keyboard Shortcuts trigger (chỉ hiện trên màn hình md trở lên) -->
+        <button type="button" (click)="showShortcutsModal.set(true)"
+          class="hidden md:flex items-center gap-1.5 rounded-full border border-line bg-surface/90 px-3 py-1 shadow-2xs text-[11px] font-semibold text-ink hover:text-brand-800 hover:border-brand-400 transition-colors cursor-pointer"
+          title="Danh sách phím tắt Canva (Bấm ?)">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2.5"/>
+            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" stroke-linecap="round"/>
+          </svg>
+          <span>Phím tắt</span>
+          <span class="rounded bg-brand-100 px-1 text-[9px] font-bold text-brand-800">?</span>
+        </button>
+      </div>
     </div>
 
     <!-- Phone Mockup Canvas (Supports Bleed Overflow View) -->
     <div class="relative transition-transform duration-200" [style.transform]="'scale(' + state.zoom() / 100 + ')'">
 
-      <!-- Contextual Formatting Toolbar (Pinned cleanly above phone mockup, NEVER obscuring the case design) -->
+      <!-- Contextual Formatting Toolbar (Pinned cleanly above phone mockup with safe spacing, NEVER obscuring case design or top bar) -->
       @if (state.selectedLayer(); as sel) {
       <div (click)="$event.stopPropagation()"
-        class="pointer-events-auto absolute -top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-2xl border border-line/90 bg-white/95 px-3 py-1.5 shadow-lift backdrop-blur-xl whitespace-nowrap transition-all duration-150 animate-fade-in"
+        class="pointer-events-auto absolute -top-12 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-110px)] sm:max-w-none overflow-x-auto scrollbar-none flex items-center gap-1.5 rounded-2xl border border-line/90 bg-white/95 px-3 py-1.5 shadow-lift backdrop-blur-xl whitespace-nowrap transition-all duration-150 animate-fade-in"
         style="box-shadow: 0 16px 36px -6px rgba(67, 48, 117, 0.16), 0 6px 14px -3px rgba(0,0,0,0.08);">
 
         <!-- ── Typography Controls (Text Layer) ── -->
@@ -1460,33 +1465,40 @@
      BOTTOM ACTION BAR (Spans Drawer + Canvas + Specs)
 ═══════════════════════════════════════════════ -->
 <footer class="studio-bottom-bar">
-  <!-- Left: Model info -->
-  <div class="flex items-center gap-3">
-    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-800 shadow-2xs">
-      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+  <!-- Left: Current Active Device Switcher Indicator (Đồng bộ chuẩn 1:1 với Kho Mẫu) -->
+  <div class="inline-flex items-center gap-2 rounded-full border border-purple-200/90 bg-gradient-to-r from-purple-50/90 via-white to-purple-50/80 p-1 pl-2.5 sm:pl-3 shadow-soft backdrop-blur-md">
+    <!-- Phone Model Icon with Active Pulse -->
+    <div class="relative flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-brand-100 text-brand-800 shadow-2xs shrink-0">
+      <svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <rect x="5" y="2" width="14" height="20" rx="3" />
+        <circle cx="12" cy="18" r="1" fill="currentColor" />
       </svg>
+      <span class="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+          [class]="state.selectedModel().has3dModel ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2"
+          [class]="state.selectedModel().has3dModel ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+      </span>
     </div>
-    <div>
-      <div class="flex items-center gap-2">
-        <p class="text-xs font-bold text-ink">Ốp lưng {{ state.selectedModel().name }}</p>
-        <button
-          type="button"
-          (click)="openModelModal()"
-          class="inline-flex items-center gap-1 text-[11px] font-bold text-brand-800 hover:text-brand-900 bg-brand-50 hover:bg-brand-100 border border-brand-200/90 px-2 py-0.5 rounded-full transition-all cursor-pointer shadow-2xs hover:shadow-xs"
-          title="Đổi sang dòng điện thoại khác"
-        >
-          <span>Đổi máy</span>
-          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
-      <p class="text-[10px] text-ink-soft">
-        <span class="font-semibold text-brand-800">Phôi Polycarbonate cao cấp · Chuẩn in UV Ultra-HD</span>
-      </p>
+
+    <!-- Model Name Label (với truncate an toàn khi co nhỏ màn hình) -->
+    <div class="flex items-center gap-1.5 text-xs min-w-0">
+      <span class="text-[10px] sm:text-[11px] font-semibold text-ink-soft uppercase tracking-wide hidden sm:inline">Dòng máy:</span>
+      <span class="font-display font-extrabold text-ink tracking-tight truncate max-w-[100px] sm:max-w-[170px]" [title]="state.selectedModel().name">{{ state.selectedModel().name }}</span>
     </div>
+
+    <!-- Action Button: Đổi máy (Đồng bộ chuẩn nút Đổi máy ngoài kho) -->
+    <button
+      type="button"
+      (click)="openModelModal()"
+      class="inline-flex items-center gap-1 rounded-full bg-brand-800 px-2.5 sm:px-3 py-1 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-900 hover:shadow-xs cursor-pointer active:scale-95 shrink-0"
+      title="Đổi sang dòng điện thoại khác"
+    >
+      <span>Đổi máy</span>
+      <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    </button>
   </div>
 
   <!-- Center: Auto-save status indicator -->
@@ -1504,35 +1516,109 @@
   </div>
 
   <!-- Right action buttons -->
-  <div class="flex items-center gap-2">
+  <div class="flex items-center gap-2 shrink-0">
     <!-- Save Design Button -->
     <button
       type="button"
       (click)="onSaveDesign()"
-      class="inline-flex items-center gap-1.5 rounded-pill border border-brand-400/60 bg-brand-50 px-4 py-2 text-xs font-bold text-brand-800 shadow-soft transition-all hover:bg-brand-100 cursor-pointer"
+      class="inline-flex items-center gap-1.5 rounded-pill border border-brand-400/60 bg-brand-50 px-3 sm:px-4 py-2 text-xs font-bold text-brand-800 shadow-soft transition-all hover:bg-brand-100 cursor-pointer"
     >
       <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
       </svg>
-      <span>Lưu thiết kế</span>
+      <span class="hidden sm:inline">Lưu thiết kế</span>
+      <span class="sm:hidden">Lưu</span>
     </button>
 
     <!-- Add to Cart (Bug 7: Toast only, no drawer popup) -->
     <button
       type="button"
       (click)="onAddToCart()"
-      class="inline-flex items-center gap-2 rounded-pill px-5 py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow cursor-pointer"
+      class="inline-flex items-center gap-1.5 sm:gap-2 rounded-pill px-3.5 sm:px-5 py-2 sm:py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow cursor-pointer"
       style="background: var(--grad-primary)"
     >
       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
       </svg>
-      <span>Thêm vào giỏ</span>
+      <span class="hidden sm:inline">Thêm vào giỏ</span>
+      <span class="sm:hidden">Giỏ hàng</span>
       <span>•</span>
       <span>{{ state.totalPrice().toLocaleString('vi-VN') }}đ</span>
     </button>
   </div>
 </footer>
+
+<!-- ═══════════════════════════════════════════════
+     FLOATING 3D PREVIEW FOR NARROW / TABLET SCREENS
+     (Đảm bảo không bị mất Preview 3D khi co nhỏ màn hình)
+═══════════════════════════════════════════════ -->
+<div class="lg:hidden fixed bottom-18 right-3.5 z-40">
+  <button
+    type="button"
+    (click)="toggleMobile3d()"
+    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-lift backdrop-blur-md transition-all active:scale-95 cursor-pointer"
+    [class]="isMobile3dOpen()
+      ? 'bg-brand-900 text-white border-brand-700 shadow-purple-950/40 ring-2 ring-purple-400'
+      : 'bg-white/95 text-brand-900 hover:bg-purple-50 border-purple-200/90 shadow-soft'"
+  >
+    <span class="relative flex h-2 w-2">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+    </span>
+    <span>Preview 3D</span>
+    <svg class="h-3.5 w-3.5 transition-transform" [class.rotate-180]="isMobile3dOpen()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+</div>
+
+<!-- Floating PIP 3D Model Card on Narrow Screens -->
+@if (isMobile3dOpen()) {
+  <div class="lg:hidden fixed bottom-28 right-3.5 w-[285px] rounded-3xl border border-purple-200/90 bg-white shadow-2xl p-3 z-50 animate-scale-in flex flex-col">
+    <!-- Card Header -->
+    <div class="flex items-center justify-between pb-2 mb-2 border-b border-purple-100">
+      <div class="flex items-center gap-1.5">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+        <span class="text-xs font-bold text-ink">Mô hình 3D xoay 360°</span>
+      </div>
+      <button
+        type="button"
+        (click)="isMobile3dOpen.set(false)"
+        class="rounded-full p-1 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+        title="Đóng xem trước 3D"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- 3D Stage -->
+    <div class="relative w-full h-[250px] rounded-2xl overflow-hidden shadow-inner flex items-center justify-center"
+      style="background: radial-gradient(circle at 50% 35%, #e3dbfa 0%, #cec2f0 100%);">
+      @if (state.selectedModel().has3dModel && state.selectedModel().model3dUrl) {
+        <model-viewer
+          [src]="state.selectedModel().model3dUrl"
+          [alt]="'Mô hình 3D ' + state.selectedModel().name"
+          camera-controls
+          camera-orbit="0deg 85deg 105%"
+          tone-mapping="neutral"
+          shadow-intensity="1.2"
+          exposure="0.75"
+          touch-action="pan-y"
+          style="width: 100%; height: 100%; outline: none;"
+        ></model-viewer>
+      } @else {
+        <div class="p-4 text-center">
+          <p class="text-xs font-bold text-ink">Chưa hỗ trợ 3D</p>
+          <p class="text-[10px] text-ink-soft mt-1">Dòng máy này đang được hoàn thiện mô hình 3D.</p>
+        </div>
+      }
+    </div>
+
+    <p class="text-center text-[10px] text-ink-soft mt-2">Giữ chuột hoặc ngón tay để xoay 360°</p>
+  </div>
+}
 
 </div> <!-- Closes .studio-main-area -->
 </div> <!-- Closes .studio-layout -->

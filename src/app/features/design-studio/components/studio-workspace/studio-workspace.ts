@@ -237,6 +237,13 @@ export class StudioWorkspace implements OnDestroy {
     this.isMobileDrawerOpen.set(false);
   }
 
+  // Responsive 3D Preview (Float / PIP on Smaller Screens)
+  protected readonly isMobile3dOpen = signal<boolean>(false);
+
+  protected toggleMobile3d(): void {
+    this.isMobile3dOpen.update((v) => !v);
+  }
+
   // Canva-style Flip Transform
   protected toggleFlipH(layerId: string): void {
     const layer = this.state.layers().find((l) => l.id === layerId);

@@ -382,46 +382,93 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════
-       SECTION 2: CATEGORY FILTER TABS & ACTIVE HASHTAG BADGE
+       SECTION 2: CATEGORY FILTER TABS (Kéo mượt, chọn nhiều nút, mở rộng toàn bộ)
   ══════════════════════════════════════════════════════ -->
   <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-center flex-wrap gap-2 sm:gap-2.5">
-      @for (cat of categories; track cat.id) {
-        <button
-          type="button"
-          (click)="selectCategory(cat.id)"
-          class="inline-flex items-center gap-1.5 rounded-full px-4 sm:px-5 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer"
-          [class]="activeCategory() === cat.id && !activeHashtagFilter()
-            ? (cat.id === 'favorites' ? 'bg-rose-500 text-white shadow-soft scale-105' : 'bg-brand-800 text-white shadow-soft scale-105')
-            : (cat.id === 'favorites' ? 'border border-rose-200 bg-rose-50/70 text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-2xs' : 'border border-purple-100 bg-white/90 text-ink-soft hover:bg-purple-50 hover:text-brand-800 hover:border-brand-300 shadow-2xs')"
+    <div class="flex items-center gap-2 sm:gap-3">
+
+      <!-- Scrollable Track with Edge Fades when not expanded -->
+      <div class="relative flex-1 min-w-0" [class.overflow-hidden]="!isCategoriesExpanded()">
+
+        <!-- Left & Right Gradient Fade Masks (Chỉ hiển thị khi đang cuộn thanh hẹp, tắt khi đã mở rộng đầy đủ) -->
+        @if (!isCategoriesExpanded()) {
+          <div class="pointer-events-none absolute left-0 top-0 bottom-0 w-6 sm:w-10 bg-gradient-to-r from-purple-50/90 to-transparent z-10 transition-opacity"></div>
+          <div class="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-14 bg-gradient-to-l from-purple-50/90 to-transparent z-10 transition-opacity"></div>
+        }
+
+        <!-- Categories Container (Kéo trượt mượt mà, sáng rõ nút khi cuộn) -->
+        <div
+          class="flex items-center gap-2 sm:gap-2.5 py-1 scroll-smooth"
+          [class.flex-nowrap]="!isCategoriesExpanded()"
+          [class.overflow-x-auto]="!isCategoriesExpanded()"
+          [class.scrollbar-none]="!isCategoriesExpanded()"
+          [class.flex-wrap]="isCategoriesExpanded()"
+          [class.justify-center]="isCategoriesExpanded()"
         >
-          @if (cat.id === 'all') {
-            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" />
-            </svg>
-          } @else if (cat.id === 'favorites') {
-            <svg class="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
-              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          }
-          <span>{{ cat.name }}</span>
-          @if (cat.id === 'favorites' && favoriteCount() > 0) {
-            <span
-              class="ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-bold"
-              [class]="activeCategory() === 'favorites' ? 'bg-white/30 text-white' : 'bg-rose-100 text-rose-700'"
+          @for (cat of categories; track cat.id) {
+            <button
+              type="button"
+              (click)="toggleCategory(cat.id)"
+              class="inline-flex items-center gap-1.5 rounded-full px-4 sm:px-5 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer shrink-0 select-none active:scale-95"
+              [class]="isCategorySelected(cat.id)
+                ? (cat.id === 'favorites' ? 'bg-rose-500 text-white shadow-soft scale-105' : 'bg-brand-800 text-white shadow-soft scale-105')
+                : (cat.id === 'favorites' ? 'border border-rose-200 bg-rose-50/80 text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-2xs opacity-85 hover:opacity-100' : 'border border-purple-100 bg-white/95 text-ink-soft hover:bg-purple-50 hover:text-brand-800 hover:border-brand-300 shadow-2xs opacity-85 hover:opacity-100')"
             >
-              {{ favoriteCount() }}
-            </span>
+              @if (cat.id === 'all') {
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+              } @else if (cat.id === 'favorites') {
+                <svg class="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              }
+              <span>{{ cat.name }}</span>
+
+              @if (cat.id === 'favorites' && favoriteCount() > 0) {
+                <span
+                  class="ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-bold"
+                  [class]="isCategorySelected('favorites') ? 'bg-white/30 text-white' : 'bg-rose-100 text-rose-700'"
+                >
+                  {{ favoriteCount() }}
+                </span>
+              }
+
+              <!-- Visual checkmark indicator when category is active (multi-selected) -->
+              @if (isCategorySelected(cat.id) && cat.id !== 'all') {
+                <span class="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-black">✓</span>
+              }
+            </button>
           }
-        </button>
-      }
+        </div>
+      </div>
+
+      <!-- Expand / Collapse Button ("Mở to thành 1 thanh đầy đủ / Thu gọn") -->
+      <button
+        type="button"
+        (click)="toggleExpandCategories()"
+        class="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-purple-200/90 bg-white px-3.5 py-2 text-xs font-bold text-brand-800 shadow-2xs hover:bg-purple-50 hover:border-brand-400 transition-all cursor-pointer select-none active:scale-95"
+        [title]="isCategoriesExpanded() ? 'Thu gọn thành thanh cuộn ngang' : 'Mở rộng hiển thị tất cả chủ đề'"
+      >
+        @if (isCategoriesExpanded()) {
+          <svg class="h-3.5 w-3.5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+          </svg>
+          <span class="hidden sm:inline">Thu gọn</span>
+        } @else {
+          <svg class="h-3.5 w-3.5 text-purple-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+          <span class="hidden sm:inline">Xem tất cả</span>
+        }
+      </button>
 
       <!-- Active Hashtag Filter Clear Pill -->
       @if (activeHashtagFilter(); as currentTag) {
-        <div class="inline-flex items-center gap-1.5 rounded-full bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-soft animate-fade-in">
+        <div class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-purple-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-soft animate-fade-in">
           <span>Đang lọc: {{ currentTag }}</span>
           <button
             type="button"
@@ -435,6 +482,7 @@
           </button>
         </div>
       }
+
     </div>
   </div>
 
@@ -732,14 +780,14 @@
               <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </div>
-          @if (activeCategory() === 'favorites') {
+          @if (isCategorySelected('favorites')) {
             <h4 class="font-display text-base font-bold text-ink">Chưa có mẫu nào trong danh sách yêu thích</h4>
             <p class="mt-1 text-xs text-ink-soft max-w-md mx-auto">
               Nhấn vào biểu tượng trái tim ở góc trên các mẫu ốp lưng để lưu lại những thiết kế bạn ưng ý nhất nhé!
             </p>
             <button
               type="button"
-              (click)="selectCategory('all')"
+              (click)="toggleCategory('all')"
               class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-800 px-5 py-2 text-xs font-bold text-white hover:bg-brand-900 shadow-soft transition-all cursor-pointer"
             >
               Khám phá toàn bộ kho mẫu
@@ -1160,22 +1208,6 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <!-- Favorite Toggle Button in Modal Header -->
-            <button
-              type="button"
-              (click)="toggleFavorite(activeTpl.id, $event)"
-              class="flex h-9 w-9 items-center justify-center rounded-full border border-purple-200/80 bg-white transition-all hover:bg-rose-50 hover:border-rose-200 cursor-pointer shadow-xs"
-              [class.text-rose-500]="isFavorite(activeTpl.id)"
-              [class.text-ink-soft]="!isFavorite(activeTpl.id)"
-              [class.bg-rose-50]="isFavorite(activeTpl.id)"
-              [class.border-rose-200]="isFavorite(activeTpl.id)"
-              title="Lưu mẫu yêu thích"
-            >
-              <svg class="h-4.5 w-4.5" [class.fill-rose-500]="isFavorite(activeTpl.id)" [class.fill-none]="!isFavorite(activeTpl.id)" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </button>
-
             <!-- Close Modal Button -->
             <button
               type="button"
@@ -1193,36 +1225,58 @@
         <!-- Modal Body: 2 Columns Layout (Left: Frozen 3D/2D Stage | Right: Scrollable Details & Reviews) -->
         <div class="flex-1 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0">
 
-          <!-- Left Column (5/12): Frozen/Sticky Preview (Cố định không bị trôi khi cuộn phần nội dung bên phải) -->
-          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/70 via-white/80 to-purple-50/50 flex flex-col items-center justify-start gap-3.5 border-b lg:border-b-0 lg:border-r border-purple-100/80 shrink-0 select-none lg:sticky lg:top-0 lg:h-full lg:overflow-hidden">
+          <!-- Left Column (5/12): Frozen/Sticky Preview (Luxury Dark Twilight Purple - Kéo dài full modal) -->
+          <div
+            class="lg:col-span-5 p-5 flex flex-col items-center justify-between border-b lg:border-b-0 lg:border-r border-purple-900/40 shrink-0 select-none lg:sticky lg:top-0 lg:h-full lg:overflow-hidden relative text-white"
+            style="background: linear-gradient(165deg, #120e20 0%, #19142d 40%, #241b3d 75%, #140f24 100%);"
+          >
+            <!-- Ambient Twilight Atmospheric Glows -->
+            <div class="pointer-events-none absolute -top-20 -left-20 h-64 w-64 rounded-full bg-purple-600/15 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl"></div>
 
-            <!-- View Mode Switcher: 3D Model vs 2D Graphic -->
-            <div class="flex items-center gap-1 rounded-full bg-purple-100/80 p-1 shadow-2xs text-xs font-semibold shrink-0">
+            <!-- View Mode Switcher: 3D Model vs 2D Graphic (Dark Glassmorphism) -->
+            <div class="flex items-center gap-1 rounded-full bg-white/10 border border-white/15 p-1 shadow-inner text-xs font-semibold shrink-0 z-20 backdrop-blur-md">
               <button
                 type="button"
                 (click)="toggleViewMode('3d')"
-                class="rounded-full px-3 py-1 transition-all cursor-pointer"
-                [class]="viewMode() === '3d' ? 'bg-white text-brand-800 shadow-xs' : 'text-ink-soft hover:text-brand-800'"
+                class="rounded-full px-3.5 py-1.5 transition-all cursor-pointer"
+                [class]="viewMode() === '3d' ? 'bg-white text-purple-950 shadow-md font-bold' : 'text-purple-200/80 hover:text-white'"
               >
                 Mô hình 3D xoay
               </button>
               <button
                 type="button"
                 (click)="toggleViewMode('2d')"
-                class="rounded-full px-3 py-1 transition-all cursor-pointer"
-                [class]="viewMode() === '2d' ? 'bg-white text-brand-800 shadow-xs' : 'text-ink-soft hover:text-brand-800'"
+                class="rounded-full px-3.5 py-1.5 transition-all cursor-pointer"
+                [class]="viewMode() === '2d' ? 'bg-white text-purple-950 shadow-md font-bold' : 'text-purple-200/80 hover:text-white'"
               >
                 Mặt lưng 2D
               </button>
             </div>
 
-            <!-- Stage Display (Kéo dài khung hình h-[420px] sm:h-[450px], phôi ốp to rõ thanh lịch) -->
+            <!-- Stage Display (Kéo dài tràn full chiều cao modal, nền tím trầm sang xịn mịn) -->
             <div
-              class="relative w-full h-[420px] sm:h-[450px] flex items-center justify-center rounded-2xl overflow-hidden shadow-inner border border-purple-200/70 shrink-0"
-              style="background: linear-gradient(135deg, #ede7fe 0%, #fce7f3 35%, #e0e7ff 70%, #f3e8ff 100%);"
+              class="relative w-full flex-1 min-h-[420px] flex items-center justify-center rounded-2xl overflow-hidden my-3 border border-white/10 shrink-0 z-10"
+              style="background: radial-gradient(circle at 50% 40%, rgba(139, 92, 246, 0.15) 0%, rgba(30, 20, 55, 0.4) 60%, rgba(15, 10, 28, 0.8) 100%);"
             >
               <!-- Ambient Soft Lighting Overlay -->
-              <div class="pointer-events-none absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.9),transparent_70%)]"></div>
+              <div class="pointer-events-none absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.15),transparent_70%)]"></div>
+
+              <!-- Floating Favorite Heart Button inside Preview Stage (Vị trí cực kỳ dễ thấy!) -->
+              <button
+                type="button"
+                (click)="toggleFavorite(activeTpl.id, $event)"
+                class="absolute top-3 right-3 z-30 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all shadow-lg backdrop-blur-md cursor-pointer border active:scale-95"
+                [class]="isFavorite(activeTpl.id)
+                  ? 'bg-rose-500/90 text-white border-rose-400 shadow-rose-900/40'
+                  : 'bg-black/40 text-white/90 border-white/20 hover:bg-black/60 hover:text-white'"
+                title="Lưu mẫu yêu thích"
+              >
+                <svg class="h-4 w-4" [class.fill-current]="isFavorite(activeTpl.id)" [class.fill-none]="!isFavorite(activeTpl.id)" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span>{{ isFavorite(activeTpl.id) ? 'Đã thích' : 'Yêu thích' }}</span>
+              </button>
 
               @if (viewMode() === '3d') {
                 @if (state.selectedModel().has3dModel && state.selectedModel().model3dUrl) {
@@ -1528,10 +1582,10 @@
 
             </div>
 
-            <!-- Hardware Model Compatibility Badge (Gắn liền ngay dưới display) -->
-            <div class="w-full flex items-center justify-center gap-1.5 text-xs text-ink-soft shrink-0 pt-0.5">
-              <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-              <span>Dòng máy: <strong class="text-ink">{{ state.selectedModel().name }}</strong></span>
+            <!-- Hardware Model Compatibility Badge (Dark theme) -->
+            <div class="w-full flex items-center justify-center gap-2 text-xs text-purple-200/80 shrink-0 pt-1 z-20">
+              <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+              <span>Dòng máy: <strong class="text-white font-bold">{{ state.selectedModel().name }}</strong></span>
             </div>
 
           </div>
@@ -1580,36 +1634,6 @@
                   </button>
                 }
               </div>
-            </div>
-
-            <!-- Section 3: Tech Specs Highlights Card -->
-            <div class="rounded-2xl border border-purple-200/90 bg-gradient-to-br from-purple-50/90 via-indigo-50/40 to-pink-50/30 p-4.5 shadow-2xs space-y-2.5">
-              <div class="flex items-center gap-2 text-purple-900 font-bold text-xs">
-                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-white/80 text-purple-700 shadow-2xs">
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </span>
-                <span>Chất lượng in ấn tiêu chuẩn CasEYE</span>
-              </div>
-              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-ink-soft pl-8">
-                <li class="flex items-center gap-1.5">
-                  <span class="text-emerald-500 font-bold">✓</span>
-                  <span>Chống sốc tiêu chuẩn quân đội 2.5m</span>
-                </li>
-                <li class="flex items-center gap-1.5">
-                  <span class="text-emerald-500 font-bold">✓</span>
-                  <span>In nhiệt UV sắc nét 300 DPI</span>
-                </li>
-                <li class="flex items-center gap-1.5">
-                  <span class="text-emerald-500 font-bold">✓</span>
-                  <span>Viền TPU đệm khí bảo vệ camera nhô cao</span>
-                </li>
-                <li class="flex items-center gap-1.5">
-                  <span class="text-emerald-500 font-bold">✓</span>
-                  <span>Chống ố vàng & không bám vân tay</span>
-                </li>
-              </ul>
             </div>
 
             <!-- Section 4: Bình luận & Góp ý thẩm mỹ Card -->
@@ -1756,15 +1780,15 @@
             <button
               type="button"
               (click)="toggleFavorite(activeTpl.id, $event)"
-              class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+              class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-xs font-bold transition-all cursor-pointer shadow-soft active:scale-95"
               [class]="isFavorite(activeTpl.id)
-                ? 'border-rose-200 bg-rose-50 text-rose-600 font-bold'
-                : 'border-purple-200/90 bg-white text-ink-soft hover:bg-purple-50 hover:text-ink'"
+                ? 'border-rose-300 bg-rose-50 text-rose-600 shadow-rose-100'
+                : 'border-purple-200/90 bg-white text-brand-800 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200'"
             >
-              <svg class="h-3.5 w-3.5" [class.fill-rose-500]="isFavorite(activeTpl.id)" [class.fill-none]="!isFavorite(activeTpl.id)" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="h-4 w-4" [class.fill-rose-500]="isFavorite(activeTpl.id)" [class.fill-none]="!isFavorite(activeTpl.id)" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span>{{ isFavorite(activeTpl.id) ? 'Đã thích' : 'Yêu thích' }}</span>
+              <span>{{ isFavorite(activeTpl.id) ? 'Đã lưu yêu thích' : 'Lưu vào yêu thích' }}</span>
             </button>
           </div>
 
