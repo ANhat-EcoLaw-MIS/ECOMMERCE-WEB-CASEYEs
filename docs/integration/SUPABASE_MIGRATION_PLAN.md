@@ -186,3 +186,16 @@ Cùng logic với `domain/schedule.ts` và `scheduled-jobs.ts`.
 | Q4 | Bảng `test` và RPC `cancel_order` cũ | Xóa `test`; thay `cancel_order` bằng bản theo BRD v8 (đổi hành vi) |
 | Q5 | Ví (MoMo…) và thẻ trong Checkout | Lưu là `prepaid`, có thêm `payment_channel` để biết kênh |
 | Q6 | Khiếu nại (CSKH & Khiếu nại) | Bảng ticket thuộc function CSKH; Order Tracking chỉ cần `ticket_id` và kết quả |
+
+## 5. Đã chốt (15/11/2026) và đã viết
+
+| # | Quyết định |
+|---|---|
+| Q1 | Mình viết SQL + rollback lên nhánh integration, người giữ project áp (xem `supabase/APPLY_MIGRATIONS.md`) |
+| Q2 | Ngày giao dự kiến do Angular tính, `place_order` lưu lại |
+| Q3 | Khu admin cố định, không cần đăng nhập; chưa gán vai trò theo email (cột `role` vẫn có sẵn) |
+| Q4 | Giữ nguyên bảng `test`; thay `cancel_order` theo BRD v8 |
+| Q5 | Thanh toán là mock: lưu `payment_method` (cod / prepaid) + `payment_channel` (vietqr / e_wallet / card / cod), không ràng buộc chặt |
+| Q6 | Ticket thuộc CSKH & Khiếu nại; đơn chỉ giữ `ticket_id` và kết quả (`apply_ticket_result`) |
+
+Migration M1–M7 và rollback nằm trong `supabase/migrations/20261114100*` và `supabase/rollbacks/`, đã chạy thử 37/37 kịch bản trên Postgres (PGlite).
