@@ -8,59 +8,95 @@
   <!-- ══════════════════════════════════════════════════════
        SECTION 0: MY DESIGNS (Tiếp tục chỉnh sửa hoặc tạo mới)
   ══════════════════════════════════════════════════════ -->
-  @if (myDesigns().length > 0) {
-    <div
-      class="border-b border-purple-900/60 py-7 relative z-20 shadow-xl overflow-hidden"
-      style="background: linear-gradient(145deg, #180e2b 0%, #251642 50%, #1a1030 100%);"
-    >
-      <!-- Ambient Studio Glow -->
-      <div class="pointer-events-none absolute inset-0 overflow-hidden">
-        <div class="absolute -top-32 left-1/4 h-80 w-80 rounded-full bg-brand-600/20 blur-3xl"></div>
-        <div class="absolute -bottom-24 right-1/4 h-80 w-80 rounded-full bg-purple-500/15 blur-3xl"></div>
-      </div>
+  <div
+    class="border-b border-purple-950/40 py-7 relative z-20 shadow-2xl overflow-hidden"
+    style="background: linear-gradient(135deg, #0e0520 0%, #1c0a38 25%, #2e0f54 50%, #431274 75%, #1b0735 100%);"
+  >
+    <!-- Shimmering Atmospheric Glows & Mesh Accents -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden">
+      <div class="absolute -top-32 left-1/4 h-80 w-80 rounded-full bg-fuchsia-600/20 blur-3xl"></div>
+      <div class="absolute -bottom-24 right-1/4 h-80 w-80 rounded-full bg-indigo-600/20 blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 bg-purple-500/15 blur-3xl"></div>
+    </div>
 
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
 
-        <!-- My Designs Section Header -->
-        <div class="flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/25 text-purple-200 border border-purple-400/30 shadow-xs">
-              <svg class="h-5 w-5 text-purple-200" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="3" y="3" width="7" height="7" rx="2" />
-                <rect x="14" y="3" width="7" height="7" rx="2" />
-                <rect x="3" y="14" width="7" height="7" rx="2" />
-                <rect x="14" y="14" width="7" height="7" rx="2" />
-              </svg>
-            </span>
-            <div>
-              <div class="flex items-center gap-2.5">
-                <h3 class="font-display text-base sm:text-lg font-bold text-white tracking-wide">My Designs</h3>
+      <!-- My Designs Section Header -->
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/25 text-purple-200 border border-purple-400/30 shadow-xs">
+            <svg class="h-5 w-5 text-purple-200" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="3" y="3" width="7" height="7" rx="2" />
+              <rect x="14" y="3" width="7" height="7" rx="2" />
+              <rect x="3" y="14" width="7" height="7" rx="2" />
+              <rect x="14" y="14" width="7" height="7" rx="2" />
+            </svg>
+          </span>
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h3 class="font-display text-base sm:text-lg font-bold text-white tracking-wide">My Designs</h3>
+              @if (isLoggedIn()) {
                 <span class="rounded-pill bg-purple-500/30 border border-purple-400/40 px-2.5 py-0.5 text-[11px] font-bold text-purple-200">
                   {{ myDesigns().length }}
                 </span>
-              </div>
-              <p class="text-xs text-purple-200/75">Tiếp tục chỉnh sửa hoặc tạo thiết kế mới</p>
+              }
             </div>
+            <p class="text-xs text-purple-200/75">
+              @if (isLoggedIn()) {
+                Tiếp tục chỉnh sửa hoặc tạo thiết kế mới
+              } @else {
+                Đăng nhập để xem và lưu trữ các bản thiết kế của riêng bạn
+              }
+            </p>
           </div>
-
-          <!-- "Xem tất cả →" (Chỉ hiện khi vượt quá 4 designs theo yêu cầu) -->
-          @if (hasMoreMyDesigns()) {
-            <button
-              type="button"
-              (click)="openAllDesignsModal()"
-              class="group inline-flex items-center gap-1.5 text-xs font-bold text-purple-200 hover:text-white transition-all cursor-pointer py-1.5 px-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-sm shadow-xs"
-              title="Xem danh sách đầy đủ tất cả các bản thiết kế của bạn"
-            >
-              <span>Xem tất cả</span>
-              <svg class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
-          }
         </div>
 
-        <!-- My Designs Cards Grid (Tối đa 4 card hiển thị to và rõ tương đương kho mẫu bên dưới) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
+        <!-- "Xem tất cả →" (Chỉ hiện khi đã đăng nhập và vượt quá 4 designs theo yêu cầu) -->
+        @if (isLoggedIn() && hasMoreMyDesigns()) {
+          <button
+            type="button"
+            (click)="openAllDesignsModal()"
+            class="group inline-flex items-center gap-1.5 text-xs font-bold text-purple-200 hover:text-white transition-all cursor-pointer py-1.5 px-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 backdrop-blur-sm shadow-xs"
+            title="Xem danh sách đầy đủ tất cả các bản thiết kế của bạn"
+          >
+            <span>Xem tất cả</span>
+            <svg class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
+        }
+      </div>
+
+      <!-- Content: Phải đăng nhập mới có mẫu lưu -->
+      @if (!isLoggedIn()) {
+        <div class="mt-5 rounded-3xl border border-white/15 bg-white/5 p-6 sm:p-7 backdrop-blur-md shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-5 text-center sm:text-left">
+          <div class="flex flex-col sm:flex-row items-center gap-4">
+            <div class="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 text-purple-200 border border-purple-400/30 shadow-inner">
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-display text-sm sm:text-base font-bold text-white">
+                Đăng nhập để xem & lưu trữ các bản thiết kế của bạn
+              </h4>
+              <p class="text-xs text-purple-200/80 mt-1 max-w-xl leading-relaxed">
+                Các bản thiết kế tự vẽ chỉ khả dụng khi bạn đăng nhập tài khoản. Đăng nhập ngay để tiếp tục chỉnh sửa trên mọi thiết bị và đặt in ốp nhanh chóng!
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            (click)="openLoginModal()"
+            class="shrink-0 rounded-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-bold text-xs px-6 py-3 shadow-lg shadow-purple-500/30 transition-all transform hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+          >
+            Đăng nhập / Đăng ký ngay →
+          </button>
+        </div>
+      } @else {
+        <!-- My Designs Cards Grid (Khi đã đăng nhập) -->
+        @if (myDesigns().length > 0) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
           @for (item of displayedMyDesigns(); track item.id) {
             <div
               class="group relative flex flex-col justify-between rounded-3xl border border-purple-200/80 bg-white p-3.5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-brand-400 hover:shadow-2xl"
@@ -283,9 +319,16 @@
             </div>
           }
         </div>
-      </div>
-    </div>
-  }
+      } @else {
+        <!-- Khi đã đăng nhập nhưng chưa có bản thiết kế nào -->
+        <div class="mt-5 rounded-2xl border border-white/10 bg-white/5 p-8 text-center text-purple-200/85">
+          <p class="text-sm font-semibold">Bạn chưa có bản thiết kế nào được lưu.</p>
+          <p class="text-xs mt-1 text-purple-200/60">Hãy chọn một mẫu trong kho bên dưới hoặc bắt đầu từ phôi trắng để tự do sáng tạo!</p>
+        </div>
+      }
+    }
+  </div>
+</div>
 
   <!-- ══════════════════════════════════════════════════════
        SECTION 1: KHO MẪU THIẾT KẾ & DÒNG MÁY HIỆN TẠI
@@ -332,8 +375,8 @@
           (click)="selectCategory(cat.id)"
           class="inline-flex items-center gap-1.5 rounded-full px-4 sm:px-5 py-2 text-xs font-semibold transition-all duration-200 cursor-pointer"
           [class]="activeCategory() === cat.id && !activeHashtagFilter()
-            ? 'bg-brand-800 text-white shadow-soft scale-105'
-            : 'border border-purple-100 bg-white/90 text-ink-soft hover:bg-purple-50 hover:text-brand-800 hover:border-brand-300 shadow-2xs'"
+            ? (cat.id === 'favorites' ? 'bg-rose-500 text-white shadow-soft scale-105' : 'bg-brand-800 text-white shadow-soft scale-105')
+            : (cat.id === 'favorites' ? 'border border-rose-200 bg-rose-50/70 text-rose-700 hover:bg-rose-100 hover:border-rose-300 shadow-2xs' : 'border border-purple-100 bg-white/90 text-ink-soft hover:bg-purple-50 hover:text-brand-800 hover:border-brand-300 shadow-2xs')"
         >
           @if (cat.id === 'all') {
             <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -342,8 +385,20 @@
               <rect x="3" y="14" width="7" height="7" rx="1.5" />
               <rect x="14" y="14" width="7" height="7" rx="1.5" />
             </svg>
+          } @else if (cat.id === 'favorites') {
+            <svg class="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
           }
           <span>{{ cat.name }}</span>
+          @if (cat.id === 'favorites' && favoriteCount() > 0) {
+            <span
+              class="ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-bold"
+              [class]="activeCategory() === 'favorites' ? 'bg-white/30 text-white' : 'bg-rose-100 text-rose-700'"
+            >
+              {{ favoriteCount() }}
+            </span>
+          }
         </button>
       }
 
@@ -622,6 +677,30 @@
             </div>
           </div>
 
+        </div>
+      } @empty {
+        <div class="col-span-full py-16 text-center">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-500 mb-3 border border-rose-200/80 shadow-xs">
+            <svg class="h-8 w-8 fill-rose-500" viewBox="0 0 24 24">
+              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          @if (activeCategory() === 'favorites') {
+            <h4 class="font-display text-base font-bold text-ink">Chưa có mẫu nào trong danh sách yêu thích</h4>
+            <p class="mt-1 text-xs text-ink-soft max-w-md mx-auto">
+              Nhấn vào biểu tượng trái tim ở góc trên các mẫu ốp lưng để lưu lại những thiết kế bạn ưng ý nhất nhé!
+            </p>
+            <button
+              type="button"
+              (click)="selectCategory('all')"
+              class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-800 px-5 py-2 text-xs font-bold text-white hover:bg-brand-900 shadow-soft transition-all cursor-pointer"
+            >
+              Khám phá toàn bộ kho mẫu
+            </button>
+          } @else {
+            <h4 class="font-display text-base font-bold text-ink">Không tìm thấy mẫu phù hợp</h4>
+            <p class="mt-1 text-xs text-ink-soft">Hãy thử chọn danh mục hoặc hashtag khác.</p>
+          }
         </div>
       }
 
@@ -907,11 +986,11 @@
         <!-- Modal Body: 2 Columns Layout (Left: 3D Stage | Right: Details & Reviews) -->
         <div class="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 min-h-0">
 
-          <!-- Left Column (5/12): 3D Model WebGL Canvas & Controls -->
-          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/50 to-white flex flex-col items-center justify-between border-b lg:border-b-0 lg:border-r border-purple-100">
+          <!-- Left Column (5/12): 3D Model WebGL Canvas & Controls (Gom gọn lên trên cùng, bỏ justify-between) -->
+          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/50 to-white flex flex-col items-center justify-start gap-3.5 border-b lg:border-b-0 lg:border-r border-purple-100">
 
             <!-- View Mode Switcher: 3D Model vs 2D Graphic -->
-            <div class="flex items-center gap-1 rounded-full bg-purple-100/80 p-1 shadow-2xs text-xs font-semibold">
+            <div class="flex items-center gap-1 rounded-full bg-purple-100/80 p-1 shadow-2xs text-xs font-semibold shrink-0">
               <button
                 type="button"
                 (click)="toggleViewMode('3d')"
@@ -932,7 +1011,7 @@
 
             <!-- Stage Display (Chuẩn Studio Canvas: Background Lavender sang trọng & 3D WebGL đồng bộ 1:1) -->
             <div
-              class="relative w-full h-[400px] flex items-center justify-center my-3 rounded-2xl overflow-hidden shadow-inner border border-purple-100"
+              class="relative w-full h-[380px] flex items-center justify-center rounded-2xl overflow-hidden shadow-inner border border-purple-100 shrink-0"
               style="background: radial-gradient(circle at 50% 35%, #e3dbfa 0%, #cec2f0 100%);"
             >
 
@@ -1159,8 +1238,8 @@
 
             </div>
 
-            <!-- Hardware Model Compatibility Badge -->
-            <div class="w-full flex items-center justify-center gap-1.5 text-xs text-ink-soft pt-1">
+            <!-- Hardware Model Compatibility Badge (Gắn liền ngay dưới display) -->
+            <div class="w-full flex items-center justify-center gap-1.5 text-xs text-ink-soft shrink-0 pt-0.5">
               <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
               <span>Dòng máy: <strong class="text-ink">{{ state.selectedModel().name }}</strong></span>
             </div>
@@ -1227,115 +1306,122 @@
               </ul>
             </div>
 
-            <!-- Section 4: Đánh giá & Phản hồi từ người dùng -->
+            <!-- Section 4: Bình luận & Góp ý thẩm mỹ (Khử rating sao, phải đăng nhập mới được bình luận) -->
             <div>
               <div class="flex items-center justify-between border-b border-purple-100 pb-2">
                 <div class="flex items-center gap-2">
                   <h4 class="font-display text-xs font-extrabold text-ink uppercase tracking-wider text-purple-900">
-                    Đánh giá từ khách hàng
+                    Bình luận & Góp ý thẩm mỹ
                   </h4>
-                  @if (currentTemplateReviews().length > 0) {
-                    <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-900">
-                      ★ {{ activeTpl.rating }} ({{ currentTemplateReviews().length }} đánh giá)
-                    </span>
-                  } @else {
-                    <span class="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-bold text-purple-900">
-                      Mẫu tuyển chọn độc quyền
-                    </span>
-                  }
+                  <span class="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-bold text-purple-900">
+                    {{ currentTemplateReviews().length }} góp ý
+                  </span>
                 </div>
+                <span class="text-[10px] text-ink-soft/75">Góc sáng tạo cộng đồng</span>
               </div>
 
-              <!-- Interactive User Review Form (Cho phép người dùng đánh giá) -->
-              <div class="mt-3.5 rounded-2xl border border-purple-200/90 bg-white p-3.5 shadow-2xs">
-                <div class="flex items-center justify-between">
-                  <span class="text-xs font-bold text-ink">Viết đánh giá của bạn:</span>
-                  <!-- Clickable 5 Stars Picker -->
-                  <div class="flex items-center gap-1">
-                    @for (star of [1, 2, 3, 4, 5]; track star) {
-                      <button
-                        type="button"
-                        (click)="setUserRating(star)"
-                        class="text-base transition-transform hover:scale-125 cursor-pointer"
-                        [class.text-amber-400]="userRating() >= star"
-                        [class.text-slate-200]="userRating() < star"
-                        [title]="star + ' sao'"
-                      >
-                        ★
-                      </button>
-                    }
+              <!-- Comment Form: Phải đăng nhập mới cho bình luận -->
+              @if (!isLoggedIn()) {
+                <div class="mt-3.5 rounded-2xl border border-dashed border-purple-200/90 bg-purple-50/40 p-4 text-center">
+                  <div class="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 text-brand-800 mb-2">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                   </div>
-                </div>
-
-                <div class="mt-2.5">
-                  <textarea
-                    rows="2"
-                    [value]="userReviewText()"
-                    (input)="onReviewTextInput($event)"
-                    placeholder="Chia sẻ cảm nhận về độ sắc nét, màu sắc hoặc chất liệu của mẫu này..."
-                    class="w-full resize-none rounded-xl border border-purple-100 bg-purple-50/20 p-2.5 text-xs text-ink placeholder:text-ink-soft/45 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400/20"
-                  ></textarea>
-                </div>
-
-                <div class="mt-2 flex items-center justify-between">
-                  @if (reviewSubmittedSuccess()) {
-                    <span class="text-[11px] font-bold text-emerald-600 animate-fade-in">
-                      ✓ Cảm ơn bạn! Đánh giá đã được đăng thành công.
-                    </span>
-                  } @else {
-                    <span class="text-[10px] text-ink-soft">
-                      Đánh giá của bạn sẽ hiển thị công khai cho mọi người
-                    </span>
-                  }
-
+                  <p class="text-xs font-bold text-ink">Đăng nhập để gửi nhận xét thẩm mỹ</p>
+                  <p class="text-[11px] text-ink-soft mt-0.5 max-w-sm mx-auto">
+                    Bạn cần đăng nhập tài khoản để chia sẻ cảm nhận độ đẹp của mẫu hoặc đề xuất các thay đổi mong muốn.
+                  </p>
                   <button
                     type="button"
-                    (click)="onSubmitUserReview()"
-                    [disabled]="!userReviewText().trim()"
-                    class="rounded-full bg-brand-800 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    (click)="openLoginModal()"
+                    class="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-800 px-4 py-1.5 text-xs font-bold text-white hover:bg-brand-900 shadow-soft transition-all cursor-pointer"
                   >
-                    Gửi đánh giá
+                    <span>Đăng nhập để nhận xét</span>
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
                   </button>
                 </div>
-              </div>
+              } @else {
+                <!-- Form gửi góp ý thẩm mỹ (Đã đăng nhập) -->
+                <div class="mt-3.5 rounded-2xl border border-purple-200/90 bg-white p-3.5 shadow-2xs">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <div class="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-white font-bold text-[10px]">
+                        {{ userDisplayName().charAt(0).toUpperCase() }}
+                      </div>
+                      <span class="text-xs font-bold text-ink">Góp ý từ {{ userDisplayName() }}:</span>
+                    </div>
+                    <span class="text-[10px] text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full font-semibold">
+                      Góp ý thẩm mỹ
+                    </span>
+                  </div>
 
-              <!-- Customer Reviews List -->
+                  <div>
+                    <textarea
+                      rows="2"
+                      [value]="userReviewText()"
+                      (input)="onReviewTextInput($event)"
+                      placeholder="Chia sẻ cảm nhận về độ thẩm mỹ, màu sắc hoặc góp ý chi tiết bạn mong muốn xuất hiện thêm trên mẫu này..."
+                      class="w-full resize-none rounded-xl border border-purple-100 bg-purple-50/20 p-2.5 text-xs text-ink placeholder:text-ink-soft/45 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400/20"
+                    ></textarea>
+                  </div>
+
+                  <div class="mt-2 flex items-center justify-between">
+                    @if (reviewSubmittedSuccess()) {
+                      <span class="text-[11px] font-bold text-emerald-600 animate-fade-in">
+                        ✓ Cảm ơn bạn! Góp ý thẩm mỹ đã được gửi thành công.
+                      </span>
+                    } @else {
+                      <span class="text-[10px] text-ink-soft">
+                        Đóng góp ý kiến để giúp CasEYE hoàn thiện mẫu đẹp hơn
+                      </span>
+                    }
+
+                    <button
+                      type="button"
+                      (click)="onSubmitUserReview()"
+                      [disabled]="!userReviewText().trim()"
+                      class="rounded-full bg-brand-800 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Gửi góp ý
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- Customer Feedback List (Không dùng đánh giá sao) -->
               <div class="mt-4 space-y-3">
                 @for (rev of currentTemplateReviews(); track rev.id) {
-                  <div class="rounded-xl border border-purple-50 bg-purple-50/20 p-3 text-xs space-y-1">
+                  <div class="rounded-xl border border-purple-50 bg-purple-50/25 p-3 text-xs space-y-1.5">
                     <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-1.5">
+                      <div class="flex items-center gap-2">
+                        <div class="flex h-5.5 w-5.5 items-center justify-center rounded-full bg-purple-100 text-brand-800 font-bold text-[10px]">
+                          {{ rev.userName.charAt(0).toUpperCase() }}
+                        </div>
                         <span class="font-bold text-ink">{{ rev.userName }}</span>
-                        @if (rev.isVerifiedBuyer) {
-                          <span class="rounded bg-emerald-100 px-1.5 py-0.2 text-[9px] font-bold text-emerald-800">
-                            ✓ Đã mua hàng
-                          </span>
-                        }
+                        <span class="rounded bg-purple-100 px-1.5 py-0.5 text-[9px] font-bold text-purple-800">
+                          Góp ý thẩm mỹ
+                        </span>
                       </div>
                       <span class="text-[10px] text-ink-soft">{{ rev.date }}</span>
                     </div>
 
-                    <div class="flex items-center gap-1 text-amber-400 text-xs">
-                      @for (s of [1, 2, 3, 4, 5]; track s) {
-                        <span>{{ rev.rating >= s ? '★' : '☆' }}</span>
-                      }
-                      <span class="text-[10px] text-ink-soft ml-1.5">Áp dụng cho {{ rev.deviceModel }}</span>
-                    </div>
-
-                    <p class="text-ink-soft text-[11px] leading-relaxed pt-0.5">
+                    <p class="text-ink text-[11px] leading-relaxed pl-7">
                       {{ rev.comment }}
                     </p>
                   </div>
                 } @empty {
-                  <!-- Empty Review State (Khử sạch NPC comments, chỉ hiển thị đánh giá thực) -->
+                  <!-- Empty Feedback State -->
                   <div class="rounded-2xl border border-dashed border-purple-200/90 bg-purple-50/20 p-5 text-center">
                     <div class="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 text-brand-800 mb-2">
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
                     </div>
-                    <p class="text-xs font-semibold text-ink">Chưa có đánh giá nào cho mẫu này</p>
-                    <p class="mt-0.5 text-[11px] text-ink-soft">Hãy là người đầu tiên chia sẻ cảm nhận của bạn ở khung phía trên nhé!</p>
+                    <p class="text-xs font-semibold text-ink">Chưa có góp ý thẩm mỹ nào cho mẫu này</p>
+                    <p class="mt-0.5 text-[11px] text-ink-soft">Hãy chia sẻ cảm nhận độ đẹp hoặc mong muốn thay đổi của bạn để CasEYE phát triển thêm nhé!</p>
                   </div>
                 }
               </div>

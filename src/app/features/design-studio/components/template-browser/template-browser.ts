@@ -4,6 +4,7 @@ import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
 import { CanvasLayer, ImageElement, TextElement } from '../../models/canvas-element.model';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
+import { AuthModal } from '../../../../core/auth/auth-modal';
 
 // Dynamically import @google/model-viewer for rich WebGL 3D rendering in browser
 if (typeof window !== 'undefined') {
@@ -209,11 +210,12 @@ export interface TemplateReview {
   id: string;
   userName: string;
   userAvatar?: string;
-  rating: number; // 1 to 5 stars
+  rating?: number;
   date: string;
   deviceModel: string;
   comment: string;
-  isVerifiedBuyer: boolean;
+  isVerifiedBuyer?: boolean;
+  tag?: string;
 }
 
 export interface TemplateCard {
@@ -465,10 +467,28 @@ export class TemplateBrowser {
   private readonly catalog = inject(StudioCatalogService);
   private readonly router = inject(Router);
   private readonly auth = inject(SupabaseAuthService);
+  private readonly authModal = inject(AuthModal);
 
   // Authentication & Designs State
   protected readonly isLoggedIn = this.auth.isAuthenticated;
   protected readonly myDesigns = this.state.savedDesigns;
+
+  /** Display name of current user */
+  protected readonly userDisplayName = computed(() => {
+    const user = this.auth.user();
+    if (!user) return 'Khách hàng';
+    return (
+      user.user_metadata?.['full_name'] ||
+      user.user_metadata?.['name'] ||
+      user.email?.split('@')[0] ||
+      'Bạn'
+    );
+  });
+
+  /** Open the global Auth Modal */
+  protected openLoginModal(): void {
+    this.authModal.open('login');
+  }
 
   /** First 4 designs displayed on the main page */
   protected readonly displayedMyDesigns = computed(() => this.myDesigns().slice(0, 4));
@@ -508,8 +528,9 @@ export class TemplateBrowser {
   protected readonly designToRename = signal<SavedDesignItem | null>(null);
   protected readonly renameInput = signal<string>('');
 
-  // Favorites Set
+  // Favorites Set & Count
   protected readonly favoriteTemplates = signal<Set<string>>(new Set(['tpl-001', 'tpl-004']));
+  protected readonly favoriteCount = computed(() => this.favoriteTemplates().size);
 
   // Filter & Search Signals
   protected readonly activeCategory = signal<string>('all');
@@ -518,6 +539,7 @@ export class TemplateBrowser {
   // Categories matching the image tabs
   protected readonly categories = [
     { id: 'all', name: 'Tất cả' },
+    { id: 'favorites', name: 'Đã thích ❤️' },
     { id: 'floral', name: 'Hoa lá' },
     { id: 'minimalist', name: 'Tối giản' },
     { id: 'nature', name: 'Phong cảnh' },
@@ -533,7 +555,13 @@ export class TemplateBrowser {
   protected readonly filteredTemplates = computed(() => {
     const cat = this.activeCategory();
     const tag = this.activeHashtagFilter();
+    const favs = this.favoriteTemplates();
     return this.templates.filter((t) => {
+      if (cat === 'favorites') {
+        const isFav = favs.has(t.id);
+        const matchTag = !tag || t.hashtags.includes(tag) || t.tagLabel === tag;
+        return isFav && matchTag;
+      }
       const matchCat = cat === 'all' || t.categories.includes(cat);
       const matchTag = !tag || t.hashtags.includes(tag) || t.tagLabel === tag;
       return matchCat && matchTag;
@@ -1136,17 +1164,18 @@ export class TemplateBrowser {
   }
 
 
-  // --- User Review Submission ---
-  protected setUserRating(star: number): void {
-    this.userRating.set(star);
-  }
-
+  // --- User Comment / Feedback Submission (Phải đăng nhập mới được gửi) ---
   protected onReviewTextInput(event: Event): void {
     const target = event.target as HTMLTextAreaElement;
     this.userReviewText.set(target.value);
   }
 
   protected onSubmitUserReview(): void {
+    if (!this.isLoggedIn()) {
+      this.openLoginModal();
+      return;
+    }
+
     const comment = this.userReviewText().trim();
     if (!comment) return;
 
@@ -1155,12 +1184,12 @@ export class TemplateBrowser {
 
     const newRev: TemplateReview = {
       id: 'rev-' + Date.now(),
-      userName: 'Bạn (Khách hàng)',
-      rating: this.userRating(),
+      userName: this.userDisplayName(),
       date: 'Vừa xong',
       deviceModel: this.state.selectedModel().name,
       comment,
       isVerifiedBuyer: true,
+      tag: 'Góp ý thẩm mỹ',
     };
 
     const currentList = this.reviewsMap()[tpl.id] || [];
