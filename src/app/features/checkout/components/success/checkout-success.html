@@ -1,0 +1,232 @@
+<div class="success-screen">
+  <div class="screen-back-row">
+    <button type="button" class="btn-back" (click)="newOrder.emit()">
+      <span class="material-symbols-outlined">refresh</span>
+      <span>Đặt thêm đơn hàng khác</span>
+    </button>
+  </div>
+
+  @if (checkoutService.activeOrder(); as order) {
+  <!-- Hero Celebration -->
+  <section class="celebration-hero">
+    <div class="celebration-badge">
+      <span class="material-symbols-outlined">auto_awesome</span>
+      <span>Đơn hàng bespoke đã được xác nhận tự động</span>
+      <span class="material-symbols-outlined">auto_awesome</span>
+    </div>
+
+    <!-- Animated Celebration Success Icon Orb -->
+    <div class="success-icon-wrapper">
+      <div class="pulse-ring pulse-ring--1"></div>
+      <div class="pulse-ring pulse-ring--2"></div>
+      <span class="material-symbols-outlined sparkle-icon sparkle--tl">auto_awesome</span>
+      <span class="material-symbols-outlined sparkle-icon sparkle--tr">auto_awesome</span>
+      <span class="material-symbols-outlined sparkle-icon sparkle--br">star</span>
+      <span class="material-symbols-outlined sparkle-icon sparkle--bl">auto_awesome</span>
+
+      <div class="success-icon-orb">
+        <div class="success-icon-orb__glow"></div>
+        <div class="success-icon-orb__inner">
+          <span class="material-symbols-outlined check-badge">verified</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="celebration-subtitle">ĐƠN HÀNG THÀNH CÔNG</p>
+    <h4 class="celebration-title">CHIẾC ỐP CỦA BẠN ĐÃ SẴN SÀNG LÊN KHUÔN!</h4>
+    <p class="celebration-desc">
+      Cảm ơn <strong>{{ order.address.fullName }}</strong> đã tin tưởng và đồng hành sáng tạo cùng vũ trụ
+      <strong>CaseEYE's</strong>.
+    </p>
+
+    <div class="order-snapshot-pill">
+      <span class="pill-label">Mã đơn hàng:</span>
+      <strong class="pill-code">#{{ order.orderCode }}</strong>
+      <button type="button" class="btn-icon-copy" (click)="copyText(order.orderCode, 'Mã đơn hàng')">
+        <span class="material-symbols-outlined">content_copy</span>
+      </button>
+      <div class="pill-divider"></div>
+      <span class="pill-paid-badge">
+        <span class="material-symbols-outlined">check_circle</span>
+        ĐÃ THANH TOÁN 100% ({{ order.paymentMethodTitle }})
+      </span>
+    </div>
+  </section>
+
+  <!-- Quy trình 4 bước in UV -->
+  <section class="card card--timeline">
+    <div class="timeline-header">
+      <div>
+        <h2 class="timeline-title">
+          <span class="material-symbols-outlined">precision_manufacturing</span>
+          Tiến Độ Gia Công Tại Xưởng In UV CaseEYE's
+        </h2>
+        <p class="timeline-sub">Quy trình in 8 lớp phủ pha lê tiêu chuẩn Nhật Bản độc quyền</p>
+      </div>
+      <span class="badge badge--success">
+        <span class="dot-pulse"></span> Cập nhật trực tiếp: Hôm nay
+      </span>
+    </div>
+
+    <div class="timeline-grid">
+      @for (stage of order.stages; track stage.id) {
+      <div class="stage-card" [class.stage-card--completed]="stage.status === 'completed'"
+        [class.stage-card--active]="stage.status === 'in_progress'"
+        [class.stage-card--pending]="stage.status === 'pending'">
+        <div class="stage-card__header">
+          @if (stage.status === 'completed') {
+          <span class="stage-num"><span class="material-symbols-outlined">check</span></span>
+          <span class="stage-status">Hoàn tất</span>
+          } @else if (stage.status === 'in_progress') {
+          <span class="stage-num stage-num--active"><span
+              class="material-symbols-outlined spinner">cyclone</span></span>
+          <span class="stage-status stage-status--active">Đang in UV</span>
+          } @else {
+          <span class="stage-num stage-num--muted"><span class="material-symbols-outlined">hourglass_empty</span></span>
+          <span class="stage-status">Chờ xử lý</span>
+          }
+        </div>
+        <h4 class="stage-title">{{ stage.title }}</h4>
+        <p class="stage-desc">{{ stage.description }}</p>
+        @if (stage.meta) {
+        <span class="stage-meta text-accent"><span class="material-symbols-outlined">bolt</span> {{ stage.meta }}</span>
+        } @else if (stage.timestamp) {
+        <span class="stage-meta"><span class="material-symbols-outlined">schedule</span> {{ stage.timestamp }}</span>
+        }
+      </div>
+      }
+    </div>
+  </section>
+
+  <!-- Hai cột thông tin chi tiết -->
+  <div class="success-two-col">
+    <!-- Cột trái: Cosmic Club & Chia sẻ -->
+    <div class="success-col-left">
+      <div class="vip-card">
+        <div class="vip-card__header">
+          <span class="vip-card__title">
+            <span class="material-symbols-outlined">diamond</span>
+            CaseEYE's Cosmic Club
+          </span>
+          <span class="vip-card__tier">Hạng Bạc</span>
+        </div>
+        <div class="vip-card__points">
+          <p>Điểm thưởng vừa tích luỹ từ đơn hàng:</p>
+          <div class="points-val">
+            <strong>+{{ order.loyaltyStars }}</strong>
+            <span>Cosmic Stars ★</span>
+          </div>
+        </div>
+        <div class="vip-card__progress">
+          <div class="progress-labels">
+            <span>Silver Explorer</span>
+            <strong>Gold Creator (2.000 pts)</strong>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: 74%"></div>
+          </div>
+          <p class="vip-card__hint">Còn 520 Stars để mở khóa Freeship trọn đời!</p>
+        </div>
+      </div>
+
+      <div class="share-card">
+        <div class="share-card__header">
+          <span class="material-symbols-outlined share-icon">redeem</span>
+          <div>
+            <h4>Khoe Chiếc Ốp - Nhận Ngay 50.000₫</h4>
+            <p>Chia sẻ lên Story IG / TikTok gắn thẻ <strong>&#64;caseeyes.vn</strong> để nhận mã ưu đãi.</p>
+          </div>
+        </div>
+        <div class="share-actions">
+          <button type="button" class="btn-share" (click)="copyText(order.orderCode, 'Link khoe ốp')">Story IG</button>
+          <button type="button" class="btn-share" (click)="copyText(order.orderCode, 'Link khoe ốp')">TikTok</button>
+          <button type="button" class="btn-share" (click)="copyText(order.orderCode, 'Mã đơn')">Sao chép</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cột phải: Đơn hàng đã đóng băng (Dùng chính activeOrder) -->
+    <div class="success-col-right">
+      <div class="card card--frozen-order">
+        <div class="card__header">
+          <h3 class="card__title">
+            <span class="material-symbols-outlined">inventory_2</span>
+            Tóm Tắt Đơn Hàng Đã Đóng Băng
+          </h3>
+          <span class="badge badge--subtle">{{ order.items.length }} Sản phẩm Custom</span>
+        </div>
+
+        @for (item of order.items; track item.id) {
+        <div class="frozen-item">
+          <div class="frozen-item__thumb">
+            <img [src]="item.imageUrl" [alt]="item.name" />
+            <span class="tag-3d">3D UV</span>
+          </div>
+          <div class="frozen-item__info">
+            <div class="frozen-item__title-row">
+              <span class="badge badge--purple">Bespoke Design {{ item.designCode }}</span>
+              <strong class="item-price">{{ checkoutService.formatCurrency(item.price) }}</strong>
+            </div>
+            <h4 class="item-name">{{ item.name }}</h4>
+            <div class="item-specs-grid">
+              <span>• Thiết bị: <strong>{{ item.device }}</strong></span>
+              <span>• Viền: <strong>{{ item.edge }}</strong></span>
+              <span>• Bề mặt: <strong>{{ item.surface }}</strong></span>
+              <span>• SL: <strong>0{{ item.quantity }} chiếc</strong></span>
+            </div>
+          </div>
+        </div>
+        }
+
+        <div class="frozen-address-grid">
+          <div class="address-col">
+            <span class="col-title"><span class="material-symbols-outlined">pin_drop</span> Địa Chỉ Nhận</span>
+            <strong class="name">{{ order.address.fullName }}</strong>
+            <p class="address">{{ order.address.streetAddress }}</p>
+            <span class="phone">SĐT: {{ order.address.phone }}</span>
+          </div>
+          <div class="address-col">
+            <span class="col-title"><span class="material-symbols-outlined">local_shipping</span> Vận Chuyển & Thanh
+              Toán</span>
+            <strong>{{ order.shippingMethod.name }}</strong>
+            <p>Dự kiến: <span class="text-success">{{ order.shippingMethod.estimatedDelivery }}</span></p>
+            <span class="badge badge--success mt-2">{{ order.paymentMethodTitle }} • Đã quyết toán</span>
+          </div>
+        </div>
+
+        <div class="price-breakdown">
+          <div class="price-row">
+            <span>Tạm tính</span>
+            <span>{{ checkoutService.formatCurrency(order.subtotal) }}</span>
+          </div>
+          <div class="price-row">
+            <span>Phí gia công in nổi UV 8 lớp</span>
+            <span class="text-success">Miễn phí (Ưu đãi Gen Z)</span>
+          </div>
+          <div class="price-row">
+            <span>Phí vận chuyển</span>
+            <span>{{ checkoutService.formatCurrency(order.shippingFee) }}</span>
+          </div>
+          @if (order.discountAmount > 0) {
+          <div class="price-row price-row--discount">
+            <span>Voucher giảm giá</span>
+            <span>-{{ checkoutService.formatCurrency(order.discountAmount) }}</span>
+          </div>
+          }
+          <div class="total-row">
+            <span>Tổng tiền đã thanh toán</span>
+            <span class="total-price">{{ checkoutService.formatCurrency(order.totalAmount) }}</span>
+          </div>
+        </div>
+
+        <div class="frozen-actions">
+          <button type="button" class="btn-cta" (click)="newOrder.emit()">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            Tiếp tục mua sắm
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>
