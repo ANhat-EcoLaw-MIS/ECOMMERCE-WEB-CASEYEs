@@ -1,8 +1,8 @@
 # Design Studio Module — Tình trạng hiện tại (`feature/design-studio`)
 
-Tài liệu tóm tắt nhanh kiến trúc, luồng hoạt động, các tính năng đã hoàn thiện và những điểm còn đang mock/chờ tích hợp của module **Design Studio** (Phòng thiết kế ốp lưng 2D + 3D) để các thành viên trong nhóm dễ nắm bắt và phối hợp khi merge vào `develop`.
+Tài liệu tóm tắt nhanh kiến trúc, luồng hoạt động, các tính năng đã hoàn thiện và những điểm tích hợp của module **Design Studio** (Phòng thiết kế ốp lưng 2D + 3D) để các thành viên trong nhóm dễ nắm bắt và phối hợp khi merge vào `develop`.
 
-> **Cập nhật:** 12/11/2026 · **Branch:** `feature/design-studio` · **Trạng thái build:** `npx ng build` thành công (xuất `dist/DoAnWEB`, kèm warning vượt budget nhẹ).
+> **Cập nhật:** 14/11/2026 · **Branch:** `feature/design-studio` · **Trạng thái build:** `npx ng build` thành công 100% (0 TypeScript errors, xuất `dist/DoAnWEB`).
 
 ---
 
@@ -16,8 +16,8 @@ Module được lazy-load tại `/design-studio` trong `src/app/app.routes.ts` v
   │                    ├── Có `localStorage['caseyes_active_model']` ──► /design-studio/templates
   │                    └── Chưa có ────────────────────────────────────► /design-studio/select-model
   ├── /select-model  ──► ModelPicker (Bước 1: Chọn hãng & dòng máy)
-  ├── /templates     ──► TemplateBrowser (Bước 2: My Designs, AI gợi ý & Kho mẫu)
-  └── /editor        ──► StudioWorkspace (Bước 3: Canvas 2D + Live 3D WebGL Preview, full-screen)
+  ├── /templates     ──► TemplateBrowser (Bước 2: My Designs, Kho 16 mẫu 2-Layer AI & Modal 3D)
+  └── /editor        ──► StudioWorkspace (Bước 3: Canvas 2D + Live 3D WebGL Spotlight, full-screen)
 ```
 
 > **Lưu ý layout:** Ở route `/design-studio/editor`, `App` (`src/app/app.ts` / `app.html`) tự động ẩn `<app-header>` và `<app-footer>` toàn site để hiển thị không gian làm việc full-screen kiểu Canva/Figma.
@@ -33,11 +33,11 @@ src/app/features/design-studio/
 ├── design-studio.spec.ts                   # Smoke test mặc định
 ├── components/
 │   ├── model-picker/                       # Chọn hãng (Apple, Samsung, Xiaomi) & dòng máy + thông số phôi in
-│   ├── model-selector/                     # Dropdown chọn nhanh model/SKU
-│   ├── template-browser/                   # My Designs + AI gợi ý mẫu + Kho mẫu + Modal Chi tiết & 3D
-│   └── studio-workspace/                   # Trình chỉnh sửa Canvas 2D + Preview 3D thời gian thực
+│   ├── model-selector/                     # Dropdown / Modal chọn nhanh model/SKU
+│   ├── template-browser/                   # My Designs + Kho 16 mẫu 2-Layer AI + Modal Chi tiết 3D & Góp ý thẩm mỹ
+│   └── studio-workspace/                   # Trình chỉnh sửa Canvas 2D + Live 3D WebGL Spotlight + Kho Element AI
 ├── constants/
-│   └── template-artworks.ts                # Vector SVG artworks + `buildTemplateLayers()` đồng bộ 1:1 vào Canvas
+│   └── template-artworks.ts                # SVG artworks & artwork map đồng bộ 1:1 vào Canvas
 ├── models/
 │   ├── canvas-element.model.ts             # `TextElement`, `StickerElement`, `ImageElement`, `BackgroundElement`, `CanvasLayer`
 │   ├── studio-domain.model.ts              # `Brand`, `PhoneModel`, `SafeZoneMask`, `CameraCutout`, `BaseSKU`, `CASE_MATERIALS`
@@ -45,74 +45,95 @@ src/app/features/design-studio/
 │   └── policy-consent.model.ts             # `ContentPolicyConsent`, `BannedKeyword`
 └── services/
     ├── studio-catalog.ts                   # Dữ liệu 3 hãng, 5 dòng máy, camera cutout & SKUs
-    ├── studio-state.ts                     # State reactive (Angular Signals): layers, undo/redo, savedDesigns, moderation, giá 250.000đ
+    ├── studio-state.ts                     # State reactive (Signals): layers, undo/redo, stickers AI, savedDesigns, giá 250.000đ
     └── studio-draft.ts                     # Auto-save bản nháp 60s vào `localStorage['caseye_studio_draft']`
 ```
 
 **Assets bổ sung trên nhánh:**
 - `public/models/*.glb`: 6 model 3D (`iphone-15-pro-max.glb`, `iphone-16-pro.glb`, `iphone-14.glb`, `galaxy-s24.glb`, `xiaomi-14-ultra.glb`, `phone-generic.glb`).
-- `public/assets/stickers/*.svg`: 24 sticker SVG vector phân nhóm `y2k`, `cute`, `creative`.
-- `public/assets/badges/*.svg`: 3 huy hiệu SVG (`360-rotate.svg`, `polycarbonate-shield.svg`, `uniform-price.svg`).
-- `scripts/generate-assets.js`: Script Node dùng để sinh các asset SVG trên.
+- `public/assets/templates/background/`: 13 ảnh nền phôi ốp AI độ phân giải cao định dạng `.webp`.
+- `public/assets/templates/elements/`: 13 ảnh element nghệ thuật AI tách nền trong suốt định dạng `.png`.
+- `public/assets/templates/the-creators-*.webp`: 2 tác phẩm độc quyền The Creators (Real team & Chibi squad).
+- `public/assets/stickers/`: 13 element đồ họa & sticker AI tách nền trong suốt chất lượng cao chuẩn print.
+- `public/assets/chibi-designer.webp`: Nhân vật Chibi áo tím xuất hiện khi hover card phôi trắng.
+- `public/assets/badges/*.svg`: Các huy hiệu SVG (`360-rotate.svg`, `polycarbonate-shield.svg`, `uniform-price.svg`).
 
 ---
 
-## 3. Những tính năng đã làm xong
+## 3. Những tính năng đã hoàn thiện
 
 ### A. Chọn dòng máy (`ModelPicker` & `StudioCatalogService`)
 - Hỗ trợ 3 hãng / 5 máy: **iPhone 15 Pro Max**, **iPhone 16 Pro**, **iPhone 15 Pro**, **Galaxy S24**, **Xiaomi 14 Ultra**.
-- Lưu lựa chọn vào `localStorage` (`caseyes_active_model`), hiển thị kích thước vùng in (`printWidthMm × printHeightMm`), DPI tối thiểu (`150 DPI`), số ống kính và trạng thái hỗ trợ 3D (`has3dModel`).
-- Có modal cảnh báo/xác nhận khi đổi dòng máy lúc Canvas đang có layer (`DesignStudio`).
+- Đồng bộ giao diện nút đổi dòng máy chuẩn UI thương hiệu giữa ngoài Kho Mẫu và trong Canvas Studio.
+- Đổi dòng máy bằng **Modal chuyên dụng**, khóa cuộn nền (`body overflow: hidden`) chống giật lag.
+- Khi người dùng đổi máy trong Canvas Studio rồi nhấn *"Tiếp tục"*, hệ thống tự động cập nhật ngay phôi ốp và lỗ camera tương ứng mà không bị văng về kho mẫu.
+- Hiển thị kích thước vùng in (`printWidthMm × printHeightMm`), DPI tối thiểu (`150 DPI`), số ống kính và cờ hỗ trợ 3D thật (`has3dModel`).
 
 ### B. Kho mẫu & My Designs (`TemplateBrowser`)
-- **My Designs:** Hiển thị tối đa 4 card trên trang chính; khi `> 4` bản vẽ thì hiện nút **Xem tất cả** mở popup có ô tìm kiếm. Menu `⋮` hỗ trợ: *Tiếp tục chỉnh sửa*, *Nhân bản*, *Đổi tên*, *Xóa* (có modal xác nhận).
-- **AI gợi ý mẫu (`F13`):** Ô nhập ý tưởng (`0/200` ký tự) tự nhận diện từ khóa để lọc danh mục phù hợp và cuộn xuống lưới mẫu.
-- **Kho mẫu (`TEMPLATE_CATALOG`):** 10 mẫu (vị trí `#1` là **Ốp Lưng Trắng Tiêu Chuẩn** để vẽ từ đầu + 9 mẫu artwork: *Dreamy Kitten, Sakura Bloom, Mountain Escape, Minimal Cat, Anime Girl, Abstract Waves, Dino Friend, Starry Night, That Girl Era*). Đã bỏ hiển thị giá trên card/modal theo thiết kế tinh gọn, lọc theo 8 danh mục và hashtag.
-- **Modal Chi tiết & Xem trước 3D thật:** Dùng `<model-viewer>` nạp `.glb` + `syncTemplate3dTexture()` vẽ nền, artwork, lỗ cắt camera và viền bumper lên mô hình 3D; chuyển đổi qua lại giữa **Mô hình 3D xoay** và **Mặt lưng 2D**; có nút snap về mặt lưng & bật/tắt tự xoay.
-- **Đánh giá mẫu:** Đã xóa toàn bộ comment NPC giả lập, hiển thị empty state khi chưa có đánh giá và cho phép người dùng chọn 1–5 sao + gửi nhận xét ngay trong modal.
-- **Đồng bộ 1:1 vào Studio Canvas:** Chọn bất kỳ mẫu nào đều nạp chính xác màu nền/gradient và toàn bộ `CanvasLayer[]` từ `buildTemplateLayers()` (`constants/template-artworks.ts`) vào editor.
+- **Hiệu ứng Chibi Peeker độc quyền:**
+  - Tại card **"Ốp Lưng Trắng Tiêu Chuẩn"**, khi hover chuột, nhân vật Chibi áo tím từ từ ló ra phía sau góc trên bên phải, chỉ tay về phía ốp kèm bong bóng thoại *"Tự thiết kế ngay!"*.
+  - Layer chibi nằm sau card (`z-0`), không che nút bấm/nội dung, căn sát lề 16px mượt mà, hỗ trợ tắt trên màn hình cảm ứng hoặc `prefers-reduced-motion`.
+- **My Designs (Thiết kế của tôi):**
+  - Yêu cầu đăng nhập tài khoản để xem và đồng bộ các mẫu cá nhân.
+  - Nền khu vực My Designs chuyển sang dải gradient tím dịu nhẹ, phân biệt rõ ràng với kho mẫu bên dưới.
+  - Hiển thị tối đa 4 card thiết kế to rõ; khi `> 4` bản vẽ có nút **Xem tất cả** mở popup có bộ lọc tìm kiếm.
+  - Menu `⋮` hỗ trợ: *Tiếp tục chỉnh sửa*, *Nhân bản*, *Đổi tên*, *Xóa* (kèm modal xác nhận).
+- **Kho mẫu (`TEMPLATE_CATALOG` — 16 mẫu 2-Layer AI trọn gói):**
+  1. **#1. Ốp Lưng Trắng Tiêu Chuẩn** (Tự vẽ từ đầu với Chibi Peeker).
+  2. **#2. The Creators • Đội Ngũ CasEYE** (Bản vẽ chân dung độc quyền của team).
+  3. **#3. The Creators • Chibi Squad** (Phiên bản hoạt hình 5 thành viên siêu dễ thương).
+  4. **#4 – #16. 13 Mẫu AI 2 Lớp Hoàn Chỉnh:** *Fluffy Cloud Kittens, Matcha Boba Corgi, Baby Dino Picnic, Cyber Chrome Heart, Holographic Cosmic Butterfly, Retro Arcade 1998, Tokyo Night Sakura, Fuji Lavender Sunset, Wild Botanical Garden, Manifesting Good Vibes, Create Your Own Luck, Liquid Amethyst Waves, Aura Gradient Energy*.
+  - **Cơ chế 2-Layer độc lập:** Nền phôi (`bgImage`) và đối tượng chính (`elementImage` tách nền PNG). Khi bấm *"Dùng mẫu này & Vào Studio"*, ảnh nền được nạp vào `caseBg`, còn element trở thành một `ImageElement` độc lập trên canvas để người dùng tự do phóng to, thu nhỏ, xoay, lật, di chuyển hoặc xóa.
+  - Card thiết kế tinh gọn: Đã lược bỏ điểm số sao và nhãn tuyển chọn không cần thiết, hover có viền tím pastel phát sáng nổi bật.
+- **Thanh Hashtag Chủ Đề Đồng Bộ 100%:**
+  - Tự động quét và tổng hợp toàn bộ 60+ hashtag có trong catalog (`#Creators`, `#Chibi`, `#Hoa_lá`, `#Cute`, `#Pastel`, `#Tối_giản`, `#Phong_cảnh`, `#Hoạt_hình`, `#Typography`, `#Abstract`, `#Aesthetic`, `#Mèo_con`, `#Y2K`, `#Retro`, `#Streetwear`, `#Vintage`, `#Cyberpunk`, `#GenZ`,...).
+  - Hỗ trợ chọn nhiều nút chủ đề cùng lúc (loại trừ nút *Tất cả* khi chọn cụ thể), nút *"Xem tất cả"* / *"Thu gọn"* chuyển đổi mượt mà giữa cuộn ngang và lưới đầy đủ.
+- **Modal Chi tiết & Xem trước 3D Realtime:**
+  - Phối màu gradient tím tối trầm sang trọng, cân đối, full chiều cao modal.
+  - Cột preview bên trái cố định (sticky) khi cuộn nội dung thông tin bên phải.
+  - Khắc phục triệt để lỗi đen màn hình: Cắt đường bao ốp trước (`ctx.clip()`), sau đó chiếu texture nền và element sắc nét, bảo toàn không gian màu sRGB.
+  - Chuyển đổi linh hoạt giữa **Mô hình 3D xoay** và **Mặt lưng 2D**; với các dòng máy chưa hỗ trợ 3D, hệ thống ưu tiên mở tab 2D và hiện thông báo nhắc nhở tinh tế khi bấm tab 3D.
+  - Tích hợp nút **Lưu vào yêu thích (Tim)** dễ nhìn, đồng bộ số lượng với tab *"Đã thích ❤️"*.
+  - **Bình luận & Góp ý thẩm mỹ:** Thay thế hoàn toàn đánh giá sao truyền thống bằng góc góp ý độ đẹp và mong muốn tùy biến mẫu, có cổng chặn bắt buộc đăng nhập tài khoản trước khi gửi nhận xét.
 
 ### C. Trình chỉnh sửa Canvas 2D + 3D Live (`StudioWorkspace`)
-- **Thanh công cụ trái (5 tab):**
-  1. **Tải ảnh (`img`):** Upload PNG/JPG/WEBP (hỗ trợ kéo-thả); ảnh `> 10MB` được tự nén/resize client-side (giữ kênh trong suốt alpha với PNG/WEBP); cảnh báo nếu `< 150 DPI`; modal cam kết bản quyền điện tử `v1.0` (`caseyes_dont_remind_consent` / `caseyes_dont_remind_resize`).
-  2. **Chữ (`txt`):** Thêm chữ, preset style chữ, đổi font/màu/cỡ/căn lề/đậm/nghiêng/gạch chân, text effects (`shadow`, `neon`, `lift`), kiểm duyệt từ khóa cấm theo `BANNED_KEYWORDS`.
-  3. **Sticker (`stk`):** 24 sticker SVG vector, lọc theo nhóm (`all`, `y2k`, `cute`, `creative`) và tìm kiếm.
-  4. **Nền (`bg`):** Bảng màu solid, color picker tự chọn, bộ tạo dual gradient (`linear`/`radial`, chỉnh góc, đảo màu) và curated gradients.
-  5. **Layers (`tpl`):** Danh sách layer theo stack trên→dưới, kéo-thả đổi thứ tự, khóa/mở khóa, lên/xuống bậc, xóa.
-- **Tương tác Canvas 2D:** Kéo thả di chuyển kèm đường gióng căn tâm (**Smart Snap Guides**), kéo ra ngoài vùng stage để xóa, 4 tay cầm phóng to/thu nhỏ, xoay, 4 tay cầm crop ảnh/sticker (hoặc đổi bề rộng wrap text), lật ngang/dọc, **nhấn đúp sửa chữ trực tiếp trên canvas** với caret xanh (`#2563eb`) và tự xóa layer nếu xóa hết chữ.
-- **Phím tắt Canva (`?`):** `Ctrl+D`, `Ctrl+Z`, `Ctrl+Y` / `Ctrl+Shift+Z`, `Delete`/`Backspace`, phím mũi tên (`+ Shift` để nudge nhanh), `T`, `S`, `Ctrl+[` / `Ctrl+]`, `Esc`, `Ctrl + Cuộn chuột` zoom (50–160%).
-- **Live 3D Preview & Specs (Cột phải):** Render Offscreen Canvas (`600×1264`) chiếu lên Three.js `CaseOverlayMesh` + dựng viền bumper `CaseExtrusionBumper` đổi màu theo 7 preset (`caseStrokeColor`); hiển thị thông số phôi *Polycarbonate Ultra-Defense* và đồng giá `250.000đ` (`UNIFIED_STUDIO_PRICE`).
-- **Lưu & Guest flow:** Auto-save nháp mỗi `60s`; nếu khách chưa đăng nhập bấm Lưu / Thêm vào giỏ sẽ lưu ngầm bản nháp vào `localStorage` (`caseyes_guest_draft`), mở `AuthModal`, và tự đồng bộ vào *My Designs* sau khi đăng nhập thành công (`checkAndSyncGuestDraft()`).
+- **Thanh công cụ trái (5 tab chuyên sâu):**
+  1. **Tải ảnh (`img`):** Upload PNG/JPG/WEBP; tự nén/resize client-side giữ kênh alpha; cảnh báo `< 150 DPI`; cam kết bản quyền điện tử `v1.0`.
+  2. **Chữ (`txt`):** Thêm chữ, preset style, font/màu/cỡ/căn lề/đậm/nghiêng/gạch chân, text effects (`shadow`, `neon`, `lift`), kiểm duyệt từ khóa cấm theo `BANNED_KEYWORDS`.
+  3. **Sticker & Element AI (`stk`):** Thay mới toàn bộ bằng **13 Element AI đồ họa tách nền trong suốt**, viền mượt mà, phân loại `cute`, `y2k`, `creative`, bố trí lưới gọn gàng chống tràn viền.
+  4. **Nền (`bg`):** Bảng màu solid, color picker tự do, bộ tạo dual gradient (`linear`/`radial`, góc quay, đảo màu) và kho gradient nghệ thuật.
+  5. **Layers (`tpl`):** Danh sách layer trực quan, kéo-thả đổi thứ tự, khóa/mở khóa, lên/xuống bậc, ẩn/hiện, xóa.
+- **Tương tác Canvas 2D mượt mà:** Kéo thả di chuyển kèm đường gióng căn tâm (**Smart Snap Guides**), kéo ra ngoài stage để xóa, 4 tay cầm resize/rotate/crop, lật ngang/dọc, **nhấn đúp sửa chữ trực tiếp trên canvas**.
+- **Phím tắt Canva (`?`):** `Ctrl+D`, `Ctrl+Z`, `Ctrl+Y` / `Ctrl+Shift+Z`, `Delete`/`Backspace`, mũi tên nudge, `T`, `S`, `Ctrl+[` / `Ctrl+]`, `Esc`, `Ctrl + Wheel` zoom.
+- **Live 3D Preview (Cột phải):**
+  - Khung 3D Stage nâng cấp sang **Radial Gradient Spotlight** (`radial-gradient(ellipse at 50% 25%, #ffffff 0%, #f6f3fe 35%, #ece6fd 70%, #d8cdf8 100%)`) có viền tím mờ và bóng chìm sang trọng.
+  - Render thời gian thực từ Canvas 2D lên Three.js texture trên phôi ốp Polycarbonate.
+- **Lưu & Guest flow:** Auto-save nháp mỗi `60s`; khách chưa đăng nhập bấm Lưu / Thêm vào giỏ sẽ lưu ngầm vào `caseyes_guest_draft`, mở `AuthModal` và tự động sync vào *My Designs* ngay sau khi đăng nhập.
 
 ---
 
-## 4. Trạng thái tích hợp & Việc còn lại (Handoff cho team)
+## 4. Trạng thái tích hợp & Handoff cho team
 
 ### Đã tích hợp thật
 - **Authentication:** Dùng `SupabaseAuthService` và `AuthModal` (`src/app/core/supabase/supabase-auth.service.ts`, `src/app/core/auth/auth-modal.ts`).
-- **3D Rendering:** `@google/model-viewer` + Three.js texture injection trực tiếp trên trình duyệt.
+- **3D Rendering:** `@google/model-viewer` + Three.js texture projection trực tiếp trên WebGL.
+- **Asset Pipeline:** 13 bộ mẫu 2-layer AI + 13 Element/Sticker AI hoàn chỉnh đã nằm trong `public/assets/`.
 
-### Đang chạy Local / Mock phía Frontend (chờ ghép Backend / Module khác)
-1. **Cart integration (`onAddToCart()` trong `studio-workspace.ts`):** Hiện mới kiểm tra điều kiện (`REJECTED`, `hasLayers()`, đã đăng nhập) và hiện toast *"Đã thêm thiết kế vào giỏ hàng thành công!"* kèm link tới `/cart`. Chưa đẩy dữ liệu sang `CartService` do `src/app/features/cart/cart.ts` hiện vẫn là component khung và `App.cartCount` trong `src/app/app.ts` đang để `TODO(cart team)`.
+### Đang chạy Local / Chờ Backend kết nối
+1. **Cart integration (`onAddToCart()`):** Kiểm tra điều kiện (`REJECTED`, `hasLayers()`, đăng nhập) và hiện toast thông báo. Sẵn sàng kết nối `CartService` khi nhánh cart hoàn thiện.
 2. **Supabase Database & Storage:**
-   - `StudioCatalogService` (hãng, dòng máy, SKU) và `TEMPLATE_CATALOG` hiện là dữ liệu tĩnh ở frontend, chưa query bảng `phone_models` trong Supabase (`database.types.ts`).
-   - `savedDesigns`, bản nháp (`StudioDraft`) và đánh giá mẫu (`reviewsMap`) đang lưu ở `localStorage` / signal state, chưa đồng bộ CRUD lên bảng `designs` của Supabase.
-   - Ảnh upload của người dùng hiện lưu dưới dạng Data URL base64 trong layer, chưa upload lên Supabase Storage.
-3. **AI gợi ý mẫu (`F13`):** Hàm `onAiSearch()` trong `template-browser.ts` hiện dùng regex/keyword matching phía client, chưa gọi API AI backend.
-
-### Một số điểm nhỏ cần lưu ý khi review / dọn PR
-- **3D trên Samsung / Xiaomi:** Thư mục `public/models/` đã có `galaxy-s24.glb` và `xiaomi-14-ultra.glb`, nhưng `StudioCatalogService` hiện vẫn đặt `has3dModel: false` và chưa gán `model3dUrl` cho 2 máy này (chỉ 3 mẫu iPhone đang bật `has3dModel: true`).
-- **Dependency chưa dùng:** `package.json` có cài `"html2canvas": "^1.4.1"` nhưng code hiện tại dựng ảnh bằng Canvas 2D thuần, chưa import `html2canvas`.
-- **Budget cảnh báo khi `ng build`:** Initial bundle `666.86 kB` (budget `500.00 kB`) và `studio-workspace.scss` `4.39 kB` (budget `4.00 kB`); unit test mới có spec khởi tạo cơ bản trong `design-studio.spec.ts`.
+   - `savedDesigns`, bản nháp (`StudioDraft`) và đánh giá thẩm mỹ (`reviewsMap`) đang lưu qua Signal state và `localStorage`, có thể nối trực tiếp vào bảng `designs` của Supabase.
+   - Ảnh upload cá nhân hiện lưu tạm dạng Data URL base64, sẵn sàng chuyển sang upload bucket Supabase Storage khi có endpoint.
 
 ---
 
-## 5. File ngoài `design-studio/` có chỉnh sửa trên nhánh
+## 5. Danh sách file chính của module
 
-Để tránh conflict khi merge vào `develop` (xem thêm `docs/GIT_WORKFLOW.md`), cần chú ý các file dùng chung đã chạm tới:
-- `package.json`, `package-lock.json` (thêm `@google/model-viewer`, `html2canvas`)
-- `src/index.html` (thêm script `@google/model-viewer` v4.0.0 CDN)
-- `src/app/app.ts`, `src/app/app.html` (thêm signal `isCanvasEditor` ẩn header/footer ở `/design-studio/editor`)
-- `src/app/app.routes.ts` (format lại route lazy-load `design-studio`)
-- `src/app/core/layout/header/header.ts`, `src/app/features/landing/section/hero/hero.ts`, `hero.html` (gỡ nút phụ ở hero, gọn lại import)
-- `.gitignore` (thêm `.agents/`), kèm file tài liệu/prompt nội bộ (`DESIGN_STUDIO_UI_REDESIGN_PROMPT_PACK.md`, `docs/*`)
+- `src/app/features/design-studio/components/template-browser/`:
+  - `template-browser.ts`: Khai báo 16 `TEMPLATE_CATALOG`, hàm sinh hashtag đồng bộ `generateSynchronizedCategories()`, modal 3D và logic yêu thích/đánh giá.
+  - `template-browser.html`: Giao diện My Designs, thanh hashtag, lưới mẫu kèm hiệu ứng Chibi Peeker và modal chi tiết.
+  - `template-browser.scss`: Keyframes animation peeker, responsive breakpoint và hiệu ứng glow.
+- `src/app/features/design-studio/components/studio-workspace/`:
+  - `studio-workspace.ts`: Logic Canvas 2D, Three.js 3D texture projection và phím tắt.
+  - `studio-workspace.html`: Canvas editor full-screen, kho Sticker AI và khung 3D Spotlight.
+- `src/app/features/design-studio/services/studio-state.ts`: Quản lý reactive signal state cho Canvas, layers, history và danh sách `STICKERS_LIST`.

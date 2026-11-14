@@ -125,27 +125,42 @@
         <span class="flex-1">{{ state.rejectionMessage() }}</span>
       </div>
     }
-    @if (draft.hasDraftToRestore()) {
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800 shrink-0">
-        <div class="flex items-center gap-2">
-          <svg class="h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span class="font-semibold">Phát hiện bản nháp chưa lưu</span>
-          @if (draft.draftSavedAt()) { <span class="text-amber-600">· {{ draft.draftSavedAt()! | date:'HH:mm, dd/MM' }}</span> }
-        </div>
-        <div class="flex gap-2">
-          <button type="button" (click)="draft.restoreDraft()" class="rounded-pill bg-amber-600 px-4 py-1 font-bold text-white hover:bg-amber-700 cursor-pointer">Khôi phục</button>
-          <button type="button" (click)="draft.dismissDraft()" class="rounded-pill border border-amber-300 px-4 py-1 font-medium text-amber-700 hover:bg-amber-100 cursor-pointer">Bỏ qua</button>
-        </div>
-      </div>
-    }
 
     <!-- 3-Column Studio Grid: Drawer | Canvas | Specs -->
     <div class="studio-shell">
 
+      <!-- Responsive Mobile Drawer Overlay Backdrop (Click to dismiss on smaller screens) -->
+      @if (isMobileDrawerOpen()) {
+        <div
+          class="lg:hidden absolute inset-0 z-35 bg-brand-950/25 backdrop-blur-[1px] transition-opacity cursor-pointer animate-fade-in"
+          (click)="closeMobileDrawer()"
+        ></div>
+      }
+
       <!-- ───────────────────────────────────
            COL 1 · Tool Drawer
       ─────────────────────────────────────── -->
-      <aside class="tool-drawer">
+      <aside class="tool-drawer" [class.tool-drawer--open]="isMobileDrawerOpen()">
+
+        <!-- Mobile Drawer Header with Close Button -->
+        <div class="lg:hidden flex items-center justify-between pb-3 mb-2 border-b border-line shrink-0">
+          <span class="text-xs font-bold text-ink flex items-center gap-1.5">
+            <svg class="h-4 w-4 text-brand-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            <span>Tùy chọn công cụ</span>
+          </span>
+          <button
+            type="button"
+            (click)="closeMobileDrawer()"
+            class="rounded-full p-1.5 text-ink-soft hover:bg-purple-100 hover:text-ink cursor-pointer transition-colors"
+            title="Đóng bảng tùy chọn"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
     <!-- ── Thêm ảnh panel ── -->
     @if (state.activeTool() === 'img') {
@@ -241,24 +256,24 @@
     </div>
     }
 
-    <!-- ── Sticker panel (24 Mẫu Vector Gen-Z) ── -->
+    <!-- ── Sticker panel (Kho Element & Sticker AI Tách Nền Trong Suốt) ── -->
     @if (state.activeTool() === 'stk') {
     <div class="flex flex-col h-full space-y-2.5">
       <div class="flex items-center justify-between shrink-0">
-        <p class="drawer-section-title">Kho Sticker Gen-Z</p>
-        <span class="rounded bg-brand-100 px-2 py-0.5 text-[10px] font-black text-brand-800">
-          24 mẫu 3D
+        <p class="drawer-section-title">Kho Sticker & Element AI</p>
+        <span class="rounded-full bg-brand-100 px-2.5 py-0.5 text-[10px] font-black text-brand-800">
+          {{ stickers.length }} mẫu sắc nét
         </span>
       </div>
       <p class="text-[11px] text-ink-soft leading-tight shrink-0">
-        Sticker die-cut sắc nét chuẩn Gen-Z, viền trắng nổi bật, kéo thả tự do
+        Element đồ họa & sticker AI tách nền trong suốt sắc nét, viền mượt mà, kéo thả tự do
       </p>
-      <div class="grid grid-cols-4 gap-2 overflow-y-auto pr-1 flex-1 pb-4">
+      <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 content-start auto-rows-max overflow-y-auto pr-1 flex-1 pb-4">
         @for (s of stickers; track s.id) {
         <button type="button" (click)="onAddSticker(s)" [title]="s.name"
-          class="group relative flex aspect-square items-center justify-center rounded-2xl border border-line bg-surface p-2 transition-all hover:scale-108 hover:border-brand-400 hover:bg-white hover:shadow-soft cursor-pointer active:scale-95">
+          class="group relative flex aspect-square items-center justify-center rounded-2xl border border-line bg-surface p-2 transition-all hover:scale-105 hover:border-brand-400 hover:bg-white hover:shadow-soft cursor-pointer active:scale-95">
           <img [src]="s.url" [alt]="s.name"
-            class="h-10 w-10 object-contain drop-shadow-xs transition-transform group-hover:scale-115" />
+            class="h-14 w-14 object-contain drop-shadow-xs transition-transform group-hover:scale-110" />
         </button>
         }
       </div>
@@ -536,14 +551,14 @@
   <main class="canvas-stage" (click)="onStageClick($event)" (wheel)="onStageWheel($event)"
     (pointermove)="onCanvasPointerMove($event)" (pointerup)="onCanvasPointerUp($event)">
 
-    <!-- Canvas top toolbar: design name + view mode toggle + zoom -->
-    <div class="absolute top-3 left-4 right-4 z-30 flex items-center justify-between gap-2">
-      <!-- Design name editable -->
+    <!-- Canvas top toolbar: design name + view mode toggle + zoom (Thanh cố định trên cùng chuẩn Canva/Figma, không bao giờ đè chữ hay overlap) -->
+    <div class="absolute top-0 left-0 right-0 z-30 flex items-center justify-between gap-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-white/85 backdrop-blur-md border-b border-line/60 shadow-2xs">
+      <!-- Design name editable (with smart truncate) -->
       <div
-        class="flex items-center gap-1.5 rounded-xl bg-white/80 px-3 py-1.5 shadow-soft backdrop-blur-sm border border-line">
-        <span class="text-xs font-bold text-ink">{{ state.designName() }}</span>
-        <button type="button" (click)="onSaveDesign()"
-          class="text-ink-soft hover:text-brand-800 transition-colors cursor-pointer" title="Đổi tên">
+        class="flex items-center gap-1 sm:gap-1.5 rounded-xl bg-surface/80 px-2 sm:px-3 py-1 shadow-2xs border border-line min-w-0 max-w-[140px] sm:max-w-[220px] shrink">
+        <span (click)="onOpenRenameModal()" class="text-xs font-bold text-ink truncate block cursor-pointer hover:text-brand-800 transition-colors" [title]="state.designName() + ' (Bấm để đổi tên)'">{{ state.designName() }}</span>
+        <button type="button" (click)="onOpenRenameModal()"
+          class="text-ink-soft hover:text-brand-800 transition-colors cursor-pointer shrink-0 p-0.5 rounded-md hover:bg-brand-50" title="Đổi tên thiết kế">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -553,64 +568,69 @@
 
       <!-- View mode toggle (Radio buttons: Hiện tràn viền mờ 50% vs Chỉ hiện vùng in) -->
       <div
-        class="flex items-center rounded-full border border-line bg-white/90 p-1 shadow-soft backdrop-blur-sm text-[11px] font-semibold">
+        class="flex items-center rounded-full border border-line bg-surface/90 p-0.5 sm:p-1 shadow-2xs text-[10px] sm:text-[11px] font-semibold shrink-0">
         <button type="button" (click)="viewMode.set('bleed')"
-          class="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all cursor-pointer"
+          class="flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-all cursor-pointer"
           [class]="viewMode() === 'bleed' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:text-ink'"
           title="Xem toàn bộ phần tử (phần tràn ra ngoài ốp hiển thị mờ 50%)">
-          <span class="flex h-3 w-3 items-center justify-center rounded-full border"
+          <span class="flex h-2 w-2 sm:h-2.5 sm:w-2.5 items-center justify-center rounded-full border"
             [class]="viewMode() === 'bleed' ? 'border-white' : 'border-ink-soft/60'">
             @if (viewMode() === 'bleed') {
-            <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+            <span class="h-1 w-1 rounded-full bg-white"></span>
             }
           </span>
-          <span>Tràn viền (Mờ 50%)</span>
+          <span class="hidden sm:inline">Tràn viền (Mờ 50%)</span>
+          <span class="sm:hidden">Tràn viền</span>
         </button>
 
         <button type="button" (click)="viewMode.set('clipped')"
-          class="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all cursor-pointer"
+          class="flex items-center gap-1 sm:gap-1.5 rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-all cursor-pointer"
           [class]="viewMode() === 'clipped' ? 'bg-brand-800 text-white shadow-xs' : 'text-ink-soft hover:text-ink'"
           title="Chỉ hiển thị phần nằm trong vùng in của ốp">
-          <span class="flex h-3 w-3 items-center justify-center rounded-full border"
+          <span class="flex h-2 w-2 sm:h-2.5 sm:w-2.5 items-center justify-center rounded-full border"
             [class]="viewMode() === 'clipped' ? 'border-white' : 'border-ink-soft/60'">
             @if (viewMode() === 'clipped') {
-            <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
+            <span class="h-1 w-1 rounded-full bg-white"></span>
             }
           </span>
-          <span>Chỉ vùng in</span>
+          <span class="hidden sm:inline">Chỉ vùng in</span>
+          <span class="sm:hidden">Vùng in</span>
         </button>
       </div>
 
-      <!-- Zoom control (Touchpad or buttons) -->
-      <div
-        class="flex items-center gap-1 rounded-full border border-line bg-white/80 px-2 py-1 shadow-soft backdrop-blur-sm">
-        <button type="button" (click)="state.zoomOut()"
-          class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center cursor-pointer">−</button>
-        <span class="min-w-[36px] text-center font-mono text-xs font-bold text-ink">{{ state.zoom() }}%</span>
-        <button type="button" (click)="state.zoomIn()"
-          class="h-6 w-6 rounded-full text-ink hover:bg-brand-50 text-sm font-bold flex items-center justify-center cursor-pointer">+</button>
-      </div>
+      <!-- Right Controls: Zoom + Canva Shortcuts -->
+      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+        <!-- Zoom control -->
+        <div
+          class="flex items-center gap-0.5 sm:gap-1 rounded-full border border-line bg-surface/90 px-1 sm:px-2 py-0.5 shadow-2xs">
+          <button type="button" (click)="state.zoomOut()"
+            class="h-5 w-5 sm:h-6 sm:w-6 rounded-full text-ink hover:bg-brand-50 text-xs sm:text-sm font-bold flex items-center justify-center cursor-pointer">−</button>
+          <span class="min-w-[26px] sm:min-w-[34px] text-center font-mono text-[10px] sm:text-xs font-bold text-ink">{{ state.zoom() }}%</span>
+          <button type="button" (click)="state.zoomIn()"
+            class="h-5 w-5 sm:h-6 sm:w-6 rounded-full text-ink hover:bg-brand-50 text-xs sm:text-sm font-bold flex items-center justify-center cursor-pointer">+</button>
+        </div>
 
-      <!-- Canva Keyboard Shortcuts trigger -->
-      <button type="button" (click)="showShortcutsModal.set(true)"
-        class="flex items-center gap-1.5 rounded-full border border-line bg-white/90 px-3 py-1 shadow-soft backdrop-blur-sm text-[11px] font-semibold text-ink hover:text-brand-800 hover:border-brand-400 transition-colors cursor-pointer"
-        title="Danh sách phím tắt Canva (Bấm ?)">
-        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="2" y="4" width="20" height="16" rx="2.5"/>
-          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" stroke-linecap="round"/>
-        </svg>
-        <span class="hidden sm:inline">Phím tắt</span>
-        <span class="rounded bg-brand-100 px-1 text-[9px] font-bold text-brand-800">?</span>
-      </button>
+        <!-- Canva Keyboard Shortcuts trigger (chỉ hiện trên màn hình md trở lên) -->
+        <button type="button" (click)="showShortcutsModal.set(true)"
+          class="hidden md:flex items-center gap-1.5 rounded-full border border-line bg-surface/90 px-3 py-1 shadow-2xs text-[11px] font-semibold text-ink hover:text-brand-800 hover:border-brand-400 transition-colors cursor-pointer"
+          title="Danh sách phím tắt Canva (Bấm ?)">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2.5"/>
+            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" stroke-linecap="round"/>
+          </svg>
+          <span>Phím tắt</span>
+          <span class="rounded bg-brand-100 px-1 text-[9px] font-bold text-brand-800">?</span>
+        </button>
+      </div>
     </div>
 
     <!-- Phone Mockup Canvas (Supports Bleed Overflow View) -->
     <div class="relative transition-transform duration-200" [style.transform]="'scale(' + state.zoom() / 100 + ')'">
 
-      <!-- Contextual Formatting Toolbar (Pinned cleanly above phone mockup, NEVER obscuring the case design) -->
+      <!-- Contextual Formatting Toolbar (Pinned cleanly above phone mockup with safe spacing, NEVER obscuring case design or top bar) -->
       @if (state.selectedLayer(); as sel) {
       <div (click)="$event.stopPropagation()"
-        class="pointer-events-auto absolute -top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 rounded-2xl border border-line/90 bg-white/95 px-3 py-1.5 shadow-lift backdrop-blur-xl whitespace-nowrap transition-all duration-150 animate-fade-in"
+        class="pointer-events-auto absolute -top-12 left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-110px)] sm:max-w-none overflow-x-auto scrollbar-none flex items-center gap-1.5 rounded-2xl border border-line/90 bg-white/95 px-3 py-1.5 shadow-lift backdrop-blur-xl whitespace-nowrap transition-all duration-150 animate-fade-in"
         style="box-shadow: 0 16px 36px -6px rgba(67, 48, 117, 0.16), 0 6px 14px -3px rgba(0,0,0,0.08);">
 
         <!-- ── Typography Controls (Text Layer) ── -->
@@ -1196,68 +1216,108 @@
               class="rounded-lg object-contain pointer-events-none select-none block max-w-none" />
             }
           </div>
+        </div>
+        }
+        }
 
-          <!-- Canva-style Selection & 4-Side Crop Controls (Inner Case Layer) -->
-          @if (state.selectedLayerId() === layer.id && editingTextLayerId() !== layer.id) {
-          <div class="pointer-events-none absolute border border-purple-500 z-30" [style.top.%]="layer.cropTop || 0"
-            [style.right.%]="layer.cropRight || 0" [style.bottom.%]="layer.cropBottom || 0"
-            [style.left.%]="layer.cropLeft || 0">
-            <!-- 4 Corner circle scale handles (Canva white circles) -->
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'tl')"
-              class="pointer-events-auto absolute -top-1.5 -left-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
-              title="Kéo giãn góc trên-trái"></div>
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'tr')"
-              class="pointer-events-auto absolute -top-1.5 -right-1.5 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
-              title="Kéo giãn góc trên-phải"></div>
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'bl')"
-              class="pointer-events-auto absolute -bottom-1.5 -left-1.5 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
-              title="Kéo giãn góc dưới-trái"></div>
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'br')"
-              class="pointer-events-auto absolute -bottom-1.5 -right-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
-              title="Kéo giãn góc dưới-phải"></div>
-
-            <!-- Edge pill handles: Canva-style crop for images, width/word-wrap for text -->
-            @if (layer.type !== 'text') {
-            <!-- Top Crop Handle -->
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'top')"
-              class="pointer-events-auto absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-              title="Cắt xén từ trên xuống">
-              <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
+        <!-- ── Canva-style Selection & 4-Side Crop Controls (Overlay Layer at z-35: Luôn nổi trên Camera Island, nhưng element bên dưới vẫn nằm dưới Camera) ── -->
+        @if (state.selectedLayer(); as sel) {
+        @if (editingTextLayerId() !== sel.id && !sel.isLocked) {
+        <div class="pointer-events-none absolute z-35 transition-transform"
+          [style.left.%]="sel.x"
+          [style.top.%]="sel.y"
+          [style.transform]="'translate(-50%, -50%) rotate(' + sel.rotation + 'deg)'">
+          <div class="relative block"
+            [style.transform]="(sel.flipH ? 'scaleX(-1) ' : '') + (sel.flipV ? 'scaleY(-1)' : '')">
+            <!-- Invisible ghost element for 100% exact sizing & bounding box calculation -->
+            <div class="invisible select-none pointer-events-none" aria-hidden="true">
+              @if (sel.type === 'text') {
+              <div class="block whitespace-normal break-words px-2 py-1 leading-tight select-none pointer-events-none rounded"
+                [style.textAlign]="sel.textAlign || 'center'" [style.width.px]="(sel.width / 100) * 300"
+                [style.fontFamily]="sel.fontFamily" [style.fontSize.px]="sel.fontSize"
+                [style.fontWeight]="sel.fontWeight ?? 'bold'" [style.fontStyle]="sel.fontStyle ?? 'normal'"
+                [style.textDecoration]="sel.textDecoration ?? 'none'">{{ sel.content }}</div>
+              }
+              @if (sel.type === 'sticker') {
+              @if (sel.assetUrl) {
+              <img [src]="sel.assetUrl" [alt]="sel.name" [style.width.px]="(sel.width / 100) * 300"
+                class="pointer-events-none select-none block max-w-none" />
+              } @else {
+              <span class="block select-none leading-none" [style.fontSize.px]="(sel.width / 100) * 120">{{ sel.name }}</span>
+              }
+              }
+              @if (sel.type === 'image') {
+              @if (sel.storageUrl) {
+              <img [src]="sel.storageUrl" alt="Ảnh tải lên" [style.width.px]="(sel.width / 100) * 300"
+                class="rounded-lg object-contain pointer-events-none select-none block max-w-none" />
+              } @else {
+              <div class="h-28 w-28"></div>
+              }
+              }
             </div>
 
-            <!-- Bottom Crop Handle -->
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'bottom')"
-              class="pointer-events-auto absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-              title="Cắt xén từ dưới lên">
-              <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
-            </div>
-            }
+            <!-- Purple Selection Box & 8 Handles + Rotate Handle (z-40: Over Camera Island!) -->
+            <div class="pointer-events-none absolute border border-purple-500 z-40"
+              [style.top.%]="sel.cropTop || 0"
+              [style.right.%]="sel.cropRight || 0"
+              [style.bottom.%]="sel.cropBottom || 0"
+              [style.left.%]="sel.cropLeft || 0">
+              <!-- 4 Corner circle scale handles (Canva white circles) -->
+              <div (pointerdown)="onResizeHandlePointerDown($event, sel.id, 'tl')"
+                class="pointer-events-auto absolute -top-1.5 -left-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
+                title="Kéo giãn góc trên-trái"></div>
+              <div (pointerdown)="onResizeHandlePointerDown($event, sel.id, 'tr')"
+                class="pointer-events-auto absolute -top-1.5 -right-1.5 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
+                title="Kéo giãn góc trên-phải"></div>
+              <div (pointerdown)="onResizeHandlePointerDown($event, sel.id, 'bl')"
+                class="pointer-events-auto absolute -bottom-1.5 -left-1.5 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
+                title="Kéo giãn góc dưới-trái"></div>
+              <div (pointerdown)="onResizeHandlePointerDown($event, sel.id, 'br')"
+                class="pointer-events-auto absolute -bottom-1.5 -right-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-purple-600 bg-white shadow-sm transition-transform hover:scale-125 z-40"
+                title="Kéo giãn góc dưới-phải"></div>
 
-            <!-- Left Handle -->
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'left')"
-              class="pointer-events-auto absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-              [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên trái'">
-              <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
-            </div>
+              <!-- Edge pill handles: Canva-style crop for images, width/word-wrap for text -->
+              @if (sel.type !== 'text') {
+              <!-- Top Crop Handle -->
+              <div (pointerdown)="onCropHandlePointerDown($event, sel.id, 'top')"
+                class="pointer-events-auto absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
+                title="Cắt xén từ trên xuống">
+                <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
+              </div>
 
-            <!-- Right Handle -->
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'right')"
-              class="pointer-events-auto absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
-              [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên phải'">
-              <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
-            </div>
+              <!-- Bottom Crop Handle -->
+              <div (pointerdown)="onCropHandlePointerDown($event, sel.id, 'bottom')"
+                class="pointer-events-auto absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
+                title="Cắt xén từ dưới lên">
+                <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
+              </div>
+              }
 
-            <!-- Top Rotate Handle -->
-            <div (pointerdown)="onRotateHandlePointerDown($event, layer.id)"
-              class="pointer-events-auto absolute -top-8 left-1/2 -translate-x-1/2 h-5 w-5 cursor-grab rounded-full border-2 border-purple-600 bg-white shadow-xs z-40 flex items-center justify-center hover:scale-110"
-              title="Xoay">
-              <svg class="h-3 w-3 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              <!-- Left Handle -->
+              <div (pointerdown)="onCropHandlePointerDown($event, sel.id, 'left')"
+                class="pointer-events-auto absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
+                [title]="sel.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên trái'">
+                <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
+              </div>
+
+              <!-- Right Handle -->
+              <div (pointerdown)="onCropHandlePointerDown($event, sel.id, 'right')"
+                class="pointer-events-auto absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm transition-transform hover:scale-110 hover:border-purple-600 z-40 flex items-center justify-center"
+                [title]="sel.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên phải'">
+                <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
+              </div>
+
+              <!-- Top Rotate Handle (Above Camera Island!) -->
+              <div (pointerdown)="onRotateHandlePointerDown($event, sel.id)"
+                class="pointer-events-auto absolute -top-8 left-1/2 -translate-x-1/2 h-5 w-5 cursor-grab rounded-full border-2 border-purple-600 bg-white shadow-xs z-40 flex items-center justify-center hover:scale-110"
+                title="Xoay">
+                <svg class="h-3 w-3 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
             </div>
           </div>
-          }
         </div>
         }
         }
@@ -1287,8 +1347,8 @@
     </div>
 
     <!-- 3D WebGL Stage -->
-    <div class="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl mx-3 mt-2"
-      style="height: 270px; background: radial-gradient(circle at 50% 35%, #e3dbfa 0%, #cec2f0 100%);">
+    <div class="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl mx-3 mt-2 shadow-[inset_0_2px_12px_rgba(67,48,117,0.08)] border border-purple-200/50"
+      style="height: 270px; background: radial-gradient(ellipse at 50% 25%, #ffffff 0%, #f6f3fe 35%, #ece6fd 70%, #d8cdf8 100%);">
       @if (state.selectedModel().has3dModel && state.selectedModel().model3dUrl) {
       <model-viewer #modelViewer id="caseViewer" [src]="state.selectedModel().model3dUrl"
         [alt]="'Mô hình 3D ' + state.selectedModel().name" camera-controls camera-orbit="0deg 85deg 105%"
@@ -1445,20 +1505,40 @@
      BOTTOM ACTION BAR (Spans Drawer + Canvas + Specs)
 ═══════════════════════════════════════════════ -->
 <footer class="studio-bottom-bar">
-  <!-- Left: Model info -->
-  <div class="flex items-center gap-3">
-    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-800 shadow-2xs">
-      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+  <!-- Left: Current Active Device Switcher Indicator (Đồng bộ chuẩn 1:1 với Kho Mẫu) -->
+  <div class="inline-flex items-center gap-2 rounded-full border border-purple-200/90 bg-gradient-to-r from-purple-50/90 via-white to-purple-50/80 p-1 pl-2.5 sm:pl-3 shadow-soft backdrop-blur-md">
+    <!-- Phone Model Icon with Active Pulse -->
+    <div class="relative flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-brand-100 text-brand-800 shadow-2xs shrink-0">
+      <svg class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <rect x="5" y="2" width="14" height="20" rx="3" />
+        <circle cx="12" cy="18" r="1" fill="currentColor" />
       </svg>
+      <span class="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+          [class]="state.selectedModel().has3dModel ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2"
+          [class]="state.selectedModel().has3dModel ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+      </span>
     </div>
-    <div>
-      <p class="text-xs font-bold text-ink">Ốp lưng {{ state.selectedModel().name }}</p>
-      <p class="text-[10px] text-ink-soft">
-        <span class="font-semibold text-brand-800">Phôi Polycarbonate cao cấp · Chuẩn in UV Ultra-HD</span>
-      </p>
+
+    <!-- Model Name Label (với truncate an toàn khi co nhỏ màn hình) -->
+    <div class="flex items-center gap-1.5 text-xs min-w-0">
+      <span class="text-[10px] sm:text-[11px] font-semibold text-ink-soft uppercase tracking-wide hidden sm:inline">Dòng máy:</span>
+      <span class="font-display font-extrabold text-ink tracking-tight truncate max-w-[100px] sm:max-w-[170px]" [title]="state.selectedModel().name">{{ state.selectedModel().name }}</span>
     </div>
+
+    <!-- Action Button: Đổi máy (Đồng bộ chuẩn nút Đổi máy ngoài kho) -->
+    <button
+      type="button"
+      (click)="openModelModal()"
+      class="inline-flex items-center gap-1 rounded-full bg-brand-800 px-2.5 sm:px-3 py-1 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-900 hover:shadow-xs cursor-pointer active:scale-95 shrink-0"
+      title="Đổi sang dòng điện thoại khác"
+    >
+      <span>Đổi máy</span>
+      <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    </button>
   </div>
 
   <!-- Center: Auto-save status indicator -->
@@ -1476,35 +1556,109 @@
   </div>
 
   <!-- Right action buttons -->
-  <div class="flex items-center gap-2">
+  <div class="flex items-center gap-2 shrink-0">
     <!-- Save Design Button -->
     <button
       type="button"
       (click)="onSaveDesign()"
-      class="inline-flex items-center gap-1.5 rounded-pill border border-brand-400/60 bg-brand-50 px-4 py-2 text-xs font-bold text-brand-800 shadow-soft transition-all hover:bg-brand-100 cursor-pointer"
+      class="inline-flex items-center gap-1.5 rounded-pill border border-brand-400/60 bg-brand-50 px-3 sm:px-4 py-2 text-xs font-bold text-brand-800 shadow-soft transition-all hover:bg-brand-100 cursor-pointer"
     >
       <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
       </svg>
-      <span>Lưu thiết kế</span>
+      <span class="hidden sm:inline">Lưu thiết kế</span>
+      <span class="sm:hidden">Lưu</span>
     </button>
 
     <!-- Add to Cart (Bug 7: Toast only, no drawer popup) -->
     <button
       type="button"
       (click)="onAddToCart()"
-      class="inline-flex items-center gap-2 rounded-pill px-5 py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow cursor-pointer"
+      class="inline-flex items-center gap-1.5 sm:gap-2 rounded-pill px-3.5 sm:px-5 py-2 sm:py-2.5 font-display text-xs font-bold text-white shadow-soft transition-all hover:scale-102 hover:shadow-glow cursor-pointer"
       style="background: var(--grad-primary)"
     >
       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
       </svg>
-      <span>Thêm vào giỏ</span>
+      <span class="hidden sm:inline">Thêm vào giỏ</span>
+      <span class="sm:hidden">Giỏ hàng</span>
       <span>•</span>
       <span>{{ state.totalPrice().toLocaleString('vi-VN') }}đ</span>
     </button>
   </div>
 </footer>
+
+<!-- ═══════════════════════════════════════════════
+     FLOATING 3D PREVIEW FOR NARROW / TABLET SCREENS
+     (Đảm bảo không bị mất Preview 3D khi co nhỏ màn hình)
+═══════════════════════════════════════════════ -->
+<div class="lg:hidden fixed bottom-18 right-3.5 z-40">
+  <button
+    type="button"
+    (click)="toggleMobile3d()"
+    class="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold shadow-lift backdrop-blur-md transition-all active:scale-95 cursor-pointer"
+    [class]="isMobile3dOpen()
+      ? 'bg-brand-900 text-white border-brand-700 shadow-purple-950/40 ring-2 ring-purple-400'
+      : 'bg-white/95 text-brand-900 hover:bg-purple-50 border-purple-200/90 shadow-soft'"
+  >
+    <span class="relative flex h-2 w-2">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+    </span>
+    <span>Preview 3D</span>
+    <svg class="h-3.5 w-3.5 transition-transform" [class.rotate-180]="isMobile3dOpen()" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+</div>
+
+<!-- Floating PIP 3D Model Card on Narrow Screens -->
+@if (isMobile3dOpen()) {
+  <div class="lg:hidden fixed bottom-28 right-3.5 w-[285px] rounded-3xl border border-purple-200/90 bg-white shadow-2xl p-3 z-50 animate-scale-in flex flex-col">
+    <!-- Card Header -->
+    <div class="flex items-center justify-between pb-2 mb-2 border-b border-purple-100">
+      <div class="flex items-center gap-1.5">
+        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+        <span class="text-xs font-bold text-ink">Mô hình 3D xoay 360°</span>
+      </div>
+      <button
+        type="button"
+        (click)="isMobile3dOpen.set(false)"
+        class="rounded-full p-1 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+        title="Đóng xem trước 3D"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- 3D Stage -->
+    <div class="relative w-full h-[250px] rounded-2xl overflow-hidden shadow-inner flex items-center justify-center"
+      style="background: radial-gradient(circle at 50% 35%, #e3dbfa 0%, #cec2f0 100%);">
+      @if (state.selectedModel().has3dModel && state.selectedModel().model3dUrl) {
+        <model-viewer
+          [src]="state.selectedModel().model3dUrl"
+          [alt]="'Mô hình 3D ' + state.selectedModel().name"
+          camera-controls
+          camera-orbit="0deg 85deg 105%"
+          tone-mapping="neutral"
+          shadow-intensity="1.2"
+          exposure="0.75"
+          touch-action="pan-y"
+          style="width: 100%; height: 100%; outline: none;"
+        ></model-viewer>
+      } @else {
+        <div class="p-4 text-center">
+          <p class="text-xs font-bold text-ink">Chưa hỗ trợ 3D</p>
+          <p class="text-[10px] text-ink-soft mt-1">Dòng máy này đang được hoàn thiện mô hình 3D.</p>
+        </div>
+      }
+    </div>
+
+    <p class="text-center text-[10px] text-ink-soft mt-2">Giữ chuột hoặc ngón tay để xoay 360°</p>
+  </div>
+}
 
 </div> <!-- Closes .studio-main-area -->
 </div> <!-- Closes .studio-layout -->
@@ -1546,17 +1700,23 @@
           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
       </svg>
     </div>
-    <h3 class="font-display text-base font-bold text-ink">Đặt tên cho bản thiết kế</h3>
-    <p class="mt-1 text-xs text-ink-soft">Đặt tên để dễ dàng tìm kiếm và vẽ tiếp trong mục My Designs.</p>
+    <h3 class="font-display text-base font-bold text-ink">
+      {{ isSavePromptingName() ? 'Đặt tên cho bản thiết kế' : 'Đổi tên bản thiết kế' }}
+    </h3>
+    <p class="mt-1 text-xs text-ink-soft">
+      {{ isSavePromptingName() ? 'Đặt tên để dễ dàng tìm kiếm và vẽ tiếp trong mục My Designs.' : 'Nhập tên mới cho bản thiết kế của bạn.' }}
+    </p>
     <input type="text" [value]="namingInput()" (input)="namingInput.set($any($event.target).value)"
+      (keyup.enter)="confirmNaming()"
       class="mt-4 w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-bold text-ink focus:border-brand-400 focus:outline-none"
       placeholder="Ví dụ: Ốp hoa anh đào mùa xuân" />
     <div class="mt-5 flex gap-2">
       <button type="button" (click)="closeNamingModal()"
         class="flex-1 rounded-pill border border-line py-2 text-xs font-semibold text-ink hover:bg-surface cursor-pointer">Hủy</button>
       <button type="button" (click)="confirmNaming()"
-        class="flex-1 rounded-pill bg-brand-800 py-2 text-xs font-bold text-white shadow-soft hover:bg-brand-600 cursor-pointer">Lưu
-        thiết kế</button>
+        class="flex-1 rounded-pill bg-brand-800 py-2 text-xs font-bold text-white shadow-soft hover:bg-brand-600 cursor-pointer">
+        {{ isSavePromptingName() ? 'Lưu thiết kế' : 'Lưu tên' }}
+      </button>
     </div>
   </div>
 </div>
@@ -1867,6 +2027,148 @@
       <button type="button" (click)="showShortcutsModal.set(false)"
         class="w-full rounded-pill bg-brand-800 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-600 transition-colors cursor-pointer">
         Đã hiểu, quay lại thiết kế
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ═══════════════════════════════════════════════
+     CANVAS PHONE MODEL SELECTOR MODAL (Đổi máy trực tiếp trên Canvas)
+═══════════════════════════════════════════════ -->
+@if (showModelModal()) {
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/60 backdrop-blur-md animate-fade-in"
+  (click)="closeModelModal()"
+>
+  <div
+    class="w-full max-w-2xl max-h-[88vh] rounded-[28px] border border-purple-100 bg-white shadow-2xl flex flex-col overflow-hidden text-left"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between border-b border-purple-100/80 px-6 py-4.5 bg-purple-50/40">
+      <div class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-100 text-brand-800 shadow-2xs">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </span>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="font-display text-base font-bold text-ink">Đổi dòng điện thoại</h3>
+            <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-900">
+              Cập nhật trực tiếp phôi ốp
+            </span>
+          </div>
+          <p class="text-xs text-ink-soft">Phôi ốp, vị trí camera và tỷ lệ sẽ tự động điều chỉnh ngay trong Canvas</p>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <button
+        type="button"
+        (click)="closeModelModal()"
+        class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+        title="Đóng cửa sổ"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Brand Filter Tabs -->
+    <div class="border-b border-purple-100/60 px-6 py-3.5 bg-white">
+      <label class="text-[11px] font-bold uppercase tracking-wider text-purple-900 block mb-2">
+        Hãng điện thoại
+      </label>
+      <div class="flex items-center gap-2">
+        @for (b of brands(); track b.id) {
+          <button
+            type="button"
+            (click)="selectModalBrand(b.id)"
+            class="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer border"
+            [class]="modalSelectedBrandId() === b.id
+              ? 'border-brand-600 bg-brand-800 text-white shadow-soft'
+              : 'border-purple-200/80 bg-purple-50/50 text-ink-soft hover:bg-purple-100/70 hover:text-ink'"
+          >
+            <span>{{ b.name }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Models Grid in Modal Body -->
+    <div class="flex-1 overflow-y-auto p-6 scrollbar-thin">
+      <label class="text-[11px] font-bold uppercase tracking-wider text-purple-900 block mb-3">
+        Chọn model máy ({{ modalAvailableModels().length }} model)
+      </label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        @for (m of modalAvailableModels(); track m.id) {
+          <div
+            (click)="selectModalModel(m.id)"
+            class="group relative flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all cursor-pointer"
+            [class]="modalSelectedModelId() === m.id
+              ? 'border-brand-600 bg-brand-50/60 shadow-soft'
+              : 'border-purple-100 bg-white hover:border-purple-300 hover:bg-purple-50/20'"
+          >
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-10 w-10 items-center justify-center rounded-xl font-bold text-sm transition-colors"
+                [class]="modalSelectedModelId() === m.id
+                  ? 'bg-brand-800 text-white shadow-xs'
+                  : 'bg-purple-100 text-brand-800 group-hover:bg-purple-200'"
+              >
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-display text-xs font-bold text-ink group-hover:text-brand-800">
+                  {{ m.name }}
+                </h4>
+                <p class="text-[10px] text-ink-soft">
+                  Năm ra mắt: {{ m.releaseYear }} · Cụm {{ m.safeZoneMask.cameraCutout.lensCount }} mắt
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all"
+              [class]="modalSelectedModelId() === m.id
+                ? 'border-brand-600 bg-brand-600 text-white'
+                : 'border-purple-300 bg-white'"
+            >
+              @if (modalSelectedModelId() === m.id) {
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="flex items-center justify-between border-t border-purple-100/80 px-6 py-4 bg-white">
+      <button
+        type="button"
+        (click)="closeModelModal()"
+        class="rounded-full border border-purple-200 px-5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
+      >
+        Hủy bỏ
+      </button>
+
+      <button
+        type="button"
+        (click)="applySelectedModel()"
+        class="inline-flex items-center gap-2 rounded-full bg-brand-800 px-6 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-900 hover:shadow-lift transition-all cursor-pointer"
+      >
+        <span>Xác nhận & Cập nhật phôi ốp</span>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+        </svg>
       </button>
     </div>
   </div>

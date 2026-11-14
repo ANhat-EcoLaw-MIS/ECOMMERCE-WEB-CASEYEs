@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { StudioState } from '../../services/studio-state';
 import { Brand, PhoneModel } from '../../models/studio-domain.model';
@@ -14,6 +14,7 @@ export class ModelPicker {
   private readonly catalog = inject(StudioCatalogService);
   private readonly state = inject(StudioState);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   // Available brands & models from catalog
   protected readonly brands = this.catalog.brands;
@@ -104,11 +105,16 @@ export class ModelPicker {
     this.state.requestModelChange(modelId);
   }
 
-  // Primary action: Confirm and navigate to templates
+  // Primary action: Confirm and navigate
   protected onContinue(): void {
     const modelId = this.selectedModelId();
     this.persistAndSelect(modelId);
-    this.router.navigate(['/design-studio/templates']);
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    if (returnUrl === 'editor' || returnUrl === 'canvas') {
+      this.router.navigate(['/design-studio/editor']);
+    } else {
+      this.router.navigate(['/design-studio/templates']);
+    }
   }
 
   // Quick Start Actions from Mockup 4a

@@ -50,7 +50,7 @@ export interface StickerElement extends BaseDesignElement {
 export interface ImageElement extends BaseDesignElement {
   readonly type: 'image';
   readonly storageUrl: string;
-  readonly fileType: 'image/png' | 'image/jpeg';
+  readonly fileType: 'image/png' | 'image/jpeg' | 'image/webp';
   readonly fileSizeBytes: number;
   readonly pixelWidth: number;
   readonly pixelHeight: number;

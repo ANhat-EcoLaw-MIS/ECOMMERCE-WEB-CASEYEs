@@ -13,7 +13,7 @@
 }
 
 .card-cloud-bg {
-  background: radial-gradient(circle at 50% 35%, #f3e8ff 0%, #ede9fe 40%, #e0e7ff 75%, #f5f3ff 100%);
+  background: linear-gradient(145deg, #fce7f3 0%, #ede9fe 40%, #e0e7ff 75%, #f5f3ff 100%);
 }
 
 .preview-case-shadow {
@@ -71,4 +71,23 @@ model-viewer {
 
 .animate-sparkle {
   animation: sparklePulse 3s ease-in-out infinite;
+}
+
+// Chibi Peeker Animation for "Ốp Lưng Trắng Tiêu Chuẩn"
+.chibi-peeker {
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@media (hover: none) {
+  .chibi-peeker {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chibi-peeker {
+    transition: none !important;
+    animation: none !important;
+  }
 }

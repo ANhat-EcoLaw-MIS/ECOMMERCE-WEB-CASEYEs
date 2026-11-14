@@ -1,9 +1,10 @@
-import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
 import { CanvasLayer, ImageElement, TextElement } from '../../models/canvas-element.model';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
+import { AuthModal } from '../../../../core/auth/auth-modal';
 
 // Dynamically import @google/model-viewer for rich WebGL 3D rendering in browser
 if (typeof window !== 'undefined') {
@@ -148,27 +149,6 @@ const TEMPLATE_SVG_MINIMAL_CAT = `<svg xmlns="http://www.w3.org/2000/svg" viewBo
   </g>
 </svg>`;
 
-const TEMPLATE_SVG_ANIME = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420" width="360" height="420">
-  <defs>
-    <radialGradient id="animeHalo" cx="50%" cy="40%" r="50%">
-      <stop offset="0%" stop-color="#818cf8"/>
-      <stop offset="100%" stop-color="#4f46e5"/>
-    </radialGradient>
-  </defs>
-  <circle cx="180" cy="180" r="140" fill="url(#animeHalo)"/>
-  <circle cx="180" cy="190" r="85" fill="#fef3c7"/>
-  <path d="M 100,160 Q 140,210 160,190 Q 180,220 200,190 Q 220,210 260,160 Q 220,110 180,115 Q 140,110 100,160 Z" fill="#4338ca"/>
-  <ellipse cx="145" cy="190" rx="15" ry="18" fill="#1e1b4b"/>
-  <ellipse cx="215" cy="190" rx="15" ry="18" fill="#1e1b4b"/>
-  <circle cx="140" cy="184" r="6" fill="#ffffff"/>
-  <circle cx="210" cy="184" r="6" fill="#ffffff"/>
-  <ellipse cx="130" cy="212" rx="14" ry="7" fill="#f472b6" opacity="0.8"/>
-  <ellipse cx="230" cy="212" rx="14" ry="7" fill="#f472b6" opacity="0.8"/>
-  <path d="M 172,216 Q 180,224 188,216" fill="none" stroke="#db2777" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M 95,290 L 140,380 L 220,380 L 265,290 Z" fill="#312e81"/>
-  <polygon points="160,290 180,335 200,290" fill="#f43f5e"/>
-</svg>`;
-
 const TEMPLATE_SVG_WAVES = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 650" width="400" height="650">
   <path d="M -20,150 Q 120,70 200,200 T 420,160 L 420,700 L -20,700 Z" fill="#fed7aa"/>
   <path d="M -20,250 Q 100,170 230,300 T 420,270 L 420,700 L -20,700 Z" fill="#fbcfe8"/>
@@ -230,21 +210,24 @@ export interface TemplateReview {
   id: string;
   userName: string;
   userAvatar?: string;
-  rating: number; // 1 to 5 stars
+  rating?: number;
   date: string;
   deviceModel: string;
   comment: string;
-  isVerifiedBuyer: boolean;
+  isVerifiedBuyer?: boolean;
+  tag?: string;
 }
 
 export interface TemplateCard {
   id: string;
   name: string;
   creator: string;
-  category: 'floral' | 'minimalist' | 'nature' | 'cartoon' | 'typography' | 'abstract' | 'cute';
+  category: string;
   categories: string[];
   styleLabel: string;
   gradient: string;
+  bgImage?: string;
+  elementImage?: string;
   tagText: string;
   description: string;
   detailedDescription: string;
@@ -256,17 +239,7 @@ export interface TemplateCard {
   hashtags: string[];
   isTrending: boolean;
   isBlankCanvas?: boolean;
-  artType:
-    | 'dreamy-kitten'
-    | 'sakura-bloom'
-    | 'mountain-escape'
-    | 'minimal-cat'
-    | 'anime-girl'
-    | 'abstract-waves'
-    | 'dino-friend'
-    | 'starry-night'
-    | 'that-girl-era'
-    | 'blank';
+  artType: string;
 }
 
 export const TEMPLATE_CATALOG: TemplateCard[] = [
@@ -293,203 +266,363 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     isBlankCanvas: true,
     artType: 'blank',
   },
-  // 2. Dreamy Kitten (#pastel)
+  // 2. The Creators • Đội Ngũ CasEYE (#creators)
   {
-    id: 'tpl-001',
-    name: 'Dreamy Kitten',
-    creator: 'PastelStudio',
-    category: 'cute',
-    categories: ['cute', 'all'],
-    styleLabel: 'Dễ thương',
-    gradient: 'linear-gradient(180deg, #93c5fd 0%, #c4b5fd 40%, #fbcfe8 100%)',
-    tagText: 'DREAMY VIBES',
-    description: 'Mây hồng pastel bồng bềnh cùng những chú mèo con đáng yêu mỉm cười.',
+    id: 'tpl-creators-real',
+    name: 'The Creators • Đội Ngũ CasEYE',
+    creator: 'CasEYE Team',
+    category: 'typography',
+    categories: ['typography', 'cute', 'all'],
+    styleLabel: 'Đội ngũ CasEYE',
+    gradient: 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 45%, #e0e7ff 100%)',
+    elementImage: '/assets/templates/the-creators-real.webp',
+    tagText: 'WE ARE THE CREATORS',
+    description: 'Bản thiết kế chân dung độc quyền tôn vinh tinh thần sáng tạo từ đội ngũ CasEYE.',
     detailedDescription:
-      'Thiết kế Dreamy Kitten mang đến bầu không khí mộng mơ với những đám mây pastel bồng bềnh và chú mèo con ngọt ngào. Sử dụng công nghệ in UV đa lớp chống trầy xước, phôi ốp Polycarbonate tiêu chuẩn với viền TPU đệm khí 4 góc giúp bảo vệ máy tối đa.',
-    tagLabel: '#pastel',
-    tagColor: '#a855f7',
-    rating: 4.9,
-    reviews: '1.2k',
-    reviewCount: 1240,
-    hashtags: ['#pastel', '#cute', '#kitten', '#dreamy', '#catlover', '#pinksky', '#aesthetic'],
+      'Tác phẩm "We Are The Creators" phiên bản đời thật tôn vinh tinh thần sáng tạo không giới hạn của các bạn trẻ tài năng. Tone màu tím mộng mơ kết hợp sắc nét với chân dung các thành viên CasEYE, in nhiệt UV siêu bền màu.',
+    tagLabel: '#creators',
+    tagColor: '#7c3aed',
+    rating: 5.0,
+    reviews: '2.8k',
+    reviewCount: 2800,
+    hashtags: ['#thecreators', '#caseye', '#teamwork', '#creators', '#youth', '#purplevibe'],
     isTrending: true,
-    artType: 'dreamy-kitten',
+    artType: 'the-creators-real',
   },
-  // 2. Sakura Bloom (#floral)
+  // 3. The Creators • Chibi Squad (#chibi)
   {
-    id: 'tpl-002',
-    name: 'Sakura Bloom',
-    creator: 'TokyoVibe',
-    category: 'floral',
-    categories: ['floral', 'cute', 'all'],
-    styleLabel: 'Hoa lá',
-    gradient: 'linear-gradient(180deg, #fff1f2 0%, #fce7f3 40%, #fbcfe8 100%)',
-    tagText: 'SAKURA BLOOM',
-    description: 'Cành hoa anh đào Nhật Bản nở rộ trong trẻo, mang vẻ tươi mới mùa xuân.',
-    detailedDescription:
-      'Lấy cảm hứng từ những cành hoa anh đào nở rộ trong gió xuân Tokyo. Từng chi tiết cánh hoa được xử lý chuyển sắc tinh tế trên nền kem ánh hồng sang trọng, phù hợp cho phong cách nữ tính, thanh lịch.',
-    tagLabel: '#floral',
-    tagColor: '#ec4899',
-    rating: 4.8,
-    reviews: '956',
-    reviewCount: 956,
-    hashtags: ['#floral', '#sakura', '#japan', '#cherryblossom', '#spring', '#aesthetic', '#pink'],
-    isTrending: true,
-    artType: 'sakura-bloom',
-  },
-  // 3. Mountain Escape (#nature)
-  {
-    id: 'tpl-003',
-    name: 'Mountain Escape',
-    creator: 'AlpineLab',
-    category: 'nature',
-    categories: ['nature', 'all'],
-    styleLabel: 'Phong cảnh',
-    gradient: 'linear-gradient(180deg, #7dd3fc 0%, #bae6fd 40%, #ecfeff 80%)',
-    tagText: 'WILD & FREE',
-    description: 'Dãy núi tuyết hùng vĩ soi bóng mặt hồ xanh biếc và rừng thông ngút ngàn.',
-    detailedDescription:
-      'Phong cảnh núi tuyết phản chiếu mặt hồ tĩnh lặng mang lại cảm giác bình yên và phóng khoáng. Gam màu xanh ngọc bích hòa quyện cùng bầu trời trong trẻo, tôn lên nét cá tính cho người yêu xê dịch.',
-    tagLabel: '#nature',
-    tagColor: '#10b981',
-    rating: 4.9,
-    reviews: '742',
-    reviewCount: 742,
-    hashtags: ['#nature', '#mountain', '#alpine', '#lake', '#wanderlust', '#travel', '#freedom'],
-    isTrending: false,
-    artType: 'mountain-escape',
-  },
-  // 4. Minimal Cat (#minimal)
-  {
-    id: 'tpl-004',
-    name: 'Minimal Cat',
-    creator: 'ZenMinimal',
-    category: 'minimalist',
-    categories: ['minimalist', 'cute', 'all'],
-    styleLabel: 'Tối giản',
-    gradient: '#FAF8F5',
-    tagText: 'MINIMAL CAT',
-    description: 'Nét vẽ chú mèo tối giản nhìn lên trái tim đỏ tinh tế trên nền kem ấm.',
-    detailedDescription:
-      'Nét vẽ một nét (continuous line art) tinh giản khắc họa chú mèo nhỏ ngước nhìn trái tim đỏ ấm áp. Nền kem Warm Ivory dịu mắt, phù hợp tuyệt đối với những tín đồ phong cách tối giản Bắc Âu.',
-    tagLabel: '#minimal',
-    tagColor: '#3b82f6',
-    rating: 4.9,
-    reviews: '1.1k',
-    reviewCount: 1120,
-    hashtags: ['#minimal', '#lineart', '#cat', '#zen', '#cozy', '#modern', '#blackandwhite'],
-    isTrending: true,
-    artType: 'minimal-cat',
-  },
-  // 5. Anime Girl (#anime)
-  {
-    id: 'tpl-005',
-    name: 'Anime Girl',
-    creator: 'AnimeArtisan',
-    category: 'cartoon',
-    categories: ['cartoon', 'all'],
-    styleLabel: 'Hoạt hình',
-    gradient: 'linear-gradient(180deg, #c7d2fe 0%, #a5b4fc 40%, #818cf8 100%)',
-    tagText: 'KAWAII SOUL',
-    description: 'Cô gái anime tóc xanh xinh xắn trong ánh sao lấp lánh huyền ảo.',
-    detailedDescription:
-      'Tác phẩm minh họa phong cách anime hiện đại với mái tóc xanh óng ánh và những hạt sao vũ trụ lung linh. Kỹ thuật in phủ bóng cục bộ tạo độ sâu quang học sống động dưới mọi góc nhìn.',
-    tagLabel: '#anime',
-    tagColor: '#6366f1',
-    rating: 4.8,
-    reviews: '933',
-    reviewCount: 933,
-    hashtags: ['#anime', '#kawaii', '#manga', '#bluehair', '#aesthetic', '#otaku', '#cyber'],
-    isTrending: true,
-    artType: 'anime-girl',
-  },
-  // 6. Abstract Waves (#abstract)
-  {
-    id: 'tpl-006',
-    name: 'Abstract Waves',
-    creator: 'ChromaFlow',
-    category: 'abstract',
-    categories: ['abstract', 'all'],
-    styleLabel: 'Abstract',
-    gradient: '#fffbeb',
-    tagText: 'FLOW STATE',
-    description: 'Dải lụa sóng pastel mềm mại uốn lượn phong cách retro aesthetic.',
-    detailedDescription:
-      'Những dải sóng pastel nhịp nhàng uốn lượn mang cảm hứng Retro Futurism kết hợp hơi thở hiện đại. Sự chuyển giao màu sắc mềm mại tạo nên vẻ ngoài thời thượng.',
-    tagLabel: '#abstract',
-    tagColor: '#f97316',
-    rating: 4.7,
-    reviews: '685',
-    reviewCount: 685,
-    hashtags: ['#abstract', '#waves', '#retro', '#palette', '#modernart', '#flow', '#pastel'],
-    isTrending: false,
-    artType: 'abstract-waves',
-  },
-  // 7. Dino Friend (#cute)
-  {
-    id: 'tpl-007',
-    name: 'Dino Friend',
-    creator: 'ChibiStudio',
+    id: 'tpl-creators-chibi',
+    name: 'The Creators • Chibi Squad',
+    creator: 'CasEYE Team',
     category: 'cute',
     categories: ['cute', 'cartoon', 'all'],
-    styleLabel: 'Dễ thương',
-    gradient: '#f0fdf4',
-    tagText: 'LITTLE DINO',
-    description: 'Khủng long con màu xanh tinh nghịch mỉm cười giữa vườn hoa cúc.',
+    styleLabel: 'Chibi đáng yêu',
+    gradient: 'linear-gradient(180deg, #fdf4ff 0%, #fae8ff 50%, #ede9fe 100%)',
+    elementImage: '/assets/templates/the-creators-chibi.webp',
+    tagText: 'CHIBI CREATORS',
+    description: 'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên Thắm, Đức, Nhật, Mai Anh, Thy.',
     detailedDescription:
-      'Chú khủng long xanh lá mũm mĩm với nụ cười rạng rỡ giữa những đóa hoa cúc vàng. Năng lượng tích cực và đáng yêu sẽ đồng hành cùng bạn suốt cả ngày dài.',
+      'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên sáng lập CasEYE: Thắm, Đức, Nhật, Mai Anh, Thy. Phong cách chibi ngộ nghĩnh, tươi vui, lan tỏa năng lượng tích cực và sự gắn kết cho chiếc ốp lưng của bạn.',
+    tagLabel: '#chibi',
+    tagColor: '#ec4899',
+    rating: 5.0,
+    reviews: '3.1k',
+    reviewCount: 3100,
+    hashtags: ['#chibi', '#creators', '#cute', '#friends', '#squad', '#caseye'],
+    isTrending: true,
+    artType: 'the-creators-chibi',
+  },
+  // 4. Fluffy Cloud Kittens (#pastel, #cute, #mèo_con)
+  {
+    id: 'tpl-cloud-kittens',
+    name: 'Fluffy Cloud Kittens',
+    creator: 'PastelStudio',
+    category: 'cute',
+    categories: ['cute', 'pastel', 'cat', 'all'],
+    styleLabel: 'Pastel mộng mơ',
+    gradient: 'linear-gradient(180deg, #e0e7ff 0%, #c4b5fd 40%, #fce7f3 100%)',
+    bgImage: '/assets/templates/background/tpl-cloud-kittens-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-cloud-kittens-element.png',
+    tagText: 'DREAMY KITTENS',
+    description: 'Mây hồng pastel bồng bềnh cùng hai chú mèo con đáng yêu ôm nhau ngủ say.',
+    detailedDescription:
+      'Thiết kế Fluffy Cloud Kittens mang đến bầu không khí mộng mơ với những đám mây pastel bồng bềnh và đôi mèo con ngọt ngào. Layer nền gradient êm dịu kết hợp sticker mèo die-cut tách nền sắc nét 300 DPI.',
+    tagLabel: '#pastel',
+    tagColor: '#a855f7',
+    rating: 5.0,
+    reviews: '1.8k',
+    reviewCount: 1840,
+    hashtags: ['#pastel', '#cute', '#mèo_con', '#dreamy', '#catlover', '#aesthetic'],
+    isTrending: true,
+    artType: 'cloud-kittens',
+  },
+  // 5. Matcha Boba Corgi (#cute, #genz)
+  {
+    id: 'tpl-matcha-corgi',
+    name: 'Matcha Boba Corgi',
+    creator: 'BobaCafe',
+    category: 'cute',
+    categories: ['cute', 'genz', 'pastel', 'all'],
+    styleLabel: 'Foodie dễ thương',
+    gradient: 'linear-gradient(180deg, #dcfce7 0%, #f0fdf4 50%, #fefce8 100%)',
+    bgImage: '/assets/templates/background/tpl-matcha-corgi-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-matcha-corgi-element.png',
+    tagText: 'MATCHA CORGI',
+    description: 'Chú chó Corgi mỉm cười ngồi trong ly trà sữa matcha trân châu thơm ngon.',
+    detailedDescription:
+      'Họa tiết bé Corgi ngồi trong ly trà sữa matcha trân châu béo ngậy mang đậm năng lượng vui tươi của giới trẻ Gen-Z. Nền xanh bơ pastel dịu mắt kết hợp sticker Corgi tách nền sống động.',
     tagLabel: '#cute',
+    tagColor: '#16a34a',
+    rating: 4.9,
+    reviews: '1.4k',
+    reviewCount: 1420,
+    hashtags: ['#cute', '#genz', '#corgi', '#foodie', '#matcha', '#pastel'],
+    isTrending: true,
+    artType: 'matcha-corgi',
+  },
+  // 6. Baby Dino Picnic (#cute, #hoạt_hình)
+  {
+    id: 'tpl-baby-dino',
+    name: 'Baby Dino Picnic',
+    creator: 'ChibiStudio',
+    category: 'cute',
+    categories: ['cute', 'cartoon', 'chibi', 'all'],
+    styleLabel: 'Dã ngoại vui vẻ',
+    gradient: 'linear-gradient(180deg, #fefce8 0%, #ecfdf5 60%, #d1fae5 100%)',
+    bgImage: '/assets/templates/background/tpl-baby-dino-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-baby-dino-element.png',
+    tagText: 'BABY DINO',
+    description: 'Khủng long con xanh mint đội nón vàng dã ngoại picnic giữa vườn hoa.',
+    detailedDescription:
+      'Bé khủng long xanh mint đáng yêu đội mũ bucket vàng rực rỡ ngồi trên thảm picnic hoa cúc. Phong cách hoạt hình ngọt ngào, tinh nghịch tạo điểm nhấn tươi vui cho chiếc điện thoại của bạn.',
+    tagLabel: '#hoạt_hình',
     tagColor: '#84cc16',
     rating: 4.9,
-    reviews: '721',
-    reviewCount: 721,
-    hashtags: ['#cute', '#dino', '#chibi', '#cartoon', '#green', '#happy', '#kawaii'],
+    reviews: '980',
+    reviewCount: 980,
+    hashtags: ['#cute', '#hoạt_hình', '#chibi', '#dino', '#picnic'],
     isTrending: true,
-    artType: 'dino-friend',
+    artType: 'baby-dino',
   },
-  // 8. Starry Night (#sky)
+  // 7. Cyber Chrome Heart (#y2k, #cyberpunk)
   {
-    id: 'tpl-008',
-    name: 'Starry Night',
-    creator: 'CosmicWander',
-    category: 'nature',
-    categories: ['nature', 'cute', 'all'],
-    styleLabel: 'Phong cảnh',
-    gradient: 'linear-gradient(180deg, #4f46e5 0%, #7c3aed 45%, #c084fc 100%)',
-    tagText: 'MOONLIGHT',
-    description: 'Bầu trời hoàng hôn tím mộng mơ với vầng trăng khuyết và mây bay.',
+    id: 'tpl-y2k-chrome-heart',
+    name: 'Cyber Chrome Heart',
+    creator: 'CyberLab',
+    category: 'abstract',
+    categories: ['abstract', 'streetwear', 'y2k', 'cyberpunk', 'all'],
+    styleLabel: 'Y2K Cyberpunk',
+    gradient: 'linear-gradient(180deg, #1e1435 0%, #0f0a1c 60%, #1e1b4b 100%)',
+    bgImage: '/assets/templates/background/tpl-y2k-chrome-heart-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-y2k-chrome-heart-element.png',
+    tagText: 'CHROME HEART',
+    description: 'Trái tim chrome 3D kim loại lỏng thủy ngân với đôi cánh gai nhọn cyberpunk.',
     detailedDescription:
-      'Bầu trời đêm huyền ảo trong ánh trăng lưỡi liềm vàng kim và những dải mây tím bồng bềnh. Biểu tượng cho sự tĩnh lặng, sâu lắng và nguồn cảm hứng sáng tạo bất tận.',
-    tagLabel: '#sky',
-    tagColor: '#0ea5e9',
-    rating: 4.8,
-    reviews: '590',
-    reviewCount: 590,
-    hashtags: ['#sky', '#night', '#moon', '#stars', '#cosmic', '#dreamy', '#purple'],
+      'Thiết kế trái tim chrome kim loại lỏng bóng bẩy phản chiếu ánh hologram ngũ sắc trên nền vũ trụ tím huyền ảo. Tuyên ngôn thời trang Y2K tương lai cực chất dành cho tín đồ streetwear.',
+    tagLabel: '#y2k',
+    tagColor: '#ec4899',
+    rating: 5.0,
+    reviews: '2.1k',
+    reviewCount: 2150,
+    hashtags: ['#y2k', '#cyberpunk', '#aesthetic', '#chrome', '#streetwear', '#heart'],
     isTrending: true,
-    artType: 'starry-night',
+    artType: 'y2k-chrome-heart',
   },
-  // 9. That Girl Era (#typography)
+  // 8. Holographic Cosmic Butterfly (#y2k, #aesthetic)
   {
-    id: 'tpl-009',
-    name: 'That Girl Era',
+    id: 'tpl-holo-butterfly',
+    name: 'Holographic Cosmic Butterfly',
+    creator: 'PrismStudio',
+    category: 'abstract',
+    categories: ['abstract', 'y2k', 'aesthetic', 'all'],
+    styleLabel: 'Bướm Hologram',
+    gradient: 'linear-gradient(180deg, #2a1d4d 0%, #433075 50%, #312e81 100%)',
+    bgImage: '/assets/templates/background/tpl-holo-butterfly-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-holo-butterfly-element.png',
+    tagText: 'HOLO BUTTERFLY',
+    description: 'Cánh bướm pha lê hologram ngũ sắc tỏa ánh sáng tím lơ kiêu kỳ.',
+    detailedDescription:
+      'Cánh bướm thủy tinh pha lê lấp lánh với hiệu ứng khúc xạ ánh sáng cầu vồng holographic rực rỡ trên tone tím thương hiệu CasEYE. Vẻ đẹp kiêu sa, quyến rũ và đầy tính nghệ thuật thị giác.',
+    tagLabel: '#aesthetic',
+    tagColor: '#8b5cf6',
+    rating: 4.9,
+    reviews: '1.6k',
+    reviewCount: 1620,
+    hashtags: ['#y2k', '#aesthetic', '#hologram', '#purple', '#butterfly'],
+    isTrending: true,
+    artType: 'holo-butterfly',
+  },
+  // 9. Retro Arcade 1998 (#retro, #vintage)
+  {
+    id: 'tpl-retro-arcade',
+    name: 'Retro Arcade 1998',
+    creator: 'PixelZone',
+    category: 'cartoon',
+    categories: ['cartoon', 'retro', 'vintage', 'genz', 'all'],
+    styleLabel: 'Synthwave 90s',
+    gradient: 'linear-gradient(180deg, #181028 0%, #2e1065 60%, #4c1d95 100%)',
+    bgImage: '/assets/templates/background/tpl-retro-arcade-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-retro-arcade-element.png',
+    tagText: 'GAME OVER 1998',
+    description: 'Máy chơi game cầm tay 8-bit hoài niệm thập niên 90 và lưới chân trời synthwave.',
+    detailedDescription:
+      'Hồi tưởng ký ức tuổi thơ với máy chơi game retro 8-bit trong suốt, băng game pixel và dòng chữ "GAME OVER" phong cách arcade Nhật Bản trên nền lưới synthwave ánh tím neon bắt mắt.',
+    tagLabel: '#retro',
+    tagColor: '#06b6d4',
+    rating: 4.8,
+    reviews: '890',
+    reviewCount: 890,
+    hashtags: ['#retro', '#pixel', '#hoạt_hình', '#vintage', '#arcade', '#genz'],
+    isTrending: false,
+    artType: 'retro-arcade',
+  },
+  // 10. Tokyo Night Sakura (#hoa_lá, #phong_cảnh)
+  {
+    id: 'tpl-tokyo-sakura',
+    name: 'Tokyo Night Sakura',
+    creator: 'TokyoVibe',
+    category: 'floral',
+    categories: ['floral', 'nature', 'aesthetic', 'all'],
+    styleLabel: 'Hoa anh đào đêm',
+    gradient: 'linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
+    bgImage: '/assets/templates/background/tpl-tokyo-sakura-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-tokyo-sakura-element.png',
+    tagText: 'TOKYO SAKURA',
+    description: 'Cành hoa anh đào Nhật Bản nở rộ thanh nhã dưới ánh trăng bạc đêm Tokyo.',
+    detailedDescription:
+      'Những nhánh hoa anh đào cánh hồng phấn bừng nở kiêu hãnh dưới ánh trăng khuyết lãng mạn. Nền đêm lam tím mộng ảo tạo chiều sâu thanh tao, thoát tục cho chiếc ốp lưng của bạn.',
+    tagLabel: '#hoa_lá',
+    tagColor: '#ec4899',
+    rating: 5.0,
+    reviews: '2.3k',
+    reviewCount: 2300,
+    hashtags: ['#hoa_lá', '#phong_cảnh', '#japan', '#sakura', '#aesthetic', '#night'],
+    isTrending: true,
+    artType: 'tokyo-sakura',
+  },
+  // 11. Fuji Lavender Sunset (#phong_cảnh, #tối_giản)
+  {
+    id: 'tpl-fuji-sunset',
+    name: 'Fuji Lavender Sunset',
+    creator: 'AlpineLab',
+    category: 'nature',
+    categories: ['nature', 'minimalist', 'all'],
+    styleLabel: 'Hoàng hôn Phú Sĩ',
+    gradient: 'linear-gradient(180deg, #e9d5ff 0%, #fed7aa 60%, #fef08a 100%)',
+    bgImage: '/assets/templates/background/tpl-fuji-sunset-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-fuji-sunset-element.png',
+    tagText: 'MOUNT FUJI',
+    description: 'Đỉnh núi Phú Sĩ tuyết trắng cùng mặt trời đỏ rực giữa hoàng hôn tím vàng êm đềm.',
+    detailedDescription:
+      'Phong cảnh núi Phú Sĩ biểu tượng với đỉnh tuyết trắng ngần in bóng lên nền trời hoàng hôn chuyển sắc oải hương và hổ phách. Nét vẽ tối giản tranh khắc gỗ Nhật Bản mang lại sự an yên, tĩnh tại.',
+    tagLabel: '#phong_cảnh',
+    tagColor: '#f97316',
+    rating: 4.9,
+    reviews: '1.5k',
+    reviewCount: 1540,
+    hashtags: ['#phong_cảnh', '#nature', '#japan', '#tối_giản', '#sunset', '#fuji'],
+    isTrending: true,
+    artType: 'fuji-sunset',
+  },
+  // 12. Wild Botanical Garden (#hoa_lá, #vintage)
+  {
+    id: 'tpl-botanical-garden',
+    name: 'Wild Botanical Garden',
+    creator: 'AtelierParis',
+    category: 'floral',
+    categories: ['floral', 'vintage', 'minimalist', 'all'],
+    styleLabel: 'Vườn hoa Vintage',
+    gradient: 'linear-gradient(180deg, #fdfbf7 0%, #fefce8 60%, #f5f5f4 100%)',
+    bgImage: '/assets/templates/background/tpl-botanical-garden-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-botanical-garden-element.png',
+    tagText: 'HERBARIUM',
+    description: 'Cành hoa oải hương và lá bạch đàn vintage ép thủ công trên giấy mỹ thuật Pháp.',
+    detailedDescription:
+      'Họa tiết hoa cỏ dại pressed flower tinh tế phong cách bảo tàng thực vật Paris. Đường nét mạ vàng thanh lịch trên nền giấy mỹ thuật kem ngà cổ điển, toát lên phong thái tao nhã và quý phái.',
+    tagLabel: '#vintage',
+    tagColor: '#84cc16',
+    rating: 4.8,
+    reviews: '810',
+    reviewCount: 810,
+    hashtags: ['#hoa_lá', '#vintage', '#tối_giản', '#cottagecore', '#lavender'],
+    isTrending: false,
+    artType: 'botanical-garden',
+  },
+  // 13. Manifesting Good Vibes (#typography, #genz)
+  {
+    id: 'tpl-good-vibes',
+    name: 'Manifesting Good Vibes',
     creator: 'VogueTypography',
     category: 'typography',
-    categories: ['typography', 'all'],
-    styleLabel: 'Typography',
-    gradient: 'linear-gradient(160deg, #fce7f3 0%, #f5d0fe 50%, #e0e7ff 100%)',
-    tagText: 'THAT GIRL ERA',
-    description: 'Kiểu chữ Typography thời thượng khẳng định phong cách hiện đại.',
+    categories: ['typography', 'genz', 'streetwear', 'all'],
+    styleLabel: 'Typography 70s',
+    gradient: 'linear-gradient(180deg, #f3e8ff 0%, #fef08a 60%, #fce7f3 100%)',
+    bgImage: '/assets/templates/background/tpl-good-vibes-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-good-vibes-element.png',
+    tagText: 'GOOD VIBES',
+    description: 'Dòng chữ uốn lượn retro 70s lan tỏa năng lượng tích cực và hoa mặt cười.',
     detailedDescription:
-      'Thông điệp khẳng định bản thân đầy tự tin theo xu hướng "That Girl" với phông chữ serif thời trang và màu hồng cánh sen kiêu kỳ. Dành cho những cô nàng độc lập và phong cách.',
+      'Thông điệp "Manifesting Good Vibes" thiết kế phông chữ puffy 3D retro thập niên 70 rực rỡ, điểm xuyết hoa mặt cười và ngôi sao lấp lánh. Sự lựa chọn hoàn hảo tiếp thêm năng lượng tươi vui mỗi ngày.',
     tagLabel: '#typography',
     tagColor: '#d946ef',
     rating: 4.9,
-    reviews: '820',
-    reviewCount: 820,
-    hashtags: ['#typography', '#thatgirl', '#y2k', '#positive', '#vibe', '#aesthetic', '#pink'],
+    reviews: '1.3k',
+    reviewCount: 1350,
+    hashtags: ['#typography', '#genz', '#streetwear', '#aesthetic', '#positive'],
+    isTrending: true,
+    artType: 'good-vibes',
+  },
+  // 14. Create Your Own Luck (#streetwear, #typography)
+  {
+    id: 'tpl-lucky-clover',
+    name: 'Create Your Own Luck',
+    creator: 'TechKicks',
+    category: 'typography',
+    categories: ['typography', 'streetwear', 'y2k', 'all'],
+    styleLabel: 'Techwear Street',
+    gradient: 'linear-gradient(180deg, #09090b 0%, #18181b 60%, #27272a 100%)',
+    bgImage: '/assets/templates/background/tpl-lucky-clover-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-lucky-clover-element.png',
+    tagText: 'LUCKY 2026',
+    description: 'Cỏ bốn lá kim loại chrome 3D kết hợp chữ typography thời thượng trên nền đen nhám.',
+    detailedDescription:
+      'Huy hiệu cỏ bốn lá chrome 3D siêu bóng bẩy mang biểu tượng may mắn, kết hợp mã tọa độ công nghệ và chữ STREETWEAR sắc lạnh trên nền đen mờ sang trọng. Đậm chất cá tính cho giới trẻ hiện đại.',
+    tagLabel: '#streetwear',
+    tagColor: '#10b981',
+    rating: 5.0,
+    reviews: '1.9k',
+    reviewCount: 1940,
+    hashtags: ['#typography', '#streetwear', '#lucky', '#y2k', '#clover'],
+    isTrending: true,
+    artType: 'lucky-clover',
+  },
+  // 15. Liquid Amethyst Waves (#abstract, #nghệ_thuật)
+  {
+    id: 'tpl-amethyst-waves',
+    name: 'Liquid Amethyst Waves',
+    creator: 'ChromaFlow',
+    category: 'abstract',
+    categories: ['abstract', 'aesthetic', 'all'],
+    styleLabel: 'Cẩm thạch thạch anh',
+    gradient: 'linear-gradient(180deg, #3b0764 0%, #6b21a8 50%, #a855f7 100%)',
+    bgImage: '/assets/templates/background/tpl-amethyst-waves-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-amethyst-waves-element.png',
+    tagText: 'LIQUID MARBLE',
+    description: 'Dải lụa cẩm thạch thạch anh tím lượn sóng cuộn trào cùng nhũ vàng óng ánh.',
+    detailedDescription:
+      'Những dải sóng chất lỏng cẩm thạch tím thạch anh uốn lượn mềm mại hòa cùng các đường vân vàng kim loại bắt sáng. Nghệ thuật trừu tượng cao cấp biến chiếc ốp lưng thành một tác phẩm nghệ thuật.',
+    tagLabel: '#abstract',
+    tagColor: '#9333ea',
+    rating: 4.8,
+    reviews: '760',
+    reviewCount: 760,
+    hashtags: ['#abstract', '#nghệ_thuật', '#purple', '#aesthetic', '#liquid', '#marble'],
     isTrending: false,
-    artType: 'that-girl-era',
+    artType: 'amethyst-waves',
+  },
+  // 16. Aura Gradient Energy (#genz, #aesthetic)
+  {
+    id: 'tpl-aura-gradient',
+    name: 'Aura Gradient Energy',
+    creator: 'AuraMind',
+    category: 'abstract',
+    categories: ['abstract', 'pastel', 'genz', 'aesthetic', 'all'],
+    styleLabel: 'Hào quang tâm linh',
+    gradient: 'linear-gradient(180deg, #ede9fe 0%, #fef08a 50%, #e0f2fe 100%)',
+    bgImage: '/assets/templates/background/tpl-aura-gradient-bg.webp',
+    elementImage: '/assets/templates/elements/tpl-aura-gradient-element.png',
+    tagText: 'PROTECT PEACE',
+    description: 'Quầng hào quang năng lượng bình an chuyển sắc pastel và thông điệp chữa lành.',
+    detailedDescription:
+      'Hào quang năng lượng tâm linh aura mờ ảo hòa quyện sắc tím lilac, vàng nhạt và xanh thiên thanh, mang thông điệp "PROTECT YOUR PEACE". Xu hướng thịnh hành Pinterest giúp xua tan âu lo và nạp đầy năng lượng tích cực.',
+    tagLabel: '#genz',
+    tagColor: '#0ea5e9',
+    rating: 4.9,
+    reviews: '1.2k',
+    reviewCount: 1220,
+    hashtags: ['#aesthetic', '#abstract', '#pastel', '#genz', '#aura', '#peace'],
+    isTrending: true,
+    artType: 'aura-gradient',
   },
 ];
 
@@ -498,7 +631,7 @@ const INITIAL_REVIEWS: Record<string, TemplateReview[]> = {};
 @Component({
   selector: 'app-template-browser',
   standalone: true,
-  imports: [RouterLink],
+  imports: [],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './template-browser.html',
   styleUrl: './template-browser.scss',
@@ -509,10 +642,28 @@ export class TemplateBrowser {
   private readonly catalog = inject(StudioCatalogService);
   private readonly router = inject(Router);
   private readonly auth = inject(SupabaseAuthService);
+  private readonly authModal = inject(AuthModal);
 
   // Authentication & Designs State
   protected readonly isLoggedIn = this.auth.isAuthenticated;
   protected readonly myDesigns = this.state.savedDesigns;
+
+  /** Display name of current user */
+  protected readonly userDisplayName = computed(() => {
+    const user = this.auth.user();
+    if (!user) return 'Khách hàng';
+    return (
+      user.user_metadata?.['full_name'] ||
+      user.user_metadata?.['name'] ||
+      user.email?.split('@')[0] ||
+      'Bạn'
+    );
+  });
+
+  /** Open the global Auth Modal */
+  protected openLoginModal(): void {
+    this.authModal.open('login');
+  }
 
   /** First 4 designs displayed on the main page */
   protected readonly displayedMyDesigns = computed(() => this.myDesigns().slice(0, 4));
@@ -521,10 +672,38 @@ export class TemplateBrowser {
   protected readonly hasMoreMyDesigns = computed(() => this.myDesigns().length > 4);
 
   // Modal & Popup States
+  protected readonly showModelSelectorModal = signal<boolean>(false);
+  protected readonly modalSelectedBrandId = signal<string>('brand-apple');
+  protected readonly modalSelectedModelId = signal<string>('iphone-15-pro-max');
+
+  protected readonly brands = this.catalog.brands;
+  protected readonly allModels = this.catalog.models;
+
+  protected readonly modalAvailableModels = computed(() => {
+    const brandId = this.modalSelectedBrandId();
+    return this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+  });
+
   protected readonly showAllDesignsModal = signal<boolean>(false);
   protected readonly searchMyDesignQuery = signal<string>('');
   protected readonly previewTemplate = signal<TemplateCard | null>(null);
   protected readonly activeMenuDesignId = signal<string | null>(null);
+
+  // Delete & Rename Modals
+  protected readonly designToDelete = signal<SavedDesignItem | null>(null);
+  protected readonly designToRename = signal<SavedDesignItem | null>(null);
+  protected readonly renameInput = signal<string>('');
+
+  /** Computes whether ANY modal is currently open to freeze body scrolling */
+  protected readonly isAnyModalOpen = computed(() => {
+    return (
+      this.showModelSelectorModal() ||
+      this.showAllDesignsModal() ||
+      this.previewTemplate() !== null ||
+      this.designToDelete() !== null ||
+      this.designToRename() !== null
+    );
+  });
 
   // 3D View Controls
   protected readonly viewMode = signal<'3d' | '2d'>('3d');
@@ -543,42 +722,171 @@ export class TemplateBrowser {
   protected readonly userReviewText = signal<string>('');
   protected readonly reviewSubmittedSuccess = signal<boolean>(false);
 
-  // Delete & Rename Modals
-  protected readonly designToDelete = signal<SavedDesignItem | null>(null);
-  protected readonly designToRename = signal<SavedDesignItem | null>(null);
-  protected readonly renameInput = signal<string>('');
+  constructor() {
+    this.preloadTemplateArtworks();
 
-  // Favorites Set
+    // Freeze body scroll when ANY modal is open
+    effect(() => {
+      if (typeof document === 'undefined') return;
+      if (this.isAnyModalOpen()) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Model Selector Modal Handlers
+  protected openModelSelectorModal(): void {
+    this.modalSelectedBrandId.set(this.state.selectedModel().brandId || 'brand-apple');
+    this.modalSelectedModelId.set(this.state.selectedModel().id || 'iphone-15-pro-max');
+    this.showModelSelectorModal.set(true);
+  }
+
+  protected closeModelSelectorModal(): void {
+    this.showModelSelectorModal.set(false);
+  }
+
+  protected selectModalBrand(brandId: string): void {
+    this.modalSelectedBrandId.set(brandId);
+    const models = this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+    if (models.length > 0) {
+      this.modalSelectedModelId.set(models[0].id);
+    }
+  }
+
+  protected selectModalModel(modelId: string): void {
+    this.modalSelectedModelId.set(modelId);
+  }
+
+  protected applySelectedModel(): void {
+    const modelId = this.modalSelectedModelId();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('caseyes_active_model', modelId);
+    }
+    this.catalog.selectModel(modelId);
+    this.state.requestModelChange(modelId);
+    this.closeModelSelectorModal();
+  }
+
+  // Favorites Set & Count
   protected readonly favoriteTemplates = signal<Set<string>>(new Set(['tpl-001', 'tpl-004']));
+  protected readonly favoriteCount = computed(() => this.favoriteTemplates().size);
 
   // Filter & Search Signals
-  protected readonly activeCategory = signal<string>('all');
+  protected readonly selectedCategories = signal<string[]>(['all']);
+  protected readonly isCategoriesExpanded = signal<boolean>(false);
   protected readonly activeHashtagFilter = signal<string | null>(null);
-  protected readonly aiPrompt = signal<string>('');
-  protected readonly isAiSearching = signal<boolean>(false);
-  protected readonly showNoResults = signal<boolean>(false);
 
-  // Categories matching the image tabs
-  protected readonly categories = [
-    { id: 'all', name: 'Tất cả' },
-    { id: 'floral', name: 'Hoa lá' },
-    { id: 'minimalist', name: 'Tối giản' },
-    { id: 'nature', name: 'Phong cảnh' },
-    { id: 'cartoon', name: 'Hoạt hình' },
-    { id: 'typography', name: 'Typography' },
-    { id: 'abstract', name: 'Abstract' },
-    { id: 'cute', name: 'Cute' },
-  ];
+  // Categories matching the image tabs (Định dạng Hashtag #, đồng bộ 100% tất cả hashtag trong từng mẫu)
+  protected readonly categories = this.generateSynchronizedCategories();
+
+  private generateSynchronizedCategories(): { id: string; name: string }[] {
+    const list: { id: string; name: string }[] = [
+      { id: 'all', name: 'Tất cả' },
+      { id: 'favorites', name: 'Đã thích ❤️' },
+    ];
+
+    // Danh sách ưu tiên các hashtag hot/nổi bật để xếp ở hàng đầu tiên
+    const priorityTags = [
+      '#Creators', '#Chibi', '#Hoa_lá', '#Cute', '#Pastel', '#Tối_giản',
+      '#Phong_cảnh', '#Hoạt_hình', '#Typography', '#Abstract', '#Aesthetic',
+      '#Mèo_con', '#Y2K', '#Retro', '#Streetwear', '#Vintage', '#Cyberpunk',
+      '#GenZ', '#TheCreators', '#Tự_thiết_kế', '#Phôi_trắng', '#Tự_vẽ',
+      '#Japan', '#Sakura', '#Sunset', '#Nature', '#Hologram', '#Butterfly',
+      '#Pixel', '#Arcade', '#Positive', '#Lucky', '#Clover', '#Nghệ_thuật',
+      '#Liquid', '#Marble', '#Aura', '#Peace', '#Diy', '#Custom', '#Minimal',
+      '#PurpleVibe', '#Friends', '#Squad', '#Corgi', '#Foodie', '#Matcha',
+      '#Dino', '#Picnic', '#Chrome', '#Heart', '#Cottagecore', '#Lavender',
+      '#Dreamy', '#CatLover', '#Night', '#Fuji'
+    ];
+
+    const seen = new Set<string>();
+
+    // Thu thập tất cả hashtag có mặt trong kho mẫu TEMPLATE_CATALOG
+    const allCatalogHashtags = new Set<string>();
+    for (const tpl of TEMPLATE_CATALOG) {
+      if (tpl.hashtags) {
+        tpl.hashtags.forEach((h) => allCatalogHashtags.add(h.toLowerCase().trim()));
+      }
+      if (tpl.tagLabel) {
+        allCatalogHashtags.add(tpl.tagLabel.toLowerCase().trim());
+      }
+    }
+
+    // Thêm các tag ưu tiên nếu có trong kho mẫu
+    for (const p of priorityTags) {
+      const lower = p.toLowerCase().trim();
+      const id = lower.replace(/^#/, '');
+      if (allCatalogHashtags.has(lower) && !seen.has(id)) {
+        seen.add(id);
+        list.push({ id, name: p });
+      }
+    }
+
+    // Tự động quét và bổ sung MỌI hashtag còn lại từ từng mẫu đảm bảo không bao giờ sót bất kỳ tag nào
+    for (const tpl of TEMPLATE_CATALOG) {
+      if (tpl.hashtags) {
+        for (const h of tpl.hashtags) {
+          const lower = h.toLowerCase().trim();
+          const id = lower.replace(/^#/, '');
+          if (!seen.has(id)) {
+            seen.add(id);
+            const formatted = h.startsWith('#') ? h : '#' + h;
+            const displayName = formatted.length > 2
+              ? '#' + formatted.charAt(1).toUpperCase() + formatted.slice(2)
+              : formatted;
+            list.push({ id, name: displayName });
+          }
+        }
+      }
+    }
+
+    return list;
+  }
 
   protected readonly templates = TEMPLATE_CATALOG;
 
-  /** Filtered templates based on category, hashtag and search */
+  /** Filtered templates based on category (multi-select), hashtag and search */
   protected readonly filteredTemplates = computed(() => {
-    const cat = this.activeCategory();
+    const cats = this.selectedCategories();
     const tag = this.activeHashtagFilter();
+    const favs = this.favoriteTemplates();
+
     return this.templates.filter((t) => {
-      const matchCat = cat === 'all' || t.categories.includes(cat);
-      const matchTag = !tag || t.hashtags.includes(tag) || t.tagLabel === tag;
+      // 1. Check category criteria
+      let matchCat = false;
+      if (cats.includes('all')) {
+        matchCat = true;
+      } else {
+        const matchFavorites = cats.includes('favorites') && favs.has(t.id);
+        const matchOtherCats = cats.some((c) => {
+          if (c === 'favorites') return false;
+          const cleanC = c.toLowerCase().trim();
+          return (
+            (t.categories && t.categories.includes(c)) ||
+            (t.hashtags && t.hashtags.some((h) => {
+              const cleanH = h.replace(/^#/, '').toLowerCase().trim();
+              return cleanH === cleanC || cleanH.includes(cleanC) || cleanC.includes(cleanH);
+            })) ||
+            (t.tagLabel && (
+              t.tagLabel.replace(/^#/, '').toLowerCase().trim() === cleanC ||
+              t.tagLabel.toLowerCase().includes(cleanC)
+            )) ||
+            (cleanC === 'cat' && (t.name.toLowerCase().includes('cat') || t.name.toLowerCase().includes('mèo') || t.name.toLowerCase().includes('kitten')))
+          );
+        });
+        matchCat = matchFavorites || matchOtherCats;
+      }
+
+      // 2. Check hashtag criteria
+      const matchTag = !tag || (t.hashtags && t.hashtags.some((h) => h.toLowerCase() === tag.toLowerCase())) || (t.tagLabel && t.tagLabel.toLowerCase() === tag.toLowerCase());
       return matchCat && matchTag;
     });
   });
@@ -602,17 +910,126 @@ export class TemplateBrowser {
     return model?.model3dUrl || '/models/iphone-15-pro-max.glb';
   });
 
-  // --- Category and Hashtag Handlers ---
-  protected selectCategory(catId: string): void {
-    this.activeCategory.set(catId);
+  /**
+   * Bộ artwork SVG vector & Element PNG 1:1 đồng bộ tuyệt đối với Canvas Studio
+   */
+  protected readonly artworkMap: Record<
+    string,
+    { url: string; x: number; y: number; width: number; height: number; text?: string; textY?: number }
+  > = {
+    // 13 mẫu thiết kế trọn gói mới (Layer Element tách nền trong suốt)
+    'cloud-kittens': { url: '/assets/templates/elements/tpl-cloud-kittens-element.png', x: 50, y: 65, width: 88, height: 75 },
+    'matcha-corgi': { url: '/assets/templates/elements/tpl-matcha-corgi-element.png', x: 50, y: 62, width: 86, height: 80 },
+    'baby-dino': { url: '/assets/templates/elements/tpl-baby-dino-element.png', x: 50, y: 64, width: 84, height: 76 },
+    'y2k-chrome-heart': { url: '/assets/templates/elements/tpl-y2k-chrome-heart-element.png', x: 50, y: 56, width: 88, height: 82 },
+    'holo-butterfly': { url: '/assets/templates/elements/tpl-holo-butterfly-element.png', x: 50, y: 55, width: 90, height: 85 },
+    'retro-arcade': { url: '/assets/templates/elements/tpl-retro-arcade-element.png', x: 50, y: 58, width: 86, height: 80 },
+    'tokyo-sakura': { url: '/assets/templates/elements/tpl-tokyo-sakura-element.png', x: 50, y: 54, width: 92, height: 88 },
+    'fuji-sunset': { url: '/assets/templates/elements/tpl-fuji-sunset-element.png', x: 50, y: 58, width: 92, height: 80 },
+    'botanical-garden': { url: '/assets/templates/elements/tpl-botanical-garden-element.png', x: 50, y: 55, width: 88, height: 88 },
+    'good-vibes': { url: '/assets/templates/elements/tpl-good-vibes-element.png', x: 50, y: 56, width: 88, height: 78 },
+    'lucky-clover': { url: '/assets/templates/elements/tpl-lucky-clover-element.png', x: 50, y: 55, width: 86, height: 82 },
+    'amethyst-waves': { url: '/assets/templates/elements/tpl-amethyst-waves-element.png', x: 50, y: 55, width: 92, height: 88 },
+    'aura-gradient': { url: '/assets/templates/elements/tpl-aura-gradient-element.png', x: 50, y: 55, width: 86, height: 82 },
+
+    // The Creators
+    'the-creators-real': { url: '/assets/templates/the-creators-real.webp', x: 50, y: 55, width: 92, height: 80 },
+    'the-creators-chibi': { url: '/assets/templates/the-creators-chibi.webp', x: 50, y: 56, width: 92, height: 82 },
+
+    // Backward-compatibility aliases
+    'dreamy-kitten': { url: '/assets/templates/elements/tpl-cloud-kittens-element.png', x: 50, y: 65, width: 88, height: 75 },
+    'sakura-bloom': { url: '/assets/templates/elements/tpl-tokyo-sakura-element.png', x: 50, y: 54, width: 92, height: 88 },
+    'mountain-escape': { url: '/assets/templates/elements/tpl-fuji-sunset-element.png', x: 50, y: 58, width: 92, height: 80 },
+    'minimal-cat': { url: svgToDataUri(TEMPLATE_SVG_MINIMAL_CAT), x: 50, y: 68, width: 62, height: 62 },
+    'abstract-waves': { url: '/assets/templates/elements/tpl-amethyst-waves-element.png', x: 50, y: 55, width: 92, height: 88 },
+    'dino-friend': { url: '/assets/templates/elements/tpl-baby-dino-element.png', x: 50, y: 64, width: 84, height: 76 },
+    'starry-night': { url: svgToDataUri(TEMPLATE_SVG_MOON), x: 50, y: 48, width: 86, height: 70, text: 'STARRY', textY: 83 },
+  };
+
+  protected getArtwork(artType: string) {
+    return this.artworkMap[artType] || null;
+  }
+
+  protected getSavedDesignArtwork(item: SavedDesignItem): {
+    url?: string;
+    x: number;
+    y: number;
+    width: number;
+    text?: string;
+    textY?: number;
+  } | null {
+    if (item.thumbnailType === 'dreamy-sky') return this.artworkMap['dreamy-kitten'] || null;
+    if (item.thumbnailType === 'sakura') return this.artworkMap['sakura-bloom'] || null;
+    if (item.thumbnailType === 'cat') return this.artworkMap['minimal-cat'] || null;
+    if (item.thumbnailType === 'mountain') return this.artworkMap['mountain-escape'] || null;
+    if (item.thumbnailType === 'starry') return this.artworkMap['starry-night'] || null;
+
+    if (item.layers && item.layers.length > 0) {
+      const imgLayer = item.layers.find((l) => l.type === 'image' && (l as any).storageUrl);
+      const txtLayer = item.layers.find((l) => l.type === 'text');
+      if (imgLayer) {
+        return {
+          url: (imgLayer as any).storageUrl,
+          x: imgLayer.x,
+          y: imgLayer.y,
+          width: imgLayer.width,
+          text: txtLayer ? (txtLayer as any).content : undefined,
+          textY: txtLayer ? txtLayer.y : undefined,
+        };
+      }
+      if (txtLayer) {
+        return {
+          x: txtLayer.x,
+          y: txtLayer.y,
+          width: 80,
+          text: (txtLayer as any).content,
+          textY: txtLayer.y,
+        };
+      }
+    }
+    return null;
+  }
+
+  // --- Category Multi-Select and Hashtag Handlers ---
+  protected isCategorySelected(catId: string): boolean {
+    return this.selectedCategories().includes(catId);
+  }
+
+  protected toggleCategory(catId: string): void {
     this.activeHashtagFilter.set(null);
-    this.showNoResults.set(false);
+
+    // Rule: "khi chọn nhiều nút thì không được chọn cái tất cả nha"
+    if (catId === 'all') {
+      // Selecting "Tất cả" clears all specific categories
+      this.selectedCategories.set(['all']);
+      return;
+    }
+
+    const current = this.selectedCategories().filter((c) => c !== 'all');
+    const index = current.indexOf(catId);
+
+    if (index >= 0) {
+      current.splice(index, 1);
+      // If no categories left, revert to ['all']
+      if (current.length === 0) {
+        this.selectedCategories.set(['all']);
+      } else {
+        this.selectedCategories.set([...current]);
+      }
+    } else {
+      current.push(catId);
+      this.selectedCategories.set([...current]);
+    }
+  }
+
+  protected toggleExpandCategories(): void {
+    this.isCategoriesExpanded.update((v) => !v);
   }
 
   protected filterByHashtag(tag: string): void {
     this.closePreviewModal();
     this.activeHashtagFilter.set(tag);
-    this.activeCategory.set('all');
+    this.selectedCategories.set(['all']);
     // Scroll down to template grid
     const target = document.getElementById('template-grid-section');
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -622,75 +1039,13 @@ export class TemplateBrowser {
     this.activeHashtagFilter.set(null);
   }
 
-  protected setPrompt(text: string): void {
-    this.aiPrompt.set(text);
-    this.showNoResults.set(false);
-  }
-
-  protected onPromptInput(event: Event): void {
-    const input = event.target as HTMLInputElement | HTMLTextAreaElement;
-    this.aiPrompt.set(input.value);
-    this.showNoResults.set(false);
-  }
-
-  /** Trigger AI suggestion based on user's prompt (F13 shortcut or click) */
-  protected onAiSearch(): void {
-    const query = this.aiPrompt().trim().toLowerCase();
-    if (!query) return;
-
-    this.isAiSearching.set(true);
-    setTimeout(() => {
-      this.isAiSearching.set(false);
-
-      // Intelligent keyword matching
-      let matchedCategory = 'all';
-      if (/hoa|cherry|blossom|sakura|rose/i.test(query)) {
-        matchedCategory = 'floral';
-      } else if (/tối giản|minimal|đơn giản|clean/i.test(query)) {
-        matchedCategory = 'minimalist';
-      } else if (/núi|sơn thủy|phong cảnh|nature|mountain|hồ/i.test(query)) {
-        matchedCategory = 'nature';
-      } else if (/anime|hoạt hình|manga|chibi/i.test(query)) {
-        matchedCategory = 'cartoon';
-      } else if (/chữ|quote|typography|slogan/i.test(query)) {
-        matchedCategory = 'typography';
-      } else if (/sóng|abstract|loang|wave/i.test(query)) {
-        matchedCategory = 'abstract';
-      } else if (/mèo|cat|dino|khủng long|cute|dễ thương|pastel/i.test(query)) {
-        matchedCategory = 'cute';
-      }
-
-      this.activeCategory.set(matchedCategory);
-
-      // Check if any template matches
-      const hasDirectMatch = this.templates.some(
-        (t) =>
-          t.name.toLowerCase().includes(query) ||
-          t.description.toLowerCase().includes(query) ||
-          t.tagLabel.toLowerCase().includes(query) ||
-          t.categories.includes(matchedCategory)
-      );
-
-      this.showNoResults.set(!hasDirectMatch);
-
-      // Smooth scroll to template section
-      const target = document.getElementById('template-grid-section');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 650);
-  }
-
-  protected onRetry(): void {
-    this.aiPrompt.set('');
-    this.showNoResults.set(false);
-    this.activeCategory.set('all');
-    this.activeHashtagFilter.set(null);
-  }
-
   // --- Favorite Toggle ---
-  protected toggleFavorite(templateId: string, event: MouseEvent): void {
-    event.stopPropagation();
+  protected toggleFavorite(templateId: string, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    if (!this.auth.isAuthenticated()) {
+      this.authModal.open('login');
+      return;
+    }
     this.favoriteTemplates.update((set) => {
       const next = new Set(set);
       if (next.has(templateId)) {
@@ -710,15 +1065,22 @@ export class TemplateBrowser {
   protected openDetailModal(template: TemplateCard, event?: MouseEvent): void {
     if (event) event.stopPropagation();
     this.previewTemplate.set(template);
-    this.viewMode.set('3d');
+    const has3d = this.state.selectedModel().has3dModel && !!this.state.selectedModel().model3dUrl;
+    if (has3d) {
+      this.viewMode.set('3d');
+    } else {
+      this.viewMode.set('2d');
+    }
     this.isAutoRotate.set(false);
     this.userReviewText.set('');
     this.userRating.set(5);
     this.reviewSubmittedSuccess.set(false);
-    setTimeout(() => {
-      this.syncTemplate3dTexture(template);
-      this.reset3dView();
-    }, 150);
+    if (has3d) {
+      setTimeout(() => {
+        this.syncTemplate3dTexture(template);
+        this.reset3dView();
+      }, 150);
+    }
   }
 
   protected closePreviewModal(): void {
@@ -777,52 +1139,74 @@ export class TemplateBrowser {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // 1. Draw Background Gradient / Color
-    const bg = template.gradient || '#FFFFFF';
-    if (bg.includes('gradient')) {
-      const colorMatches = bg.match(/#[a-fA-F0-9]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/g);
-      if (colorMatches && colorMatches.length >= 2) {
-        const angleMatch = bg.match(/(\d+)deg/);
-        const angle = angleMatch ? parseInt(angleMatch[1], 10) : 180;
-        const rad = ((angle - 90) * Math.PI) / 180;
-        const cx = W / 2;
-        const cy = H / 2;
-        const length = Math.sqrt(W * W + H * H) / 2;
-        const x0 = cx - Math.cos(rad) * length;
-        const y0 = cy - Math.sin(rad) * length;
-        const x1 = cx + Math.cos(rad) * length;
-        const y1 = cy + Math.sin(rad) * length;
-
-        const linGrad = ctx.createLinearGradient(x0, y0, x1, y1);
-        colorMatches.forEach((col, idx) => {
-          linGrad.addColorStop(idx / (colorMatches.length - 1), col);
-        });
-        ctx.fillStyle = linGrad;
-      } else {
-        const grad = ctx.createLinearGradient(0, 0, 0, H);
-        grad.addColorStop(0, '#FAFAFA');
-        grad.addColorStop(1, '#ECE6FD');
-        ctx.fillStyle = grad;
-      }
-    } else {
-      const lower = bg.toLowerCase();
-      ctx.fillStyle = (lower === '#ffffff' || lower === '#fff' || lower === '#fafafa') ? '#f3f3f6' : bg;
-    }
-
-    // Clip to case silhouette
+    // 1. Clip to case silhouette matching 2D canvas frame radius (50px * 2)
+    ctx.save();
     ctx.beginPath();
     if ((ctx as any).roundRect) {
       (ctx as any).roundRect(0, 0, W, H, [100, 100, 100, 100]);
     } else {
       ctx.rect(0, 0, W, H);
     }
-    ctx.fill();
     ctx.clip();
 
-    // 2. Draw Artwork on Canvas according to artType
+    // 2. Draw Background Image or Gradient / Color
+    if (template.bgImage) {
+      let bgImg = this.templateArtImageCache.get(template.bgImage);
+      if (!bgImg) {
+        bgImg = new Image();
+        bgImg.crossOrigin = 'anonymous';
+        bgImg.onload = () => {
+          this.templateArtImageCache.set(template.bgImage!, bgImg!);
+          if (this.previewTemplate()?.id === template.id) {
+            this.syncTemplate3dTexture(template);
+          }
+        };
+        bgImg.src = template.bgImage;
+      }
+      if (bgImg.complete && bgImg.naturalWidth > 0) {
+        ctx.drawImage(bgImg, 0, 0, W, H);
+      } else {
+        ctx.fillStyle = template.gradient || '#FFFFFF';
+        ctx.fillRect(0, 0, W, H);
+      }
+    } else {
+      const bg = template.gradient || '#FFFFFF';
+      if (bg.includes('gradient')) {
+        const colorMatches = bg.match(/#[a-fA-F0-9]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/g);
+        if (colorMatches && colorMatches.length >= 2) {
+          const angleMatch = bg.match(/(\d+)deg/);
+          const angle = angleMatch ? parseInt(angleMatch[1], 10) : 180;
+          const rad = ((angle - 90) * Math.PI) / 180;
+          const cx = W / 2;
+          const cy = H / 2;
+          const length = Math.sqrt(W * W + H * H) / 2;
+          const x0 = cx - Math.cos(rad) * length;
+          const y0 = cy - Math.sin(rad) * length;
+          const x1 = cx + Math.cos(rad) * length;
+          const y1 = cy + Math.sin(rad) * length;
+
+          const linGrad = ctx.createLinearGradient(x0, y0, x1, y1);
+          colorMatches.forEach((col, idx) => {
+            linGrad.addColorStop(idx / (colorMatches.length - 1), col);
+          });
+          ctx.fillStyle = linGrad;
+        } else {
+          const grad = ctx.createLinearGradient(0, 0, 0, H);
+          grad.addColorStop(0, '#FAFAFA');
+          grad.addColorStop(1, '#ECE6FD');
+          ctx.fillStyle = grad;
+        }
+      } else {
+        const lower = bg.toLowerCase();
+        ctx.fillStyle = (lower === '#ffffff' || lower === '#fff' || lower === '#fafafa') ? '#f3f3f6' : bg;
+      }
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // 3. Draw Artwork on Canvas according to artType / elementImage
     this.drawTemplateArtworkToCanvas(ctx, template, W, H);
 
-    // 3. Punch Camera Cutout cleanly matching model
+    // 4. Punch Camera Cutout cleanly matching model
     const model = this.state.selectedModel();
     const cam = model.safeZoneMask.cameraCutout;
     const camX = (cam.xPercent / 100) * W;
@@ -855,7 +1239,7 @@ export class TemplateBrowser {
     ctx.fill();
     ctx.restore();
 
-    // 4. Bumper Rim Stroke
+    // 5. Bumper Rim Stroke
     ctx.save();
     ctx.lineWidth = 18;
     ctx.strokeStyle = '#18181b';
@@ -891,6 +1275,8 @@ export class TemplateBrowser {
     }
     ctx.stroke();
     ctx.restore();
+
+    ctx.restore(); // Restore case clip context
 
     // 5. Inject Three.js Texture & Meshes into <model-viewer>
     const sceneSymbol = Object.getOwnPropertySymbols(mv).find((s) => s.toString().includes('scene'));
@@ -1103,7 +1489,29 @@ export class TemplateBrowser {
   }
 
   /**
-   * Vẽ tác phẩm đặc trưng của từng Template lên Canvas 2D phục vụ 3D Texture
+   * Bộ nhớ đệm Image cho SVG vector phục vụ render 3D texture
+   */
+  private readonly templateArtImageCache = new Map<string, HTMLImageElement>();
+
+  /**
+   * Preload toàn bộ các artwork SVG vector ngay khi khởi tạo
+   */
+  private preloadTemplateArtworks(): void {
+    if (typeof window === 'undefined') return;
+    Object.values(this.artworkMap).forEach((art) => {
+      if (art.url && !this.templateArtImageCache.has(art.url)) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          this.templateArtImageCache.set(art.url, img);
+        };
+        img.src = art.url;
+      }
+    });
+  }
+
+  /**
+   * Vẽ tác phẩm đặc trưng của từng Template lên Canvas 2D phục vụ 3D Texture (1:1 với Artwork Vector)
    */
   private drawTemplateArtworkToCanvas(
     ctx: CanvasRenderingContext2D,
@@ -1111,298 +1519,71 @@ export class TemplateBrowser {
     W: number,
     H: number
   ): void {
-    const art = template.artType;
+    const artInfo = this.getArtwork(template.artType);
 
-    if (art === 'dreamy-kitten') {
-      ctx.save();
-      // Fluffy clouds at bottom
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(W * 0.5, H * 0.85, 170, 0, Math.PI * 2);
-      ctx.arc(W * 0.28, H * 0.88, 130, 0, Math.PI * 2);
-      ctx.arc(W * 0.72, H * 0.88, 130, 0, Math.PI * 2);
-      ctx.fill();
+    if (artInfo?.url) {
+      let img = this.templateArtImageCache.get(artInfo.url);
+      if (!img) {
+        img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          this.templateArtImageCache.set(artInfo.url, img!);
+          if (this.previewTemplate()?.id === template.id) {
+            this.syncTemplate3dTexture(template);
+          }
+        };
+        img.src = artInfo.url;
+      }
 
-      // Kitten 1 (Left)
-      const catX = W * 0.42;
-      const catY = H * 0.75;
-      ctx.beginPath();
-      ctx.arc(catX, catY, 78, 0, Math.PI * 2);
-      ctx.fill();
-      // Ears
-      ctx.beginPath();
-      ctx.moveTo(catX - 65, catY - 40);
-      ctx.lineTo(catX - 35, catY - 115);
-      ctx.lineTo(catX - 5, catY - 60);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(catX + 5, catY - 60);
-      ctx.lineTo(catX + 35, catY - 115);
-      ctx.lineTo(catX + 65, catY - 40);
-      ctx.fill();
-      // Pink inner ears
-      ctx.fillStyle = '#fbcfe8';
-      ctx.beginPath();
-      ctx.moveTo(catX - 52, catY - 45);
-      ctx.lineTo(catX - 35, catY - 98);
-      ctx.lineTo(catX - 15, catY - 58);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(catX + 15, catY - 58);
-      ctx.lineTo(catX + 35, catY - 98);
-      ctx.lineTo(catX + 52, catY - 45);
-      ctx.fill();
-      // Eyes ^ ^
-      ctx.strokeStyle = '#f472b6';
-      ctx.lineWidth = 4.5;
-      ctx.beginPath();
-      ctx.arc(catX - 25, catY - 5, 14, Math.PI, 0, false);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(catX + 25, catY - 5, 14, Math.PI, 0, false);
-      ctx.stroke();
-      // Blush
-      ctx.fillStyle = '#f472b6';
-      ctx.beginPath();
-      ctx.arc(catX - 38, catY + 16, 11, 0, Math.PI * 2);
-      ctx.arc(catX + 38, catY + 16, 11, 0, Math.PI * 2);
-      ctx.fill();
+      if (img.complete && img.naturalWidth > 0) {
+        const artW = (artInfo.width / 100) * W;
+        const artH = artW * (img.naturalHeight / (img.naturalWidth || 1));
+        const artX = (artInfo.x / 100) * W;
+        const artY = (artInfo.y / 100) * H;
+        ctx.save();
+        ctx.drawImage(img, artX - artW / 2, artY - artH / 2, artW, artH);
+        ctx.restore();
+      }
+    }
 
-      // Kitten 2 (Right)
-      const cat2X = W * 0.63;
-      const cat2Y = H * 0.78;
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(cat2X, cat2Y, 65, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cat2X - 50, cat2Y - 30);
-      ctx.lineTo(cat2X - 28, cat2Y - 90);
-      ctx.lineTo(cat2X, cat2Y - 45);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cat2X, cat2Y - 45);
-      ctx.lineTo(cat2X + 28, cat2Y - 90);
-      ctx.lineTo(cat2X + 50, cat2Y - 30);
-      ctx.fill();
-      ctx.restore();
-    } else if (art === 'sakura-bloom') {
+    if (template.artType === 'that-girl-era') {
       ctx.save();
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.1, H * 0.96);
-      ctx.quadraticCurveTo(W * 0.45, H * 0.65, W * 0.35, H * 0.36);
-      ctx.quadraticCurveTo(W * 0.3, H * 0.16, W * 0.75, H * 0.08);
-      ctx.stroke();
-      ctx.lineWidth = 9;
-      ctx.beginPath();
-      ctx.moveTo(W * 0.38, H * 0.46);
-      ctx.quadraticCurveTo(W * 0.62, H * 0.38, W * 0.86, H * 0.32);
-      ctx.stroke();
-      const blossoms = [
-        { x: W * 0.35, y: H * 0.36, r: 38 },
-        { x: W * 0.75, y: H * 0.15, r: 42 },
-        { x: W * 0.58, y: H * 0.33, r: 34 },
-        { x: W * 0.84, y: H * 0.33, r: 38 },
-        { x: W * 0.22, y: H * 0.6, r: 32 },
-        { x: W * 0.48, y: H * 0.22, r: 30 },
-        { x: W * 0.68, y: H * 0.46, r: 28 },
-      ];
-      for (const b of blossoms) {
-        ctx.fillStyle = '#fda4af';
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#f43f5e';
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r * 0.45, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    } else if (art === 'mountain-escape') {
-      ctx.save();
-      ctx.fillStyle = '#0284c7';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.1, H * 0.72);
-      ctx.lineTo(W * 0.5, H * 0.22);
-      ctx.lineTo(W * 0.9, H * 0.72);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.5, H * 0.22);
-      ctx.lineTo(W * 0.38, H * 0.4);
-      ctx.lineTo(W * 0.5, H * 0.35);
-      ctx.lineTo(W * 0.62, H * 0.4);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#0369a1';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.35, H * 0.75);
-      ctx.lineTo(W * 0.7, H * 0.36);
-      ctx.lineTo(W, H * 0.75);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#0f766e';
-      ctx.beginPath();
-      ctx.moveTo(0, H * 0.85);
-      ctx.lineTo(W * 0.25, H * 0.52);
-      ctx.lineTo(W * 0.6, H * 0.85);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(0, H * 0.78, W, H * 0.22);
-      ctx.restore();
-    } else if (art === 'minimal-cat') {
-      ctx.save();
-      ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 52px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('♥', W / 2, H * 0.54);
-      ctx.strokeStyle = '#18181b';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      const cX = W / 2;
-      const cY = H * 0.75;
-      ctx.beginPath();
-      ctx.moveTo(cX - 70, cY - 80);
-      ctx.lineTo(cX - 60, cY - 170);
-      ctx.lineTo(cX - 20, cY - 130);
-      ctx.quadraticCurveTo(cX, cY - 135, cX + 20, cY - 130);
-      ctx.lineTo(cX + 60, cY - 170);
-      ctx.lineTo(cX + 70, cY - 80);
-      ctx.quadraticCurveTo(cX + 90, cY + 40, cX + 65, cY + 90);
-      ctx.quadraticCurveTo(cX, cY + 100, cX - 65, cY + 90);
-      ctx.quadraticCurveTo(cX - 90, cY + 40, cX - 70, cY - 80);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cX + 55, cY + 70);
-      ctx.quadraticCurveTo(cX + 120, cY + 50, cX + 100, cY - 10);
-      ctx.stroke();
-      ctx.restore();
-    } else if (art === 'anime-girl') {
-      ctx.save();
-      ctx.fillStyle = '#6366f1';
-      ctx.beginPath();
-      ctx.arc(W / 2, H * 0.65, 135, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fef3c7';
-      ctx.beginPath();
-      ctx.arc(W / 2, H * 0.67, 88, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#312e81';
-      ctx.beginPath();
-      ctx.arc(W / 2 - 36, H * 0.67, 14, 0, Math.PI * 2);
-      ctx.arc(W / 2 + 36, H * 0.67, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#f472b6';
-      ctx.beginPath();
-      ctx.arc(W / 2 - 42, H * 0.71, 12, 0, Math.PI * 2);
-      ctx.arc(W / 2 + 42, H * 0.71, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#4f46e5';
-      ctx.beginPath();
-      if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(W / 2 - 82, H * 0.76, 164, 140, [32, 32, 0, 0]);
-      } else {
-        ctx.rect(W / 2 - 82, H * 0.76, 164, 140);
-      }
-      ctx.fill();
-      ctx.restore();
-    } else if (art === 'abstract-waves') {
-      ctx.save();
-      const colors = ['#fed7aa', '#fbcfe8', '#ddd6fe', '#bae6fd'];
-      const waveHeights = [H * 0.35, H * 0.52, H * 0.7, H * 0.85];
-      colors.forEach((col, idx) => {
-        ctx.fillStyle = col;
-        ctx.beginPath();
-        ctx.moveTo(0, waveHeights[idx]);
-        ctx.bezierCurveTo(W * 0.35, waveHeights[idx] - 90, W * 0.65, waveHeights[idx] + 110, W, waveHeights[idx] - 40);
-        ctx.lineTo(W, H);
-        ctx.lineTo(0, H);
-        ctx.closePath();
-        ctx.fill();
-      });
-      ctx.restore();
-    } else if (art === 'dino-friend') {
-      ctx.save();
-      const dX = W / 2;
-      const dY = H * 0.74;
-      ctx.fillStyle = '#facc15';
-      [-75, -40, -5].forEach((offset) => {
-        ctx.beginPath();
-        ctx.arc(dX - 76, dY + offset, 16, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      ctx.fillStyle = '#86efac';
-      ctx.beginPath();
-      if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(dX - 72, dY - 115, 144, 185, [52, 52, 42, 42]);
-      } else {
-        ctx.rect(dX - 72, dY - 115, 144, 185);
-      }
-      ctx.fill();
-      ctx.fillStyle = '#064e3b';
-      ctx.beginPath();
-      ctx.arc(dX - 25, dY - 60, 12, 0, Math.PI * 2);
-      ctx.arc(dX + 25, dY - 60, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#bbf7d0';
-      ctx.beginPath();
-      ctx.ellipse(dX, dY + 15, 46, 56, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    } else if (art === 'starry-night') {
-      ctx.save();
-      ctx.fillStyle = '#fde047';
-      ctx.shadowColor = '#fde047';
-      ctx.shadowBlur = 30;
-      ctx.beginPath();
-      ctx.arc(W * 0.76, H * 0.28, 55, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#4c1d95';
-      ctx.beginPath();
-      ctx.arc(W * 0.72, H * 0.26, 48, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-      ctx.beginPath();
-      ctx.arc(W * 0.5, H * 0.72, 90, 0, Math.PI * 2);
-      ctx.arc(W * 0.35, H * 0.75, 70, 0, Math.PI * 2);
-      ctx.arc(W * 0.65, H * 0.75, 70, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 32px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('STARRY', W / 2, H * 0.83);
-      ctx.restore();
-    } else if (art === 'that-girl-era') {
-      ctx.save();
+      ctx.font = '900 50px "Plus Jakarta Sans", sans-serif';
       ctx.fillStyle = '#db2777';
-      ctx.font = '900 48px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('THAT GIRL', W / 2, H * 0.65);
-      ctx.fillText('ERA', W / 2, H * 0.72);
+      ctx.shadowColor = 'rgba(219, 39, 119, 0.35)';
+      ctx.shadowBlur = 8;
+      ctx.fillText('THAT GIRL', W / 2, H * 0.58);
+      ctx.font = '900 56px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText('ERA', W / 2, H * 0.65);
+      ctx.restore();
+    } else if (artInfo?.text && artInfo.textY) {
+      ctx.save();
+      ctx.font = '800 32px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+      ctx.shadowBlur = 8;
+      ctx.fillText(artInfo.text, (artInfo.x / 100) * W, (artInfo.textY / 100) * H);
       ctx.restore();
     }
   }
 
 
-  // --- User Review Submission ---
-  protected setUserRating(star: number): void {
-    this.userRating.set(star);
-  }
-
+  // --- User Comment / Feedback Submission (Phải đăng nhập mới được gửi) ---
   protected onReviewTextInput(event: Event): void {
     const target = event.target as HTMLTextAreaElement;
     this.userReviewText.set(target.value);
   }
 
   protected onSubmitUserReview(): void {
+    if (!this.isLoggedIn()) {
+      this.openLoginModal();
+      return;
+    }
+
     const comment = this.userReviewText().trim();
     if (!comment) return;
 
@@ -1411,12 +1592,12 @@ export class TemplateBrowser {
 
     const newRev: TemplateReview = {
       id: 'rev-' + Date.now(),
-      userName: 'Bạn (Khách hàng)',
-      rating: this.userRating(),
+      userName: this.userDisplayName(),
       date: 'Vừa xong',
       deviceModel: this.state.selectedModel().name,
       comment,
       isVerifiedBuyer: true,
+      tag: 'Góp ý thẩm mỹ',
     };
 
     const currentList = this.reviewsMap()[tpl.id] || [];
@@ -1530,29 +1711,6 @@ export class TemplateBrowser {
         fileSizeBytes: 3100,
         pixelWidth: 300,
         pixelHeight: 360,
-        dpi: 300,
-        isLowResAcknowledged: true,
-      };
-      return [imgLayer];
-    }
-
-    if (art === 'anime-girl') {
-      const imgLayer: ImageElement = {
-        id: 'tpl_layer_anime_' + Date.now(),
-        type: 'image',
-        zIndex: 1,
-        x: 50,
-        y: 68,
-        width: 75,
-        height: 68,
-        rotation: 0,
-        opacity: 1,
-        isLocked: false,
-        storageUrl: svgToDataUri(TEMPLATE_SVG_ANIME),
-        fileType: 'image/png',
-        fileSizeBytes: 4500,
-        pixelWidth: 360,
-        pixelHeight: 420,
         dpi: 300,
         isLowResAcknowledged: true,
       };
@@ -1686,6 +1844,56 @@ export class TemplateBrowser {
       return [textLayer1, textLayer2];
     }
 
+    if (template.elementImage) {
+      const isChibi = art === 'the-creators-chibi';
+      const isReal = art === 'the-creators-real';
+      const artInfo = this.getArtwork(template.artType);
+      const imgLayer: ImageElement = {
+        id: 'tpl_layer_' + template.id + '_' + Date.now(),
+        type: 'image',
+        zIndex: 1,
+        x: artInfo?.x ?? 50,
+        y: artInfo?.y ?? 55,
+        width: artInfo?.width ?? 85,
+        height: artInfo?.height ?? 80,
+        rotation: 0,
+        opacity: 1,
+        isLocked: false,
+        storageUrl: template.elementImage,
+        fileType: isChibi || isReal ? 'image/webp' : 'image/png',
+        fileSizeBytes: 350000,
+        pixelWidth: 1600,
+        pixelHeight: 1600,
+        dpi: 300,
+        isLowResAcknowledged: true,
+      };
+      return [imgLayer];
+    }
+
+    if (art === 'the-creators-real' || art === 'the-creators-chibi') {
+      const isChibi = art === 'the-creators-chibi';
+      const imgLayer: ImageElement = {
+        id: (isChibi ? 'tpl_layer_chibi_' : 'tpl_layer_real_') + Date.now(),
+        type: 'image',
+        zIndex: 1,
+        x: 50,
+        y: 55,
+        width: 92,
+        height: 80,
+        rotation: 0,
+        opacity: 1,
+        isLocked: false,
+        storageUrl: isChibi ? '/assets/templates/the-creators-chibi.webp' : '/assets/templates/the-creators-real.webp',
+        fileType: 'image/webp',
+        fileSizeBytes: isChibi ? 964108 : 1597886,
+        pixelWidth: isChibi ? 941 : 1103,
+        pixelHeight: isChibi ? 1672 : 1426,
+        dpi: 300,
+        isLowResAcknowledged: true,
+      };
+      return [imgLayer];
+    }
+
     return [];
   }
 
@@ -1698,7 +1906,11 @@ export class TemplateBrowser {
       this.state.designName.set(`Ốp lưng ${this.state.selectedModel().name} - Trắng`);
     } else {
       this.state.clearCanvas();
-      this.state.caseBg.set(template.gradient);
+      if (template.bgImage) {
+        this.state.caseBg.set(`url('${template.bgImage}') center / cover no-repeat`);
+      } else {
+        this.state.caseBg.set(template.gradient);
+      }
       this.state.designName.set(`Ốp ${template.name} - ${this.state.selectedModel().name}`);
       const layers = this.createTemplateLayers(template);
       if (layers.length > 0) {
@@ -1806,6 +2018,14 @@ export class TemplateBrowser {
     if (event) event.stopPropagation();
     this.closeCardMenu();
     this.designToDelete.set(item);
+  }
+
+  protected openDeleteConfirmModal(item: SavedDesignItem, event?: MouseEvent): void {
+    this.onDeleteSavedDesign(item, event);
+  }
+
+  protected openRenameModal(item: SavedDesignItem, event?: MouseEvent): void {
+    this.startRenameDesign(item, event);
   }
 
   protected confirmDelete(): void {

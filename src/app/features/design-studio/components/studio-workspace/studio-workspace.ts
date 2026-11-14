@@ -12,7 +12,6 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { CanvasLayer } from '../../models/canvas-element.model';
 import {
   BANNED_KEYWORDS,
@@ -23,6 +22,7 @@ import {
   StudioState,
 } from '../../services/studio-state';
 import { StudioDraft } from '../../services/studio-draft';
+import { StudioCatalogService } from '../../services/studio-catalog';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 import { AuthModal } from '../../../../core/auth/auth-modal';
 import { CartService } from '../../../../shared/services/cart.service';
@@ -33,7 +33,7 @@ import { UNIFIED_STUDIO_PRICE } from '../../services/studio-state';
 @Component({
   selector: 'app-studio-workspace',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './studio-workspace.html',
   styleUrl: './studio-workspace.scss',
@@ -41,6 +41,7 @@ import { UNIFIED_STUDIO_PRICE } from '../../services/studio-state';
 })
 export class StudioWorkspace implements OnDestroy {
   protected readonly state = inject(StudioState);
+  protected readonly catalog = inject(StudioCatalogService);
   protected readonly draft = inject(StudioDraft);
   protected readonly auth = inject(SupabaseAuthService);
   protected readonly authModal = inject(AuthModal);
@@ -112,8 +113,32 @@ export class StudioWorkspace implements OnDestroy {
   // Modals for First Save Naming & Guest Login (Issue 13 & 14)
   protected readonly showNamingModal = signal<boolean>(false);
   protected readonly namingInput = signal<string>('');
+  protected readonly isSavePromptingName = signal<boolean>(false);
   protected readonly showAuthModal = signal<boolean>(false);
   protected readonly guestActionType = signal<'save' | 'cart'>('save');
+
+  // Model Selector Modal in Canvas
+  protected readonly showModelModal = signal<boolean>(false);
+  protected readonly modalSelectedBrandId = signal<string>('brand-apple');
+  protected readonly modalSelectedModelId = signal<string>('iphone-15-pro-max');
+
+  protected readonly brands = this.catalog.brands;
+  protected readonly allModels = this.catalog.models;
+
+  protected readonly modalAvailableModels = computed(() => {
+    const brandId = this.modalSelectedBrandId();
+    return this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+  });
+
+  protected readonly isAnyModalOpen = computed(() => {
+    return (
+      this.showModelModal() ||
+      this.showNamingModal() ||
+      this.showAuthModal() ||
+      this.showShortcutsModal() ||
+      this.isResizeNoticeModalOpen()
+    );
+  });
 
   // Bleed View Mode: 'bleed' (shows overflow at 50% opacity) | 'clipped' (strictly hides overflow)
   protected readonly viewMode = signal<'bleed' | 'clipped'>('bleed');
@@ -213,6 +238,20 @@ export class StudioWorkspace implements OnDestroy {
 
   // Canva Shortcuts Modal State
   protected readonly showShortcutsModal = signal<boolean>(false);
+
+  // Responsive Tool Drawer (Canvas Drawer Toggle on Smaller Screens)
+  protected readonly isMobileDrawerOpen = signal<boolean>(false);
+
+  protected closeMobileDrawer(): void {
+    this.isMobileDrawerOpen.set(false);
+  }
+
+  // Responsive 3D Preview (Float / PIP on Smaller Screens)
+  protected readonly isMobile3dOpen = signal<boolean>(false);
+
+  protected toggleMobile3d(): void {
+    this.isMobile3dOpen.update((v) => !v);
+  }
 
   // Canva-style Flip Transform
   protected toggleFlipH(layerId: string): void {
@@ -434,6 +473,16 @@ export class StudioWorkspace implements OnDestroy {
       this.state.selectedModel();
       this.trigger3dTextureSync();
     });
+
+    // Freeze body scroll when ANY modal is open
+    effect(() => {
+      if (typeof document === 'undefined') return;
+      if (this.isAnyModalOpen()) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
   }
 
   // 3D Preview
@@ -491,11 +540,54 @@ export class StudioWorkspace implements OnDestroy {
       clearTimeout(this.syncFadeTimer);
       this.syncFadeTimer = null;
     }
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  // --- Model Selector Modal Handlers (Đổi máy trực tiếp trong Canvas) ---
+  protected openModelModal(): void {
+    this.modalSelectedBrandId.set(this.state.selectedModel().brandId || 'brand-apple');
+    this.modalSelectedModelId.set(this.state.selectedModel().id || 'iphone-15-pro-max');
+    this.showModelModal.set(true);
+  }
+
+  protected closeModelModal(): void {
+    this.showModelModal.set(false);
+  }
+
+  protected selectModalBrand(brandId: string): void {
+    this.modalSelectedBrandId.set(brandId);
+    const models = this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+    if (models.length > 0) {
+      this.modalSelectedModelId.set(models[0].id);
+    }
+  }
+
+  protected selectModalModel(modelId: string): void {
+    this.modalSelectedModelId.set(modelId);
+  }
+
+  protected applySelectedModel(): void {
+    const modelId = this.modalSelectedModelId();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('caseyes_active_model', modelId);
+    }
+    this.catalog.selectModel(modelId);
+    this.state.requestModelChange(modelId);
+    this.closeModelModal();
+    this.showToast(`Đã chuyển sang phôi ốp ${this.state.selectedModel().name}`);
+    this.trigger3dTextureSync(true);
   }
 
   // --- Tool Switching ---
   protected selectTool(tool: 'txt' | 'stk' | 'img' | 'bg' | 'tpl'): void {
-    this.state.activeTool.set(tool);
+    if (this.state.activeTool() === tool && this.isMobileDrawerOpen()) {
+      this.isMobileDrawerOpen.set(false);
+    } else {
+      this.state.activeTool.set(tool);
+      this.isMobileDrawerOpen.set(true);
+    }
   }
 
   // --- Real-time Banned Keyword Validation (Issue 5) ---
@@ -616,6 +708,17 @@ export class StudioWorkspace implements OnDestroy {
     this.state.addText(content, font, color, size);
   }
 
+  // --- Rename Modal Handler (Phục vụ riêng cho việc đổi tên thiết kế) ---
+  protected onOpenRenameModal(): void {
+    this.isSavePromptingName.set(false);
+    this.namingInput.set(
+      this.state.designName() === 'Thiết kế chưa đặt tên'
+        ? `Ốp lưng ${this.state.selectedModel().name}`
+        : this.state.designName()
+    );
+    this.showNamingModal.set(true);
+  }
+
   // --- Save & Naming Flow (Issue 13 & 14) ---
   protected onSaveDesign(): void {
     if (!this.state.hasLayers()) {
@@ -633,12 +736,10 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    if (this.state.isFirstSave()) {
-      this.namingInput.set(
-        this.state.designName() === 'Thiết kế chưa đặt tên'
-          ? `Ốp lưng ${this.state.selectedModel().name}`
-          : this.state.designName()
-      );
+    // Nếu chưa từng đặt tên riêng (vẫn là tên mặc định), hỏi tên khi bấm Lưu lần đầu
+    if (this.state.isFirstSave() && (this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName())) {
+      this.namingInput.set(`Ốp lưng ${this.state.selectedModel().name}`);
+      this.isSavePromptingName.set(true);
       this.showNamingModal.set(true);
     } else {
       this.performSave();
@@ -648,16 +749,34 @@ export class StudioWorkspace implements OnDestroy {
   protected confirmNaming(): void {
     const name = this.namingInput().trim();
     if (name) {
+      const oldName = this.state.designName();
       this.state.designName.set(name);
+
+      // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
+      this.state.savedDesigns.update((list) =>
+        list.map((d) => (d.name === oldName ? { ...d, name } : d))
+      );
+
+      // Cập nhật nháp localStorage
+      this.saveToGuestLocalStorage();
     }
-    this.state.isFirstSave.set(false);
     this.showNamingModal.set(false);
-    this.performSave();
-    this.startAutoSaveTimer();
+
+    // Phân định rõ ràng: Nếu mở từ nút "Lưu thiết kế" thì thực hiện lưu
+    if (this.isSavePromptingName()) {
+      this.isSavePromptingName.set(false);
+      this.state.isFirstSave.set(false);
+      this.performSave();
+      this.startAutoSaveTimer();
+    } else {
+      // Nếu mở từ nút "Đổi tên", CHỈ cập nhật tên và thông báo, KHÔNG lưu thiết kế trùng lặp
+      this.showToast(`Đã đổi tên thiết kế thành "${name || this.state.designName()}"!`);
+    }
   }
 
   protected closeNamingModal(): void {
     this.showNamingModal.set(false);
+    this.isSavePromptingName.set(false);
   }
 
   private performSave(): void {
@@ -1643,6 +1762,10 @@ export class StudioWorkspace implements OnDestroy {
 
     // 5. Deselect or close modal: Escape
     if (event.key === 'Escape') {
+      if (this.showModelModal()) {
+        this.showModelModal.set(false);
+        return;
+      }
       if (this.showShortcutsModal()) {
         this.showShortcutsModal.set(false);
         return;
@@ -1803,9 +1926,40 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    // Draw Background (Supports any solid color, linear-gradient with any angle, and radial-gradient)
+    // 1. Clip to case silhouette matching 2D canvas frame radius (50px * 2)
+    ctx.save();
+    ctx.beginPath();
+    if ((ctx as any).roundRect) {
+      (ctx as any).roundRect(0, 0, W, H, [100, 100, 100, 100]);
+    } else {
+      ctx.rect(0, 0, W, H);
+    }
+    ctx.clip(); // Strictly clip all bleeding graphics to case silhouette for 3D & print
+
+    // 2. Draw Background (Supports image url, solid color, linear-gradient with any angle, and radial-gradient)
     const bg = this.state.caseBg();
-    if (bg.includes('gradient')) {
+    if (bg.includes('url(')) {
+      const match = bg.match(/url\(['"]?([^'"]+)['"]?\)/);
+      const imgUrl = match ? match[1] : '';
+      if (imgUrl) {
+        let bgImg = this.imageCache.get(imgUrl);
+        if (!bgImg) {
+          bgImg = new Image();
+          bgImg.crossOrigin = 'anonymous';
+          bgImg.onload = () => {
+            this.imageCache.set(imgUrl, bgImg!);
+            this.trigger3dTextureSync(true);
+          };
+          bgImg.src = imgUrl;
+        }
+        if (bgImg.complete && bgImg.naturalWidth > 0) {
+          ctx.drawImage(bgImg, 0, 0, W, H);
+        } else {
+          ctx.fillStyle = '#FAFAFA';
+          ctx.fillRect(0, 0, W, H);
+        }
+      }
+    } else if (bg.includes('gradient')) {
       const colorMatches = bg.match(/#[a-fA-F0-9]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)/g);
       if (colorMatches && colorMatches.length >= 2) {
         if (bg.includes('radial-gradient')) {
@@ -1838,21 +1992,13 @@ export class StudioWorkspace implements OnDestroy {
         grad.addColorStop(1, '#ECE6FD');
         ctx.fillStyle = grad;
       }
+      ctx.fillRect(0, 0, W, H);
     } else {
       // Soften pure white slightly to prevent specular burnout/glare in 3D PBR
       const lower = bg.toLowerCase();
       ctx.fillStyle = (lower === '#ffffff' || lower === '#fff' || lower === '#fafafa') ? '#f3f3f6' : bg;
+      ctx.fillRect(0, 0, W, H);
     }
-
-    // Rounded case silhouette matching 2D canvas frame radius (50px * 2)
-    ctx.beginPath();
-    if ((ctx as any).roundRect) {
-      (ctx as any).roundRect(0, 0, W, H, [100, 100, 100, 100]);
-    } else {
-      ctx.rect(0, 0, W, H);
-    }
-    ctx.fill();
-    ctx.clip(); // Strictly clip all bleeding graphics to case silhouette for 3D & print
 
     // Draw Layers (Text, Stickers, Images)
     const layers = this.state.layers();
@@ -2074,6 +2220,7 @@ export class StudioWorkspace implements OnDestroy {
     }
     ctx.stroke();
     ctx.restore();
+    ctx.restore(); // Restore case clip context
 
     this.capturePreview(canvas);
 
