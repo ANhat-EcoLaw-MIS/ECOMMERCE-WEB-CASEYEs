@@ -156,7 +156,7 @@ export class ReportIssueDialog {
     this.error.set(null);
     await simulateLatency(700);
     const v = this.form.getRawValue();
-    const result = this.service.reportIssue(
+    const result = await this.service.reportIssue(
       this.order().id,
       { issueType: v.issueType as IssueType, description: v.description, evidenceNames: this.evidence().map((e) => e.name) },
       { opKey: this.opKey },

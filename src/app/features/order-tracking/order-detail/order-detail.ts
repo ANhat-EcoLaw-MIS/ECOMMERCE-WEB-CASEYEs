@@ -270,7 +270,7 @@ export class OrderDetail {
     if (this.busy()) return;
     this.busy.set(true);
     await simulateLatency();
-    const r = this.service.confirmReceived(this.order()!.id, { opKey: crypto.randomUUID() });
+    const r = await this.service.confirmReceived(this.order()!.id, { opKey: crypto.randomUUID() });
     this.busy.set(false);
     this.confirmOpen.set(false);
     if (r.error) {
@@ -285,7 +285,7 @@ export class OrderDetail {
     if (this.busy()) return;
     this.busy.set(true);
     await simulateLatency();
-    const r = this.service.resubmitDesign(this.order()!.id, { opKey: crypto.randomUUID() });
+    const r = await this.service.resubmitDesign(this.order()!.id, { opKey: crypto.randomUUID() });
     this.busy.set(false);
     this.toast.show(
       r.error

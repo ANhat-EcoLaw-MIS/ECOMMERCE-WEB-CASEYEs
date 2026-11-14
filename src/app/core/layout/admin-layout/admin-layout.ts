@@ -17,11 +17,10 @@ export class AdminLayout {
   protected readonly roles = STAFF_ROLES;
 
   protected switchRole(role: StaffRole): void {
-    this.session.signIn(role);
+    this.session.setView(role);
   }
 
   protected signOut(): void {
-    this.session.signOut();
-    void this.router.navigateByUrl('/admin/dang-nhap');
+    void this.session.signOut().then(() => this.router.navigateByUrl('/admin/dang-nhap'));
   }
 }

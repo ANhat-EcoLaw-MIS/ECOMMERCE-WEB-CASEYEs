@@ -51,7 +51,7 @@ export class DemoSettings {
   }
 
   patch(change: Partial<DemoState>): void {
-    if (change.role) this.staff.signIn(change.role);
+    if (change.role) this.staff.setView(change.role);
     const next = { ...this._state(), ...change };
     this._state.set(next);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));

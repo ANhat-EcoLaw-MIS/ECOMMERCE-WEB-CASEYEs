@@ -224,12 +224,12 @@ export class AdminOrders {
     this.report(this.service.moderateDesign(o.id, 'Rejected', { violationGroup: this.violation(), reason: this.note() }, this.actor()), `${o.orderCode}: đã gửi yêu cầu chỉnh sửa cho khách`);
   }
 
-  protected startProduction(): void {
-    const r = this.service.closeBatch(this.actor());
+  protected async startProduction(): Promise<void> {
+    const r = await this.service.closeBatch(this.actor());
     if (r.error) {
       return this.flash.set({ ok: false, text: r.error.message });
     }
-    this.flash.set({ ok: true, text: `Đã đưa ${r.data.count} đơn vào sản xuất (${Object.entries(r.data.groups).map(([m, n]) => `${m}: ${n}`).join(', ')}).` });
+    this.flash.set({ ok: true, text: `Đã đưa ${r.data.count} đơn vào sản xuất.` });
   }
 
   protected pack(o: Order): void {
@@ -272,7 +272,8 @@ export class AdminOrders {
     this.report(this.service.retryTransfer(o.id, r.id, this.actor()), `${o.orderCode}: chuyển khoản lại`);
   }
 
-  private report(r: { error: { message: string } | null }, text: string): void {
+  private async report(pending: { error: { message: string } | null } | Promise<{ error: { message: string } | null }>, text: string): Promise<void> {
+    const r = await pending;
     this.flash.set(r.error ? { ok: false, text: r.error.message } : { ok: true, text });
     if (!r.error) this.note.set('');
   }
