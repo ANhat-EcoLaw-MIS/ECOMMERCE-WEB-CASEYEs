@@ -27,7 +27,6 @@ export const CARRIER: Actor = { type: 'Carrier', id: 'mock-3pl' };
 
 export type RefundChoice =
   | { readonly method: 'Bank'; readonly bank: string; readonly accountNo: string; readonly holder: string }
-  | { readonly method: 'Voucher' }
   | { readonly method: 'Later' };
 
 function rid(prefix: string): string {
@@ -59,9 +58,6 @@ export function withTransition(o: Order, to: OrderStatus, actor: Actor, reason: 
 
 export function applyRefundChoice(r: RefundRequest, choice: RefundChoice | undefined): RefundRequest {
   if (!choice || choice.method === 'Later') return r;
-  if (choice.method === 'Voucher') {
-    return { ...r, refundMethod: 'Voucher', refundBank: undefined, refundAccountNo: undefined, refundAccountHolder: undefined };
-  }
   return {
     ...r,
     refundMethod: 'Bank',

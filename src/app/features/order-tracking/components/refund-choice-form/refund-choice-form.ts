@@ -8,7 +8,7 @@ import { RefundChoice } from '../../domain/order-mutations';
 import { sameHolderName } from '../../domain/order-rules';
 import { FIELD, LABEL } from '../ui';
 
-type Method = 'Bank' | 'Voucher' | 'Later';
+type Method = 'Bank' | 'Later';
 
 /** Upper case without Vietnamese accents, as banks print account names. */
 export function toHolderName(s: string): string {
@@ -25,7 +25,7 @@ export function toHolderName(s: string): string {
 
 /**
  * How the customer receives a refund (P1-11): bank account (holder = payer, shown back as a
- * summary and masked after saving), voucher 100%, or "Cung cấp sau".
+ * summary and masked after saving) or "Cung cấp sau". Refunds are bank transfers only.
  */
 @Component({
   selector: 'app-refund-choice-form',
@@ -49,7 +49,6 @@ export class RefundChoiceForm implements OnInit {
   protected readonly banks = VN_BANKS;
   protected readonly listId = `ot-banks-${crypto.randomUUID().slice(0, 6)}`;
   protected readonly deadlineDays = DELIVERY_CONFIG.refundAccountDeadlineDays;
-  protected readonly voucherDays = DELIVERY_CONFIG.voucherValidDays;
   protected readonly warnBox = `rounded-xl border px-3 py-2 text-xs ${TONE_CLASSES.warning.box}`;
 
   protected readonly form = this.fb.group({
@@ -96,7 +95,6 @@ export class RefundChoiceForm implements OnInit {
 
   private emit(): void {
     const v = this.form.getRawValue();
-    if (v.method === 'Voucher') return this.choiceChange.emit({ method: 'Voucher' });
     if (v.method === 'Later') return this.choiceChange.emit({ method: 'Later' });
     this.choiceChange.emit(this.bankValid() ? { method: 'Bank', bank: v.bank.split(' – ')[0].trim(), accountNo: v.accountNo, holder: v.holder.trim() } : null);
   }

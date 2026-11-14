@@ -43,13 +43,11 @@ export class RefundProgress {
   protected readonly formatVnd = formatVnd;
   protected readonly situationLabel = computed(() => SITUATION_LABELS[this.refund().situation]);
   protected readonly etaText = DELIVERY_CONFIG.refundEtaText;
-  protected readonly deadlineDays = DELIVERY_CONFIG.refundAccountDeadlineDays;
   protected readonly warnBox = `rounded-xl border px-4 py-3 text-sm ${TONE_CLASSES.warning.box}`;
   protected readonly dangerBox = `rounded-xl border px-4 py-3 text-sm ${TONE_CLASSES.danger.box}`;
   protected readonly choice = signal<RefundChoice | null>(null);
   protected readonly busy = signal(false);
 
-  protected readonly isVoucher = computed(() => this.refund().refundMethod === 'Voucher');
   protected readonly needsChoice = computed(() => {
     const r = this.refund();
     return (r.status === 'Pending_Approval' && !r.refundMethod) || r.status === 'Refund_Pending_Retry';
@@ -62,13 +60,11 @@ export class RefundProgress {
     const done = r.status === 'Refunded';
     const state = (isDone: boolean, isCurrent: boolean): StepState => (isDone ? 'done' : isCurrent ? 'current' : 'upcoming');
     const list: { key: string; label: string; state: StepState }[] = [
-      { key: 'choose', label: 'Chọn cách nhận hoàn', state: state(chosen || transferring || done, !chosen) },
-      { key: 'received', label: 'Đã tiếp nhận, chờ xác nhận', state: state(transferring || done, chosen && r.status === 'Pending_Approval') },
+      { key: 'choose', label: 'Cung cấp tài khoản nhận hoàn', state: state(chosen || transferring || done, !chosen) },
+      { key: 'received', label: 'Shop đang xác nhận', state: state(transferring || done, chosen && r.status === 'Pending_Approval') },
+      { key: 'transfer', label: 'Đang chuyển khoản', state: state(done, transferring) },
+      { key: 'done', label: 'Đã hoàn tiền', state: state(done, false) },
     ];
-    if (!this.isVoucher()) {
-      list.push({ key: 'transfer', label: 'Đang chuyển khoản', state: state(done, transferring) });
-    }
-    list.push({ key: 'done', label: this.isVoucher() ? 'Đã cấp voucher' : 'Đã hoàn tiền', state: state(done, false) });
     return list;
   });
 

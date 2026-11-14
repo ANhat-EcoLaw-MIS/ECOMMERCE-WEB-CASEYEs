@@ -1,13 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { DELIVERY_CONFIG } from '../config/delivery-config';
-import { addDaysIso } from '../domain/calendar';
 import {
   SYSTEM,
   finalizeFailedDelivery,
   withCancellation,
   withRefund,
   withTransition,
-  withVoucher,
 } from '../domain/order-mutations';
 import { Order, RefundRequest } from '../models/order-tracking.model';
 import { Clock } from './clock';
@@ -113,19 +111,15 @@ export class ScheduledJobs {
         for (const r of o.refunds) {
           if (r.status !== 'Pending_Approval' || r.refundMethod) continue;
           const created = new Date(r.createdAt).getTime();
-          if (t >= created + cfg.refundAccountDeadlineDays * DAY) {
-            const v = withVoucher(changed, 'Store_Credit', r.amount, nowIso);
-            changed = {
-              ...v.order,
-              refunds: v.order.refunds.map((x): RefundRequest =>
-                x.id === r.id ? { ...x, status: 'Refunded', refundMethod: 'Voucher', voucherCode: v.voucher.code, approvedBy: 'system-job4', resolvedAt: nowIso } : x,
-              ),
-            };
-            this.notifier.notify(db, changed, 'Đã hoàn bằng voucher', `Sau 7 ngày chưa nhận được tài khoản, bạn được cấp voucher ${v.voucher.code} (hạn ${new Date(addDaysIso(nowIso, cfg.voucherValidDays)).toLocaleDateString('vi-VN')}).`, nowIso);
-            out.push(`${o.orderCode}: cấp voucher thay hoàn tiền (${r.situation})`);
+          if (!r.escalatedAt && t >= created + cfg.refundAccountDeadlineDays * DAY) {
+            // No more automatic voucher: CSKH contacts the customer to get the account.
+            changed = { ...changed, refunds: changed.refunds.map((x): RefundRequest => (x.id === r.id ? { ...x, escalatedAt: nowIso } : x)) };
+            this.bus.dispatch(db, 'CustomerService', 'ContactForRefundAccount', { orderId: o.id, refundId: r.id, amount: r.amount }, nowIso);
+            this.notifier.notify(db, changed, 'CSKH sẽ liên hệ để hoàn tiền', 'Bạn chưa cung cấp tài khoản nhận hoàn. Nhân viên CSKH sẽ liên hệ để hỗ trợ.', nowIso);
+            out.push(`${o.orderCode}: quá ${cfg.refundAccountDeadlineDays} ngày chưa có tài khoản → chuyển CSKH liên hệ (${r.situation})`);
           } else if (!r.reminderSentAt && t >= created + cfg.reminderDay * DAY) {
             changed = { ...changed, refunds: changed.refunds.map((x) => (x.id === r.id ? { ...x, reminderSentAt: nowIso } : x)) };
-            this.notifier.notify(db, changed, 'Nhắc cung cấp tài khoản nhận hoàn', 'Vui lòng nhập tài khoản hoặc chọn nhận voucher trong chi tiết đơn.', nowIso);
+            this.notifier.notify(db, changed, 'Nhắc cung cấp tài khoản nhận hoàn', 'Vui lòng nhập tài khoản ngân hàng nhận hoàn trong chi tiết đơn.', nowIso);
             out.push(`${o.orderCode}: nhắc cung cấp tài khoản (ngày 3)`);
           }
         }

@@ -73,7 +73,8 @@ export type RefundStatus =
   | 'Rejected'
   | 'Refund_Pending_Retry'
   | 'Refund_Pending_Manual';
-export type RefundMethod = 'Bank' | 'Voucher';
+/** Refunds are bank transfers only (feedback 14/11: no 100% voucher option). */
+export type RefundMethod = 'Bank';
 /** Table 3.4 situations. S3c never creates a request; it is kept for logging. */
 export type RefundSituation = 'S1' | 'S2' | 'S3a' | 'S3b' | 'S3c' | 'S4';
 
@@ -199,7 +200,8 @@ export interface RefundRequest {
   readonly transferAttempts: number;
   readonly rejectReason?: string;
   readonly reminderSentAt?: string;
-  readonly voucherCode?: string;
+  /** Still no account after the deadline: handed to CSKH to contact the customer. */
+  readonly escalatedAt?: string;
   readonly createdAt: string;
   readonly resolvedAt?: string;
 }

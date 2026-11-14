@@ -188,7 +188,7 @@ export function refundStatusLabel(r: RefundRequest): string {
     case 'Processing':
       return 'Đang hoàn';
     case 'Refunded':
-      return r.refundMethod === 'Voucher' ? 'Đã hoàn bằng voucher' : 'Đã hoàn tiền';
+      return 'Đã hoàn tiền';
     case 'Rejected':
       return 'Từ chối';
     case 'Refund_Pending_Retry':

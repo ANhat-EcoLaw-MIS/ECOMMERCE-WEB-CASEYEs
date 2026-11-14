@@ -35,8 +35,6 @@
               @case ('choose') {
                 @if (r.refundMethod === 'Bank' && r.status !== 'Refund_Pending_Retry') {
                   <p class="text-xs text-ink-soft">Chuyển khoản · {{ r.refundBank }} ****{{ r.refundAccountNo?.slice(-4) }}</p>
-                } @else if (r.refundMethod === 'Voucher') {
-                  <p class="text-xs text-ink-soft">Nhận voucher 100% giá trị</p>
                 }
               }
               @case ('transfer') {
@@ -53,9 +51,6 @@
                   @if (r.bankRef) {
                     <p class="text-xs text-ink-soft">Mã giao dịch <span class="font-mono text-ink">{{ r.bankRef }}</span>{{ r.resolvedAt ? ' · ' : '' }}{{ r.resolvedAt | date: 'dd/MM/yyyy' }}</p>
                   }
-                  @if (r.voucherCode) {
-                    <p class="text-xs text-ink-soft">Mã voucher <span class="font-mono text-ink">{{ r.voucherCode }}</span>{{ r.resolvedAt ? ' · ' : '' }}{{ r.resolvedAt | date: 'dd/MM/yyyy' }}</p>
-                  }
                 }
               }
             }
@@ -68,9 +63,9 @@
   @if (needsChoice()) {
     <div class="mt-4">
       @if (r.status === 'Refund_Pending_Retry') {
-        <p role="status" class="mb-3" [class]="warnBox">Chuyển khoản chưa thành công. Vui lòng kiểm tra lại tài khoản hoặc chọn nhận voucher.</p>
+        <p role="status" class="mb-3" [class]="warnBox">Chuyển khoản chưa thành công. Vui lòng kiểm tra và nhập lại thông tin tài khoản.</p>
       } @else {
-        <p class="mb-3 text-sm text-ink">Chờ bạn cung cấp tài khoản hoặc chọn voucher. Sau {{ deadlineDays }} ngày chưa có thông tin, shop tự cấp voucher 100%.</p>
+        <p class="mb-3 text-sm text-ink">Nhập tài khoản ngân hàng để nhận tiền hoàn.@if (r.escalatedAt) { CSKH sẽ liên hệ để hỗ trợ bạn. }</p>
       }
       <app-refund-choice-form [payerName]="order().payerName" [amountLabel]="formatVnd(r.amount)" [allowLater]="false" (choiceChange)="choice.set($event)" />
       <button type="button" [class]="btnPrimary" class="mt-3 w-full" [disabled]="!choice() || busy()" (click)="submit()">Lưu thông tin nhận hoàn</button>

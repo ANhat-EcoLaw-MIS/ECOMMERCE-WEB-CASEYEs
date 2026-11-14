@@ -40,11 +40,11 @@ describe('buildInsights (P2)', () => {
   it('counts cancel kinds, refund methods and reorder clicks', () => {
     const ev = (name: TrackEvent['name'], props: TrackEvent['props'] = {}): TrackEvent => ({ name, ts: '', props });
     const r = buildInsights(
-      [ev('cancel_submitted', { kind: 'cod' }), ev('cancel_submitted', { kind: 'request' }), ev('refund_method_chosen', { method: 'Voucher' }), ev('reorder_clicked')],
+      [ev('cancel_submitted', { kind: 'cod' }), ev('cancel_submitted', { kind: 'request' }), ev('refund_method_chosen', { method: 'Later' }), ev('reorder_clicked')],
       [o({ status: 'Cancelled', cancellation: { reason: 'Changed_Mind', cause: 'Customer_In_Window', customerFault: false, createdAt: '' } })],
     );
     expect(r.summary[0].value).toBe('1 / 1');
-    expect(r.summary[1].value).toBe('1 / 0 / 0');
+    expect(r.summary[1].value).toBe('0 / 1');
     expect(r.reasonRows[0]).toMatchObject({ label: 'Đổi ý', value: '1' });
   });
 });

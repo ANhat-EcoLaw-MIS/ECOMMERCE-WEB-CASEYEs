@@ -33,7 +33,6 @@ export function buildInsights(events: readonly TrackEvent[], orders: readonly Or
 
   const cod = count('cancel_submitted', (e) => e.props['kind'] === 'cod');
   const req = count('cancel_submitted', (e) => e.props['kind'] === 'request');
-  const voucher = count('refund_method_chosen', (e) => e.props['method'] === 'Voucher');
   const bank = count('refund_method_chosen', (e) => e.props['method'] === 'Bank');
   const later = count('refund_method_chosen', (e) => e.props['method'] === 'Later');
 
@@ -49,7 +48,7 @@ export function buildInsights(events: readonly TrackEvent[], orders: readonly Or
 
   const summary: InsightRow[] = [
     { label: 'Hủy COD / Yêu cầu hủy (đơn trả trước)', value: `${cod} / ${req}`, note: `COD chiếm ${pct(cod, cod + req)}` },
-    { label: 'Nhận hoàn: voucher / tài khoản / cung cấp sau', value: `${voucher} / ${bank} / ${later}`, note: `Voucher ${pct(voucher, voucher + bank + later)}` },
+    { label: 'Nhận hoàn: nhập tài khoản ngay / cung cấp sau', value: `${bank} / ${later}`, note: `Cung cấp sau ${pct(later, bank + later)}` },
     { label: 'Thời gian TB từ gửi yêu cầu hủy đến có kết quả', value: avgHours === null ? '–' : `${avgHours.toFixed(1)} giờ`, note: `${decided.length} yêu cầu` },
     { label: 'Số lần mở “Vì sao?” ở ngày giao dự kiến', value: String(count('edd_why_opened')), note: `trên ${count('order_detail_viewed')} lần xem chi tiết` },
     { label: 'Bấm “Mua lại / Đặt lại thiết kế”', value: String(reorder), note: `${pct(reorder, closedOrders)} so với đơn đã hoàn thành/hủy` },

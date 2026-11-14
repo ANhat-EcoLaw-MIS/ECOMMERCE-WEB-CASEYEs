@@ -180,8 +180,8 @@ describe('OrderTrackingService scenarios (v8)', () => {
   it('P0-5 scenario 5: design rejected -> customer cancels and gets 100% at once (S2)', () => {
     const o = create({ template: 'custom_upload' });
     ok(service.moderateDesign(o.id, 'Rejected', { violationGroup: 'Khác', reason: 'Ảnh mờ' }, OPERATOR));
-    ok(service.cancelRejectedOrder(o.id, { method: 'Voucher' }, {}));
-    expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S2', refundMethod: 'Voucher' });
+    ok(service.cancelRejectedOrder(o.id, { method: 'Bank', bank: 'VCB', accountNo: '0123456789', holder: 'NGUYEN NHAT ANH' }, {}));
+    expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S2', refundMethod: 'Bank' });
   });
 
   it('design rejected 3 times -> only cancel & refund remains', () => {
@@ -283,7 +283,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
     ok(service.applyWebhook(o.id, 'In_Transit'));
     ok(service.applyWebhook(o.id, 'Delivery_Failed', { failureCause: 'Lost_In_Transit' }));
     ok(service.applyWebhook(o.id, 'Warehouse_Received'));
-    ok(service.cancelAfterFailure(o.id, { method: 'Voucher' }, {}));
+    ok(service.cancelAfterFailure(o.id, { method: 'Bank', bank: 'VCB', accountNo: '0123456789', holder: 'NGUYEN NHAT ANH' }, {}));
     expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S3a', amount: 284_000 });
   });
 
@@ -293,7 +293,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
     ok(service.applyWebhook(o.id, 'In_Transit'));
     ok(service.applyWebhook(o.id, 'Delivery_Failed', { failureCause: 'Customer_Refused' }));
     ok(service.applyWebhook(o.id, 'Warehouse_Received'));
-    ok(service.cancelAfterFailure(o.id, { method: 'Voucher' }, {}));
+    ok(service.cancelAfterFailure(o.id, { method: 'Bank', bank: 'VCB', accountNo: '0123456789', holder: 'NGUYEN NHAT ANH' }, {}));
     expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S3b', amount: 179_000, deductedFee: 50_000 });
   });
 
@@ -344,7 +344,10 @@ describe('OrderTrackingService scenarios (v8)', () => {
     ok(service.cancelRejectedOrder(b.id, { method: 'Later' }, {}));
     later(24 * 7 + 1);
     jobs.run('job4');
-    expect(get(b.id).refunds[0]).toMatchObject({ status: 'Refunded', refundMethod: 'Voucher' });
+    // No automatic voucher any more: the refund stays pending and is handed to CSKH.
+    expect(get(b.id).refunds[0].status).toBe('Pending_Approval');
+    expect(get(b.id).refunds[0].refundMethod).toBeUndefined();
+    expect(get(b.id).refunds[0].escalatedAt).toBeTruthy();
   });
 
   it('listOpenOrders follows Table 3.1', () => {
