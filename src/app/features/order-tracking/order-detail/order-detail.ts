@@ -6,6 +6,7 @@ import { PhoneCaseMock } from '../../../shared/ui/phone-case-mock/phone-case-moc
 import { CancelDialog, CANCEL_REASONS, CancelMode } from '../components/cancel-dialog/cancel-dialog';
 import { CancelRequestPanel } from '../components/cancel-request-panel/cancel-request-panel';
 import { NotificationBell } from '../components/notification-bell/notification-bell';
+import { OrderJourney } from '../components/order-journey/order-journey';
 import { OrderTimeline } from '../components/order-timeline/order-timeline';
 import { OtModal } from '../components/ot-modal/ot-modal';
 import { RedeliveryDialog } from '../components/redelivery-dialog/redelivery-dialog';
@@ -35,19 +36,10 @@ import {
 } from '../domain/order-rules';
 import { formatVnd } from '../domain/shipping-fee';
 import { statusLabel } from '../domain/timeline';
-import { ActorType, OrderItem } from '../models/order-tracking.model';
+import { OrderItem } from '../models/order-tracking.model';
 import { Clock } from '../services/clock';
 import { OrderTrackingService } from '../services/order-tracking.service';
 import { track } from '../services/tracker';
-
-const ACTOR_LABELS: Record<ActorType, string> = {
-  Customer: 'Bạn',
-  Operator: "Xưởng CasEYE's",
-  Admin: "CasEYE's",
-  System: 'Hệ thống',
-  Carrier: 'Đơn vị vận chuyển',
-  CustomerService: 'Chăm sóc khách hàng',
-};
 
 /** "Bạn cần làm gì?" banner content (P1-6): one sentence + one button. */
 interface Todo {
@@ -68,6 +60,7 @@ interface Todo {
     PhoneCaseMock,
     StatusBadge,
     OrderTimeline,
+    OrderJourney,
     OtModal,
     CancelDialog,
     ReportIssueDialog,
@@ -94,7 +87,6 @@ export class OrderDetail {
   protected readonly btnSecondary = BTN_SECONDARY;
   protected readonly btnGhost = BTN_GHOST;
   protected readonly formatVnd = formatVnd;
-  protected readonly actorLabels = ACTOR_LABELS;
   protected readonly tierLabels = SHIPPING_TIER_LABELS;
   protected readonly fixDays = DELIVERY_CONFIG.designFixDeadlineDays;
   protected readonly todoBox = `flex flex-col gap-3 rounded-card border p-4 sm:flex-row sm:items-center sm:justify-between ${TONE_CLASSES.warning.box}`;
@@ -177,7 +169,7 @@ export class OrderDetail {
       return { text: `Giao hàng chưa thành công. Hàng được giữ đến ${formatFullDate(o.warehouseHold.expiresAt)}, hãy chọn cách giao lại.`, button: 'Chọn cách giao lại', intent: 'redeliver' };
     }
     if (this.refundNeedsCustomer()) {
-      return { text: 'Shop cần thông tin để hoàn tiền cho bạn: nhập tài khoản hoặc chọn nhận voucher.', button: 'Cung cấp thông tin nhận hoàn', intent: 'refund' };
+      return { text: 'Nhập tài khoản ngân hàng để shop chuyển tiền hoàn cho bạn.', button: 'Cung cấp thông tin nhận hoàn', intent: 'refund' };
     }
     return null;
   });
@@ -198,7 +190,7 @@ export class OrderDetail {
     const sameDay = o.earliestEDD === toDateKey(new Date(o.confirmedAt ?? o.confirmDueAt ?? o.createdAt));
     return {
       express,
-      title: o.status === 'Delivered' ? 'Đã giao' : express ? (sameDay ? 'Giao trong hôm nay' : 'Giao ngày làm việc kế tiếp') : 'Dự kiến giao',
+      title: o.status === 'Delivered' ? 'Đã giao' : express ? (sameDay ? 'Giao trong hôm nay' : 'Giao vào ngày làm việc tiếp theo') : 'Dự kiến giao',
       range: o.status === 'Delivered' && o.deliveredAt
         ? formatDayLabel(toDateKey(new Date(o.deliveredAt)))
         : express || o.earliestEDD === o.latestEDD
@@ -206,12 +198,11 @@ export class OrderDetail {
           : `${formatDayLabel(o.earliestEDD)} – ${formatDayLabel(o.latestEDD)}`,
       delivered: o.status === 'Delivered',
       why: express
-        ? `Đơn Hỏa tốc xác nhận trước ${String(DELIVERY_CONFIG.expressCutoff.hour).padStart(2, '0')}:00 ngày làm việc được giao trong ngày, sau giờ này giao ngày làm việc kế tiếp.`
-        : `Xử lý & in ${handling.min}–${handling.max} ngày làm việc (Thứ 2–Thứ 6) + vận chuyển ${t.min === t.max ? t.min : `${t.min}–${t.max}`} ngày (Thứ 2–Thứ 7, theo địa chỉ của bạn).`,
+        ? `Đơn Hỏa tốc được xác nhận trước ${String(DELIVERY_CONFIG.expressCutoff.hour).padStart(2, '0')}:00 (Thứ Hai – Thứ Sáu) sẽ giao ngay trong ngày; sau giờ này, đơn được giao vào ngày làm việc tiếp theo.`
+        : `Gồm ${handling.min}–${handling.max} ngày làm việc để ${o.hasCustomItem ? 'in và kiểm tra chất lượng' : 'chuẩn bị hàng'}, cộng ${t.min === t.max ? t.min : `${t.min}–${t.max}`} ngày vận chuyển đến địa chỉ của bạn (không tính Chủ nhật và ngày lễ).`,
       adjusted: o.redeliveryUsed || o.qcReprintCount > 0 || o.tickets.some((t) => t.resolution === 'Reprint') || o.cancelRequests.some((r) => r.status === 'Rejected'),
     };
   });
-  protected readonly logs = computed(() => [...this.order()!.logs].reverse());
 
   constructor() {
     effect(() => {
@@ -270,7 +261,7 @@ export class OrderDetail {
   }
 
   protected voucherLabel(kind: string): string {
-    return { Late_Delivery: 'Voucher giao trễ', Express_Surcharge: 'Voucher bù phụ phí Hỏa tốc', Store_Credit: 'Voucher hoàn tiền', Complaint_Compensation: 'Voucher đền bù' }[kind] ?? kind;
+    return { Late_Delivery: 'Voucher giao trễ', Express_Surcharge: 'Voucher bù phụ phí Hỏa tốc', Complaint_Compensation: 'Voucher đền bù' }[kind] ?? kind;
   }
 
   protected async confirmReceived(): Promise<void> {

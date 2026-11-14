@@ -12,7 +12,7 @@
 
     @switch (mode()) {
       @case ('cod') {
-        <p class="text-sm text-ink-soft">Đơn thanh toán khi nhận hàng nên hủy không phát sinh phí.</p>
+        <p class="text-sm text-ink-soft">Đơn thanh toán khi nhận hàng nên bạn hủy hoàn toàn miễn phí.</p>
       }
       @case ('request') {
         <p class="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
@@ -20,10 +20,10 @@
         </p>
       }
       @case ('rejected') {
-        <p class="text-sm text-ink-soft">Thiết kế chưa đạt chính sách nội dung. Khi hủy, bạn được hoàn <b class="text-ink">100%</b>.</p>
+        <p class="text-sm text-ink-soft">Bản thiết kế chưa phù hợp chính sách nội dung. Khi hủy, bạn được hoàn <b class="text-ink">100%</b>.</p>
       }
       @case ('failed') {
-        <p class="text-sm text-ink-soft">Giao không thành công: <b class="text-ink">{{ faultText() }}</b>.</p>
+        <p class="text-sm text-ink-soft">Lần giao chưa thành công: <b class="text-ink">{{ faultText() }}</b>.</p>
         @if (refund(); as r) {
           <p class="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
             Số tiền hoàn: <b>{{ amountLabel() }}</b>
@@ -32,7 +32,7 @@
             }
           </p>
         } @else {
-          <p class="text-sm text-ink-soft">Đơn thanh toán khi nhận hàng nên không phát sinh hoàn tiền.</p>
+          <p class="text-sm text-ink-soft">Đơn chưa thanh toán nên không có khoản hoàn tiền.</p>
         }
       }
     }
@@ -60,7 +60,7 @@
 
     @if (needsRefundChoice()) {
       <app-refund-choice-form [payerName]="order().payerName" [amountLabel]="amountLabel()" (choiceChange)="refundChoice.set($event)" />
-      <p class="text-xs text-ink-soft">Mọi khoản hoàn được Admin đối chiếu và chuyển khoản thủ công, không hoàn tự động.</p>
+      <p class="text-xs text-ink-soft">Tiền hoàn được chuyển khoản vào tài khoản của bạn sau khi shop xác nhận.</p>
     }
 
     @if (error(); as message) {

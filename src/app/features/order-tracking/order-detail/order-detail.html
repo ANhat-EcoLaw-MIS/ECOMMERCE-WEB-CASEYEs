@@ -25,59 +25,65 @@
           }
 
           <!-- Where is my order / when will it arrive -->
-          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft sm:p-6">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div class="min-w-0">
-                <h1 class="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">Đơn {{ o.orderCode }}</h1>
-                <p class="mt-1 text-sm text-ink-soft">Đặt lúc {{ o.createdAt | date: 'HH:mm, dd/MM/yyyy' }}</p>
-              </div>
-              <div class="flex flex-wrap items-center gap-2">
-                @if (mixed()) {
-                  <span class="rounded-pill border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">Giao chung một kiện</span>
-                }
-                <app-status-badge [status]="o.status" [label]="label()" />
-              </div>
-            </div>
-
-            <!-- P1-7: delivery date right under the status, second-largest text -->
-            @if (showEdd()) {
-              @let e = edd();
-              <div class="mt-4 rounded-xl bg-brand-50 px-4 py-3">
-                <p class="text-xs font-semibold uppercase tracking-wide text-brand-800">{{ e.title }}</p>
-                <p class="font-display text-xl font-bold text-brand-900 sm:text-2xl">{{ e.range }}</p>
-                @if (!e.delivered) {
-                <details class="group mt-1 text-sm text-brand-900" (toggle)="onWhy($event)">
-                  <summary class="inline-flex min-h-9 cursor-pointer list-none items-center gap-1 font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-brand-400">
-                    Vì sao?
-                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4 transition-transform group-open:rotate-180 motion-reduce:transition-none"><path d="m6 9 6 6 6-6" /></svg>
-                  </summary>
-                  <p class="mt-1">{{ e.why }}</p>
-                  @if (e.adjusted) {
-                    <p class="mt-1 text-xs text-ink-soft">Ngày giao đã được cập nhật theo tiến độ mới của đơn.</p>
+          <article class="overflow-hidden rounded-card border border-line bg-surface-alt shadow-soft">
+            <header class="bg-(image:--grad-soft) px-5 pb-4 pt-5 sm:px-6">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">Đơn hàng</p>
+                  <h1 class="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{{ o.orderCode }}</h1>
+                  <p class="mt-0.5 text-sm text-ink-soft">Đặt lúc {{ o.createdAt | date: 'HH:mm, dd/MM/yyyy' }}</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  @if (mixed()) {
+                    <span class="rounded-pill bg-surface-alt px-2.5 py-1 text-xs font-semibold text-brand-800 ring-1 ring-brand-200">Giao chung một kiện</span>
                   }
-                </details>
-                }
+                  <app-status-badge [status]="o.status" [label]="label()" />
+                </div>
               </div>
-            }
 
+              @if (showEdd()) {
+                @let e = edd();
+                <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <p class="inline-flex items-center gap-2 rounded-pill bg-surface-alt px-3.5 py-1.5 text-sm text-ink ring-1 ring-brand-100">
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-4 text-brand-600"><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                    <span>{{ e.title }}</span>
+                    <b class="font-semibold text-brand-900">{{ e.range }}</b>
+                  </p>
+                  @if (!e.delivered) {
+                    <details class="group text-sm text-ink-soft" (toggle)="onWhy($event)">
+                      <summary class="inline-flex min-h-9 cursor-pointer list-none items-center gap-1 font-medium text-brand-800 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-brand-400">
+                        Cách tính ngày giao
+                        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4 transition-transform group-open:rotate-180 motion-reduce:transition-none"><path d="m6 9 6 6 6-6" /></svg>
+                      </summary>
+                      <p class="mt-1 max-w-prose">{{ e.why }}</p>
+                      @if (e.adjusted) {
+                        <p class="mt-1 text-xs">Ngày giao đã được cập nhật theo tiến độ mới của đơn.</p>
+                      }
+                    </details>
+                  }
+                </div>
+              }
+            </header>
+
+            <div class="px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
             @if (o.cancelRequests.length) {
               <!-- FR-OT-20: cancel request block sits above the progress bar -->
-              <div class="mt-5"><app-cancel-request-panel [order]="o" /></div>
+              <div class="mb-5"><app-cancel-request-panel [order]="o" /></div>
             }
 
-            <div class="mt-5">
+            <div>
               @switch (o.status) {
                 @case ('Action_Required') {
                   <div [class]="infoBox()">
                     <p class="font-display font-bold">Thiết kế cần chỉnh sửa</p>
                     @if (lastRejection(); as r) {
-                      <p class="mt-1 text-sm">Nhóm vi phạm: <b>{{ r.violationGroup }}</b> · {{ r.reason }}</p>
+                      <p class="mt-1 text-sm">Lý do: <b>{{ r.violationGroup }}</b> – {{ r.reason }}</p>
                     }
                     <p class="mt-1 text-sm">
                       @if (canResubmit()) {
-                        Bạn còn {{ resubmitsLeft() }} lượt gửi lại. Quá {{ fixDays }} ngày không chỉnh sửa, đơn tự hủy và được hoàn 100%.
+                        Bạn còn {{ resubmitsLeft() }} lượt gửi lại. Nếu chưa chỉnh sửa sau {{ fixDays }} ngày, đơn sẽ tự hủy và bạn được hoàn 100%.
                       } @else {
-                        Bạn đã dùng hết lượt gửi lại, đơn chỉ còn lựa chọn hủy và nhận hoàn 100%.
+                        Bạn đã dùng hết lượt gửi lại. Bạn có thể hủy đơn và nhận hoàn 100%.
                       }
                     </p>
                     <button type="button" [class]="btnSecondary" class="mt-4" (click)="openCancel('rejected')">Hủy đơn & nhận hoàn tiền</button>
@@ -87,23 +93,23 @@
                   <div [class]="infoBox()">
                     <p class="font-display font-bold">Giao hàng không thành công</p>
                     @if (failureText(); as f) {
-                      <p class="mt-1 text-sm">Nguyên nhân: <b>{{ f.cause }}</b> (bên chịu lỗi: {{ f.party }})</p>
+                      <p class="mt-1 text-sm">Nguyên nhân: <b>{{ f.cause }}</b> · Trách nhiệm: {{ f.party }}</p>
                     }
                     @if (o.warehouseHold; as h) {
                       @if (h.disputed) {
-                        <p class="mt-1 text-sm">Shop đang đối soát nguyên nhân với đơn vị vận chuyển; hạn lưu kho tạm dừng trong thời gian này.</p>
+                        <p class="mt-1 text-sm">Shop đang làm rõ nguyên nhân với đơn vị vận chuyển. Thời hạn giữ hàng tạm dừng trong lúc này.</p>
                       } @else {
-                        <p class="mt-1 text-sm">Hàng được giữ đến <b>{{ h.expiresAt | date: 'dd/MM/yyyy' }}</b>. Quá hạn, đơn sẽ tự đóng theo chính sách.</p>
+                        <p class="mt-1 text-sm">Hàng được giữ đến <b>{{ h.expiresAt | date: 'dd/MM/yyyy' }}</b>. Sau ngày này, đơn sẽ được đóng theo chính sách.</p>
                       }
                     } @else {
-                      <p class="mt-1 text-sm">Hàng đang được hoàn về kho của shop. Bạn sẽ được chọn cách xử lý khi hàng về kho.</p>
+                      <p class="mt-1 text-sm">Hàng đang được chuyển về kho của shop. Khi hàng về, bạn có thể chọn giao lại hoặc hủy đơn.</p>
                     }
                     @if (o.warehouseHold && !o.warehouseHold.disputed) {
                       @if (failedSituation() === 'S3c' && canRedeliver()) {
-                        <p class="mt-2 text-sm">Hàng thiết kế theo yêu cầu làm riêng cho bạn, không bán lại được nên không hoàn tiền khi lỗi giao thuộc về bạn. Bạn có thể yêu cầu giao lại (bạn trả cước).</p>
+                        <p class="mt-2 text-sm">Sản phẩm được làm riêng cho bạn nên không thể hoàn tiền khi lần giao không thành công do phía bạn. Bạn có thể yêu cầu giao lại với phí vận chuyển do bạn chi trả.</p>
                       }
                       @if (o.redeliveryUsed) {
-                        <p class="mt-2 text-sm">Đơn đã dùng lượt giao lại.</p>
+                        <p class="mt-2 text-sm">Đơn đã dùng lượt giao lại duy nhất.</p>
                       }
                       @if (canCancelFailed()) {
                         <button type="button" [class]="btnSecondary" class="mt-4" (click)="openCancel('failed')">
@@ -119,7 +125,7 @@
                     @if (openTicket(); as t) {
                       <p class="mt-1 text-sm">Mã yêu cầu <b>{{ t.ticketCode }}</b> · {{ issueLabel(t.issueType) }} · gửi lúc {{ t.createdAt | date: 'HH:mm dd/MM' }}</p>
                     }
-                    <p class="mt-1 text-sm">CSKH sẽ phản hồi kết quả trong chi tiết đơn và qua email.</p>
+                    <p class="mt-1 text-sm">Kết quả sẽ được cập nhật tại đây và gửi qua email.</p>
                   </div>
                 }
                 @case ('Cancelled') {
@@ -127,14 +133,14 @@
                     <p class="font-display font-bold">Đơn hàng đã hủy</p>
                     <p class="mt-1 text-sm">Lý do: {{ cancelReasonLabel() }}@if (o.cancellation?.note) { – “{{ o.cancellation?.note }}” }</p>
                     @if (o.destruction) {
-                      <p class="mt-1 text-sm">Hàng thiết kế theo yêu cầu đã được tiêu hủy có biên bản để bảo mật thông tin của bạn.</p>
+                      <p class="mt-1 text-sm">Sản phẩm thiết kế riêng đã được tiêu hủy để bảo vệ hình ảnh và thông tin của bạn.</p>
                     }
                   </div>
                 }
                 @case ('Refunded') {
                   <div [class]="infoBox()">
                     <p class="font-display font-bold">Đơn hàng được hoàn tiền</p>
-                    <p class="mt-1 text-sm">Yêu cầu hỗ trợ được chấp nhận hoàn tiền 100%. Xem tiến độ hoàn tiền.</p>
+                    <p class="mt-1 text-sm">Yêu cầu hỗ trợ của bạn được chấp nhận hoàn tiền 100%. Theo dõi tiến độ ở khung Hoàn tiền.</p>
                   </div>
                 }
                 @default {
@@ -152,6 +158,7 @@
                 <code class="rounded-lg bg-surface-alt px-3 py-1.5 font-mono text-sm font-bold text-brand-800">{{ v.code }}</code>
               </div>
             }
+            </div>
           </article>
 
           @if (o.status === 'Completed') {
@@ -189,7 +196,7 @@
                     @if (item.design; as d) {
                       <p class="mt-1 inline-flex rounded-pill bg-brand-100 px-2 py-0.5 text-xs font-semibold text-brand-800">Bản thiết kế bạn đã thanh toán · phiên bản {{ d.version }}</p>
                     } @else {
-                      <p class="mt-1 text-xs text-ink-soft">Hàng có sẵn</p>
+                      <p class="mt-1 text-xs text-ink-soft">Sản phẩm có sẵn</p>
                     }
                     <p class="mt-2 font-semibold text-ink sm:hidden">{{ formatVnd(item.unitPrice * item.quantity) }}</p>
                   </div>
@@ -199,59 +206,85 @@
             </ul>
           </article>
 
-          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft sm:p-6">
-            <h2 class="font-display text-lg font-bold text-ink">Địa chỉ & vận chuyển</h2>
-            <p class="mt-3 text-sm font-semibold text-ink">{{ o.customerName }} · {{ o.customerPhone }}</p>
-            <p class="text-sm text-ink-soft">{{ o.shippingAddress }}</p>
-            <p class="mt-2 text-sm text-ink-soft">Gói giao: {{ tierLabels[o.shippingTier] }}</p>
-            @if (o.shipment; as s) {
-              <p class="mt-1 text-sm text-ink-soft">{{ s.carrier }} · Mã vận đơn <span class="font-mono text-ink">{{ s.trackingCode }}</span></p>
-            }
-          </article>
+          <app-order-journey [order]="o" />
 
           <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft sm:p-6">
-            <h2 class="font-display text-lg font-bold text-ink">Lịch sử đơn hàng</h2>
-            <ol class="mt-4 flex flex-col gap-4 border-l-2 border-brand-100 pl-5">
-              @for (log of logs(); track log.id) {
-                <li class="relative">
-                  <span aria-hidden="true" class="absolute -left-[27px] top-1.5 size-3 rounded-full border-2 border-surface-alt" [class.bg-brand-800]="$first" [class.bg-brand-200]="!$first"></span>
-                  <p class="text-sm font-semibold text-ink">{{ log.reason }}</p>
-                  <p class="text-xs text-ink-soft">{{ log.createdAt | date: 'HH:mm dd/MM/yyyy' }} · {{ actorLabels[log.actorType] }}</p>
-                </li>
+            <h2 class="font-display text-lg font-bold text-ink">Thông tin giao hàng</h2>
+            <div class="mt-3 flex gap-3">
+              <span aria-hidden="true" class="grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-800">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-ink">{{ o.customerName }} · {{ o.customerPhone }}</p>
+                <p class="text-sm text-ink-soft">{{ o.shippingAddress }}</p>
+              </div>
+            </div>
+            <dl class="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-surface p-3 text-sm sm:grid-cols-3">
+              <div>
+                <dt class="text-xs text-ink-soft">Gói giao</dt>
+                <dd class="font-semibold text-ink">{{ tierLabels[o.shippingTier] }}</dd>
+              </div>
+              <div>
+                <dt class="text-xs text-ink-soft">Đơn vị vận chuyển</dt>
+                <dd class="font-semibold text-ink">{{ o.shipment?.carrier ?? 'Cập nhật khi bàn giao' }}</dd>
+              </div>
+              @if (o.shipment; as s) {
+                <div>
+                  <dt class="text-xs text-ink-soft">Mã vận đơn</dt>
+                  <dd class="font-mono font-semibold text-ink">{{ s.trackingCode }}</dd>
+                </div>
               }
-            </ol>
+            </dl>
           </article>
         </div>
 
         <!-- ================= RIGHT: money and help, sticky on desktop (P1-5) ================= -->
         <aside class="flex min-w-0 flex-col gap-5 lg:sticky lg:top-20 lg:col-span-4">
-          <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
+          <article class="overflow-hidden rounded-card border border-line bg-surface-alt shadow-soft">
             <button type="button" (click)="paymentOpen.set(!paymentOpen())" [attr.aria-expanded]="paymentOpen()" aria-controls="payment-summary"
-              class="flex min-h-11 w-full items-center justify-between gap-3 text-left lg:pointer-events-none">
-              <span class="font-display text-lg font-bold text-ink">Thanh toán</span>
+              class="flex w-full items-center justify-between gap-3 bg-(image:--grad-primary) px-5 py-4 text-left text-white lg:pointer-events-none">
+              <span>
+                <span class="block text-xs font-semibold uppercase tracking-widest text-white/75">Tổng thanh toán</span>
+                <span class="font-display text-2xl font-extrabold">{{ formatVnd(total()) }}</span>
+              </span>
               <span class="flex items-center gap-2">
-                <span class="font-display text-lg font-bold text-brand-800">{{ formatVnd(total()) }}</span>
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-5 text-ink-soft transition-transform lg:hidden motion-reduce:transition-none" [class.rotate-180]="paymentOpen()"><path d="m6 9 6 6 6-6" /></svg>
+                <span class="rounded-pill bg-white/15 px-2.5 py-1 text-xs font-semibold ring-1 ring-white/30">
+                  {{ o.paymentStatus === 'Paid' ? 'Đã thanh toán' : 'Trả khi nhận hàng' }}
+                </span>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-5 transition-transform lg:hidden motion-reduce:transition-none" [class.rotate-180]="paymentOpen()"><path d="m6 9 6 6 6-6" /></svg>
               </span>
             </button>
-            <dl id="payment-summary" class="mt-3 grid-cols-2 gap-y-1.5 text-sm lg:grid" [class.grid]="paymentOpen()" [class.hidden]="!paymentOpen()">
-              <dt class="text-ink-soft">Tạm tính</dt>
-              <dd class="text-right text-ink">{{ formatVnd(o.goodsTotal) }}</dd>
-              <dt class="text-ink-soft">Vận chuyển ({{ tierLabels[o.shippingTier] }})</dt>
-              <dd class="text-right text-ink">{{ o.shipping.fee === 0 ? 'Miễn phí' : formatVnd(o.shipping.fee) }}</dd>
-              @if (o.discount) {
-                <dt class="text-ink-soft">Giảm giá</dt>
-                <dd class="text-right text-ink">−{{ formatVnd(o.discount) }}</dd>
-              }
-              <dt class="border-t border-line pt-2 font-semibold text-ink">Tổng cộng</dt>
-              <dd class="border-t border-line pt-2 text-right font-display font-bold text-brand-800">{{ formatVnd(total()) }}</dd>
-              <dt class="text-ink-soft">Phương thức</dt>
-              <dd class="text-right text-ink">{{ o.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản QR (đã thanh toán)' }}</dd>
-              @if (o.paymentTxnRef) {
-                <dt class="text-ink-soft">Mã giao dịch</dt>
-                <dd class="text-right font-mono text-ink">{{ o.paymentTxnRef }}</dd>
-              }
-            </dl>
+            <div id="payment-summary" class="px-5 py-4 lg:block" [class.block]="paymentOpen()" [class.hidden]="!paymentOpen()">
+              <dl class="grid grid-cols-2 gap-y-2 text-sm">
+                <dt class="text-ink-soft">Tiền hàng</dt>
+                <dd class="text-right text-ink">{{ formatVnd(o.goodsTotal) }}</dd>
+                <dt class="text-ink-soft">Phí giao hàng</dt>
+                <dd class="text-right text-ink">{{ o.shipping.fee === 0 ? 'Miễn phí' : formatVnd(o.shipping.fee) }}</dd>
+                @if (o.discount) {
+                  <dt class="text-ink-soft">Giảm giá</dt>
+                  <dd class="text-right font-medium text-emerald-700">−{{ formatVnd(o.discount) }}</dd>
+                }
+                <dt class="border-t border-line pt-2 font-semibold text-ink">Tổng cộng</dt>
+                <dd class="border-t border-line pt-2 text-right font-display font-bold text-brand-800">{{ formatVnd(total()) }}</dd>
+              </dl>
+              <div class="mt-4 flex items-center gap-3 rounded-xl bg-surface p-3">
+                <span aria-hidden="true" class="grid size-9 shrink-0 place-items-center rounded-lg" [class]="o.paymentMethod === 'COD' ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'">
+                  @if (o.paymentMethod === 'COD') {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-5"><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01M18 12h.01" /></svg>
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5"><path d="m5 12 5 5L20 7" /></svg>
+                  }
+                </span>
+                <div class="min-w-0 text-sm">
+                  <p class="font-semibold text-ink">{{ o.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : 'Chuyển khoản trực tuyến' }}</p>
+                  @if (o.paymentTxnRef) {
+                    <p class="truncate text-xs text-ink-soft">Mã giao dịch <span class="font-mono text-ink">{{ o.paymentTxnRef }}</span></p>
+                  } @else {
+                    <p class="text-xs text-ink-soft">Chuẩn bị {{ formatVnd(total()) }} khi nhận hàng</p>
+                  }
+                </div>
+              </div>
+            </div>
           </article>
 
           @if (o.refunds.length) {
@@ -265,7 +298,7 @@
           <!-- P1-10 / P1-12: help is always findable, cancel and report are secondary -->
           <article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
             <h2 class="font-display text-lg font-bold text-ink">Hỗ trợ đơn hàng</h2>
-            <div class="mt-3 flex flex-col gap-2">
+            <div class="mt-3 flex flex-col gap-2 empty:hidden">
               @if (canConfirm()) {
                 <button type="button" [class]="btnPrimary" (click)="confirmOpen.set(true)">Đã nhận được hàng</button>
                 @if (canReport()) {
@@ -279,23 +312,48 @@
                 }
               } @else if (reportExpired()) {
                 <p class="rounded-xl bg-surface px-3 py-2 text-xs text-ink-soft">
-                  Đơn hàng đã quá thời hạn tiếp nhận sự cố trực tuyến (7 ngày). Vui lòng liên hệ trực tiếp hotline để được hỗ trợ
+                  Đã quá thời hạn báo sự cố trực tuyến (7 ngày sau khi nhận hàng). Bạn vui lòng liên hệ hotline để được hỗ trợ.
                 </p>
               } @else if (openTicket(); as t) {
-                <p class="rounded-xl bg-surface px-3 py-2 text-center text-xs text-ink-soft">Đang có yêu cầu hỗ trợ {{ t.ticketCode }}</p>
+                <p class="rounded-xl bg-surface px-3 py-2 text-center text-xs text-ink-soft">Yêu cầu hỗ trợ {{ t.ticketCode }} đang được xử lý</p>
               }
 
-              @if (canCancelCod()) {
-                <button type="button" [class]="btnGhost" class="border border-line" (click)="openCancel('cod')">Hủy đơn</button>
-              } @else if (canRequestCancel()) {
-                <button type="button" [class]="btnGhost" class="border border-line" (click)="openCancel('request')">Yêu cầu hủy đơn</button>
-              } @else if (cannotCancelNote()) {
-                <p class="rounded-xl bg-surface px-3 py-2 text-xs text-ink-soft">Đơn đã vào sản xuất nên không hủy được. Nếu có vấn đề khi nhận hàng, bạn dùng Báo sự cố trong 7 ngày.</p>
-              }
-
-              <a routerLink="/customer-support" [class]="btnGhost">Liên hệ CSKH</a>
-              <a routerLink="/order-tracking/chinh-sach" class="text-center text-xs font-semibold text-brand-800 underline-offset-4 hover:underline">Xem chính sách đơn hàng</a>
             </div>
+
+            <ul class="mt-3 -mx-1 flex flex-col">
+              @if (canCancelCod() || canRequestCancel()) {
+                <li>
+                  <button type="button" class="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-ink transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-400" (click)="openCancel(canCancelCod() ? 'cod' : 'request')">
+                    <span aria-hidden="true" class="grid size-8 shrink-0 place-items-center rounded-lg bg-rose-50 text-rose-700">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-4"><circle cx="12" cy="12" r="9" /><path d="m9 9 6 6M15 9l-6 6" /></svg>
+                    </span>
+                    <span>{{ canCancelCod() ? 'Hủy đơn' : 'Yêu cầu hủy đơn' }}</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ml-auto size-4 text-ink-soft"><path d="m9 6 6 6-6 6" /></svg>
+                  </button>
+                </li>
+              }
+              <li>
+                <a routerLink="/customer-support" class="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-ink transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-400">
+                  <span aria-hidden="true" class="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-800">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>
+                  </span>
+                  <span>Chat với CSKH</span>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ml-auto size-4 text-ink-soft"><path d="m9 6 6 6-6 6" /></svg>
+                </a>
+              </li>
+              <li>
+                <a routerLink="/order-tracking/chinh-sach" class="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-ink transition-colors hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-400">
+                  <span aria-hidden="true" class="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-800">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></svg>
+                  </span>
+                  <span>Chính sách đơn hàng</span>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ml-auto size-4 text-ink-soft"><path d="m9 6 6 6-6 6" /></svg>
+                </a>
+              </li>
+            </ul>
+            @if (cannotCancelNote()) {
+              <p class="mt-2 rounded-xl bg-surface px-3 py-2 text-xs text-ink-soft">Đơn đã vào sản xuất nên không thể hủy. Nếu sản phẩm có vấn đề, bạn có thể báo sự cố trong 7 ngày sau khi nhận hàng.</p>
+            }
 
             @if (closedTickets().length) {
               <div class="mt-4 border-t border-line pt-4">

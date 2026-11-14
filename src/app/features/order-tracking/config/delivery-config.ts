@@ -42,13 +42,13 @@ export const DELIVERY_CONFIG = {
   maxRefundTransferAttempts: 2,
   /** Public holidays (YYYY-MM-DD) skipped by working-day counting. Empty until the team agrees. */
   holidays: [] as readonly string[],
-  carrierName: 'GHN (mock)',
+  carrierName: 'Giao Hàng Nhanh',
   /** Shown at the "Đang chuyển khoản" step; to be confirmed by the team (open point 1). */
   refundEtaText: 'Tiền thường về tài khoản trong 1–3 ngày làm việc.',
 } as const;
 
 export const SHIPPING_TIER_LABELS: Record<ShippingTier, string> = {
-  Standard: 'Standard',
+  Standard: 'Tiêu chuẩn',
   Express: 'Hỏa tốc',
 };
 

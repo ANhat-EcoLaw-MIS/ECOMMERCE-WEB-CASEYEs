@@ -34,7 +34,7 @@ export const POLICY_HIGHLIGHTS: readonly { id: string; title: string; text: stri
   {
     id: 'hoan-tien',
     title: 'Hoàn tiền',
-    text: 'Tiền chỉ được hoàn trong các tình huống ghi tại trang này; bạn nhận qua tài khoản ngân hàng hoặc voucher, mọi khoản đều được Admin xác nhận.',
+    text: 'Tiền chỉ được hoàn trong các tình huống ghi tại trang này; tiền được chuyển khoản vào tài khoản của bạn sau khi shop xác nhận.',
   },
 ];
 
@@ -72,7 +72,7 @@ export const POLICY_SECTIONS: readonly PolicySection[] = [
     id: 'thoi-gian',
     title: '3. Thời gian xử lý và giao hàng',
     points: [
-      `Đơn thiết kế theo yêu cầu được gom theo mẻ in hằng ngày; ${hhmm(cfg.batchCutoff)} các ngày Thứ 2 – Thứ 6 là giờ cắt đơn, đơn xác nhận sau giờ này vào mẻ của ngày làm việc kế tiếp.`,
+      `Đơn thiết kế theo yêu cầu được đưa vào sản xuất mỗi ngày làm việc. Đơn xác nhận trước ${hhmm(cfg.batchCutoff)} (Thứ 2 – Thứ 6) bắt đầu sản xuất ngay trong ngày; sau giờ này, đơn bắt đầu vào ngày làm việc tiếp theo.`,
       `Xử lý & in: hàng có sẵn ${cfg.handlingDays.stock.min}–${cfg.handlingDays.stock.max} ngày làm việc; đơn có hàng thiết kế theo yêu cầu (kể cả đơn hỗn hợp, giao chung một kiện) ${cfg.handlingDays.custom.min}–${cfg.handlingDays.custom.max} ngày làm việc.`,
       'Thời gian vận chuyển phụ thuộc địa chỉ nhận và đếm từ Thứ 2 đến Thứ 7. Khoảng ngày giao dự kiến (từ–đến) hiện khi đặt hàng và trong chi tiết đơn.',
       `Hỏa tốc chỉ áp dụng cho đơn chỉ gồm hàng có sẵn, ở khu vực được hỗ trợ: đơn xác nhận trước ${hhmm(cfg.expressCutoff)} ngày làm việc được giao trong ngày, sau giờ này giao trong ngày làm việc kế tiếp.`,
@@ -107,7 +107,7 @@ export const POLICY_SECTIONS: readonly PolicySection[] = [
       'Thiết kế chưa đạt và bạn hủy, hoặc quá hạn chỉnh sửa: hoàn 100%.',
       'Giao không thành công: lỗi vận chuyển/shop hoàn 100%; lỗi của bạn với đơn hàng có sẵn trả trước hoàn tiền hàng trừ cước hai chiều; hàng thiết kế theo yêu cầu lỗi của bạn không hoàn.',
       'Khiếu nại được chấp nhận hoàn tiền: hoàn 100%.',
-      `Cách nhận hoàn: chuyển khoản vào tài khoản đứng tên người thanh toán (nội dung “HOAN <mã đơn>”) hoặc voucher bằng 100% giá trị. Nếu chưa cung cấp tài khoản sau ${cfg.refundAccountDeadlineDays} ngày, bạn được cấp voucher.`,
+      `Cách nhận hoàn: chuyển khoản vào tài khoản đứng tên người thanh toán, nội dung “HOAN <mã đơn>”. Nếu sau ${cfg.refundAccountDeadlineDays} ngày bạn chưa cung cấp tài khoản, CSKH sẽ liên hệ để hỗ trợ.`,
       'Mọi khoản hoàn đều được Admin đối chiếu và xác nhận, không hoàn tự động. Đơn thanh toán khi nhận hàng không phát sinh hoàn tiền khi hủy.',
     ],
   },

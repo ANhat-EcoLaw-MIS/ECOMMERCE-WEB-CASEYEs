@@ -252,7 +252,7 @@ export class OrderTrackingService implements OrderIntake {
       order = withLog(order, null, startStatus, { type: 'Customer', id: h.customer.id }, 'Đặt hàng thành công', createdAt);
       db.orders.push(order);
       db.consents.push({ orderId: id, userId: h.customer.id, policyVersion: h.policyVersion, acceptedAt: h.policyAcceptedAt });
-      this.notifier.notify(db, order, 'Đặt hàng thành công', `Dự kiến giao từ ${formatShortDate(edd.earliest)} đến ${formatShortDate(edd.latest)}.`, nowIso);
+      this.notifier.notify(db, order, 'Đặt hàng thành công', `Cảm ơn bạn đã đặt hàng! Đơn dự kiến được giao từ ${formatShortDate(edd.earliest)} đến ${formatShortDate(edd.latest)}.`, nowIso);
       return order;
     });
   }
@@ -271,7 +271,7 @@ export class OrderTrackingService implements OrderIntake {
       });
       this.releaseStock(db, next, nowIso);
       this.risk.reportCancellation(db, next, 'Customer_In_Window', false, nowIso);
-      this.notifier.notify(db, next, 'Đơn hàng đã hủy', 'Đơn thanh toán khi nhận hàng đã được hủy, không phát sinh phí.', nowIso);
+      this.notifier.notify(db, next, 'Đơn hàng đã hủy', 'Đơn thanh toán khi nhận hàng của bạn đã được hủy và không phát sinh bất kỳ khoản phí nào.', nowIso);
       return next;
     });
   }
@@ -300,7 +300,7 @@ export class OrderTrackingService implements OrderIntake {
         `Khách gửi yêu cầu hủy đơn: ${CANCEL_REASON_LABELS[input.reason]}`,
         nowIso,
       );
-      this.notifier.notify(db, next, 'Đã gửi yêu cầu hủy đơn', `CSKH sẽ phản hồi trước ${formatFullDate(request.slaDueAt)}. Đơn được tạm giữ trong thời gian này.`, nowIso);
+      this.notifier.notify(db, next, 'Đã gửi yêu cầu hủy đơn', `CSKH sẽ phản hồi trước ${formatFullDate(request.slaDueAt)}. Trong thời gian này, đơn tạm dừng xử lý.`, nowIso);
       return next;
     });
   }
@@ -345,7 +345,7 @@ export class OrderTrackingService implements OrderIntake {
         next = withRefund(next, 'S1', undefined, nowIso).order;
         this.releaseStock(db, next, nowIso);
         this.risk.reportCancellation(db, next, 'Customer_Request_Accepted', false, nowIso);
-        this.notifier.notify(db, next, 'Yêu cầu hủy đã được chấp nhận', 'Vui lòng chọn cách nhận hoàn tiền trong chi tiết đơn.', nowIso);
+        this.notifier.notify(db, next, 'Yêu cầu hủy đã được chấp nhận', 'Vui lòng nhập tài khoản nhận hoàn trong chi tiết đơn.', nowIso);
         return next;
       }
 
@@ -360,7 +360,7 @@ export class OrderTrackingService implements OrderIntake {
         `CSKH từ chối yêu cầu hủy: ${reason.trim()}${held > 0 ? ` (ngày giao dự kiến lùi ${held} ngày làm việc)` : ''}`,
         nowIso,
       );
-      this.notifier.notify(db, next, 'Yêu cầu hủy không được chấp nhận', `${reason.trim()}. Đơn tiếp tục được xử lý.`, nowIso);
+      this.notifier.notify(db, next, 'Yêu cầu hủy không được chấp nhận', `${reason.trim()}. Đơn của bạn tiếp tục được xử lý.`, nowIso);
       return next;
     });
   }
@@ -375,7 +375,7 @@ export class OrderTrackingService implements OrderIntake {
       next = withRefund(next, 'S2', refund, nowIso).order;
       this.releaseStock(db, next, nowIso);
       this.risk.reportCancellation(db, next, 'Design_Rejected', true, nowIso);
-      this.notifier.notify(db, next, 'Đơn hàng đã hủy', 'Yêu cầu hoàn tiền 100% đang chờ xác nhận.', nowIso);
+      this.notifier.notify(db, next, 'Đơn hàng đã hủy', 'Shop sẽ hoàn 100% giá trị đơn sau khi xác nhận yêu cầu.', nowIso);
       return next;
     });
   }
@@ -568,7 +568,7 @@ export class OrderTrackingService implements OrderIntake {
       if (decision === 'Approved') {
         // v8: approval confirms the order ("Đã xác nhận"); the 16:00 batch moves it to In_Production.
         return {
-          ...withTransition(withReview, 'Pending_Confirmation', actor, `Duyệt bản thiết kế vòng ${round}, chờ chốt mẻ`, nowIso),
+          ...withTransition(withReview, 'Pending_Confirmation', actor, `Duyệt bản thiết kế vòng ${round}`, nowIso),
           confirmedAt: nowIso,
         };
       }
@@ -584,8 +584,8 @@ export class OrderTrackingService implements OrderIntake {
         next,
         'Thiết kế cần chỉnh sửa',
         lastChance
-          ? `Nhóm vi phạm: ${detail.violationGroup}. Đã hết lượt gửi lại, bạn có thể hủy và nhận hoàn 100%.`
-          : `Nhóm vi phạm: ${detail.violationGroup}. Sửa thiết kế trong ${DELIVERY_CONFIG.designFixDeadlineDays} ngày hoặc hủy và nhận hoàn 100%.`,
+          ? `Lý do: ${detail.violationGroup}. Bạn đã dùng hết lượt gửi lại, bạn có thể hủy đơn và nhận hoàn 100%.`
+          : `Lý do: ${detail.violationGroup}. Bạn có ${DELIVERY_CONFIG.designFixDeadlineDays} ngày để chỉnh sửa, hoặc có thể hủy đơn và nhận hoàn 100%.`,
         nowIso,
       );
       return next;
@@ -741,7 +741,7 @@ export class OrderTrackingService implements OrderIntake {
           nowIso,
         );
         next = this.maybeIssueLateVoucher(next, db, now);
-        this.notifier.notify(db, next, 'Đơn hàng đã được giao', 'Hãy kiểm tra hàng và bấm "Đã nhận được hàng".', nowIso);
+        this.notifier.notify(db, next, 'Đơn hàng đã được giao', 'Hãy kiểm tra sản phẩm và bấm "Đã nhận được hàng" khi bạn hài lòng.', nowIso);
         return next;
       }
       case 'Delivery_Failed': {
@@ -755,7 +755,7 @@ export class OrderTrackingService implements OrderIntake {
           `Giao thất bại: ${FAILURE_CAUSES[failureCause].label}`,
           nowIso,
         );
-        this.notifier.notify(db, next, 'Giao hàng không thành công', `Lý do: ${FAILURE_CAUSES[failureCause].label}. Hàng đang được hoàn về kho.`, nowIso);
+        this.notifier.notify(db, next, 'Giao hàng không thành công', `Lý do: ${FAILURE_CAUSES[failureCause].label}. Hàng đang được chuyển về kho của shop.`, nowIso);
         return next;
       }
       case 'Warehouse_Received': {
@@ -769,7 +769,7 @@ export class OrderTrackingService implements OrderIntake {
         if (o.paymentMethod === 'COD' && !o.hasCustomItem && faultParty(o) === 'Customer') {
           const next = withCancellation(o, CARRIER, 'Delivery_Failed_Customer', true, 'Hàng về kho, đơn COD lỗi khách được đóng', nowIso);
           this.risk.reportCancellation(db, next, 'Delivery_Failed_Customer', true, nowIso);
-          this.notifier.notify(db, next, 'Đơn hàng đã đóng', 'Giao hàng không thành công, đơn COD đã được hủy.', nowIso);
+          this.notifier.notify(db, next, 'Đơn hàng đã đóng', 'Giao hàng không thành công nên đơn thanh toán khi nhận hàng đã được hủy.', nowIso);
           return next;
         }
         const expiresAt = new Date(now.getTime() + DELIVERY_CONFIG.warehouseHoldDays * 86_400_000).toISOString();
@@ -804,7 +804,7 @@ export class OrderTrackingService implements OrderIntake {
       next = fast.order;
       this.loyalty.requestVoucher(db, next, 'Express_Surcharge', value.expressSurcharge, fast.voucher.code, nowIso);
     }
-    this.notifier.notify(db, next, 'Xin lỗi vì giao trễ', 'Bạn nhận được voucher bảo đảm giao đúng hạn trong chi tiết đơn.', nowIso);
+    this.notifier.notify(db, next, 'Xin lỗi vì đơn giao trễ', 'CasEYE’s gửi bạn voucher bù giao trễ, xem trong chi tiết đơn.', nowIso);
     return withLog(next, o.status, o.status, { type: 'System', id: 'edd-guarantee' }, 'Giao trễ so với ngày dự kiến, cấp voucher bảo đảm', nowIso);
   }
 
@@ -907,16 +907,11 @@ export class OrderTrackingService implements OrderIntake {
 
   // ------------------------------------------------------------------ admin refund
 
-  /** Approve: Voucher is issued at once; Bank goes to Processing (manual transfer). */
+  /** Approve: goes to Processing (Admin transfers manually, then records the bank reference). */
   approveRefund(orderId: string, refundId: string, actor: Actor): OpResult {
     return this.refundOp(orderId, refundId, actor, (o, r, db, nowIso) => {
       if (r.status !== 'Pending_Approval') throw new BusinessError(MESSAGES.handledByOther);
-      if (!r.refundMethod) throw new BusinessError('Khách chưa cung cấp tài khoản hoặc chọn voucher');
-      if (r.refundMethod === 'Voucher') {
-        const v = withVoucher(o, 'Store_Credit', r.amount, nowIso);
-        this.notifier.notify(db, o, 'Đã hoàn bằng voucher', `Voucher ${v.voucher.code} trị giá ${r.amount.toLocaleString('vi-VN')} đ.`, nowIso);
-        return this.replaceRefund(v.order, { ...r, status: 'Refunded', approvedBy: actor.id, voucherCode: v.voucher.code, resolvedAt: nowIso });
-      }
+      if (!r.refundMethod) throw new BusinessError('Khách chưa cung cấp tài khoản nhận hoàn');
       if (!sameHolderName(r.refundAccountHolder ?? '', o.payerName)) throw new BusinessError(`${MESSAGES.holderMismatch}: hãy từ chối và yêu cầu khách xác nhận lại`);
       return this.replaceRefund(o, { ...r, status: 'Processing', approvedBy: actor.id });
     });
@@ -937,7 +932,7 @@ export class OrderTrackingService implements OrderIntake {
       const attempts = r.transferAttempts + 1;
       const status = attempts >= DELIVERY_CONFIG.maxRefundTransferAttempts ? 'Refund_Pending_Manual' : 'Refund_Pending_Retry';
       if (status === 'Refund_Pending_Retry') {
-        this.notifier.notify(db, o, 'Cần xác nhận lại tài khoản nhận hoàn', 'Chuyển khoản chưa thành công, vui lòng kiểm tra tài khoản hoặc chọn nhận voucher.', nowIso);
+        this.notifier.notify(db, o, 'Cần xác nhận lại tài khoản nhận hoàn', 'Chuyển khoản chưa thành công. Vui lòng kiểm tra lại thông tin tài khoản trong chi tiết đơn.', nowIso);
       }
       return this.replaceRefund(o, { ...r, status, transferAttempts: attempts });
     });
@@ -946,7 +941,6 @@ export class OrderTrackingService implements OrderIntake {
   retryTransfer(orderId: string, refundId: string, actor: Actor): OpResult {
     return this.refundOp(orderId, refundId, actor, (o, r) => {
       if (r.status !== 'Refund_Pending_Retry') throw new BusinessError(MESSAGES.handledByOther);
-      if (r.refundMethod === 'Voucher') return this.replaceRefund(o, { ...r, status: 'Pending_Approval' });
       return this.replaceRefund(o, { ...r, status: 'Processing' });
     });
   }

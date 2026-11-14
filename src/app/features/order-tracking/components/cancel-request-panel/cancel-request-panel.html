@@ -16,7 +16,7 @@
             <div>
               <p class="font-semibold">CSKH đang xem xét</p>
               @if (overdue()) {
-                <p class="text-xs opacity-80">Xin lỗi vì phản hồi chậm hơn dự kiến. CSKH sẽ liên hệ bạn sớm nhất.</p>
+                <p class="text-xs opacity-80">Xin lỗi vì phản hồi chậm hơn dự kiến, CSKH sẽ liên hệ bạn trong thời gian sớm nhất.</p>
               } @else {
                 <p class="text-xs opacity-80">Dự kiến phản hồi trước {{ r.slaDueAt | date: 'HH:mm dd/MM/yyyy' }}</p>
               }
@@ -24,7 +24,7 @@
           </li>
           <li class="flex gap-3">
             <span aria-hidden="true" class="grid size-6 shrink-0 place-items-center rounded-full border-2 border-line text-[11px] font-bold opacity-60">3</span>
-            <p class="font-semibold opacity-60">Kết quả: Chấp nhận hoặc Từ chối</p>
+            <p class="font-semibold opacity-60">Kết quả</p>
           </li>
         </ol>
         <button type="button" [class]="btnSecondary" class="mt-4" [disabled]="busy()" (click)="withdraw()">

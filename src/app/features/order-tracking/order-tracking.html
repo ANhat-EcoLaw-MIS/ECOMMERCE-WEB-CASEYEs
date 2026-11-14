@@ -5,6 +5,8 @@
       <nav aria-label="Breadcrumb" class="mb-3 flex items-center gap-2 text-sm text-ink-soft">
         <a routerLink="/" class="rounded transition-colors hover:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-400">Trang chủ</a>
         <span aria-hidden="true">/</span>
+        <a routerLink="/account" [queryParams]="{ tab: 'orders' }" class="rounded transition-colors hover:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-400">Tài khoản</a>
+        <span aria-hidden="true">/</span>
         <span class="font-semibold text-brand-800" aria-current="page">Đơn hàng của tôi</span>
       </nav>
       <div class="flex flex-wrap items-end justify-between gap-4">
