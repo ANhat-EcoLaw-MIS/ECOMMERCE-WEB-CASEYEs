@@ -15,7 +15,7 @@ import { NotificationBell } from './components/notification-bell/notification-be
 import { OrderCard } from './components/order-card/order-card';
 import { ATTENTION_DOT } from './config/status-style';
 import { fold } from './domain/actions';
-import { ORDER_TABS, OrderTab, matchesTab } from './domain/timeline';
+import { LEGACY_TABS, ORDER_TABS, OrderTab, matchesTab } from './domain/timeline';
 import { OrderTrackingService } from './services/order-tracking.service';
 import { track } from './services/tracker';
 
@@ -42,6 +42,7 @@ export class OrderTracking {
   protected readonly dot = ATTENTION_DOT;
   protected readonly activeTab = computed<OrderTab>(() => {
     const t = this.tab();
+    if (t && LEGACY_TABS[t]) return LEGACY_TABS[t];
     return t && (TAB_KEYS as string[]).includes(t) ? (t as OrderTab) : 'all';
   });
   /** What the customer typed; `query` follows it after 300 ms (P1-3). */

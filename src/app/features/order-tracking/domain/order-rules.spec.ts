@@ -165,33 +165,47 @@ describe('state machine', () => {
   });
 });
 
-describe('timeline (Table 3.2)', () => {
-  it('custom orders show 5 milestones, stock orders 4', () => {
-    expect(buildTimeline(order(), NOW).steps.length).toBe(5);
-    expect(buildTimeline(order({ hasCustomItem: false }), NOW).steps.length).toBe(4);
+describe('timeline (linked to the status)', () => {
+  const step = (o: ReturnType<typeof order>, key: string) => buildTimeline(o, NOW).steps.find((s) => s.key === key)!;
+
+  it('custom orders: placed → design review → production → shipping → delivered', () => {
+    expect(buildTimeline(order(), NOW).steps.map((s) => s.key)).toEqual(['placed', 'review', 'production', 'shipping', 'delivered']);
+    expect(buildTimeline(order({ hasCustomItem: false }), NOW).steps.map((s) => s.key)).toEqual(['placed', 'confirm', 'production', 'shipping', 'delivered']);
   });
-  it('Pending_Review stays on "Xác nhận" with the design-check label', () => {
-    const t = buildTimeline(order({ status: 'Pending_Review' }), NOW);
-    expect(t.steps[0].state).toBe('current');
-    expect(statusLabel(order({ status: 'Pending_Review' }), NOW)).toBe('Đang kiểm tra thiết kế');
+  it('Pending_Review: design review is the current step', () => {
+    const o = order({ status: 'Pending_Review' });
+    expect(step(o, 'placed').state).toBe('done');
+    expect(step(o, 'review').state).toBe('current');
+    expect(statusLabel(o, NOW)).toBe('Đang duyệt thiết kế');
   });
-  it('approved custom order shows "Đã xác nhận"', () => {
-    expect(statusLabel(order({ confirmedAt: NOW.toISOString() }), NOW)).toBe('Đã xác nhận');
-    expect(statusLabel(order({ paymentMethod: 'COD', confirmDueAt: new Date(NOW.getTime() + 60_000).toISOString() }), NOW)).toBe('Chờ xác nhận');
+  it('"Đã xác nhận" never sits on the confirmation step', () => {
+    const o = order({ confirmedAt: NOW.toISOString() });
+    expect(statusLabel(o, NOW)).toBe('Đã xác nhận');
+    expect(step(o, 'review').state).toBe('done');
+    expect(step(o, 'production').state).toBe('current');
+    const cod = order({ hasCustomItem: false, paymentMethod: 'COD', confirmDueAt: new Date(NOW.getTime() + 60_000).toISOString() });
+    expect(statusLabel(cod, NOW)).toBe('Chờ xác nhận');
+    expect(step(cod, 'confirm').state).toBe('current');
+  });
+  it('caption never names the internal batch', () => {
+    expect(buildTimeline(order({ confirmedAt: NOW.toISOString() }), NOW).caption).not.toMatch(/mẻ/);
   });
   it('a pending cancel request dims the bar', () => {
     const pending = { id: 'cr', reason: 'Other' as const, status: 'Pending' as const, slaDueAt: '', createdAt: '' };
     const t = buildTimeline(order({ status: 'Pending_Review', cancelRequests: [pending] }), NOW);
     expect(t.dimmed).toBe(true);
-    expect(t.caption).toBe('Đơn đang tạm giữ chờ xử lý yêu cầu hủy');
+    expect(t.caption).toContain('yêu cầu hủy');
   });
-  it('exception statuses hide the bar', () => {
-    expect(buildTimeline(order({ status: 'Delivery_Failed' }), NOW).visible).toBe(false);
+  it('failed delivery marks the shipping step; cancelled orders hide the bar', () => {
+    expect(step(order({ status: 'Delivery_Failed' }), 'shipping').state).toBe('attention');
+    expect(buildTimeline(order({ status: 'Cancelled' }), NOW).visible).toBe(false);
   });
-  it('"Cần xử lý" tab groups statuses that need customer action', () => {
+  it('tabs: "Cần xử lý" needs the customer, "Đang xử lý" is the shop working', () => {
     expect(matchesTab('Action_Required', 'action')).toBe(true);
     expect(matchesTab('Return_Requested', 'action')).toBe(true);
     expect(matchesTab('In_Transit', 'action')).toBe(false);
+    expect(matchesTab('Pending_Review', 'processing')).toBe(true);
+    expect(matchesTab('Ready_for_Pickup', 'processing')).toBe(true);
   });
 });
 

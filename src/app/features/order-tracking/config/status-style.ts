@@ -18,15 +18,15 @@ export const TONE_CLASSES: Record<Tone, { badge: string; box: string; dot: strin
 
 export const STATUS_META: Record<OrderStatus, { label: string; tone: Tone }> = {
   Pending_Confirmation: { label: 'Chờ xác nhận', tone: 'brand' },
-  Pending_Review: { label: 'Đang kiểm tra thiết kế', tone: 'brand' },
+  Pending_Review: { label: 'Đang duyệt thiết kế', tone: 'brand' },
   Action_Required: { label: 'Cần chỉnh sửa thiết kế', tone: 'warning' },
-  In_Production: { label: 'Đang in', tone: 'brand' },
+  In_Production: { label: 'Đang sản xuất', tone: 'brand' },
   Ready_for_Pickup: { label: 'Đã đóng gói', tone: 'info' },
   In_Transit: { label: 'Đang giao', tone: 'info' },
   Delivered: { label: 'Đã giao', tone: 'success' },
   Completed: { label: 'Hoàn thành', tone: 'success' },
-  Delivery_Failed: { label: 'Giao không thành công', tone: 'danger' },
-  Return_Requested: { label: 'Đang xử lý yêu cầu hỗ trợ', tone: 'warning' },
+  Delivery_Failed: { label: 'Giao chưa thành công', tone: 'danger' },
+  Return_Requested: { label: 'Đang xử lý sự cố', tone: 'warning' },
   Cancelled: { label: 'Đã hủy', tone: 'neutral' },
   Refunded: { label: 'Đã hoàn tiền', tone: 'neutral' },
 };
