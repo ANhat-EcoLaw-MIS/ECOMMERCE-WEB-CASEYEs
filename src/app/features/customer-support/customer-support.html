@@ -1,1 +1,111 @@
-<p>customer-support works!</p>
+<section class="support-shell support-v5">
+  <div class="support-hero support-hero-v5">
+    <div class="support-hero-copy"><p class="eyebrow">CUSTOMER SUPPORT</p><h1>CasEYE's luôn ở đây <em>khi bạn cần.</em></h1><p class="hero-copy">Bạn cần tư vấn chọn ốp, hỏi về đơn hàng hoặc sản phẩm vừa nhận gặp sự cố? Tụi mình sẽ giúp bạn tìm đúng cách hỗ trợ.</p><div class="hero-actions"><button type="button" class="primary" (click)="openChat()">◉ Nhắn CasEYE's ngay</button><button type="button" class="secondary" (click)="setTab('complaints')">Gửi khiếu nại</button></div></div>
+    <div class="support-mascot" aria-hidden="true"><div class="mascot-halo"></div><div class="mascot-face mascot-face--support"><img src="/brand_signature/support-headset.svg" alt=""/></div><div class="mascot-laptop">💬</div><span class="mascot-sparkle">✦</span></div>
+  </div>
+  <section class="customer-journey"><h2>Chỉ 4 bước để nhận hỗ trợ</h2><div class="journey-grid"><article><span>01</span><h3>Chọn cách liên hệ</h3><p>Chat nhanh để được tư vấn hoặc mở tab Khiếu nại nếu sản phẩm có lỗi.</p></article><article><span>02</span><h3>Cho tụi mình biết vấn đề</h3><p>Chia sẻ tình trạng, mã đơn hàng và hình ảnh nếu cần.</p></article><article><span>03</span><h3>Nhận hướng giải quyết</h3><p>CasEYE's tiếp nhận thông tin và hướng dẫn bước tiếp theo.</p></article><article><span>04</span><h3>Theo dõi kết quả</h3><p>Đăng nhập để xem tiến độ khi chức năng ticket được kết nối.</p></article></div></section>
+  <div class="support-tabs" role="tablist" aria-label="Các tab hỗ trợ">
+    <button type="button" [class.is-active]="activeTab() === 'complaints'" (click)="setTab('complaints')">Khiếu nại</button>
+    <button type="button" [class.is-active]="activeTab() === 'faq'" (click)="setTab('faq')">Hỏi đáp & chat nhanh</button>
+    <button type="button" [class.is-active]="activeTab() === 'policy'" (click)="setTab('policy')">Chính sách</button>
+  </div>
+
+  @if (activeTab() === 'complaints') {
+    <section class="support-card support-card--form">
+      <div class="section-copy">
+        <p class="eyebrow">COMPLAINT TICKET</p>
+        <h2>Sản phẩm có vấn đề? Tụi mình giúp bạn.</h2>
+        <p>Hãy cho CasEYE’s biết mã đơn hàng và sự cố bạn gặp phải. Ảnh hoặc video sản phẩm sẽ giúp tụi mình kiểm tra nhanh và đề xuất hướng hỗ trợ phù hợp.</p>
+      </div>
+
+      @if (!auth.loggedIn()) {
+        <div class="login-callout">
+          <strong>Bạn cần đăng nhập trước khi tạo khiếu nại</strong>
+          <p>Vui lòng đăng nhập bằng tài khoản đặt hàng để chúng mình tìm đúng đơn và lưu tiến trình giải quyết cho bạn.</p>
+          <a routerLink="/auth/login?returnUrl=/customer-support">Đăng nhập để tiếp tục ↗</a>
+        </div>
+      }
+
+      <form class="complaint-form" (submit)="$event.preventDefault(); submitComplaint()">
+        <label>
+          <span>Mã đơn hàng</span>
+          <input type="text" placeholder="Ví dụ: CASEYE-2026-001" [value]="orderCode()" (input)="updateOrderCode($event)" />
+        </label>
+        <label>
+          <span>Lý do khiếu nại</span>
+          <select [value]="reason()" (change)="updateReason($event)">
+            <option>Sai màu</option>
+            <option>In lệch</option>
+            <option>Hư hỏng</option>
+            <option>Sai dòng máy</option>
+          </select>
+        </label>
+        <label class="full-row">
+          <span>Mô tả chi tiết</span>
+          <textarea rows="5" placeholder="Mô tả tình trạng sản phẩm hoặc vấn đề bạn gặp phải..." [value]="details()" (input)="updateDetails($event)"></textarea>
+        </label>
+        <label class="full-row upload-placeholder">
+          <span>Minh chứng ảnh/video</span>
+          <div>
+            <strong>Đính kèm hình ảnh/video</strong>
+            <p>Tính năng tải minh chứng đang được hoàn thiện. Bạn có thể mô tả chi tiết lỗi và chat với CasEYE’s trước nhé.</p>
+          </div>
+        </label>
+        <div class="form-actions full-row">
+          <button type="button" class="ghost" (click)="openChat()">Trao đổi trước qua chat</button>
+          <button type="submit" class="primary">Gửi khiếu nại</button>
+        </div>
+      </form>
+
+      @if (complaintSent()) {
+        <div class="success-state" role="status">
+          <strong>Đã ghi nhận nội dung trên bản xem thử</strong>
+          <p>Đây là bản xem thử, chưa gửi yêu cầu thực tế đến nhân viên. Khi tính năng hoạt động chính thức, bạn sẽ nhận được mã theo dõi qua tài khoản.</p>
+        </div>
+      }
+    </section>
+  }
+
+  @if (activeTab() === 'faq') {
+    <section class="support-card">
+      <div class="section-copy">
+        <p class="eyebrow">FAQ & LIVE SUPPORT</p>
+        <h2>Chat nhanh để được hướng dẫn trước</h2>
+        <p>Bạn có thể chat với CasEYE’s ngay khi đang chọn ốp hoặc theo dõi đơn hàng. Với lỗi sản phẩm, hãy chọn Khiếu nại để gửi thông tin đầy đủ hơn.</p>
+      </div>
+      <div class="faq-layout">
+        <div class="faq-list">
+          @for (item of faqs; track item.question) {
+            <article>
+              <h3>{{ item.question }}</h3>
+              <p>{{ item.answer }}</p>
+            </article>
+          }
+        </div>
+        <aside class="chat-demo-card">
+          <strong>Nhắn tin nhanh với CasEYE’s</strong>
+          <p>Chat popup phù hợp cho tư vấn, hỏi về đơn hàng hoặc được điều hướng đúng quy trình hỗ trợ.</p>
+          <button type="button" class="primary" (click)="openChat()">Mở hộp chat ↗</button>
+        </aside>
+      </div>
+    </section>
+  }
+
+  @if (activeTab() === 'policy') {
+    <section class="support-card">
+      <div class="section-copy">
+        <p class="eyebrow">POLICY</p>
+        <h2>Chính sách hỗ trợ bạn nên biết</h2>
+        <p>Tìm hiểu các điều kiện mua hàng, đổi trả và hỗ trợ đối với ốp lưng cá nhân hóa.</p>
+      </div>
+      <div class="policy-grid">
+        @for (item of policyItems; track item) {
+          <article>
+            <span>✦</span>
+            <p>{{ item }}</p>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</section>

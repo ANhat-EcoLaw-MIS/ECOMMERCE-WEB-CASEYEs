@@ -37,3 +37,11 @@
     break-after: avoid;
   }
 }
+/* CasEYE's micro-interactions: blink on add-to-bag. */
+@keyframes caseye-blink-odd {0%,20%,45%,75%,100%{transform:scaleY(1)} 28%,35%,67%{transform:scaleY(.08)}}
+@keyframes caseye-blink-even {0%,20%,45%,75%,100%{transform:scaleY(1)} 28%,35%,67%{transform:scaleY(.08)}}
+@keyframes caseye-bag-pop-odd {0%,100%{transform:scale(1)}40%{transform:scale(1.25)}70%{transform:scale(.9)}}
+@keyframes caseye-bag-pop-even {0%,100%{transform:scale(1)}40%{transform:scale(1.25)}70%{transform:scale(.9)}}
+app-header img[style*="caseye-blink"]{animation-duration:.75s;animation-timing-function:ease-in-out;animation-iteration-count:1;transform-origin:center}
+#caseye-cart-icon{animation-duration:.75s;animation-timing-function:ease-in-out;animation-iteration-count:1}
+@media(prefers-reduced-motion:reduce){app-header img,#caseye-cart-icon{animation:none!important}}

@@ -2,15 +2,35 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
 
-## Development server
+## Chạy thủ công trên Windows
 
-To start a local development server, run:
+Mở PowerShell hoặc terminal tại thư mục project `D:\Code\Project_Web`, sau đó chạy:
 
-```bash
-ng serve
+```powershell
+npm.cmd ci
+npm.cmd start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+`npm.cmd ci` chỉ cần chạy lần đầu hoặc sau khi lockfile thay đổi. Khi server báo đã sẵn sàng, mở:
+
+- Trang chủ: `http://localhost:4200/`
+- Giỏ hàng: `http://localhost:4200/cart`
+
+Giữ cửa sổ terminal mở trong lúc sử dụng; nhấn `Ctrl+C` để dừng server. Nếu `npm` báo lỗi PowerShell Execution Policy, dùng `npm.cmd` như các lệnh ở trên.
+
+### Xem giao diện mobile
+
+- **Mô phỏng trên máy tính:** mở trang giỏ hàng trong Chrome hoặc Edge, nhấn `F12`, bật Device Toolbar bằng `Ctrl+Shift+M`, chọn thiết bị/chiều rộng màn hình và tải lại trang nếu cần.
+- **Mở trên điện thoại thật:** để điện thoại và máy tính cùng mạng Wi-Fi, chạy `npm.cmd run start:network`. Tìm địa chỉ IPv4 của máy tính bằng `ipconfig`, rồi mở `http://<IPv4-may-tinh>:4200/cart` trên điện thoại. Không dùng `localhost` trên điện thoại vì địa chỉ đó trỏ về chính điện thoại. Nếu không kết nối được, cho phép Node.js/port 4200 qua Windows Firewall trên mạng riêng.
+
+Ở màn hình hẹp, nội dung giỏ hàng và phần tóm tắt xếp thành một cột; phần điều hướng dùng menu mobile.
+
+### Build và test
+
+```powershell
+npm.cmd run build
+npm.cmd test -- --watch=false
+```
 
 ## Code scaffolding
 

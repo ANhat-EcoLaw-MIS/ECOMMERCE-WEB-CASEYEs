@@ -25,8 +25,7 @@ import { StudioDraft } from '../../services/studio-draft';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 import { AuthModal } from '../../../../core/auth/auth-modal';
-import { CartService } from '../../../../shared/services/cart.service';
-import { StudioCatalogService } from '../../services/studio-catalog';
+import { CartState } from '../../../../core/cart-state/cart-state';
 import { CASE_MATERIALS } from '../../models/studio-domain.model';
 import { UNIFIED_STUDIO_PRICE } from '../../services/studio-state';
 
@@ -45,8 +44,7 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly draft = inject(StudioDraft);
   protected readonly auth = inject(SupabaseAuthService);
   protected readonly authModal = inject(AuthModal);
-  private readonly cart = inject(CartService);
-  private readonly catalog = inject(StudioCatalogService);
+  private readonly cart = inject(CartState);
   /** Small JPEG of the last rendered case texture, used as the cart / order preview (integration). */
   private lastPreviewUrl: string | undefined;
   protected readonly stickers = STICKERS_LIST;
@@ -874,25 +872,26 @@ export class StudioWorkspace implements OnDestroy {
     this.showToast('Đã thêm thiết kế vào giỏ hàng thành công!', 4000, true);
   }
 
-  /** Integration: push the design to the shared cart (read by Thanh toán). */
+  /** Integration: push the design into the site cart (Shop's CartState, read by Thanh toán). */
   private addCurrentDesignToCart(): void {
     const model = this.state.selectedModel();
     const material = CASE_MATERIALS.find((m) => m.id === this.state.selectedMaterial());
-    const hasImage = this.state.layers().some((l) => l.type === 'image');
     const name = this.state.designName();
     this.cart.add({
-      productType: 'CUSTOM',
+      id: `design:${this.catalog.selectedSku()?.skuId ?? model.id}:${Date.now().toString(36)}`,
       name: name === 'Thiết kế chưa đặt tên' ? `Ốp lưng thiết kế – ${model.name}` : name,
-      device: model.name,
-      baseSku: this.catalog.selectedSku()?.skuId ?? model.id,
+      model: model.name,
+      finish: material?.name ?? 'Ốp lưng tiêu chuẩn',
+      tone: 'lilac',
+      caption: name,
       unitPrice: UNIFIED_STUDIO_PRICE,
       quantity: 1,
-      previewUrl: this.lastPreviewUrl,
-      material: material?.name,
-      hasUploadedImage: hasImage,
-      contentPolicyAcceptedAt: hasImage ? new Date().toISOString() : undefined,
+      stock: 99,
+      custom: true,
+      snapshot: this.lastPreviewUrl,
     });
   }
+
 
   private capturePreview(source: HTMLCanvasElement): void {
     try {

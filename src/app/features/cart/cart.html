@@ -1,1 +1,29 @@
-<p>cart works!</p>
+<div class="cart-v5-shell">
+  <nav class="cart-v5-crumb"><a routerLink="/">⌂ Trang chủ</a><span>›</span><a routerLink="/shop">Cửa hàng</a><span>›</span><strong>Giỏ hàng</strong></nav>
+  <h1>Giỏ hàng ({{cart.itemCount()}})</h1>
+  @if(cart.items().length){
+    <div class="cart-v5-layout"><div class="cart-v5-items">
+      <div class="cart-v5-table-head"><span>Sản phẩm</span><span>Đơn giá</span><span>Số lượng</span><span>Thành tiền</span></div>
+      @for(item of cart.items();track item.id){
+        <article class="cart-v5-item">
+          <div class="cart-v5-product"><img [src]="item.custom && item.snapshot ? item.snapshot : productImage(item.id)" [alt]="item.name" (error)="onImageError($event)"/><div>@if(item.id.startsWith('accessory-')){<strong>{{item.name}}</strong>}@else{<a [routerLink]="['/shop',item.id.split(':')[0]]">{{item.name}}</a>}<p>{{item.model}}</p><small>{{item.finish}}</small><p class="cart-v5-stock" [class.out]="item.quantity>item.stock">{{item.stock ? '● Còn '+item.stock+' sản phẩm trong kho (giả lập)' : '● Hết hàng'}}</p><div class="cart-v5-mini-actions"><button type="button" (click)="cart.saveForLater(item.id)">♡ Lưu để mua sau</button><button type="button" (click)="cart.remove(item.id)">Xóa</button></div></div></div>
+          <strong class="cart-v5-unit">{{price(item.unitPrice)}}</strong>
+          <div class="cart-v5-quantity"><button type="button" [disabled]="item.quantity<=1" (click)="cart.decrease(item.id)" aria-label="Giảm số lượng">−</button><span>{{item.quantity}}</span><button type="button" [disabled]="item.quantity>=item.stock" (click)="cart.increase(item.id)" aria-label="Tăng số lượng">+</button></div>
+          <strong class="cart-v5-line">{{price(item.unitPrice*item.quantity)}}</strong>
+        </article>
+      }
+      <a routerLink="/shop" class="cart-v5-continue">← Tiếp tục mua sắm</a>
+      @if(cart.saved().length){<section class="cart-v5-saved"><h2>Đã lưu để mua sau</h2>@for(item of cart.saved();track item.id){<div><img [src]="item.custom && item.snapshot ? item.snapshot : productImage(item.id)" [alt]="item.name" (error)="onImageError($event)"/><strong>{{item.name}}</strong><button type="button" (click)="cart.moveToCart(item.id)">Chuyển vào giỏ</button><button type="button" (click)="cart.removeSaved(item.id)" aria-label="Xóa">✕</button></div>}</section>}
+    </div><aside class="cart-v5-summary"><h2>Tóm tắt đơn hàng</h2>
+      <div><span>Tạm tính ({{cart.itemCount()}} sản phẩm)</span><strong>{{price(cart.subtotal())}}</strong></div><div><span>Vận chuyển</span><strong>{{cart.shipping()===0 ? 'Miễn phí' : price(cart.shipping())}}</strong></div>
+      @if(discount()){<div><span>Ưu đãi CASEYE10</span><strong>−{{price(discount())}}</strong></div>}
+      <div class="cart-v5-coupon"><label for="promo">Mã ưu đãi</label><div><input id="promo" placeholder="Nhập mã CASEYE10" [value]="couponInput()" (input)="updateCoupon($event)"/><button type="button" (click)="appliedCoupon() ? removeCoupon() : applyCoupon()">{{appliedCoupon() ? 'Bỏ mã' : 'Áp dụng'}}</button></div>@if(couponMessage()){<p role="status">{{couponMessage()}}</p>}</div>
+      <div class="cart-v5-total"><span>Tổng cộng</span><strong>{{price(total())}}</strong></div>
+      <label class="cart-v5-terms"><input type="checkbox" [checked]="acceptedTerms()" (change)="acceptedTerms.set(!acceptedTerms())"/><span>Tôi đồng ý với <button type="button" (click)="showTerms.set(!showTerms())">điều khoản sản phẩm cá nhân hóa</button>.</span></label>
+      @if(showTerms()){<p class="cart-v5-terms-info">Vui lòng kiểm tra mẫu và dòng máy. Sau khi bắt đầu in, việc huỷ đơn có thể bị giới hạn. Chính sách cuối cùng do backend xác nhận.</p>}
+      <button class="cart-v5-pay" type="button" [disabled]="cart.hasStockIssues()" (click)="checkout()">Tiến hành thanh toán →</button>
+      @if(checkoutMessage()){<p class="cart-v5-checkout-note" role="status">{{checkoutMessage()}}</p>}
+      <p class="cart-v5-ship-tip">✦ Miễn phí giao hàng từ 500.000đ</p>
+    </aside></div>
+  } @else {<div class="cart-v5-empty"><h2>Giỏ hàng của bạn đang trống ♡</h2><p>Khám phá những mẫu ốp độc quyền và chọn thiết kế đúng gu nhé.</p><a routerLink="/shop">Khám phá cửa hàng →</a></div>@if(cart.saved().length){<div class="cart-v5-saved"><h2>Đã lưu để mua sau</h2>@for(item of cart.saved();track item.id){<div><img [src]="item.custom && item.snapshot ? item.snapshot : productImage(item.id)" [alt]="item.name" (error)="onImageError($event)"/><strong>{{item.name}}</strong><button type="button" (click)="cart.moveToCart(item.id)">Chuyển vào giỏ</button></div>}</div>}}
+</div>

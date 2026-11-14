@@ -1,0 +1,51 @@
+@if (product(); as p) {
+  <div class="pdp-root">
+    <nav class="breadcrumbs"><a routerLink="/">Trang chủ</a><span>›</span><a routerLink="/shop">Cửa hàng</a><span>›</span><strong>{{p.name}}</strong></nav>
+    <section class="pdp-top" aria-label="Chi tiết sản phẩm">
+      <div class="pdp-media">
+        <div class="gallery-thumbnails">
+          @for(photo of galleryPhotos();track photo;let i=$index){
+            <button type="button" [class.active]="galleryIndex()===i" (click)="setGallery(i)" [attr.aria-label]="'Xem ảnh '+(i+1)"><img [src]="photo" [alt]="p.name+' - ảnh '+(i+1)" (error)="onImageError($event)"/></button>
+          }
+        </div>
+        <div class="pdp-gallery-photo">
+          <img [src]="galleryPhotos()[galleryIndex()]" [alt]="p.name+' – hình sản phẩm'" (error)="onImageError($event)"/>
+          <div class="gallery-arrows"><button type="button" (click)="prevGallery()" aria-label="Ảnh trước">‹</button><button type="button" (click)="nextGallery()" aria-label="Ảnh tiếp theo">›</button></div>
+          <span class="gallery-counter">{{galleryIndex()+1}} / {{galleryPhotos().length}}</span>
+        </div>
+        <div class="pdp-preview">
+          <div class="pdp-view-toggle" role="group" aria-label="Chọn chế độ xem"><button type="button" [class.active]="view()==='2d'" (click)="view.set('2d')">Ảnh thiết kế</button><button type="button" [class.active]="view()==='3d'" (click)="view.set('3d')">3D · 360°</button></div>
+          @if(view()==='3d'){
+            <app-case-3d [tone]="p.tone" [caption]="p.caption" [productId]="p.id" [model]="model()"/>
+            <span class="preview-caption">Kéo để xem thử góc xoay 360°. Để thành 3D vật lý chính xác cần model GLB riêng cho từng phôi.</span>
+          } @else { <img class="pdp-preview-photo" [src]="productImage(p.id)" [alt]="'Ảnh '+p.name" (error)="onImageError($event)"/> }
+        </div>
+      </div>
+      <div class="pdp-buy">
+        <span class="eyebrow">CASEYE'S ORIGINAL · {{p.collection}}</span>
+        <h1>{{p.name}}</h1><p class="pdp-desc">{{p.description}}</p>
+        <div class="pdp-price">{{money(p.price)}}</div><p class="pdp-chip">✦ Mẫu thiết kế độc quyền CasEYE's</p>
+        <label for="pdp-phone">Chọn dòng máy <strong>*</strong></label>
+        <select id="pdp-phone" [value]="model()" (change)="updateModel($event)">@for(item of models;track item){<option [value]="item">{{item}}</option>}</select>
+        <label class="material-label">Chọn chất liệu ốp</label>
+        <div class="pdp-materials">@for(item of materials;track item){<button type="button" [class.selected]="material()===item" (click)="material.set(item)">{{item}}</button>}</div>
+        <label class="material-label">Màu viền (xem thử)</label>
+        <div class="pdp-colors">@for(item of accentColors;track item){<button type="button" [style.background]="item" [class.selected]="color()===item" (click)="color.set(item)" [attr.aria-label]="'Màu '+item"></button>}</div>
+        <div class="pdp-order-row"><div class="pdp-qty"><button type="button" (click)="decrease()" aria-label="Giảm">−</button><span>{{quantity()}}</span><button type="button" (click)="increase()" [disabled]="quantity()>=p.stock" aria-label="Tăng">+</button></div><p class="pdp-stock" [class.out]="!p.stock">{{p.stock?'● Còn '+p.stock+' sản phẩm trong kho (giả lập)':'● Tạm hết hàng'}}</p></div>
+        <button type="button" class="pdp-add" [disabled]="!p.stock" (click)="add()">Thêm vào giỏ hàng — {{money(p.price*quantity())}} ↗</button>
+        <p class="pdp-small">Thanh toán và quản lý giỏ yêu cầu đăng nhập.</p>
+        <div class="pdp-highlights"><span>◈ Chống sốc bảo vệ viền</span><span>✧ In UV bền màu</span><span>♡ Thiết kế riêng CasEYE's</span><span>✦ Tư vấn từ đội ngũ CSKH</span></div>
+      </div>
+    </section>
+    <section class="pdp-information">
+      <div class="pdp-tabs"><button type="button" [class.active]="infoTab()==='description'" (click)="infoTab.set('description')">Mô tả sản phẩm</button><button type="button" [class.active]="infoTab()==='specs'" (click)="infoTab.set('specs')">Thông số kỹ thuật</button><button type="button" [class.active]="infoTab()==='reviews'" (click)="infoTab.set('reviews')">Đánh giá</button></div>
+      @if(infoTab()==='description'){
+        <div class="pdp-description"><div><h2>Về {{p.name}}</h2><p>{{p.description}} CasEYE's mang đến một thiết kế hài hòa giữa phong cách và khả năng bảo vệ máy.</p></div><div class="pdp-benefits"><p>✓ Bảo vệ viền và phần camera</p><p>✓ Họa tiết in bền màu</p><p>✓ Dễ tháo lắp và vệ sinh</p><p>✓ Hỗ trợ nhiều dòng điện thoại</p></div><div class="pdp-description-visual"><img [src]="'/products/'+p.id+'-detail.webp'" [alt]="'Cận cảnh '+p.name" (error)="onImageError($event)"/></div></div>
+      } @else if(infoTab()==='specs'){
+        <div class="pdp-specs"><div><strong>Chất liệu</strong><span>{{material()}}</span></div><div><strong>Dòng máy</strong><span>{{model()}}</span></div><div><strong>Kỹ thuật</strong><span>{{p.material}}</span></div><div><strong>Bảo quản</strong><span>Vệ sinh bằng khăn mềm, tránh chất tẩy mạnh</span></div><div><strong>Lưu ý</strong><span>Thông số phôi và màu sắc cuối cùng sẽ được xác nhận khi đặt hàng</span></div></div>
+      } @else {<div class="pdp-reviews"><h2>Đánh giá từ khách hàng</h2><p>Chưa có dữ liệu đánh giá xác thực trong phiên bản demo. Đánh giá sẽ hiển thị khi tích hợp module đơn hàng.</p></div>}
+    </section>
+    <section class="pdp-accessories"><div class="pdp-section-title"><div><span class="eyebrow">MAKE IT YOURS</span><h2>Phụ kiện phối cùng</h2><p>Hoàn thiện phong cách với những món đồ đồng điệu.</p></div><span class="demo-label">Bộ sản phẩm demo</span></div><div class="accessory-grid">@for(item of accessories;track item.id){<article class="accessory-card"><img [src]="item.image" [alt]="item.name" loading="lazy" (error)="onImageError($event)"/><strong>{{item.name}}</strong><b>{{money(item.price)}}</b><button type="button" (click)="addAccessory(item)">+ Thêm vào giỏ</button></article>}</div></section>
+    <section class="pdp-crosssell"><span class="eyebrow">CURATED FOR YOU</span><h2>Bạn cũng có thể thích</h2><p>Khám phá các mẫu ốp cùng bộ sưu tập để hoàn thiện phong cách của bạn.</p><div class="pdp-related-grid">@for(item of related();track item.id){<a class="related-card" [routerLink]="['/shop',item.id]" (click)="resetView()"><div class="related-art"><img [src]="productImage(item.id)" [alt]="item.name" loading="lazy" (error)="onImageError($event)"/></div><span>{{item.collection}}</span><strong>{{item.name}}</strong><b>{{money(item.price)}}</b></a>}</div></section>
+  </div>
+} @else { <section class="pdp-not-found"><h1>Không tìm thấy sản phẩm.</h1><a routerLink="/shop">← Trở lại cửa hàng</a></section> }

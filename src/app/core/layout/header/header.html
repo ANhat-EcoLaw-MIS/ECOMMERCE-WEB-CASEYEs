@@ -10,6 +10,7 @@
         src="/logo.png"
         alt="CasEYE's"
         class="h-11 md:h-12 w-auto rounded-xl object-contain transition-transform duration-300 ease-out group-hover:scale-105"
+        [style.animation-name]="cartState.animationPulse() === 0 ? 'none' : (cartState.animationPulse() % 2 ? 'caseye-blink-odd' : 'caseye-blink-even')"
         loading="eager"
       />
     </a>
@@ -69,6 +70,8 @@
       <!-- Cart -->
       <a
         (click)="onCartClick()"
+        id="caseye-cart-icon"
+        [style.animation-name]="cartState.animationPulse() === 0 ? 'none' : (cartState.animationPulse() % 2 ? 'caseye-bag-pop-odd' : 'caseye-bag-pop-even')"
         [attr.aria-label]="cartLabel()"
         class="relative grid size-11 place-items-center rounded-full text-white/80 transition-colors duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
       >
@@ -186,3 +189,19 @@
     </nav>
   }
 </header>
+@if (searchOpen()) {
+  <div class="omni-overlay" (click)="searchOpen.set(false)"></div>
+  <section class="omni-dialog" aria-label="Tìm kiếm CasEYE's">
+    <div class="omni-top"><strong>Tìm kiếm <span>CasEYE's</span></strong><button type="button" (click)="searchOpen.set(false)" aria-label="Đóng tìm kiếm">✕</button></div>
+    <div class="omni-input-wrap">
+      <span aria-hidden="true">⌕</span><input autofocus type="search" aria-label="Tìm kiếm tên mẫu, phong cách" placeholder="Tìm mẫu, chủ đề, hoặc màu sắc..." [value]="omni.query()" (input)="onQueryChanged($event)" (keydown.enter)="submitSearch()"/>
+      <button type="button" (click)="submitSearch()" aria-label="Tìm kiếm">Tìm</button>
+    </div>
+    <div class="omni-dropzone" [class.dragging]="draggingImage()" (dragover)="$event.preventDefault();draggingImage.set(true)" (dragleave)="draggingImage.set(false)" (drop)="imageDropped($event)">
+      <span aria-hidden="true">◎</span><div><strong>Tìm bằng ảnh tham khảo</strong><p>Kéo ảnh vào đây hoặc chọn ảnh để tìm thiết kế có tông màu tương tự.</p></div>
+      <label class="omni-upload">Chọn ảnh<input type="file" accept="image/png,image/jpeg,image/webp" (change)="imageSelected($event)" hidden/></label>
+    </div>
+    @if (omni.message()) {<p class="omni-error" role="status">{{omni.message()}}</p>}
+  </section>
+}
+<app-cart-drawer />

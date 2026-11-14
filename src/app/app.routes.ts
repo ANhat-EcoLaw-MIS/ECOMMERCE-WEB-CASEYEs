@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { ShellLayout } from './core/layout/shell-layout/shell-layout';
 import { AdminLayout } from './core/layout/admin-layout/admin-layout';
 import { roleGuard } from './core/auth/role-guard';
+import { authGuard } from './core/auth/auth-guard';
 
 export const routes: Routes = [
   {
@@ -54,6 +55,8 @@ export const routes: Routes = [
       },
       {
         path: 'cart',
+        // Shop: the cart needs a signed-in customer (real Supabase session).
+        canActivate: [authGuard],
         title: "Giỏ hàng | CasEYE's",
         loadChildren: () => import('./features/cart/cart.routes').then((m) => m.CART_ROUTES),
       },
