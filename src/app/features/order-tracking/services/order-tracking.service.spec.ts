@@ -8,6 +8,7 @@ import { DemoOrderFactory, DemoOrderInput } from './demo-order-factory';
 import { DemoSettings } from './demo-settings';
 import { MESSAGES, OrderTrackingService } from './order-tracking.service';
 import { ScheduledJobs } from './scheduled-jobs';
+import { lateness, productionSlot } from '../domain/schedule';
 
 /** End-to-end scenarios (v8 prompt §8 and UI review §8), run against the real service + localStorage mock. */
 describe('OrderTrackingService scenarios (v8)', () => {
@@ -367,5 +368,42 @@ describe('OrderTrackingService scenarios (v8)', () => {
     settings.setDown('Shopping', false);
     jobs.run('retry');
     expect(service.db().retryQueue.length).toBe(0);
+  });
+  it('time limits: the 16:00 production run happens on its own and missed runs are caught up', () => {
+    const o = create({ template: 'custom_plain' });
+    ok(service.moderateDesign(o.id, 'Approved', {}, OPERATOR)); // Wed 10:00 → due Wed 16:00
+    expect(productionSlot(get(o.id), clock.now())).toBeNull();
+    expect(service.closeBatch(OPERATOR).error?.message).toContain('16:00');
+    at(new Date(2026, 10, 4, 16, 0));
+    jobs.run('batch'); // the background job, nobody presses a button
+    expect(get(o.id).status).toBe('In_Production');
+  });
+
+  it('a late order can start production at any time and is flagged as late', () => {
+    const o = create({ template: 'custom_plain' });
+    ok(service.moderateDesign(o.id, 'Approved', {}, OPERATOR));
+    at(new Date(2026, 10, 16, 9, 0)); // 12 days later, Monday 09:00 (before 16:00)
+    expect(productionSlot(get(o.id), clock.now())).toBe('overdue');
+    expect(lateness(get(o.id), clock.now())?.label).toContain('Trễ đợt sản xuất');
+    expect(ok(service.closeBatch(OPERATOR)).count).toBe(1);
+    expect(get(o.id).status).toBe('In_Production');
+    expect(lateness(get(o.id), clock.now())).toBeNull();
+  });
+
+  it('every later step has a time limit (review 24h, production, pickup, delivery date)', () => {
+    const o = create({ template: 'custom_plain' });
+    later(25);
+    expect(lateness(get(o.id), clock.now())?.label).toContain('Duyệt thiết kế');
+    ok(service.moderateDesign(o.id, 'Approved', {}, OPERATOR)); // Thu 11:00
+    at(new Date(2026, 10, 5, 16, 0));
+    ok(service.closeBatch(OPERATOR));
+    later(24 * 7);
+    expect(lateness(get(o.id), clock.now())?.label).toContain('Sản xuất quá');
+    ok(service.markPacked(o.id, OPERATOR));
+    later(24 * 3);
+    expect(lateness(get(o.id), clock.now())?.label).toBe('Chưa bàn giao vận chuyển');
+    ok(service.applyWebhook(o.id, 'In_Transit'));
+    later(24 * 10);
+    expect(lateness(get(o.id), clock.now())?.label).toBe('Giao trễ so với dự kiến');
   });
 });

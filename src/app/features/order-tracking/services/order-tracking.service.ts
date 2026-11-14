@@ -3,13 +3,15 @@ import { SupabaseAuthService } from '../../../core/supabase/supabase-auth.servic
 import { Result, fail, ok } from '../../../core/supabase/supabase.types';
 import { CANCEL_REASON_LABELS, DELIVERY_CONFIG, FAILURE_CAUSES } from '../config/delivery-config';
 import { addHours, addWorkingDays, diffMs, formatFullDate, formatShortDate, isWorkingDay, toDateKey } from '../domain/calendar';
-import { computeEdd, shiftEdd, workingDaysBetween } from '../domain/edd';
+import { batchDateFor, computeEdd, shiftEdd, workingDaysBetween } from '../domain/edd';
+import { productionSlot } from '../domain/schedule';
 import {
   Actor,
   BusinessError,
   CARRIER,
   RefundChoice,
   applyRefundChoice,
+  startProduction,
   finalizeFailedDelivery,
   withCancellation,
   withLog,
@@ -570,6 +572,7 @@ export class OrderTrackingService implements OrderIntake {
         return {
           ...withTransition(withReview, 'Pending_Confirmation', actor, `Duyệt bản thiết kế vòng ${round}`, nowIso),
           confirmedAt: nowIso,
+          batchDate: toDateKey(batchDateFor(now)),
         };
       }
       if (!detail.violationGroup || !detail.reason?.trim()) throw new BusinessError('Chọn nhóm vi phạm và nhập lý do');
@@ -595,31 +598,26 @@ export class OrderTrackingService implements OrderIntake {
   /** UC-OT-06 step 4: "Chốt mẻ" at 16:00 on working days. */
   closeBatch(actor: Actor): Result<{ count: number; groups: Record<string, number> }> {
     const now = this.clock.now();
-    const cutoff = new Date(now);
-    cutoff.setHours(DELIVERY_CONFIG.batchCutoff.hour, DELIVERY_CONFIG.batchCutoff.minute, 0, 0);
-    if (!isWorkingDay(now, DELIVERY_CONFIG.holidays) || now.getTime() < cutoff.getTime()) {
-      return fail({ message: 'Chưa tới giờ chốt mẻ (16:00, Thứ 2 – Thứ 6)' });
-    }
     try {
       return this.repo.transact((db) => {
         const nowIso = now.toISOString();
         const groups: Record<string, number> = {};
         let count = 0;
         db.orders = db.orders.map((o) => {
-          // Approved custom orders confirmed before the cut-off, not held by a cancel request.
-          const eligible =
-            o.status === 'Pending_Confirmation' &&
-            o.hasCustomItem &&
-            !!o.confirmedAt &&
-            new Date(o.confirmedAt).getTime() <= cutoff.getTime() &&
-            !isOnHold(o);
-          if (!eligible) return o;
+          // Today's 16:00 run, plus any order that missed its run (it may start at any time).
+          if (!productionSlot(o, now)) return o;
           count++;
           o.items.filter((i) => i.isCustom).forEach((i) => (groups[i.phoneModel] = (groups[i.phoneModel] ?? 0) + i.quantity));
-          const models = [...new Set(o.items.filter((i) => i.isCustom).map((i) => i.phoneModel))].join(', ');
-          return { ...withTransition(o, 'In_Production', actor, `Chốt mẻ ${formatShortDate(toDateKey(now))} – nhóm ${models}`, nowIso), updatedAt: nowIso };
+          return { ...startProduction(o, actor, nowIso), updatedAt: nowIso };
         });
-        if (count === 0) throw new BusinessError('Mẻ rỗng: không có đơn đủ điều kiện, mẻ không chạy');
+        if (count === 0) {
+          const waitingToday = db.orders.some((o) => o.status === 'Pending_Confirmation' && o.hasCustomItem && !!o.confirmedAt && !isOnHold(o));
+          throw new BusinessError(
+            waitingToday
+              ? `Đợt sản xuất hôm nay bắt đầu lúc ${String(DELIVERY_CONFIG.batchCutoff.hour).padStart(2, '0')}:00 (Thứ 2 – Thứ 6). Hiện không có đơn trễ hẹn.`
+              : 'Không có đơn nào cần đưa vào sản xuất',
+          );
+        }
         return ok({ count, groups });
       });
     } catch (e) {

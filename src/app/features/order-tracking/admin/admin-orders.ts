@@ -8,6 +8,7 @@ import { REFUND_TONE, TONE_CLASSES } from '../config/status-style';
 import { formatDayLabel, formatShortDate, isWorkingDay, toDateKey } from '../domain/calendar';
 import { Actor } from '../domain/order-mutations';
 import { isConfirmed, isOnHold, pendingCancelRequest, refundStatusLabel } from '../domain/order-rules';
+import { lateness, productionDueDate, productionSlot } from '../domain/schedule';
 import { formatVnd } from '../domain/shipping-fee';
 import { statusLabel } from '../domain/timeline';
 import { Order, RefundRequest, Resolution } from '../models/order-tracking.model';
@@ -25,6 +26,7 @@ type QueueKey =
   | 'refundApprove'
   | 'refundTransfer'
   | 'refundWaiting'
+  | 'late'
   | 'all';
 
 interface Queue {
@@ -54,6 +56,8 @@ const ROLE_QUEUES: Record<'Operator' | 'CSKH' | 'Admin', readonly Queue[]> = {
   ],
 };
 
+const LATE_QUEUE: Queue = { key: 'late', label: 'Trễ hẹn', hint: 'Đơn quá giới hạn thời gian ở bất kỳ bước nào. Xử lý trước các đơn khác.', match: (o, now) => lateness(o, now) !== null };
+
 const ALL_QUEUE: Queue = { key: 'all', label: 'Tất cả đơn', hint: 'Tra cứu mọi đơn hàng.', match: () => true };
 
 /**
@@ -81,7 +85,7 @@ export class AdminOrders {
   protected readonly reasonLabels = CANCEL_REASON_LABELS;
 
   protected readonly now = computed(() => this.clock.nowSignal());
-  protected readonly queues = computed<readonly Queue[]>(() => [...ROLE_QUEUES[this.demo.role()], ALL_QUEUE]);
+  protected readonly queues = computed<readonly Queue[]>(() => [...ROLE_QUEUES[this.demo.role()], LATE_QUEUE, ALL_QUEUE]);
   protected readonly queueKey = signal<QueueKey>('review');
   protected readonly queue = computed(() => this.queues().find((q) => q.key === this.queueKey()) ?? this.queues()[0]);
   protected readonly search = signal('');
@@ -96,7 +100,9 @@ export class AdminOrders {
     const q = this.search().trim().toLowerCase();
     const list = this.sorted().filter((o) => this.queue().match(o, now));
     const filtered = q ? list.filter((o) => o.orderCode.toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q)) : list;
-    return this.queue().key === 'all' ? [...filtered].reverse() : filtered;
+    if (this.queue().key === 'all') return [...filtered].reverse();
+    // Late orders first, then oldest first.
+    return [...filtered].sort((a, b) => Number(!!lateness(b, now)) - Number(!!lateness(a, now)));
   });
 
   protected readonly selectedId = signal<string | null>(null);
@@ -105,16 +111,19 @@ export class AdminOrders {
     return this.rows().find((o) => o.id === id) ?? this.service.orders().find((o) => o.id === id) ?? this.rows()[0] ?? null;
   });
 
-  /** Next daily production run (16:00 on a working day). */
+  /** Production run banner: late orders can start now, the others wait for 16:00. */
   protected readonly nextBatch = computed(() => {
     const now = this.now();
     const cut = DELIVERY_CONFIG.batchCutoff;
-    const d = new Date(now);
-    d.setHours(cut.hour, cut.minute, 0, 0);
-    const due = isWorkingDay(d, DELIVERY_CONFIG.holidays) && now.getTime() >= d.getTime();
-    const label = due ? 'Đã tới giờ' : `${String(cut.hour).padStart(2, '0')}:${String(cut.minute).padStart(2, '0')} ${toDateKey(d) === toDateKey(now) && isWorkingDay(d, DELIVERY_CONFIG.holidays) ? 'hôm nay' : 'ngày làm việc tiếp theo'}`;
-    const waiting = this.sorted().filter((o) => o.status === 'Pending_Confirmation' && o.hasCustomItem && isConfirmed(o, now) && !isOnHold(o)).length;
-    return { due, label, waiting };
+    const hhmm = `${String(cut.hour).padStart(2, '0')}:${String(cut.minute).padStart(2, '0')}`;
+    const waiting = this.sorted().filter((o) => o.status === 'Pending_Confirmation' && o.hasCustomItem && !!o.confirmedAt && !isOnHold(o));
+    const overdue = waiting.filter((o) => productionSlot(o, now) === 'overdue').length;
+    const due = waiting.filter((o) => productionSlot(o, now) === 'due').length;
+    const cutToday = new Date(now);
+    cutToday.setHours(cut.hour, cut.minute, 0, 0);
+    const today = isWorkingDay(now, DELIVERY_CONFIG.holidays);
+    const label = today && now < cutToday ? `${hhmm} hôm nay` : today ? 'đang chạy' : `${hhmm} ngày làm việc tiếp theo`;
+    return { label, overdue, due, upcoming: waiting.length - overdue - due, ready: overdue + due };
   });
 
   // form inputs (reset when the selected order changes)
@@ -165,6 +174,14 @@ export class AdminOrders {
     return `${Math.round(h / 24)} ngày`;
   }
 
+  protected late(o: Order) {
+    return lateness(o, this.now());
+  }
+
+  protected slot(o: Order) {
+    return productionSlot(o, this.now());
+  }
+
   protected reviewOverdue(o: Order): boolean {
     return o.status === 'Pending_Review' && !!o.reviewQueuedAt && this.now().getTime() - new Date(o.reviewQueuedAt).getTime() > DELIVERY_CONFIG.moderationSlaHours * HOUR;
   }
@@ -195,7 +212,7 @@ export class AdminOrders {
   }
 
   protected batchDay(o: Order): string {
-    return formatDayLabel(o.batchDate);
+    return formatDayLabel(productionDueDate(o));
   }
 
   // ------------------------------------------------------------ actions
@@ -210,7 +227,7 @@ export class AdminOrders {
   protected startProduction(): void {
     const r = this.service.closeBatch(this.actor());
     if (r.error) {
-      return this.flash.set({ ok: false, text: `${r.error.message}. Khi demo, dùng trang Mô phỏng để tua tới 16:00.` });
+      return this.flash.set({ ok: false, text: r.error.message });
     }
     this.flash.set({ ok: true, text: `Đã đưa ${r.data.count} đơn vào sản xuất (${Object.entries(r.data.groups).map(([m, n]) => `${m}: ${n}`).join(', ')}).` });
   }

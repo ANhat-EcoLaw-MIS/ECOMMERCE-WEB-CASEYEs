@@ -39,11 +39,19 @@
     <!-- Daily production run (the internal 16:00 batch) -->
     <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-(image:--grad-primary) px-5 py-4 text-white">
       <div>
-        <p class="font-display text-lg font-bold">Đợt sản xuất tiếp theo: {{ nextBatch().label }}</p>
-        <p class="text-sm text-white/80">{{ nextBatch().waiting }} đơn thiết kế đang chờ. Đơn xác nhận trước 16:00 vào đợt hôm nay, sau 16:00 vào đợt ngày làm việc tiếp theo.</p>
+        <p class="font-display text-lg font-bold">Đợt sản xuất 16:00: {{ nextBatch().label }}</p>
+        <p class="text-sm text-white/85">
+          @if (nextBatch().overdue) {
+            <b class="text-white">{{ nextBatch().overdue }} đơn trễ đợt</b> có thể vào sản xuất ngay ·
+          }
+          @if (nextBatch().due) {
+            {{ nextBatch().due }} đơn của đợt hôm nay ·
+          }
+          {{ nextBatch().upcoming }} đơn chờ đợt kế tiếp. Hệ thống tự chạy lúc 16:00 mỗi ngày làm việc.
+        </p>
       </div>
-      <button type="button" class="inline-flex min-h-11 items-center rounded-pill bg-white px-5 text-sm font-bold text-brand-900 hover:bg-brand-50 disabled:opacity-60" [disabled]="!nextBatch().waiting" (click)="startProduction()">
-        Đưa vào sản xuất
+      <button type="button" class="inline-flex min-h-11 items-center rounded-pill bg-white px-5 text-sm font-bold text-brand-900 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60" [disabled]="!nextBatch().ready" (click)="startProduction()">
+        {{ nextBatch().ready ? 'Đưa ' + nextBatch().ready + ' đơn vào sản xuất' : 'Chưa có đơn cần đưa vào' }}
       </button>
     </div>
   }
@@ -65,8 +73,8 @@
                 <span class="flex items-center gap-2">
                   <span class="font-semibold text-ink">{{ o.orderCode }}</span>
                   <span class="rounded-pill bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink-soft ring-1 ring-line">{{ kind(o) }}</span>
-                  @if (reviewOverdue(o) || requestOverdue(o)) {
-                    <span class="rounded-pill bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-800">Quá hạn</span>
+                  @if (late(o); as l) {
+                    <span class="rounded-pill bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-800">{{ l.label }}</span>
                   }
                 </span>
                 <span class="block truncate text-xs text-ink-soft">{{ o.customerName }} · {{ o.paymentMethod === 'COD' ? 'COD' : 'Đã thanh toán' }} · chờ {{ waited(o.updatedAt) }}</span>
@@ -89,6 +97,9 @@
               <h2 class="font-display text-xl font-bold text-ink">{{ o.orderCode }}</h2>
               <p class="text-sm text-ink-soft">{{ o.customerName }} · {{ o.customerPhone }} · đặt {{ o.createdAt | date: 'HH:mm dd/MM' }}</p>
               <p class="text-sm text-ink-soft">Giao dự kiến {{ formatShortDate(o.earliestEDD) }} – {{ formatShortDate(o.latestEDD) }} · {{ o.shippingTier === 'Express' ? 'Hỏa tốc' : 'Tiêu chuẩn' }}</p>
+              @if (late(o); as l) {
+                <p class="mt-1 inline-flex rounded-pill bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-800">{{ l.label }} · từ {{ l.since | date: 'HH:mm dd/MM' }}</p>
+              }
             </div>
             <div class="flex items-center gap-3">
               <app-status-badge [status]="o.status" [label]="label(o)" />
@@ -143,7 +154,15 @@
                   }
                 } @else if (o.status === 'Pending_Confirmation') {
                   @if (o.hasCustomItem) {
-                    <p class="text-sm text-ink">Đã duyệt. Đơn sẽ vào đợt sản xuất <b>{{ batchDay(o) }}</b>, bấm "Đưa vào sản xuất" ở hàng chờ "Chờ sản xuất".</p>
+                    @if (slot(o) === 'overdue') {
+                      <p class="text-sm text-rose-800">Đơn đã trễ đợt sản xuất {{ batchDay(o) }}. Đưa vào sản xuất ngay để kịp ngày giao đã hứa.</p>
+                      <button type="button" [class]="btnPrimary" class="mt-3" (click)="startProduction()">Đưa vào sản xuất ngay</button>
+                    } @else if (slot(o) === 'due') {
+                      <p class="text-sm text-ink">Đã tới đợt sản xuất hôm nay.</p>
+                      <button type="button" [class]="btnPrimary" class="mt-3" (click)="startProduction()">Đưa vào sản xuất</button>
+                    } @else {
+                      <p class="text-sm text-ink">Đã duyệt. Đơn vào đợt sản xuất <b>16:00 {{ batchDay(o) }}</b>, hệ thống tự chạy đúng giờ.</p>
+                    }
                   } @else {
                     <p class="text-sm text-ink">Hàng có sẵn: lấy hàng trong kho, đóng gói và bàn giao.</p>
                     <button type="button" [class]="btnPrimary" class="mt-3" (click)="pack(o)">Đóng gói xong</button>

@@ -161,3 +161,9 @@ export function finalizeFailedDelivery(
   }
   return { order: next, customerFault, cause, refund };
 }
+
+/** Daily production run (16:00) or a late order pushed in by the Operator. */
+export function startProduction(o: Order, actor: Actor, nowIso: string): Order {
+  const models = [...new Set(o.items.filter((i) => i.isCustom).map((i) => i.phoneModel))].join(', ');
+  return withTransition(o, 'In_Production', actor, `Bắt đầu sản xuất – nhóm ${models}`, nowIso);
+}

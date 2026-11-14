@@ -3,16 +3,18 @@ import { DELIVERY_CONFIG } from '../config/delivery-config';
 import {
   SYSTEM,
   finalizeFailedDelivery,
+  startProduction,
   withCancellation,
   withRefund,
   withTransition,
 } from '../domain/order-mutations';
+import { productionSlot } from '../domain/schedule';
 import { Order, RefundRequest } from '../models/order-tracking.model';
 import { Clock } from './clock';
 import { IntegrationBus, LoyaltyService, NotificationService, RiskProfileService } from './integrations';
 import { OrderRepository, OrderTrackingDb } from './order.repository';
 
-export type JobId = 'job1' | 'job2' | 'job3' | 'job4' | 'retry';
+export type JobId = 'batch' | 'job1' | 'job2' | 'job3' | 'job4' | 'retry';
 
 export interface JobRun {
   readonly job: JobId;
@@ -21,6 +23,7 @@ export interface JobRun {
 }
 
 export const JOB_LABELS: Record<JobId, string> = {
+  batch: 'Đợt sản xuất 16:00 (Thứ 2 – Thứ 6, chạy bù đơn trễ)',
   job1: 'Job 1 · Tự hoàn thành sau 72 giờ (mỗi giờ)',
   job2: 'Job 2 · Hết hạn lưu kho 14 ngày (mỗi giờ)',
   job3: 'Job 3 · Quá hạn chỉnh sửa thiết kế 7 ngày (mỗi giờ)',
@@ -31,8 +34,8 @@ export const JOB_LABELS: Record<JobId, string> = {
 const DAY = 86_400_000;
 
 /**
- * Background jobs (FR-OT-EX-09). In production these run on pg_cron; here they are triggered
- * from the Demo Console. Each job re-checks every order against fresh data before updating,
+ * Background jobs (FR-OT-EX-09). In production these run on pg_cron; here AutoJobs runs them every
+ * minute of the (simulated) clock and catches up missed times; the simulator can also run them by hand. Each job re-checks every order against fresh data before updating,
  * so running it twice is safe (idempotent).
  */
 @Injectable({ providedIn: 'root' })
@@ -62,7 +65,7 @@ export class ScheduledJobs {
   }
 
   runAll(): JobRun[] {
-    return (['job1', 'job2', 'job3', 'job4', 'retry'] as const).map((j) => this.run(j));
+    return (['batch', 'job1', 'job2', 'job3', 'job4', 'retry'] as const).map((j) => this.run(j));
   }
 
   private step(job: JobId, o: Order, db: OrderTrackingDb, now: Date, out: string[]): Order {
@@ -71,6 +74,13 @@ export class ScheduledJobs {
     const cfg = DELIVERY_CONFIG;
 
     switch (job) {
+      case 'batch': {
+        // Daily 16:00 production run; orders that missed a run start right away.
+        const slot = productionSlot(o, now);
+        if (!slot) return o;
+        out.push(`${o.orderCode}: vào sản xuất${slot === 'overdue' ? ' (chạy bù, trễ đợt)' : ''}`);
+        return startProduction(o, SYSTEM, nowIso);
+      }
       case 'job1': {
         if (o.status !== 'Delivered' || o.frozenAt || !o.autoCompleteAt || new Date(o.autoCompleteAt).getTime() > t) return o;
         const next = { ...withTransition(o, 'Completed', SYSTEM, 'Tự động hoàn thành sau 72 giờ kể từ khi giao', nowIso), reviewInvitePending: true };

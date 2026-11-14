@@ -34,6 +34,7 @@ import {
   isPrepaid,
   orderTotal,
 } from '../domain/order-rules';
+import { isLateForCustomer } from '../domain/schedule';
 import { formatVnd } from '../domain/shipping-fee';
 import { statusLabel } from '../domain/timeline';
 import { OrderItem } from '../models/order-tracking.model';
@@ -113,6 +114,7 @@ export class OrderDetail {
   protected readonly infoBox = computed(() => `rounded-card border p-5 ${TONE_CLASSES[this.meta().tone].box}`);
   protected readonly label = computed(() => statusLabel(this.order()!, this.now()));
   protected readonly mixed = computed(() => isMixed(this.order()!));
+  protected readonly lateForCustomer = computed(() => isLateForCustomer(this.order()!, this.now()));
   protected readonly total = computed(() => orderTotal(this.order()!));
   protected readonly canCancelCod = computed(() => canCancelCod(this.order()!, this.now()));
   protected readonly canRequestCancel = computed(() => canRequestCancel(this.order()!));

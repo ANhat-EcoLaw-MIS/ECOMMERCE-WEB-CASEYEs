@@ -27,6 +27,8 @@ export const DELIVERY_CONFIG = {
   /** Re-pack before a re-delivery or a free re-send (assumption A-07). */
   redeliveryHandlingDays: { min: 1, max: 1 } satisfies DayRange,
   qcReprintExtraWorkingDays: 1,
+  /** Packed parcels are handed to the carrier within this many working days (assumption, 15/11). */
+  pickupSlaWorkingDays: 1,
   /** Customer service answers a cancel request within this many working days. */
   cancelRequestSlaDays: 1,
   lateVoucherPct: 10,
