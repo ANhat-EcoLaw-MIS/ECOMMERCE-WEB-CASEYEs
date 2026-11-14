@@ -246,6 +246,8 @@ export interface TemplateCard {
     | 'dino-friend'
     | 'starry-night'
     | 'that-girl-era'
+    | 'the-creators-real'
+    | 'the-creators-chibi'
     | 'blank';
 }
 
@@ -448,6 +450,50 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     hashtags: ['#typography', '#thatgirl', '#y2k', '#positive', '#vibe', '#aesthetic', '#pink'],
     isTrending: false,
     artType: 'that-girl-era',
+  },
+  // 10. The Creators • Đội Ngũ CasEYE (#creators)
+  {
+    id: 'tpl-creators-real',
+    name: 'The Creators • Đội Ngũ CasEYE',
+    creator: 'CasEYE Team',
+    category: 'typography',
+    categories: ['typography', 'cute', 'all'],
+    styleLabel: 'Đội ngũ CasEYE',
+    gradient: 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 45%, #e0e7ff 100%)',
+    tagText: 'WE ARE THE CREATORS',
+    description: 'Bản thiết kế chân dung độc quyền tôn vinh tinh thần sáng tạo từ đội ngũ CasEYE.',
+    detailedDescription:
+      'Tác phẩm "We Are The Creators" phiên bản đời thật tôn vinh tinh thần sáng tạo không giới hạn của các bạn trẻ tài năng. Tone màu tím mộng mơ kết hợp sắc nét với chân dung các thành viên CasEYE, in nhiệt UV siêu bền màu.',
+    tagLabel: '#creators',
+    tagColor: '#7c3aed',
+    rating: 5.0,
+    reviews: '2.8k',
+    reviewCount: 2800,
+    hashtags: ['#thecreators', '#caseye', '#teamwork', '#creators', '#youth', '#purplevibe'],
+    isTrending: true,
+    artType: 'the-creators-real',
+  },
+  // 11. The Creators • Chibi Squad (#chibi)
+  {
+    id: 'tpl-creators-chibi',
+    name: 'The Creators • Chibi Squad',
+    creator: 'CasEYE Team',
+    category: 'cute',
+    categories: ['cute', 'cartoon', 'all'],
+    styleLabel: 'Chibi đáng yêu',
+    gradient: 'linear-gradient(180deg, #fdf4ff 0%, #fae8ff 50%, #ede9fe 100%)',
+    tagText: 'CHIBI CREATORS',
+    description: 'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên Thắm, Đức, Nhật, Mai Anh, Thy.',
+    detailedDescription:
+      'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên sáng lập CasEYE: Thắm, Đức, Nhật, Mai Anh, Thy. Phong cách chibi ngộ nghĩnh, tươi vui, lan tỏa năng lượng tích cực và sự gắn kết cho chiếc ốp lưng của bạn.',
+    tagLabel: '#chibi',
+    tagColor: '#ec4899',
+    rating: 5.0,
+    reviews: '3.1k',
+    reviewCount: 3100,
+    hashtags: ['#chibi', '#creators', '#cute', '#friends', '#squad', '#caseye'],
+    isTrending: true,
+    artType: 'the-creators-chibi',
   },
 ];
 
@@ -673,6 +719,8 @@ export class TemplateBrowser {
     'abstract-waves': { url: svgToDataUri(TEMPLATE_SVG_WAVES), x: 50, y: 58, width: 100, height: 92 },
     'dino-friend': { url: svgToDataUri(TEMPLATE_SVG_DINO), x: 50, y: 70, width: 75, height: 68 },
     'starry-night': { url: svgToDataUri(TEMPLATE_SVG_MOON), x: 50, y: 48, width: 86, height: 70, text: 'STARRY', textY: 83 },
+    'the-creators-real': { url: '/assets/templates/the-creators-real.webp', x: 50, y: 55, width: 92, height: 80 },
+    'the-creators-chibi': { url: '/assets/templates/the-creators-chibi.webp', x: 50, y: 56, width: 92, height: 82 },
   };
 
   protected getArtwork(artType: string) {
@@ -739,8 +787,12 @@ export class TemplateBrowser {
   }
 
   // --- Favorite Toggle ---
-  protected toggleFavorite(templateId: string, event: MouseEvent): void {
-    event.stopPropagation();
+  protected toggleFavorite(templateId: string, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    if (!this.auth.isAuthenticated()) {
+      this.authModal.open('login');
+      return;
+    }
     this.favoriteTemplates.update((set) => {
       const next = new Set(set);
       if (next.has(templateId)) {
@@ -760,15 +812,22 @@ export class TemplateBrowser {
   protected openDetailModal(template: TemplateCard, event?: MouseEvent): void {
     if (event) event.stopPropagation();
     this.previewTemplate.set(template);
-    this.viewMode.set('3d');
+    const has3d = this.state.selectedModel().has3dModel && !!this.state.selectedModel().model3dUrl;
+    if (has3d) {
+      this.viewMode.set('3d');
+    } else {
+      this.viewMode.set('2d');
+    }
     this.isAutoRotate.set(false);
     this.userReviewText.set('');
     this.userRating.set(5);
     this.reviewSubmittedSuccess.set(false);
-    setTimeout(() => {
-      this.syncTemplate3dTexture(template);
-      this.reset3dView();
-    }, 150);
+    if (has3d) {
+      setTimeout(() => {
+        this.syncTemplate3dTexture(template);
+        this.reset3dView();
+      }, 150);
+    }
   }
 
   protected closePreviewModal(): void {
@@ -1506,6 +1565,30 @@ export class TemplateBrowser {
         isLocked: false,
       };
       return [textLayer1, textLayer2];
+    }
+
+    if (art === 'the-creators-real' || art === 'the-creators-chibi') {
+      const isChibi = art === 'the-creators-chibi';
+      const imgLayer: ImageElement = {
+        id: (isChibi ? 'tpl_layer_chibi_' : 'tpl_layer_real_') + Date.now(),
+        type: 'image',
+        zIndex: 1,
+        x: 50,
+        y: 55,
+        width: 92,
+        height: 80,
+        rotation: 0,
+        opacity: 1,
+        isLocked: false,
+        storageUrl: isChibi ? '/assets/templates/the-creators-chibi.webp' : '/assets/templates/the-creators-real.webp',
+        fileType: 'image/webp',
+        fileSizeBytes: isChibi ? 964108 : 1597886,
+        pixelWidth: isChibi ? 941 : 1103,
+        pixelHeight: isChibi ? 1672 : 1426,
+        dpi: 300,
+        isLowResAcknowledged: true,
+      };
+      return [imgLayer];
     }
 
     return [];

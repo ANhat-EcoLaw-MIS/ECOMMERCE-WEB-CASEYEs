@@ -343,21 +343,38 @@
         </p>
       </div>
 
-      <!-- Current Active Device Switcher Indicator -->
-      <div class="inline-flex items-center gap-2 rounded-full border border-purple-200/80 bg-white/90 px-3.5 py-1.5 text-xs text-ink shadow-xs backdrop-blur-xs">
-        <span class="inline-block h-2 w-2 rounded-full" [class]="state.selectedModel().has3dModel ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-        <span class="text-ink-soft">Dòng máy:</span>
-        <span class="font-display font-bold text-ink">{{ state.selectedModel().name }}</span>
-        <span class="text-purple-300">•</span>
+      <!-- Current Active Device Switcher Indicator (Thiết kế sang xịn, hiện đại theo nhận diện CasEYE) -->
+      <div class="inline-flex items-center gap-2.5 rounded-full border border-purple-200/90 bg-gradient-to-r from-purple-50/90 via-white to-purple-50/80 p-1.5 pl-3.5 shadow-soft backdrop-blur-md transition-all hover:border-brand-400/80 hover:shadow-lift">
+        <!-- Phone Model Icon with Active Pulse -->
+        <div class="relative flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 text-brand-800 shadow-2xs">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="3" />
+            <circle cx="12" cy="18" r="1" fill="currentColor" />
+          </svg>
+          <span class="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              [class]="state.selectedModel().has3dModel ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2"
+              [class]="state.selectedModel().has3dModel ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+          </span>
+        </div>
+
+        <!-- Model Name Label -->
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="text-[11px] font-semibold text-ink-soft uppercase tracking-wide">Dòng máy:</span>
+          <span class="font-display font-extrabold text-ink tracking-tight">{{ state.selectedModel().name }}</span>
+        </div>
+
+        <!-- Action Button: Đổi máy -->
         <button
           type="button"
           (click)="openModelSelectorModal()"
-          class="font-semibold text-brand-800 hover:text-purple-950 transition-colors cursor-pointer flex items-center gap-1 hover:underline"
+          class="inline-flex items-center gap-1.5 rounded-full bg-brand-800 px-3 py-1.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-900 hover:shadow-xs cursor-pointer active:scale-95"
           title="Đổi sang dòng điện thoại khác"
         >
           <span>Đổi máy</span>
-          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </button>
       </div>
@@ -500,74 +517,130 @@
                 ></div>
                 <div class="pointer-events-none absolute inset-0 z-30 rounded-[29px] ring-1 ring-inset ring-white/30"></div>
 
-                <!-- Photorealistic Obsidian Camera Module (Khử sạch 100% màu vàng/xanh cartoon, chuẩn Canvas) -->
-                <div
-                  class="pointer-events-none absolute z-20 rounded-[20px] select-none overflow-hidden"
-                  style="left: 6px; top: 6px; width: 55px; height: 55px;
-                         background: linear-gradient(145deg, #1e2025 0%, #121316 50%, #0a0b0d 100%);
-                         box-shadow: 0 6px 14px -2px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.8);
-                         border: 1px solid rgba(255, 255, 255, 0.08);"
-                >
-                  <div class="absolute inset-[1.5px] rounded-[18px] border border-white/5 pointer-events-none"></div>
-
-                  <!-- Laser Text -->
-                  <div class="absolute top-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
-                    <span class="font-mono text-[4px] font-bold tracking-[0.12em] text-slate-500/80 uppercase">
-                      CASEYE LABS
-                    </span>
-                  </div>
-
-                  <!-- Lens 1 (Top-Left) -->
-                  <div class="absolute left-[8%] top-[14%] h-[17px] w-[17px] rounded-full flex items-center justify-center z-10"
-                    style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
-                           box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
-                    <div class="h-[14px] w-[14px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                      <div class="relative h-[11px] w-[11px] rounded-full overflow-hidden flex items-center justify-center"
-                        style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
-                        <span class="h-1 w-1 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
-                          <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
-                        </span>
+                <!-- Dynamic Camera Cutout per Model on Card (Đồng bộ chuẩn 1:1 với model máy đang chọn) -->
+                @if (state.selectedModel().id === 'galaxy-s24') {
+                  <!-- Samsung Galaxy S24: 3 vertical camera lenses -->
+                  <div class="pointer-events-none absolute left-[8px] top-[10px] z-20 flex flex-col gap-2 items-center">
+                    <div class="h-[18px] w-[18px] rounded-full flex items-center justify-center"
+                      style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                             box-shadow: 0 2px 5px rgba(0,0,0,0.6), inset 0 0.5px 0.5px rgba(255,255,255,0.3);">
+                      <div class="h-[14px] w-[14px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                        <span class="h-1 w-1 rounded-full bg-[#020203]"></span>
                       </div>
                     </div>
-                  </div>
-
-                  <!-- Lens 2 (Bottom-Left) -->
-                  <div class="absolute left-[8%] bottom-[14%] h-[17px] w-[17px] rounded-full flex items-center justify-center z-10"
-                    style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
-                           box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
-                    <div class="h-[14px] w-[14px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                      <div class="relative h-[11px] w-[11px] rounded-full overflow-hidden flex items-center justify-center"
-                        style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
-                        <span class="h-1 w-1 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
-                          <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
-                        </span>
+                    <div class="h-[18px] w-[18px] rounded-full flex items-center justify-center"
+                      style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                             box-shadow: 0 2px 5px rgba(0,0,0,0.6), inset 0 0.5px 0.5px rgba(255,255,255,0.3);">
+                      <div class="h-[14px] w-[14px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                        <span class="h-1 w-1 rounded-full bg-[#020203]"></span>
                       </div>
                     </div>
-                  </div>
-
-                  <!-- Lens 3 (Middle-Right) -->
-                  <div class="absolute right-[8%] top-1/2 -translate-y-1/2 h-[17px] w-[17px] rounded-full flex items-center justify-center z-10"
-                    style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
-                           box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
-                    <div class="h-[14px] w-[14px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                      <div class="relative h-[11px] w-[11px] rounded-full overflow-hidden flex items-center justify-center"
-                        style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
-                        <span class="h-1 w-1 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
-                          <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
-                        </span>
+                    <div class="h-[18px] w-[18px] rounded-full flex items-center justify-center"
+                      style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                             box-shadow: 0 2px 5px rgba(0,0,0,0.6), inset 0 0.5px 0.5px rgba(255,255,255,0.3);">
+                      <div class="h-[14px] w-[14px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                        <span class="h-1 w-1 rounded-full bg-[#020203]"></span>
                       </div>
                     </div>
+                    <div class="absolute -right-[8px] top-[4px] h-[5px] w-[5px] rounded-full bg-slate-200 shadow-xs"></div>
                   </div>
-
-                  <!-- Frosted Silver Flash (Khử màu vàng) -->
-                  <div class="absolute right-[14%] top-[16%] h-2 w-2 rounded-full flex items-center justify-center z-10"
-                    style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);">
-                    <div class="h-1 w-1 rounded-full bg-slate-100 shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
+                } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
+                  <!-- Xiaomi 14 Ultra: Large Leica circular camera bump -->
+                  <div
+                    class="pointer-events-none absolute left-[12px] top-[14px] z-20 h-[80px] w-[100px] rounded-full flex items-center justify-center"
+                    style="background: linear-gradient(145deg, #22242a 0%, #141417 70%, #09090b 100%);
+                           box-shadow: 0 6px 14px -2px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.2), 0 0 0 1.5px #c09d3b;
+                           border: 1px solid #3f3f46;"
+                  >
+                    <div class="grid grid-cols-2 gap-2 place-items-center">
+                      <span class="h-[18px] w-[18px] rounded-full flex items-center justify-center"
+                        style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                        <span class="h-[12px] w-[12px] rounded-full block bg-[#0d0e11]"></span>
+                      </span>
+                      <span class="h-[18px] w-[18px] rounded-full flex items-center justify-center"
+                        style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                        <span class="h-[12px] w-[12px] rounded-full block bg-[#0d0e11]"></span>
+                      </span>
+                      <span class="h-[18px] w-[18px] rounded-full flex items-center justify-center"
+                        style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                        <span class="h-[12px] w-[12px] rounded-full block bg-[#0d0e11]"></span>
+                      </span>
+                      <span class="h-[18px] w-[18px] rounded-full flex items-center justify-center"
+                        style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                        <span class="h-[12px] w-[12px] rounded-full block bg-[#0d0e11]"></span>
+                      </span>
+                    </div>
                   </div>
+                } @else {
+                  <!-- Apple iPhone Pro Obsidian Camera Island (Default) -->
+                  <div
+                    class="pointer-events-none absolute z-20 rounded-[20px] select-none overflow-hidden"
+                    style="left: 6px; top: 6px; width: 55px; height: 55px;
+                           background: linear-gradient(145deg, #1e2025 0%, #121316 50%, #0a0b0d 100%);
+                           box-shadow: 0 6px 14px -2px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.8);
+                           border: 1px solid rgba(255, 255, 255, 0.08);"
+                  >
+                    <div class="absolute inset-[1.5px] rounded-[18px] border border-white/5 pointer-events-none"></div>
 
-                  <!-- Optical LiDAR Scanner -->
-                  <div class="absolute right-[16%] bottom-[15%] h-1.5 w-1.5 rounded-full overflow-hidden bg-[#18181b] z-10 border border-black/40"></div>
-                </div>
+                    <!-- Laser Text -->
+                    <div class="absolute top-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                      <span class="font-mono text-[4px] font-bold tracking-[0.12em] text-slate-500/80 uppercase">
+                        CASEYE LABS
+                      </span>
+                    </div>
+
+                    <!-- Lens 1 (Top-Left) -->
+                    <div class="absolute left-[8%] top-[14%] h-[17px] w-[17px] rounded-full flex items-center justify-center z-10"
+                      style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                             box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
+                      <div class="h-[14px] w-[14px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                        <div class="relative h-[11px] w-[11px] rounded-full overflow-hidden flex items-center justify-center"
+                          style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                          <span class="h-1 w-1 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
+                            <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Lens 2 (Bottom-Left) -->
+                    <div class="absolute left-[8%] bottom-[14%] h-[17px] w-[17px] rounded-full flex items-center justify-center z-10"
+                      style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                             box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
+                      <div class="h-[14px] w-[14px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                        <div class="relative h-[11px] w-[11px] rounded-full overflow-hidden flex items-center justify-center"
+                          style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                          <span class="h-1 w-1 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
+                            <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Lens 3 (Middle-Right) -->
+                    <div class="absolute right-[8%] top-1/2 -translate-y-1/2 h-[17px] w-[17px] rounded-full flex items-center justify-center z-10"
+                      style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                             box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0.5px 1px rgba(255,255,255,0.3);">
+                      <div class="h-[14px] w-[14px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                        <div class="relative h-[11px] w-[11px] rounded-full overflow-hidden flex items-center justify-center"
+                          style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                          <span class="h-1 w-1 rounded-full bg-[#020203] ring-0.5 ring-white/10 flex items-center justify-center">
+                            <span class="h-0.5 w-0.5 rounded-full bg-black"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Frosted Silver Flash -->
+                    <div class="absolute right-[14%] top-[16%] h-2 w-2 rounded-full flex items-center justify-center z-10"
+                      style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);">
+                      <div class="h-1 w-1 rounded-full bg-slate-100 shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
+                    </div>
+
+                    <!-- Optical LiDAR Scanner -->
+                    <div class="absolute right-[16%] bottom-[15%] h-1.5 w-1.5 rounded-full overflow-hidden bg-[#18181b] z-10 border border-black/40"></div>
+                  </div>
+                }
 
                 <!-- Artwork Backplate Renderings (1:1 Vector SVG đồng bộ tuyệt đối với Canvas Studio) -->
                 @if (getArtwork(tpl.artType); as art) {
@@ -597,15 +670,10 @@
                     </p>
                   </div>
                 } @else if (tpl.isBlankCanvas) {
-                  <div class="absolute inset-0 flex flex-col items-center justify-center p-3 select-none pointer-events-none text-center">
-                    <div class="h-10 w-10 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-brand-800 text-xl font-black shadow-xs mb-1.5 animate-pulse">
-                      ＋
-                    </div>
-                    <span class="font-display text-[10px] font-black text-brand-800 uppercase tracking-wider">
-                      Tự vẽ từ số 0
-                    </span>
-                    <span class="text-[8px] text-ink-soft mt-0.5">
-                      Phôi ốp trắng trơn
+                  <!-- Mẫu phôi trắng nguyên bản cao cấp, hiển thị chuẩn mực như các mẫu khác -->
+                  <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center select-none text-center">
+                    <span class="font-display text-[9px] font-black text-slate-300 uppercase tracking-widest drop-shadow-xs">
+                      CASEYE BLANK
                     </span>
                   </div>
                 }
@@ -640,33 +708,19 @@
               </div>
             </div>
 
-            <!-- Card Action Footer: Nút Bắt đầu thiết kế (với mẫu trắng) hoặc Chi tiết mẫu -->
+            <!-- Card Action Footer: Chi tiết mẫu (áp dụng đồng bộ cho toàn bộ mẫu) -->
             <div class="mt-3.5 pt-2 border-t border-purple-50">
-              @if (tpl.isBlankCanvas) {
-                <button
-                  type="button"
-                  (click)="onDesignTemplate(tpl)"
-                  class="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-800 py-2.5 px-3 text-xs font-bold text-white transition-all hover:bg-brand-900 shadow-soft cursor-pointer"
-                >
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>Bắt đầu thiết kế</span>
-                </button>
-              } @else {
-                <button
-                  type="button"
-                  (click)="openDetailModal(tpl, $event)"
-                  class="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-purple-200/90 bg-purple-50/60 py-2.5 px-3 text-xs font-bold text-brand-800 transition-all hover:bg-brand-800 hover:text-white hover:border-brand-800 cursor-pointer shadow-2xs"
-                >
-                  <!-- 3D Cube / Detail Icon -->
-                  <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
-                  </svg>
-                  <span>Chi tiết mẫu</span>
-                </button>
-              }
+              <button
+                type="button"
+                (click)="openDetailModal(tpl, $event)"
+                class="w-full inline-flex items-center justify-center gap-1.5 rounded-full border border-purple-200/90 bg-purple-50/60 py-2.5 px-3 text-xs font-bold text-brand-800 transition-all hover:bg-brand-800 hover:text-white hover:border-brand-800 cursor-pointer shadow-2xs"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>Chi tiết mẫu</span>
+              </button>
             </div>
           </div>
 
@@ -1081,15 +1135,15 @@
       (click)="closePreviewModal()"
     >
       <div
-        class="w-full max-w-4xl max-h-[92vh] rounded-[28px] border border-purple-100 bg-white shadow-2xl flex flex-col overflow-hidden text-left"
+        class="w-full max-w-4xl max-h-[92vh] rounded-[28px] border border-purple-200/90 bg-gradient-to-br from-white via-purple-50/20 to-indigo-50/25 shadow-2xl flex flex-col overflow-hidden text-left"
         (click)="$event.stopPropagation()"
       >
 
         <!-- Modal Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-purple-100 bg-purple-50/40 shrink-0">
+        <div class="flex items-center justify-between px-6 py-4.5 border-b border-purple-100 bg-gradient-to-r from-purple-100/70 via-indigo-50/50 to-pink-50/40 shrink-0">
           <div class="flex items-center gap-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-brand-800 shadow-xs">
-              <svg class="h-4.5 w-4.5 text-purple-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-soft text-brand-800 border border-purple-200/60">
+              <svg class="h-5 w-5 text-purple-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
               </svg>
@@ -1097,11 +1151,11 @@
             <div>
               <div class="flex items-center gap-2">
                 <h3 class="font-display text-base font-bold text-ink">{{ activeTpl.name }}</h3>
-                <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-800">
+                <span class="rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-bold text-purple-800 border border-purple-200/60 shadow-2xs">
                   {{ activeTpl.tagLabel }}
                 </span>
               </div>
-              <p class="text-xs text-ink-soft">Mẫu thiết kế bởi {{ activeTpl.creator }}</p>
+              <p class="text-xs text-ink-soft">Mẫu thiết kế bởi <strong class="text-purple-900">{{ activeTpl.creator }}</strong></p>
             </div>
           </div>
 
@@ -1126,7 +1180,7 @@
             <button
               type="button"
               (click)="closePreviewModal()"
-              class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+              class="rounded-full p-2 text-ink-soft hover:bg-white hover:text-ink transition-colors cursor-pointer"
               title="Đóng cửa sổ"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1139,8 +1193,8 @@
         <!-- Modal Body: 2 Columns Layout (Left: 3D Stage | Right: Details & Reviews) -->
         <div class="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 min-h-0">
 
-          <!-- Left Column (5/12): 3D Model WebGL Canvas & Controls (Gom gọn lên trên cùng, bỏ justify-between) -->
-          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/50 to-white flex flex-col items-center justify-start gap-3.5 border-b lg:border-b-0 lg:border-r border-purple-100">
+          <!-- Left Column (5/12): 3D Model WebGL Canvas & Controls (Gom gọn lên trên cùng) -->
+          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/70 via-white/80 to-purple-50/50 flex flex-col items-center justify-start gap-3.5 border-b lg:border-b-0 lg:border-r border-purple-100/80">
 
             <!-- View Mode Switcher: 3D Model vs 2D Graphic -->
             <div class="flex items-center gap-1 rounded-full bg-purple-100/80 p-1 shadow-2xs text-xs font-semibold shrink-0">
@@ -1162,68 +1216,101 @@
               </button>
             </div>
 
-            <!-- Stage Display (Chuẩn Studio Canvas: Background Lavender sang trọng & 3D WebGL đồng bộ 1:1) -->
+            <!-- Stage Display (Chuẩn Studio Canvas: Background Iridescent Gradient sang trọng & 3D WebGL đồng bộ 1:1) -->
             <div
-              class="relative w-full h-[380px] flex items-center justify-center rounded-2xl overflow-hidden shadow-inner border border-purple-100 shrink-0"
-              style="background: radial-gradient(circle at 50% 35%, #e3dbfa 0%, #cec2f0 100%);"
+              class="relative w-full h-[380px] flex items-center justify-center rounded-2xl overflow-hidden shadow-inner border border-purple-200/70 shrink-0"
+              style="background: linear-gradient(135deg, #ede7fe 0%, #fce7f3 35%, #e0e7ff 70%, #f3e8ff 100%);"
             >
+              <!-- Ambient Soft Lighting Overlay -->
+              <div class="pointer-events-none absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.9),transparent_70%)]"></div>
 
               @if (viewMode() === '3d') {
-                <!-- REAL INTERACTIVE 3D WEBGL MODEL (Đồng bộ Texture Ốp Lưng Chuẩn Canvas Studio) -->
-                <model-viewer
-                  #modalModelViewer
-                  id="modalTemplateViewer"
-                  [src]="current3dModelUrl()"
-                  [attr.src]="current3dModelUrl()"
-                  [alt]="'Mô hình 3D ' + activeTpl.name"
-                  camera-controls
-                  camera-orbit="0deg 85deg 105%"
-                  tone-mapping="neutral"
-                  shadow-intensity="1.2"
-                  shadow-softness="0.8"
-                  exposure="0.75"
-                  touch-action="pan-y"
-                  (load)="onModalModelViewerLoad()"
-                  [attr.auto-rotate]="isAutoRotate() ? '' : null"
-                  rotation-per-second="24deg"
-                  style="width: 100%; height: 100%; outline: none; filter: contrast(1.18) brightness(0.96) saturate(1.08);"
-                >
-                  <!-- 3D Poster / Loading Placeholder -->
-                  <div slot="poster" class="flex flex-col items-center justify-center h-full gap-2 text-ink-soft">
-                    <div class="h-6 w-6 animate-spin rounded-full border-2 border-brand-800 border-t-transparent"></div>
-                    <span class="text-xs font-semibold">Đang nạp mô hình 3D & ốp lưng...</span>
+                @if (state.selectedModel().has3dModel && state.selectedModel().model3dUrl) {
+                  <!-- REAL INTERACTIVE 3D WEBGL MODEL (Đồng bộ Texture Ốp Lưng Chuẩn Canvas Studio) -->
+                  <model-viewer
+                    #modalModelViewer
+                    id="modalTemplateViewer"
+                    [src]="current3dModelUrl()"
+                    [attr.src]="current3dModelUrl()"
+                    [alt]="'Mô hình 3D ' + activeTpl.name"
+                    camera-controls
+                    camera-orbit="0deg 85deg 105%"
+                    tone-mapping="neutral"
+                    shadow-intensity="1.2"
+                    shadow-softness="0.8"
+                    exposure="0.75"
+                    touch-action="pan-y"
+                    (load)="onModalModelViewerLoad()"
+                    [attr.auto-rotate]="isAutoRotate() ? '' : null"
+                    rotation-per-second="24deg"
+                    style="width: 100%; height: 100%; outline: none; filter: contrast(1.18) brightness(0.96) saturate(1.08);"
+                  >
+                    <!-- 3D Poster / Loading Placeholder -->
+                    <div slot="poster" class="flex flex-col items-center justify-center h-full gap-2 text-ink-soft">
+                      <div class="h-6 w-6 animate-spin rounded-full border-2 border-brand-800 border-t-transparent"></div>
+                      <span class="text-xs font-semibold">Đang nạp mô hình 3D & ốp lưng...</span>
+                    </div>
+                  </model-viewer>
+
+                  <!-- Floating 3D Interaction Bar -->
+                  <div class="absolute bottom-2.5 inset-x-2 flex items-center justify-center gap-2 pointer-events-auto z-20">
+                    <span class="rounded-full bg-white/95 border border-purple-200/80 px-3 py-1 text-[11px] font-bold text-ink-soft shadow-soft flex items-center gap-1.5">
+                      <svg class="h-3.5 w-3.5 text-brand-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>Giữ chuột xoay 360°</span>
+                    </span>
+
+                    <button
+                      type="button"
+                      (click)="reset3dView()"
+                      class="rounded-full bg-white/95 border border-purple-200/80 px-2.5 py-1 text-[11px] font-bold text-brand-800 hover:bg-purple-50 shadow-soft cursor-pointer transition-colors"
+                    >
+                      Mặt lưng
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="toggleAutoRotate()"
+                      class="rounded-full bg-white/95 border border-purple-200/80 px-2.5 py-1 text-[11px] font-bold text-purple-700 hover:bg-purple-50 shadow-soft cursor-pointer transition-colors"
+                    >
+                      {{ isAutoRotate() ? 'Dừng xoay' : '↺ Tự xoay' }}
+                    </button>
                   </div>
-                </model-viewer>
-
-                <!-- Floating 3D Interaction Bar (Ăn theo Preview Panel trong Canvas) -->
-                <div class="absolute bottom-2.5 inset-x-2 flex items-center justify-center gap-2 pointer-events-auto z-20">
-                  <span class="rounded-full bg-white/95 border border-purple-200/80 px-3 py-1 text-[11px] font-bold text-ink-soft shadow-soft flex items-center gap-1.5">
-                    <svg class="h-3.5 w-3.5 text-brand-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>Giữ chuột xoay 360°</span>
-                  </span>
-
-                  <button
-                    type="button"
-                    (click)="reset3dView()"
-                    class="rounded-full bg-white/95 border border-purple-200/80 px-2.5 py-1 text-[11px] font-bold text-brand-800 hover:bg-purple-50 shadow-soft cursor-pointer transition-colors"
-                  >
-                    Mặt lưng
-                  </button>
-
-                  <button
-                    type="button"
-                    (click)="toggleAutoRotate()"
-                    class="rounded-full bg-white/95 border border-purple-200/80 px-2.5 py-1 text-[11px] font-bold text-purple-700 hover:bg-purple-50 shadow-soft cursor-pointer transition-colors"
-                  >
-                    {{ isAutoRotate() ? 'Dừng xoay' : '↺ Tự xoay' }}
-                  </button>
-                </div>
+                } @else {
+                  <!-- Non-3D Notice for Galaxy / Xiaomi / Unsupported Models -->
+                  <div class="flex flex-col items-center justify-center p-6 text-center max-w-xs animate-fade-in z-20">
+                    <div class="h-16 w-16 rounded-3xl bg-amber-100/90 border border-amber-200/80 flex items-center justify-center text-amber-700 shadow-soft mb-3.5">
+                      <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12" />
+                      </svg>
+                    </div>
+                    <span class="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-extrabold text-amber-800 mb-2">
+                      Chưa hỗ trợ mô hình 3D
+                    </span>
+                    <h4 class="font-display text-sm font-bold text-ink">
+                      {{ state.selectedModel().name }}
+                    </h4>
+                    <p class="text-xs text-ink-soft mt-1.5 leading-relaxed">
+                      Hiện tại tính năng mô hình 3D xoay 360° đang được tối ưu cho dòng máy iPhone. Đội ngũ CasEYE đang phát triển mô hình 3D chuẩn xác cho dòng máy này!
+                    </p>
+                    <button
+                      type="button"
+                      (click)="toggleViewMode('2d')"
+                      class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-800 px-4 py-2 text-xs font-bold text-white shadow-soft hover:bg-brand-900 transition-all cursor-pointer"
+                    >
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Xem mặt lưng 2D chi tiết</span>
+                    </button>
+                  </div>
+                }
 
               } @else {
                 <!-- 2D Photorealistic Studio Phone Case (Proportional 1:1 with Canvas Studio, Sleek & Non-distorted) -->
-                <div class="animate-float-case flex items-center justify-center p-2">
+                <div class="animate-float-case flex items-center justify-center p-2 z-10">
                   <div
                     class="relative p-[6px] rounded-[34px] select-none transition-all duration-200 shrink-0"
                     style="width: 178px; height: 362px;
@@ -1258,91 +1345,147 @@
                       ></div>
                       <div class="pointer-events-none absolute inset-0 z-30 rounded-[28px] ring-1 ring-inset ring-white/30"></div>
 
-                      <!-- Photorealistic Obsidian Camera Module (Proportional to Canvas) -->
-                      <div
-                        class="pointer-events-none absolute z-20 rounded-[18px] select-none overflow-hidden"
-                        style="left: 7.33%; top: 4.43%; width: 41.33%; height: 19.62%;
-                               background: linear-gradient(145deg, #1e2025 0%, #121316 50%, #0a0b0d 100%);
-                               box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.8);
-                               border: 1.2px solid rgba(255, 255, 255, 0.08);"
-                      >
-                        <div class="absolute inset-[1.5px] rounded-[16px] border border-white/5 pointer-events-none"></div>
-
-                        <!-- Laser-Engraved Rim Text -->
-                        <div class="absolute top-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
-                          <span class="font-mono text-[4.5px] font-bold tracking-[0.14em] text-slate-500/80 uppercase">
-                            • CASEYE LABS •
-                          </span>
-                        </div>
-                        <div class="absolute bottom-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
-                          <span class="font-mono text-[4px] font-semibold tracking-[0.12em] text-slate-500/80 uppercase">
-                            2.5M DROP TESTED
-                          </span>
-                        </div>
-
-                        <!-- Lens 1 (Top-Left) -->
-                        <div class="absolute left-[8%] top-[12%] h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
-                          style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
-                                 box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
-                          <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                            <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
-                              style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
-                              <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
-                                <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
-                              </span>
-                              <span class="absolute top-0.5 left-0.8 h-1 w-2 rounded-full opacity-30 -rotate-25 pointer-events-none"
-                                style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                      <!-- Dynamic Camera Cutout per Model on 2D Modal (Đồng bộ chuẩn 1:1 với model máy đang chọn) -->
+                      @if (state.selectedModel().id === 'galaxy-s24') {
+                        <!-- Samsung Galaxy S24: 3 vertical camera lenses -->
+                        <div class="pointer-events-none absolute left-[12px] top-[14px] z-20 flex flex-col gap-3 items-center">
+                          <div class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                            style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                                   box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3);">
+                            <div class="h-[18px] w-[18px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                              <span class="h-1.5 w-1.5 rounded-full bg-[#020203]"></span>
                             </div>
                           </div>
-                        </div>
-
-                        <!-- Lens 2 (Bottom-Left) -->
-                        <div class="absolute left-[8%] bottom-[12%] h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
-                          style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
-                                 box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
-                          <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                            <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
-                              style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
-                              <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
-                                <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
-                              </span>
+                          <div class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                            style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                                   box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3);">
+                            <div class="h-[18px] w-[18px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                              <span class="h-1.5 w-1.5 rounded-full bg-[#020203]"></span>
                             </div>
                           </div>
-                        </div>
-
-                        <!-- Lens 3 (Middle-Right) -->
-                        <div class="absolute right-[8%] top-1/2 -translate-y-1/2 h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
-                          style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
-                                 box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
-                          <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                            <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
-                              style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
-                              <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
-                                <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
-                              </span>
+                          <div class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                            style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
+                                   box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3);">
+                            <div class="h-[18px] w-[18px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                              <span class="h-1.5 w-1.5 rounded-full bg-[#020203]"></span>
                             </div>
                           </div>
+                          <div class="absolute -right-[10px] top-[6px] h-[7px] w-[7px] rounded-full bg-slate-200 shadow-xs border border-white/40"></div>
                         </div>
-
-                        <!-- Frosted Silver Flash -->
-                        <div class="absolute right-[16%] top-[12%] h-[11px] w-[11px] rounded-full flex items-center justify-center z-10"
-                          style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);">
-                          <div class="h-[7px] w-[7px] rounded-full flex items-center justify-center overflow-hidden border border-white/30"
-                            style="background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 55%, #94a3b8 100%);">
-                            <div class="h-[2.5px] w-[2.5px] rounded-full bg-white shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
+                      } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
+                        <!-- Xiaomi 14 Ultra: Large Leica circular camera bump -->
+                        <div
+                          class="pointer-events-none absolute left-[18px] top-[18px] z-20 h-[106px] w-[130px] rounded-full flex items-center justify-center"
+                          style="background: linear-gradient(145deg, #22242a 0%, #141417 70%, #09090b 100%);
+                                 box-shadow: 0 8px 18px -2px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.2), 0 0 0 2px #c09d3b;
+                                 border: 1.5px solid #3f3f46;"
+                        >
+                          <div class="grid grid-cols-2 gap-2.5 place-items-center">
+                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                              style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                            </span>
+                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                              style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                            </span>
+                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                              style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                            </span>
+                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                              style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
+                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                            </span>
                           </div>
                         </div>
+                      } @else {
+                        <!-- Apple iPhone Pro Obsidian Camera Island (Default) -->
+                        <div
+                          class="pointer-events-none absolute z-20 rounded-[18px] select-none overflow-hidden"
+                          style="left: 7.33%; top: 4.43%; width: 41.33%; height: 19.62%;
+                                 background: linear-gradient(145deg, #1e2025 0%, #121316 50%, #0a0b0d 100%);
+                                 box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.8);
+                                 border: 1.2px solid rgba(255, 255, 255, 0.08);"
+                        >
+                          <div class="absolute inset-[1.5px] rounded-[16px] border border-white/5 pointer-events-none"></div>
 
-                        <!-- LiDAR Scanner -->
-                        <div class="absolute right-[17%] bottom-[13%] h-[9px] w-[9px] rounded-full flex items-center justify-center z-10"
-                          style="background: linear-gradient(135deg, #27272a 0%, #18181b 100%);">
-                          <div class="h-[6px] w-[6px] rounded-full overflow-hidden bg-[#09090b]"></div>
+                          <!-- Laser-Engraved Rim Text -->
+                          <div class="absolute top-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                            <span class="font-mono text-[4.5px] font-bold tracking-[0.14em] text-slate-500/80 uppercase">
+                              • CASEYE LABS •
+                            </span>
+                          </div>
+                          <div class="absolute bottom-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                            <span class="font-mono text-[4px] font-semibold tracking-[0.12em] text-slate-500/80 uppercase">
+                              2.5M DROP TESTED
+                            </span>
+                          </div>
+
+                          <!-- Lens 1 (Top-Left) -->
+                          <div class="absolute left-[8%] top-[12%] h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
+                            style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                                   box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
+                            <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                              <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
+                                style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                                <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                                  <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
+                                </span>
+                                <span class="absolute top-0.5 left-0.8 h-1 w-2 rounded-full opacity-30 -rotate-25 pointer-events-none"
+                                  style="background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 75%);"></span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Lens 2 (Bottom-Left) -->
+                          <div class="absolute left-[8%] bottom-[12%] h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
+                            style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                                   box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
+                            <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                              <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
+                                style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                                <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                                  <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Lens 3 (Middle-Right) -->
+                          <div class="absolute right-[8%] top-1/2 -translate-y-1/2 h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
+                            style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
+                                   box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
+                            <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                              <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
+                                style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
+                                <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
+                                  <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Frosted Silver Flash -->
+                          <div class="absolute right-[16%] top-[12%] h-[11px] w-[11px] rounded-full flex items-center justify-center z-10"
+                            style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);">
+                            <div class="h-[7px] w-[7px] rounded-full flex items-center justify-center overflow-hidden border border-white/30"
+                              style="background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 55%, #94a3b8 100%);">
+                              <div class="h-[2.5px] w-[2.5px] rounded-full bg-white shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
+                            </div>
+                          </div>
+
+                          <!-- LiDAR Scanner -->
+                          <div class="absolute right-[17%] bottom-[13%] h-[9px] w-[9px] rounded-full flex items-center justify-center z-10"
+                            style="background: linear-gradient(135deg, #27272a 0%, #18181b 100%);">
+                            <div class="h-[6px] w-[6px] rounded-full overflow-hidden bg-[#09090b]"></div>
+                          </div>
+
+                          <!-- Pinholes -->
+                          <div class="absolute left-[47%] top-[12%] h-[2px] w-[2px] rounded-full bg-[#050608] z-10"></div>
+                          <div class="absolute right-[9%] top-[37%] h-[2px] w-[2px] rounded-full bg-[#050608] z-10"></div>
                         </div>
-
-                        <!-- Pinholes -->
-                        <div class="absolute left-[47%] top-[12%] h-[2px] w-[2px] rounded-full bg-[#050608] z-10"></div>
-                        <div class="absolute right-[9%] top-[37%] h-[2px] w-[2px] rounded-full bg-[#050608] z-10"></div>
-                      </div>
+                      }
 
                       <!-- ── Artwork Rendering trên 2D (1:1 Vector SVG đồng bộ tuyệt đối với Canvas Studio) ── -->
                       @if (getArtwork(activeTpl.artType); as art) {
@@ -1372,15 +1515,9 @@
                           </p>
                         </div>
                       } @else if (activeTpl.isBlankCanvas) {
-                        <div class="absolute inset-0 flex flex-col items-center justify-center p-3 select-none pointer-events-none text-center">
-                          <div class="h-12 w-12 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-brand-800 text-2xl font-black shadow-xs mb-2 animate-pulse">
-                            ＋
-                          </div>
-                          <span class="font-display text-xs font-black text-brand-800 uppercase tracking-wider">
-                            Tự vẽ từ số 0
-                          </span>
-                          <span class="text-[10px] text-ink-soft mt-0.5">
-                            Phôi ốp trắng trơn
+                        <div class="pointer-events-none absolute inset-x-0 bottom-6 flex flex-col items-center justify-center text-center select-none">
+                          <span class="font-mono text-[9px] font-black tracking-[0.3em] text-slate-300 uppercase">
+                            CASEYE LABS • BLANK
                           </span>
                         </div>
                       }
@@ -1399,30 +1536,44 @@
 
           </div>
 
-          <!-- Right Column (7/12): Descriptions, Hashtags, Reviews & User Input -->
-          <div class="lg:col-span-7 p-6 space-y-6">
+          <!-- Right Column (7/12): Descriptions, Hashtags, Reviews & User Input (Restyled với các Card tao nhã) -->
+          <div class="lg:col-span-7 p-6 space-y-4 bg-gradient-to-b from-white/95 via-purple-50/20 to-white/95">
 
-            <!-- Section 1: Detailed Description -->
-            <div>
-              <h4 class="font-display text-xs font-extrabold text-ink uppercase tracking-wider text-purple-900">
-                Mô tả thiết kế
-              </h4>
-              <p class="mt-2 text-xs sm:text-sm text-ink-soft leading-relaxed">
+            <!-- Section 1: Detailed Description Card -->
+            <div class="rounded-2xl border border-purple-150/80 bg-white/95 p-4.5 shadow-2xs">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                <h4 class="font-display text-xs font-extrabold uppercase tracking-wider text-purple-900">
+                  Mô tả thiết kế
+                </h4>
+              </div>
+              <p class="text-xs sm:text-sm text-ink-soft leading-relaxed pl-8">
                 {{ activeTpl.detailedDescription }}
               </p>
             </div>
 
-            <!-- Section 2: Hashtags & Theme Labels (Clickable) -->
-            <div>
-              <h4 class="font-display text-xs font-extrabold text-ink uppercase tracking-wider text-purple-900">
-                Nhãn & Hashtags chủ đề
-              </h4>
-              <div class="mt-2.5 flex flex-wrap gap-1.5">
+            <!-- Section 2: Hashtags & Theme Labels (Clickable) Card -->
+            <div class="rounded-2xl border border-purple-150/80 bg-white/95 p-4.5 shadow-2xs">
+              <div class="flex items-center gap-2 mb-2.5">
+                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </span>
+                <h4 class="font-display text-xs font-extrabold uppercase tracking-wider text-purple-900">
+                  Nhãn & Hashtags chủ đề
+                </h4>
+              </div>
+              <div class="flex flex-wrap gap-1.5 pl-8">
                 @for (tag of activeTpl.hashtags; track tag) {
                   <button
                     type="button"
                     (click)="filterByHashtag(tag)"
-                    class="rounded-full bg-purple-50 border border-purple-200/80 px-3 py-1 text-xs font-semibold text-purple-800 hover:bg-purple-600 hover:text-white transition-all cursor-pointer shadow-2xs"
+                    class="rounded-full bg-purple-50/80 border border-purple-200/80 px-3 py-1 text-xs font-semibold text-purple-800 hover:bg-purple-600 hover:text-white transition-all cursor-pointer shadow-2xs"
                     title="Bấm để lọc các mẫu có nhãn {{ tag }}"
                   >
                     {{ tag }}
@@ -1431,22 +1582,24 @@
               </div>
             </div>
 
-            <!-- Section 3: Tech Specs Highlights -->
-            <div class="rounded-2xl border border-purple-100 bg-purple-50/40 p-3.5 text-xs text-ink space-y-2">
-              <div class="flex items-center gap-2 text-purple-900 font-bold">
-                <svg class="h-4 w-4 text-purple-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+            <!-- Section 3: Tech Specs Highlights Card -->
+            <div class="rounded-2xl border border-purple-200/90 bg-gradient-to-br from-purple-50/90 via-indigo-50/40 to-pink-50/30 p-4.5 shadow-2xs space-y-2.5">
+              <div class="flex items-center gap-2 text-purple-900 font-bold text-xs">
+                <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-white/80 text-purple-700 shadow-2xs">
+                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </span>
                 <span>Chất lượng in ấn tiêu chuẩn CasEYE</span>
               </div>
-              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-ink-soft">
+              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-ink-soft pl-8">
                 <li class="flex items-center gap-1.5">
                   <span class="text-emerald-500 font-bold">✓</span>
                   <span>Chống sốc tiêu chuẩn quân đội 2.5m</span>
                 </li>
                 <li class="flex items-center gap-1.5">
                   <span class="text-emerald-500 font-bold">✓</span>
-                  <span>In nhiệt UV độ phân giải cao 300 DPI</span>
+                  <span>In nhiệt UV sắc nét 300 DPI</span>
                 </li>
                 <li class="flex items-center gap-1.5">
                   <span class="text-emerald-500 font-bold">✓</span>
@@ -1459,11 +1612,16 @@
               </ul>
             </div>
 
-            <!-- Section 4: Bình luận & Góp ý thẩm mỹ (Khử rating sao, phải đăng nhập mới được bình luận) -->
-            <div>
-              <div class="flex items-center justify-between border-b border-purple-100 pb-2">
+            <!-- Section 4: Bình luận & Góp ý thẩm mỹ Card -->
+            <div class="rounded-2xl border border-purple-150/80 bg-white/95 p-4.5 shadow-2xs space-y-3.5">
+              <div class="flex items-center justify-between border-b border-purple-100 pb-2.5">
                 <div class="flex items-center gap-2">
-                  <h4 class="font-display text-xs font-extrabold text-ink uppercase tracking-wider text-purple-900">
+                  <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                  </span>
+                  <h4 class="font-display text-xs font-extrabold uppercase tracking-wider text-purple-900">
                     Bình luận & Góp ý thẩm mỹ
                   </h4>
                   <span class="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-bold text-purple-900">
@@ -1475,7 +1633,7 @@
 
               <!-- Comment Form: Phải đăng nhập mới cho bình luận -->
               @if (!isLoggedIn()) {
-                <div class="mt-3.5 rounded-2xl border border-dashed border-purple-200/90 bg-purple-50/40 p-4 text-center">
+                <div class="rounded-2xl border border-dashed border-purple-200/90 bg-purple-50/40 p-4 text-center">
                   <div class="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 text-brand-800 mb-2">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -1498,7 +1656,7 @@
                 </div>
               } @else {
                 <!-- Form gửi góp ý thẩm mỹ (Đã đăng nhập) -->
-                <div class="mt-3.5 rounded-2xl border border-purple-200/90 bg-white p-3.5 shadow-2xs">
+                <div class="rounded-2xl border border-purple-200/90 bg-white p-3.5 shadow-2xs">
                   <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                       <div class="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-white font-bold text-[10px]">
@@ -1545,9 +1703,9 @@
               }
 
               <!-- Customer Feedback List (Không dùng đánh giá sao) -->
-              <div class="mt-4 space-y-3">
+              <div class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
                 @for (rev of currentTemplateReviews(); track rev.id) {
-                  <div class="rounded-xl border border-purple-50 bg-purple-50/25 p-3 text-xs space-y-1.5">
+                  <div class="rounded-xl border border-purple-100/70 bg-purple-50/30 p-3 text-xs space-y-1.5">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
                         <div class="flex h-5.5 w-5.5 items-center justify-center rounded-full bg-purple-100 text-brand-800 font-bold text-[10px]">
@@ -1585,7 +1743,7 @@
         </div>
 
         <!-- Modal Bottom Sticky Actions Bar -->
-        <div class="flex items-center justify-between px-6 py-4 border-t border-purple-100 bg-white shrink-0">
+        <div class="flex items-center justify-between px-6 py-4 border-t border-purple-100/90 bg-gradient-to-r from-purple-50/50 via-white to-purple-50/50 shrink-0">
           <div class="flex items-center gap-2">
             <button
               type="button"
@@ -1613,9 +1771,9 @@
           <button
             type="button"
             (click)="onDesignTemplate(activeTpl)"
-            class="inline-flex items-center gap-2 rounded-full bg-brand-800 px-6 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-600 hover:shadow-lift transition-all cursor-pointer"
+            class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-800 to-purple-700 px-6 py-2.5 text-xs font-bold text-white shadow-soft hover:from-brand-900 hover:to-purple-800 hover:shadow-lift transition-all cursor-pointer"
           >
-            <span>Dùng mẫu này & Vào Studio</span>
+            <span>{{ activeTpl.isBlankCanvas ? 'Tự thiết kế từ phôi này & Vào Studio' : 'Dùng mẫu này & Vào Studio' }}</span>
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
