@@ -1,5 +1,6 @@
+import { ViewportScroller } from '@angular/common';
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import {provideRouter, withComponentInputBinding} from '@angular/router';
+import {provideRouter, withComponentInputBinding, withInMemoryScrolling} from '@angular/router';
 import { routes } from './app.routes';
 import {provideSupabase} from './core/supabase/supabase.provider';
 import {environment} from '../environments/environment';
@@ -13,7 +14,8 @@ import { AutoJobs } from './features/order-tracking/services/auto-jobs';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
+    // New screen starts at the top; #fragment links (e.g. policy sections) still scroll to their section.
+    provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })),
     provideSupabase({url:environment.supabaseUrl, key:environment.supabaseKey}),
     provideAppInitializer(() => inject(SupabaseAuthService).init()),
     // Thanh toán creates orders through this port; Quản lý đơn hàng implements it.
@@ -22,5 +24,7 @@ export const appConfig: ApplicationConfig = {
     { provide: CustomerOrderFeed, useExisting: OrderTrackingCustomerFeed },
     // Order time limits (16:00 production run, 72h auto-complete, 14-day hold…) run on their own.
     provideAppInitializer(() => inject(AutoJobs).start()),
+    // Keep #fragment targets clear of the sticky header (64px + breathing room).
+    provideAppInitializer(() => inject(ViewportScroller).setOffset([0, 88])),
   ]
 };
