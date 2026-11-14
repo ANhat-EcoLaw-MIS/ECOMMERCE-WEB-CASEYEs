@@ -1,0 +1,223 @@
+<div class="failed-screen">
+  <div class="screen-back-row">
+    <button type="button" class="btn-back" (click)="editOrder.emit()">
+      <span class="material-symbols-outlined">arrow_back</span>
+      <span>Quay lại kiểm tra đơn hàng</span>
+    </button>
+  </div>
+
+  @if (checkoutService.activeOrder(); as order) {
+    <!-- Mascot Empathy Hero -->
+    <section class="mascot-hero">
+      <div class="mascot-orb">
+        <div class="mascot-orb__ring"></div>
+        <div class="mascot-eyes">
+          <div class="mascot-eye"><div class="pupil"></div></div>
+          <div class="mascot-eye"><div class="pupil"></div></div>
+        </div>
+        <div class="mascot-heart">
+          <span class="material-symbols-outlined">favorite</span>
+        </div>
+      </div>
+
+      <h1 class="mascot-title">GIAO DỊCH CHƯA HOÀN TẤT, ĐỪNG LO LẮNG NHÉ!</h1>
+      <p class="mascot-desc">
+        Hệ thống phản hồi kết nối bị gián đoạn hoặc hết thời gian xác thực từ {{ order.paymentMethodTitle }}.
+        <strong>Tiền trong tài khoản của bạn hoàn toàn chưa bị trừ.</strong>
+      </p>
+
+      <div class="guarantee-strip">
+        <span class="badge badge--success"><span class="material-symbols-outlined">verified_user</span> Bảo toàn 100% tài khoản</span>
+        <span class="badge badge--purple"><span class="material-symbols-outlined">palette</span> File in Custom đã được khóa lưu</span>
+        <span class="badge badge--warning"><span class="material-symbols-outlined">lock_clock</span> Không mất lượt ưu đãi</span>
+      </div>
+    </section>
+
+    <!-- Đồng hồ đếm ngược bảo lưu giỏ hàng -->
+    <div class="timer-card" [class.timer-card--expired]="isCountdownExpired()">
+      <div class="timer-card__left">
+        <div class="timer-card__icon" [class.timer-card__icon--expired]="isCountdownExpired()">
+          <span class="material-symbols-outlined">{{ isCountdownExpired() ? 'alarm_off' : 'timer' }}</span>
+        </div>
+        <div>
+          <div class="timer-card__title-row">
+            <span>{{ isCountdownExpired() ? 'Thời gian bảo lưu đã hết hạn:' : 'Bảo lưu thiết kế & giỏ hàng trong:' }}</span>
+            <span class="timer-badge" [class.timer-badge--expired]="isCountdownExpired()">{{ formatCountdown() }}</span>
+          </div>
+          <p class="timer-card__hint">
+            {{ isCountdownExpired() ? 'Khuôn in UV và mã giảm giá đã được hoàn lại. Nhấn nút bên dưới để tạo lại đơn.' : 'Sau thời gian này, máy chủ sẽ hoàn slot phôi ốp về kho chung.' }}
+          </p>
+        </div>
+      </div>
+      <div class="timer-card__right-actions">
+        <div class="voucher-lock-badge" [class.voucher-lock-badge--expired]="isCountdownExpired()">
+          <span class="material-symbols-outlined">{{ isCountdownExpired() ? 'cancel' : 'local_activity' }}</span>
+          <span>{{ isCountdownExpired() ? 'Voucher CASEFIRST đã nhả' : 'Voucher CASEFIRST (-50.000₫) đang giữ lại' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hai cột chuẩn đoán & Đơn hàng tạm giữ -->
+    <div class="failed-two-col">
+      <!-- Cột trái: Checklist & Nút thử lại -->
+      <div class="failed-col-left">
+        <div class="card card--checklist">
+          <div class="card__header">
+            <h3 class="card__title">
+              <span class="material-symbols-outlined text-accent">troubleshoot</span>
+              Checklist 3 bước kiểm tra nhanh
+            </h3>
+            <span class="badge badge--subtle">30 giây</span>
+          </div>
+          <div class="checklist">
+            <div class="checklist-item">
+              <span class="step-num">1</span>
+              <div class="step-content">
+                <strong>Kiểm tra kết nối Internet & App ví/ngân hàng</strong>
+                <p>Chuyển sang 4G/5G nếu Wi-Fi chập chờn hoặc mở lại ứng dụng thanh toán.</p>
+              </div>
+              <span class="material-symbols-outlined step-icon">wifi_protected_setup</span>
+            </div>
+            <div class="checklist-item">
+              <span class="step-num">2</span>
+              <div class="step-content">
+                <strong>Đảm bảo số dư khả dụng đủ {{ checkoutService.formatCurrency(order.totalAmount) }}</strong>
+                <p>Tài khoản thanh toán cần có số dư tối thiểu bằng tổng giá trị đơn hàng.</p>
+              </div>
+              <span class="material-symbols-outlined step-icon text-success">account_balance_wallet</span>
+            </div>
+            <div class="checklist-item">
+              <span class="step-num">3</span>
+              <div class="step-content">
+                <strong>Quét lại mã hoặc đổi sang ví điện tử khác</strong>
+                <p>Nhấn thử lại ngay để tạo phiên giao dịch mới trên cùng đơn hàng #{{ order.orderCode }}.</p>
+              </div>
+              <span class="material-symbols-outlined step-icon">qr_code_scanner</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nút hành động thử lại -->
+        <div class="card card--retry-actions">
+          <h3 class="card__title">Chọn phương thức để hoàn tất đơn ngay</h3>
+          @if (isCountdownExpired()) {
+            <button type="button" class="btn-cta btn-cta--warning" (click)="onResetAfterExpiry()">
+              <span class="material-symbols-outlined">restart_alt</span>
+              <span>Tạo lại đơn hàng mới (Giữ chỗ in lại)</span>
+            </button>
+          } @else {
+            <button type="button" class="btn-cta" [disabled]="isRetrying()" (click)="onRetryPayment()">
+              @if (isRetrying()) {
+                <span class="material-symbols-outlined spinner">progress_activity</span>
+                <span>Đang kết nối lại phiên thanh toán...</span>
+              } @else {
+                <span class="material-symbols-outlined">refresh</span>
+                <span>Thử thanh toán lại ngay (Cùng đơn #{{ order.orderCode }})</span>
+              }
+            </button>
+          }
+
+          <!-- Chuyển đổi ví điện tử nhanh mà KHÔNG mất đơn hàng -->
+          <div class="retry-options-group">
+            <span class="retry-options-label">Hoặc đổi sang ví khác:</span>
+            <div class="retry-options-row">
+              <button type="button" class="btn-secondary" (click)="onSwitchPayment('e_wallet', 'momo')">
+                <span class="wallet-dot wallet-dot--momo">M</span>
+                <span>Ví MoMo</span>
+              </button>
+              <button type="button" class="btn-secondary" (click)="onSwitchPayment('e_wallet', 'zalopay')">
+                <span class="wallet-dot wallet-dot--zalo">Z</span>
+                <span>ZaloPay</span>
+              </button>
+              <button type="button" class="btn-secondary" (click)="onSwitchPayment('e_wallet', 'shopeepay')">
+                <span class="wallet-dot wallet-dot--shopee">S</span>
+                <span>ShopeePay</span>
+              </button>
+              <button type="button" class="btn-secondary" (click)="onSwitchPayment('card')">
+                <span class="material-symbols-outlined">credit_card</span>
+                <span>Thẻ Quốc tế</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="support-strip">
+            <div class="support-strip__info">
+              <span class="material-symbols-outlined">support_agent</span>
+              <div>
+                <strong>Cần trợ giúp tức thì từ xưởng?</strong>
+                <p>Chuyên viên hỗ trợ trực tiếp 08:30 - 21:30</p>
+              </div>
+            </div>
+            <div class="support-strip__actions">
+              <a href="tel:19006868" class="btn-tel">1900 6868</a>
+              <a href="https://zalo.me" target="_blank" rel="noopener noreferrer" class="btn-zalo-sm">Chat Zalo</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột phải: Đơn hàng tạm giữ (Dùng chính activeOrder) -->
+      <div class="failed-col-right">
+        <div class="card card--held-order">
+          <div class="card__header">
+            <div>
+              <span class="card__sub-label">Đơn hàng tạm giữ</span>
+              <div class="card__code">#{{ order.orderCode }}</div>
+            </div>
+            <span class="badge badge--warning">
+              <span class="dot-pulse"></span> Chờ thanh toán
+            </span>
+          </div>
+
+          @for (item of order.items; track item.id) {
+            <div class="held-item">
+              <img [src]="item.imageUrl" [alt]="item.name" class="held-item__thumb" />
+              <div class="held-item__info">
+                <h4 class="held-item__name">{{ item.name }}</h4>
+                <p class="held-item__device">Dòng máy: {{ item.device }}</p>
+                <p class="held-item__finish">Phủ bóng Nano 8 lớp chống xước</p>
+                <div class="held-item__bottom">
+                  <span>SL: 0{{ item.quantity }}</span>
+                  <strong>{{ checkoutService.formatCurrency(item.price) }}</strong>
+                </div>
+              </div>
+            </div>
+          }
+
+          <div class="policy-callout">
+            <span class="material-symbols-outlined">info</span>
+            <p>Sản phẩm in theo thiết kế độc quyền của bạn. Sau khi thanh toán, xưởng in trong <strong>1-2 ngày</strong> và giao trong <strong>2-3 ngày</strong>.</p>
+          </div>
+
+          <div class="price-breakdown">
+            <div class="price-row">
+              <span>Tạm tính</span>
+              <span>{{ checkoutService.formatCurrency(order.subtotal) }}</span>
+            </div>
+            <div class="price-row">
+              <span>Phí vận chuyển nhanh</span>
+              <span>{{ checkoutService.formatCurrency(order.shippingFee) }}</span>
+            </div>
+            @if (order.discountAmount > 0) {
+              <div class="price-row price-row--discount">
+                <span>Voucher CASEFIRST</span>
+                <span>-{{ checkoutService.formatCurrency(order.discountAmount) }}</span>
+              </div>
+            }
+            <div class="total-row">
+              <span>Tổng cần thanh toán</span>
+              <span class="total-price">{{ checkoutService.formatCurrency(order.totalAmount) }}</span>
+            </div>
+          </div>
+
+          <div class="held-actions">
+            <button type="button" class="btn-edit-design" (click)="editOrder.emit()">
+              <span class="material-symbols-outlined">edit</span>
+              <span>Quay lại chỉnh sửa đơn hàng</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

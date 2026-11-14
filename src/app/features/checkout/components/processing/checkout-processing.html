@@ -1,0 +1,128 @@
+<div class="processing-screen">
+  <div class="screen-back-row">
+    <button type="button" class="btn-back" (click)="backToForm.emit()">
+      <span class="material-symbols-outlined">arrow_back</span>
+      <span>Quay lại trang thanh toán</span>
+    </button>
+    <span class="badge badge--purple">
+      <span class="dot-pulse"></span> {{ checkoutService.activeOrder()?.paymentMethodTitle }}
+    </span>
+  </div>
+
+  <!-- SafePay Mascot Verification Portal (Căn giữa hoàn hảo, không còn chữ nhãn) -->
+  <div class="portal-wrapper">
+    <div class="portal-aura"></div>
+    <div class="portal-outer-ring"></div>
+
+    <!-- Vòng quỹ đạo ánh sáng 1 xoay thuận -->
+    <svg class="portal-svg portal-svg--orbit" viewBox="0 0 320 320">
+      <circle cx="160" cy="160" r="148" stroke="#D4C8FA" stroke-width="1.5" stroke-dasharray="8 14" opacity="0.45"></circle>
+      <circle cx="160" cy="12" r="4.5" fill="#FFFFFF" class="starlight-glow"></circle>
+      <circle cx="304" cy="210" r="3.5" fill="#AF96FF"></circle>
+      <circle cx="28" cy="210" r="3.5" fill="#6A53B0"></circle>
+    </svg>
+
+    <!-- Vòng quỹ đạo ánh sáng 2 xoay nghịch -->
+    <svg class="portal-svg portal-svg--reverse" viewBox="0 0 270 270">
+      <circle cx="135" cy="135" r="124" stroke="#AF96FF" stroke-width="2" stroke-dasharray="12 16" opacity="0.6"></circle>
+      <circle cx="255" cy="135" r="4" fill="#D4C8FA"></circle>
+      <circle cx="15" cy="135" r="4" fill="#FFFFFF" class="starlight-glow"></circle>
+    </svg>
+
+    <!-- SafePay Mascot Center Orb (Chỉ chứa biểu tượng đôi mắt căn giữa hoàn hảo) -->
+    <div class="portal-orb">
+      <div class="portal-orb__sheen"></div>
+      <div class="portal-orb__glow-ring"></div>
+      <span class="material-symbols-outlined shield-watermark">shield</span>
+      
+      <!-- Đôi mắt Mascot đặt chính giữa tâm -->
+      <div class="mascot-eyes-centered">
+        <div class="mascot-eye">
+          <div class="pupil">
+            <div class="glimmer"></div>
+          </div>
+        </div>
+        <div class="mascot-eye">
+          <div class="pupil">
+            <div class="glimmer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="processing-header">
+    <h1 class="processing-title">
+      <span class="material-symbols-outlined spinner">sync</span>
+      Đang kết nối cổng thanh toán an toàn...
+    </h1>
+    <p class="processing-desc">
+      {{ statusText() }}
+    </p>
+  </div>
+
+  <!-- Thanh tiến trình đối soát động -->
+  <div class="progress-container">
+    <div class="progress-labels">
+      <span>Tiến độ đối soát tự động: <strong>{{ progressPercent() }}%</strong></span>
+      <span class="progress-percent-badge">{{ progressPercent() }}%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" [style.width.%]="progressPercent()"></div>
+    </div>
+    <div class="progress-steps">
+      <span class="step-label" [class.step-label--done]="progressPercent() >= 25" [class.step-label--active]="progressPercent() < 25">
+        <span class="material-symbols-outlined">{{ progressPercent() >= 25 ? 'check_circle' : 'sync' }}</span>
+        Khởi tạo giao dịch
+      </span>
+      <span class="step-label" [class.step-label--done]="progressPercent() >= 65" [class.step-label--active]="progressPercent() >= 25 && progressPercent() < 65">
+        <span class="material-symbols-outlined">{{ progressPercent() >= 65 ? 'check_circle' : (progressPercent() >= 25 ? 'sync' : 'pending') }}</span>
+        Khớp sao kê đối soát
+      </span>
+      <span class="step-label" [class.step-label--done]="progressPercent() >= 100" [class.step-label--active]="progressPercent() >= 65 && progressPercent() < 100">
+        <span class="material-symbols-outlined">{{ progressPercent() >= 100 ? 'check_circle' : (progressPercent() >= 65 ? 'sync' : 'pending') }}</span>
+        Duyệt file & In UV
+      </span>
+    </div>
+  </div>
+
+  <!-- Thẻ đối soát giao dịch liên kết cùng đơn hàng -->
+  @if (checkoutService.activeOrder(); as order) {
+    <div class="txn-card">
+      <div class="txn-card__header">
+        <div class="txn-card__title-group">
+          <span class="material-symbols-outlined">receipt_long</span>
+          <div>
+            <span class="txn-card__label">Mã giao dịch đối soát</span>
+            <div class="txn-card__code">#{{ order.transactionId }}</div>
+          </div>
+        </div>
+        <button type="button" class="btn-copy" (click)="copyText(order.transactionId, 'Mã giao dịch')">
+          <span class="material-symbols-outlined">content_copy</span>
+          <span>Sao chép</span>
+        </button>
+      </div>
+      <div class="txn-card__body">
+        <div class="txn-row">
+          <span>Mã đơn hàng liên kết</span>
+          <strong class="text-primary font-mono font-bold">#{{ order.orderCode }}</strong>
+        </div>
+        <div class="txn-row">
+          <span>Tổng số tiền thanh toán</span>
+          <strong class="text-primary">{{ checkoutService.formatCurrency(order.totalAmount) }}</strong>
+        </div>
+        <div class="txn-row">
+          <span>Phương thức thanh toán</span>
+          <span class="text-success font-semibold">
+            <span class="dot-indicator dot-indicator--success"></span>
+            {{ order.paymentMethodTitle }}
+          </span>
+        </div>
+        <div class="txn-row">
+          <span>Khách hàng</span>
+          <span>{{ order.address.fullName }} • {{ order.address.phone }}</span>
+        </div>
+      </div>
+    </div>
+  }
+</div>

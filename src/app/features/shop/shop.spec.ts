@@ -1,4 +1,6 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import { Shop } from './shop';
 
 describe('Shop', () => {
@@ -7,6 +9,8 @@ describe('Shop', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      // Integration: AuthState reads the Supabase session.
+      providers: [{ provide: SupabaseAuthService, useValue: { user: signal(null), isAuthenticated: signal(true), signOut: () => Promise.resolve({ data: null, error: null }) } }],
       imports: [Shop],
     }).compileComponents();
 

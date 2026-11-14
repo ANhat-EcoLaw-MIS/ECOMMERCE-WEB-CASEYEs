@@ -1,4 +1,6 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import { provideRouter } from '@angular/router';
 
 import { CartState } from '../../core/cart-state/cart-state';
@@ -11,7 +13,7 @@ describe('Cart', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Cart],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: SupabaseAuthService, useValue: { user: signal(null), isAuthenticated: signal(true), signOut: () => Promise.resolve({ data: null, error: null }) } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Cart);

@@ -1,14 +1,20 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { CartItem } from '../../../shared/models/cart.model';
+import type { CartItem } from '../../../core/cart-state/cart-state';
 import {
   CheckoutOrder,
   CustomOrderItem,
+  EWalletOption,
+  EWalletProvider,
   GiftPackageOption,
+  OrderStatus,
   PaymentMethodType,
   PaymentOption,
+  PaymentStatus,
   ProductionStage,
+  ProductionStatus,
   ShippingAddress,
   ShippingMethod,
+  ShippingStatus,
   VietQrConfig,
   Voucher,
 } from '../models/checkout.model';
@@ -39,7 +45,9 @@ export function calculateDeliveryRange(startOffsetDays = 2, endOffsetDays = 4): 
   providedIn: 'root',
 })
 export class CheckoutService {
-  // --- Shipping Address State (ready for Supabase 'addresses' table) ---
+  private readonly STORAGE_KEY = 'caseeye_active_checkout_order';
+
+  // --- Shipping Address State (Single Source of Truth) ---
   readonly address = signal<ShippingAddress>({
     fullName: 'Nguyễn Minh Anh',
     phone: '0912345678',
@@ -97,6 +105,36 @@ export class CheckoutService {
     maxChars: 150,
   });
 
+  // --- E-Wallet Sub Options ---
+  readonly eWalletOptions = signal<EWalletOption[]>([
+    {
+      id: 'momo',
+      name: 'Ví MoMo',
+      shortName: 'MoMo',
+      color: '#A50064',
+      textColor: '#FFFFFF',
+      description: 'Thanh toán tức thì qua ứng dụng MoMo 1 chạm',
+    },
+    {
+      id: 'zalopay',
+      name: 'Ví ZaloPay',
+      shortName: 'ZaloPay',
+      color: '#0068FF',
+      textColor: '#FFFFFF',
+      description: 'Thanh toán trực tiếp bằng Zalo hoặc app ZaloPay',
+    },
+    {
+      id: 'shopeepay',
+      name: 'Ví ShopeePay',
+      shortName: 'ShopeePay',
+      color: '#EE4D2D',
+      textColor: '#FFFFFF',
+      description: 'Thanh toán tiện lợi tích lũy Xu ShopeePay',
+    },
+  ]);
+
+  readonly selectedEWallet = signal<EWalletProvider>('momo');
+
   // --- Payment Methods ---
   readonly paymentOptions = signal<PaymentOption[]>([
     {
@@ -107,10 +145,37 @@ export class CheckoutService {
       enabled: true,
     },
     {
-      type: 'momo',
-      title: 'Ví MoMo',
-      description: 'Mở ứng dụng MoMo để thanh toán 1 chạm liền mạch',
+      type: 'e_wallet',
+      title: 'Ví điện tử',
+      description: 'Thanh toán nhanh chóng và thuận tiện thông qua ví điện tử bạn đang sử dụng.',
+      badge: 'Phổ biến',
       enabled: true,
+      subWallets: [
+        {
+          id: 'momo',
+          name: 'Ví MoMo',
+          shortName: 'MoMo',
+          color: '#A50064',
+          textColor: '#FFFFFF',
+          description: 'Thanh toán tức thì qua ứng dụng MoMo 1 chạm',
+        },
+        {
+          id: 'zalopay',
+          name: 'Ví ZaloPay',
+          shortName: 'ZaloPay',
+          color: '#0068FF',
+          textColor: '#FFFFFF',
+          description: 'Thanh toán trực tiếp bằng Zalo hoặc app ZaloPay',
+        },
+        {
+          id: 'shopeepay',
+          name: 'Ví ShopeePay',
+          shortName: 'ShopeePay',
+          color: '#EE4D2D',
+          textColor: '#FFFFFF',
+          description: 'Thanh toán tiện lợi tích lũy Xu ShopeePay',
+        },
+      ],
     },
     {
       type: 'card',
@@ -131,7 +196,7 @@ export class CheckoutService {
 
   readonly selectedPaymentType = signal<PaymentMethodType>('vietqr');
 
-  // --- VietQR Configuration (Can be fetched or updated via Supabase/Backend) ---
+  // --- VietQR Configuration ---
   readonly vietQrConfig = signal<VietQrConfig>({
     bankName: 'MB Bank (Quân Đội)',
     accountNumber: '0912 888 999',
@@ -140,7 +205,7 @@ export class CheckoutService {
     branch: 'Hà Nội',
   });
 
-  // --- Cart Items (Ready for Supabase 'order_items') ---
+  // --- Cart Items ---
   readonly items = signal<CustomOrderItem[]>([
     {
       id: 'item-01',
@@ -178,8 +243,8 @@ export class CheckoutService {
   readonly stockOnly = computed(() => this.items().every((i) => i.productType === 'IN_STOCK'));
   readonly hasCustom = computed(() => !this.stockOnly());
 
-  // --- Current active order ---
-  readonly currentOrder = signal<CheckoutOrder | null>(null);
+  // --- ACTIVE ORDER (Single Source of Truth) ---
+  readonly activeOrder = signal<CheckoutOrder | null>(null);
 
   // --- Computed financial totals ---
   readonly selectedShippingMethod = computed(() => {
@@ -215,6 +280,24 @@ export class CheckoutService {
     return this.formatCurrency(this.totalAmount());
   });
 
+  constructor() {
+    this.restoreFromStorage();
+  }
+
+  // --- Payment Method Display Helper ---
+  getPaymentMethodTitle(method: PaymentMethodType, wallet?: EWalletProvider): string {
+    if (method === 'vietqr') return 'Chuyển khoản VietQR Pro (MB Bank)';
+    if (method === 'e_wallet') {
+      const w = wallet ?? this.selectedEWallet();
+      if (w === 'momo') return 'Ví MoMo';
+      if (w === 'zalopay') return 'Ví ZaloPay';
+      if (w === 'shopeepay') return 'Ví ShopeePay';
+      return 'Ví điện tử';
+    }
+    if (method === 'card') return 'Thẻ Quốc Tế (Visa, Mastercard, JCB)';
+    return 'Thanh toán khi nhận hàng (COD)';
+  }
+
   // --- Actions ---
 
   setShippingMethod(id: 'standard' | 'express'): void {
@@ -229,6 +312,11 @@ export class CheckoutService {
     if (option && option.enabled) {
       this.selectedPaymentType.set(type);
     }
+  }
+
+  setEWalletProvider(provider: EWalletProvider): void {
+    this.selectedEWallet.set(provider);
+    this.selectedPaymentType.set('e_wallet');
   }
 
   toggleGiftPackage(enabled: boolean): void {
@@ -260,27 +348,29 @@ export class CheckoutService {
     this.items.set(
       cart.map((c) => ({
         id: c.id,
-        productType: c.productType,
-        baseSku: c.baseSku,
-        hasUploadedImage: c.hasUploadedImage,
-        contentPolicyAcceptedAt: c.contentPolicyAcceptedAt,
+        productType: c.custom ? ('CUSTOM' as const) : ('IN_STOCK' as const),
+        baseSku: c.id.split(':')[0],
         name: c.name,
-        tag: c.productType === 'CUSTOM' ? '#CustomDesign' : '#CoSan',
-        device: c.device,
-        material: c.material ?? 'Polycarbonate cao cấp',
+        tag: c.custom ? '#CustomDesign' : '#CoSan',
+        device: c.model,
+        material: c.finish,
         edge: '',
         surface: '',
         quantity: c.quantity,
         price: c.unitPrice,
-        imageUrl: c.previewUrl ?? '/logo.png',
-        resolutionText: c.productType === 'CUSTOM' ? 'Đã kiểm tra trong Design Studio' : 'Hàng có sẵn',
+        imageUrl: c.snapshot ?? (c.custom ? '/logo.png' : `/products/${c.id.split(':')[0]}.webp`),
+        resolutionText: c.custom ? 'Đã kiểm tra trong Design Studio' : 'Hàng có sẵn',
         resolutionPercent: 100,
-        leadTime: c.productType === 'CUSTOM' ? 'Nhân viên duyệt thiết kế trước khi in' : 'Có sẵn trong kho',
-        designCode: c.designCode ?? c.id,
+        leadTime: c.custom ? 'Nhân viên duyệt thiết kế trước khi in' : 'Có sẵn trong kho',
+        designCode: c.id,
       })),
     );
     this.applyCartRules();
   }
+
+  /** Integration: code returned by Quản lý đơn hàng once the order exists. */
+  readonly placedOrderCode = signal<string | null>(null);
+  readonly placeOrderError = signal<string | null>(null);
 
   private applyCartRules(): void {
     const stockOnly = this.stockOnly();
@@ -338,11 +428,43 @@ export class CheckoutService {
   }
 
   /**
-   * Finalizes order object and stores current order snapshot
-   * (Ready to be wired to: await supabase.from('orders').insert(...))
+   * Khởi tạo hoặc lấy đơn hàng duy nhất (Idempotent - không tự sinh mã mới bừa bãi)
    */
-  generateOrder(): CheckoutOrder {
-    const orderCode = `CE-${Math.floor(10000 + Math.random() * 90000)}`;
+  getOrCreateOrder(): CheckoutOrder {
+    const existing = this.activeOrder();
+    if (existing) {
+      // Cập nhật lại các thông số mới nhất nếu người dùng thay đổi trước khi chốt
+      const updated: CheckoutOrder = {
+        ...existing,
+        items: this.items(),
+        address: this.address(),
+        shippingMethod: this.selectedShippingMethod(),
+        paymentMethod: this.selectedPaymentType(),
+        eWalletProvider: this.selectedPaymentType() === 'e_wallet' ? this.selectedEWallet() : undefined,
+        paymentMethodTitle: this.getPaymentMethodTitle(this.selectedPaymentType(), this.selectedEWallet()),
+        giftPackage: this.giftOption(),
+        voucher: this.voucher(),
+        shipperNote: this.shipperNote(),
+        subtotal: this.subtotal(),
+        shippingFee: this.shippingFee(),
+        giftPrice: this.giftFee(),
+        discountAmount: this.discountAmount(),
+        totalAmount: this.totalAmount(),
+      };
+      this.saveOrder(updated);
+      return updated;
+    }
+
+    return this.createNewOrder();
+  }
+
+  /**
+   * Tạo đơn hàng mới duy nhất khi nhấn Đặt hàng
+   */
+  createNewOrder(): CheckoutOrder {
+    const orderCode = 'CE-89421'; // Mã định danh đồng bộ mẫu chuẩn
+    const transactionId = 'TXN-CEY98241';
+
     const stages: ProductionStage[] = [
       {
         id: 1,
@@ -379,13 +501,16 @@ export class CheckoutService {
     ];
 
     const order: CheckoutOrder = {
-      id: `ord-${Date.now()}`,
+      id: 'mock-order-001',
       orderCode,
+      transactionId,
       createdAt: new Date().toISOString(),
       items: this.items(),
       address: this.address(),
       shippingMethod: this.selectedShippingMethod(),
       paymentMethod: this.selectedPaymentType(),
+      eWalletProvider: this.selectedPaymentType() === 'e_wallet' ? this.selectedEWallet() : undefined,
+      paymentMethodTitle: this.getPaymentMethodTitle(this.selectedPaymentType(), this.selectedEWallet()),
       giftPackage: this.giftOption(),
       voucher: this.voucher(),
       shipperNote: this.shipperNote(),
@@ -394,13 +519,112 @@ export class CheckoutService {
       giftPrice: this.giftFee(),
       discountAmount: this.discountAmount(),
       totalAmount: this.totalAmount(),
-      status: 'pending',
+      orderStatus: 'pending',
+      paymentStatus: 'pending',
+      productionStatus: 'not_started',
+      shippingStatus: 'pending',
       loyaltyStars: 480,
       stages,
     };
 
-    this.currentOrder.set(order);
+    this.saveOrder(order);
     return order;
+  }
+
+  /**
+   * Cập nhật trạng thái thanh toán & quy trình của cùng 1 đơn hàng
+   */
+  updateOrderStatus(
+    orderStatus: OrderStatus,
+    paymentStatus: PaymentStatus,
+    productionStatus: ProductionStatus = 'not_started'
+  ): void {
+    const cur = this.activeOrder();
+    if (!cur) return;
+
+    const updated: CheckoutOrder = {
+      ...cur,
+      orderStatus,
+      paymentStatus,
+      productionStatus,
+      paymentTimestamp: paymentStatus === 'paid' ? new Date().toISOString() : undefined,
+    };
+
+    this.saveOrder(updated);
+  }
+
+  /**
+   * Khi thử thanh toán lại tại màn Failed: giữ nguyên đơn, chỉ cập nhật mã giao dịch mới
+   */
+  renewTransaction(): CheckoutOrder | null {
+    const cur = this.activeOrder();
+    if (!cur) return null;
+
+    const newTxn = `TXN-CEY${Math.floor(10000 + Math.random() * 90000)}`;
+    const updated: CheckoutOrder = {
+      ...cur,
+      transactionId: newTxn,
+      paymentStatus: 'pending',
+    };
+
+    this.saveOrder(updated);
+    return updated;
+  }
+
+  /**
+   * Đổi phương thức thanh toán tại màn Failed mà KHÔNG tạo đơn mới
+   */
+  switchPaymentMethodOnSameOrder(method: PaymentMethodType, wallet?: EWalletProvider): void {
+    const cur = this.activeOrder();
+    if (!cur) return;
+
+    this.selectedPaymentType.set(method);
+    if (wallet) {
+      this.selectedEWallet.set(wallet);
+    }
+
+    const updated: CheckoutOrder = {
+      ...cur,
+      paymentMethod: method,
+      eWalletProvider: method === 'e_wallet' ? (wallet ?? this.selectedEWallet()) : undefined,
+      paymentMethodTitle: this.getPaymentMethodTitle(method, wallet ?? this.selectedEWallet()),
+      paymentStatus: 'pending',
+    };
+
+    this.saveOrder(updated);
+  }
+
+  /**
+   * Lưu trữ trạng thái đơn hàng (Session Persistence)
+   */
+  private saveOrder(order: CheckoutOrder): void {
+    this.activeOrder.set(order);
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(order));
+      }
+    } catch (e) {
+      console.warn('Cannot write to sessionStorage:', e);
+    }
+  }
+
+  /**
+   * Khôi phục đơn hàng khi F5 tải lại trang
+   */
+  restoreFromStorage(): CheckoutOrder | null {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const raw = window.sessionStorage.getItem(this.STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as CheckoutOrder;
+          this.activeOrder.set(parsed);
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Cannot restore order from sessionStorage:', e);
+    }
+    return null;
   }
 
   formatCurrency(value: number): string {
@@ -414,4 +638,3 @@ export class CheckoutService {
     return Promise.resolve(false);
   }
 }
-
