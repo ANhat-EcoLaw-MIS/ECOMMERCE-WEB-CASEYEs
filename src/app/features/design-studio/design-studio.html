@@ -64,8 +64,9 @@
             <span class="rounded bg-amber-400/20 border border-amber-300/30 px-1.5 py-0.2 text-[9px] font-bold text-amber-200">Chưa hỗ trợ 3D</span>
           }
           <span class="text-white/20">•</span>
-          <a
-            routerLink="select-model"
+          <button
+            type="button"
+            (click)="openModelModal()"
             class="font-semibold text-brand-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
             title="Đổi sang dòng điện thoại khác"
           >
@@ -73,7 +74,7 @@
             <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-          </a>
+          </button>
         </div>
 
         <!-- Right: Action & Exit Button -->
@@ -133,6 +134,146 @@
             class="rounded-pill bg-brand-800 px-5 py-2.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 hover:shadow-glow cursor-pointer"
           >
             Xác nhận đổi
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Header Model Selector Modal (Đổi dòng máy trực tiếp trong Header) -->
+  @if (showModelModal()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/60 backdrop-blur-md animate-fade-in"
+      (click)="closeModelModal()"
+    >
+      <div
+        class="w-full max-w-2xl max-h-[88vh] rounded-[28px] border border-purple-100 bg-white shadow-2xl flex flex-col overflow-hidden text-left"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-purple-100/80 px-6 py-4.5 bg-purple-50/40">
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-100 text-brand-800 shadow-2xs">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-base font-bold text-ink">Đổi dòng điện thoại</h3>
+                <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-900">
+                  Cập nhật trực tiếp phôi ốp
+                </span>
+              </div>
+              <p class="text-xs text-ink-soft">Phôi ốp, vị trí camera và tỷ lệ sẽ tự động điều chỉnh ngay trong Canvas</p>
+            </div>
+          </div>
+
+          <!-- Close Button -->
+          <button
+            type="button"
+            (click)="closeModelModal()"
+            class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+            title="Đóng cửa sổ"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Brand Filter Tabs -->
+        <div class="border-b border-purple-100/60 px-6 py-3.5 bg-white">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-purple-900 block mb-2">
+            Hãng điện thoại
+          </label>
+          <div class="flex items-center gap-2">
+            @for (b of brands(); track b.id) {
+              <button
+                type="button"
+                (click)="selectModalBrand(b.id)"
+                class="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer border"
+                [class]="modalSelectedBrandId() === b.id
+                  ? 'border-brand-600 bg-brand-800 text-white shadow-soft'
+                  : 'border-purple-200/80 bg-purple-50/50 text-ink-soft hover:bg-purple-100/70 hover:text-ink'"
+              >
+                <span>{{ b.name }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Models Grid in Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-purple-900 block mb-3">
+            Chọn model máy ({{ modalAvailableModels().length }} model)
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (m of modalAvailableModels(); track m.id) {
+              <div
+                (click)="selectModalModel(m.id)"
+                class="group relative flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all cursor-pointer"
+                [class]="modalSelectedModelId() === m.id
+                  ? 'border-brand-600 bg-brand-50/60 shadow-soft'
+                  : 'border-purple-100 bg-white hover:border-purple-300 hover:bg-purple-50/20'"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl font-bold text-sm transition-colors"
+                    [class]="modalSelectedModelId() === m.id
+                      ? 'bg-brand-800 text-white shadow-xs'
+                      : 'bg-purple-100 text-brand-800 group-hover:bg-purple-200'"
+                  >
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-display text-xs font-bold text-ink group-hover:text-brand-800">
+                      {{ m.name }}
+                    </h4>
+                    <p class="text-[10px] text-ink-soft">
+                      Năm ra mắt: {{ m.releaseYear }} · Cụm {{ m.safeZoneMask.cameraCutout.lensCount }} mắt
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all"
+                  [class]="modalSelectedModelId() === m.id
+                    ? 'border-brand-600 bg-brand-600 text-white'
+                    : 'border-purple-300 bg-white'"
+                >
+                  @if (modalSelectedModelId() === m.id) {
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="flex items-center justify-between border-t border-purple-100/80 px-6 py-4 bg-white">
+          <button
+            type="button"
+            (click)="closeModelModal()"
+            class="rounded-full border border-purple-200 px-5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
+          >
+            Hủy bỏ
+          </button>
+
+          <button
+            type="button"
+            (click)="applySelectedModel()"
+            class="inline-flex items-center gap-2 rounded-full bg-brand-800 px-6 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-900 hover:shadow-lift transition-all cursor-pointer"
+          >
+            <span>Xác nhận & Cập nhật phôi ốp</span>
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
           </button>
         </div>
       </div>

@@ -9,14 +9,13 @@
        SECTION 0: MY DESIGNS (Tiếp tục chỉnh sửa hoặc tạo mới)
   ══════════════════════════════════════════════════════ -->
   <div
-    class="border-b border-purple-950/40 py-7 relative z-20 shadow-2xl overflow-hidden"
-    style="background: linear-gradient(135deg, #0e0520 0%, #1c0a38 25%, #2e0f54 50%, #431274 75%, #1b0735 100%);"
+    class="border-b border-purple-950/20 py-7 relative z-20 shadow-xl overflow-hidden"
+    style="background: linear-gradient(135deg, #130f1e 0%, #191428 35%, #221a34 70%, #161223 100%);"
   >
-    <!-- Shimmering Atmospheric Glows & Mesh Accents -->
+    <!-- Soft Ambient Twilight Atmospheric Glows (Màu dịu êm, không bị chói) -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div class="absolute -top-32 left-1/4 h-80 w-80 rounded-full bg-fuchsia-600/20 blur-3xl"></div>
-      <div class="absolute -bottom-24 right-1/4 h-80 w-80 rounded-full bg-indigo-600/20 blur-3xl"></div>
-      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-32 bg-purple-500/15 blur-3xl"></div>
+      <div class="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-purple-900/15 blur-3xl"></div>
+      <div class="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-indigo-950/20 blur-3xl"></div>
     </div>
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
@@ -350,8 +349,9 @@
         <span class="text-ink-soft">Dòng máy:</span>
         <span class="font-display font-bold text-ink">{{ state.selectedModel().name }}</span>
         <span class="text-purple-300">•</span>
-        <a
-          routerLink="/design-studio/select-model"
+        <button
+          type="button"
+          (click)="openModelSelectorModal()"
           class="font-semibold text-brand-800 hover:text-purple-950 transition-colors cursor-pointer flex items-center gap-1 hover:underline"
           title="Đổi sang dòng điện thoại khác"
         >
@@ -359,7 +359,7 @@
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-        </a>
+        </button>
       </div>
     </div>
   </div>
@@ -627,13 +627,6 @@
                 {{ tpl.description }}
               </p>
 
-              <!-- Rating & Reviews (Khử số ảo NPC, chỉ giữ badge xếp hạng uy tín) -->
-              <div class="mt-2 flex items-center gap-1.5 text-xs text-ink-soft">
-                <span class="text-amber-400">★</span>
-                <span class="font-bold text-ink">{{ tpl.rating }}</span>
-                <span class="text-slate-400">• Tuyển chọn</span>
-              </div>
-
               <!-- Hashtags Preview on Card -->
               <div class="mt-2 flex flex-wrap gap-1">
                 @for (tag of tpl.hashtags.slice(0, 3); track tag) {
@@ -706,6 +699,148 @@
 
     </div>
   </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       MODAL 0: CHỌN DÒNG MÁY / ĐỔI DÒNG MÁY POPUP
+  ══════════════════════════════════════════════════════ -->
+  @if (showModelSelectorModal()) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-950/60 backdrop-blur-md animate-fade-in"
+      (click)="closeModelSelectorModal()"
+    >
+      <div
+        class="w-full max-w-2xl max-h-[88vh] rounded-[28px] border border-purple-100 bg-white shadow-2xl flex flex-col overflow-hidden text-left"
+        (click)="$event.stopPropagation()"
+      >
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-purple-100/80 px-6 py-4.5 bg-purple-50/40">
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-100 text-brand-800 shadow-2xs">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-base font-bold text-ink">Chọn dòng điện thoại</h3>
+                <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-900">
+                  Phôi chuẩn 100%
+                </span>
+              </div>
+              <p class="text-xs text-ink-soft">CasEYE tự động điều chỉnh phôi ốp và cụm camera theo chính xác dòng máy bạn chọn</p>
+            </div>
+          </div>
+
+          <!-- Close Button -->
+          <button
+            type="button"
+            (click)="closeModelSelectorModal()"
+            class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+            title="Đóng cửa sổ"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Brand Filter Tabs -->
+        <div class="border-b border-purple-100/60 px-6 py-3.5 bg-white">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-purple-900 block mb-2">
+            Hãng điện thoại
+          </label>
+          <div class="flex items-center gap-2">
+            @for (b of brands(); track b.id) {
+              <button
+                type="button"
+                (click)="selectModalBrand(b.id)"
+                class="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer border"
+                [class]="modalSelectedBrandId() === b.id
+                  ? 'border-brand-600 bg-brand-800 text-white shadow-soft'
+                  : 'border-purple-200/80 bg-purple-50/50 text-ink-soft hover:bg-purple-100/70 hover:text-ink'"
+              >
+                <span>{{ b.name }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Models Grid in Modal Body -->
+        <div class="flex-1 overflow-y-auto p-6 scrollbar-thin">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-purple-900 block mb-3">
+            Chọn model máy ({{ modalAvailableModels().length }} model)
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            @for (m of modalAvailableModels(); track m.id) {
+              <div
+                (click)="selectModalModel(m.id)"
+                class="group relative flex items-center justify-between p-3.5 rounded-2xl border-2 transition-all cursor-pointer"
+                [class]="modalSelectedModelId() === m.id
+                  ? 'border-brand-600 bg-brand-50/60 shadow-soft'
+                  : 'border-purple-100 bg-white hover:border-purple-300 hover:bg-purple-50/20'"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-xl font-bold text-sm transition-colors"
+                    [class]="modalSelectedModelId() === m.id
+                      ? 'bg-brand-800 text-white shadow-xs'
+                      : 'bg-purple-100 text-brand-800 group-hover:bg-purple-200'"
+                  >
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-display text-xs font-bold text-ink group-hover:text-brand-800">
+                      {{ m.name }}
+                    </h4>
+                    <p class="text-[10px] text-ink-soft">
+                      Năm ra mắt: {{ m.releaseYear }} · Cụm {{ m.safeZoneMask.cameraCutout.lensCount }} mắt
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all"
+                  [class]="modalSelectedModelId() === m.id
+                    ? 'border-brand-600 bg-brand-600 text-white'
+                    : 'border-purple-300 bg-white'"
+                >
+                  @if (modalSelectedModelId() === m.id) {
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="flex items-center justify-between border-t border-purple-100/80 px-6 py-4 bg-white">
+          <button
+            type="button"
+            (click)="closeModelSelectorModal()"
+            class="rounded-full border border-purple-200 px-5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
+          >
+            Hủy bỏ
+          </button>
+
+          <button
+            type="button"
+            (click)="applySelectedModel()"
+            class="inline-flex items-center gap-2 rounded-full bg-brand-800 px-6 py-2.5 text-xs font-bold text-white shadow-soft hover:bg-brand-900 hover:shadow-lift transition-all cursor-pointer"
+          >
+            <span>Xác nhận đổi máy</span>
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- ══════════════════════════════════════════════════════
        MODAL 1: "XEM TẤT CẢ" MY DESIGNS POPUP (Khi click Xem tất cả)
@@ -970,17 +1105,35 @@
             </div>
           </div>
 
-          <!-- Close Modal Button -->
-          <button
-            type="button"
-            (click)="closePreviewModal()"
-            class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
-            title="Đóng cửa sổ"
-          >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div class="flex items-center gap-2">
+            <!-- Favorite Toggle Button in Modal Header -->
+            <button
+              type="button"
+              (click)="toggleFavorite(activeTpl.id, $event)"
+              class="flex h-9 w-9 items-center justify-center rounded-full border border-purple-200/80 bg-white transition-all hover:bg-rose-50 hover:border-rose-200 cursor-pointer shadow-xs"
+              [class.text-rose-500]="isFavorite(activeTpl.id)"
+              [class.text-ink-soft]="!isFavorite(activeTpl.id)"
+              [class.bg-rose-50]="isFavorite(activeTpl.id)"
+              [class.border-rose-200]="isFavorite(activeTpl.id)"
+              title="Lưu mẫu yêu thích"
+            >
+              <svg class="h-4.5 w-4.5" [class.fill-rose-500]="isFavorite(activeTpl.id)" [class.fill-none]="!isFavorite(activeTpl.id)" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+
+            <!-- Close Modal Button -->
+            <button
+              type="button"
+              (click)="closePreviewModal()"
+              class="rounded-full p-2 text-ink-soft hover:bg-purple-100 hover:text-ink transition-colors cursor-pointer"
+              title="Đóng cửa sổ"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Modal Body: 2 Columns Layout (Left: 3D Stage | Right: Details & Reviews) -->
@@ -1433,13 +1586,29 @@
 
         <!-- Modal Bottom Sticky Actions Bar -->
         <div class="flex items-center justify-between px-6 py-4 border-t border-purple-100 bg-white shrink-0">
-          <button
-            type="button"
-            (click)="closePreviewModal()"
-            class="rounded-full border border-purple-200 px-5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
-          >
-            Đóng
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="closePreviewModal()"
+              class="rounded-full border border-purple-200 px-5 py-2.5 text-xs font-semibold text-ink-soft hover:bg-purple-50 transition-colors cursor-pointer"
+            >
+              Đóng
+            </button>
+
+            <button
+              type="button"
+              (click)="toggleFavorite(activeTpl.id, $event)"
+              class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+              [class]="isFavorite(activeTpl.id)
+                ? 'border-rose-200 bg-rose-50 text-rose-600 font-bold'
+                : 'border-purple-200/90 bg-white text-ink-soft hover:bg-purple-50 hover:text-ink'"
+            >
+              <svg class="h-3.5 w-3.5" [class.fill-rose-500]="isFavorite(activeTpl.id)" [class.fill-none]="!isFavorite(activeTpl.id)" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <span>{{ isFavorite(activeTpl.id) ? 'Đã thích' : 'Yêu thích' }}</span>
+            </button>
+          </div>
 
           <button
             type="button"

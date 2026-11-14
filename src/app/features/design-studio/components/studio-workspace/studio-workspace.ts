@@ -23,6 +23,7 @@ import {
   StudioState,
 } from '../../services/studio-state';
 import { StudioDraft } from '../../services/studio-draft';
+import { StudioCatalogService } from '../../services/studio-catalog';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 import { AuthModal } from '../../../../core/auth/auth-modal';
 
@@ -37,6 +38,7 @@ import { AuthModal } from '../../../../core/auth/auth-modal';
 })
 export class StudioWorkspace implements OnDestroy {
   protected readonly state = inject(StudioState);
+  protected readonly catalog = inject(StudioCatalogService);
   protected readonly draft = inject(StudioDraft);
   protected readonly auth = inject(SupabaseAuthService);
   protected readonly authModal = inject(AuthModal);
@@ -106,6 +108,29 @@ export class StudioWorkspace implements OnDestroy {
   protected readonly namingInput = signal<string>('');
   protected readonly showAuthModal = signal<boolean>(false);
   protected readonly guestActionType = signal<'save' | 'cart'>('save');
+
+  // Model Selector Modal in Canvas
+  protected readonly showModelModal = signal<boolean>(false);
+  protected readonly modalSelectedBrandId = signal<string>('brand-apple');
+  protected readonly modalSelectedModelId = signal<string>('iphone-15-pro-max');
+
+  protected readonly brands = this.catalog.brands;
+  protected readonly allModels = this.catalog.models;
+
+  protected readonly modalAvailableModels = computed(() => {
+    const brandId = this.modalSelectedBrandId();
+    return this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+  });
+
+  protected readonly isAnyModalOpen = computed(() => {
+    return (
+      this.showModelModal() ||
+      this.showNamingModal() ||
+      this.showAuthModal() ||
+      this.showShortcutsModal() ||
+      this.isResizeNoticeModalOpen()
+    );
+  });
 
   // Bleed View Mode: 'bleed' (shows overflow at 50% opacity) | 'clipped' (strictly hides overflow)
   protected readonly viewMode = signal<'bleed' | 'clipped'>('bleed');
@@ -426,6 +451,16 @@ export class StudioWorkspace implements OnDestroy {
       this.state.selectedModel();
       this.trigger3dTextureSync();
     });
+
+    // Freeze body scroll when ANY modal is open
+    effect(() => {
+      if (typeof document === 'undefined') return;
+      if (this.isAnyModalOpen()) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
   }
 
   // 3D Preview
@@ -483,6 +518,44 @@ export class StudioWorkspace implements OnDestroy {
       clearTimeout(this.syncFadeTimer);
       this.syncFadeTimer = null;
     }
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  // --- Model Selector Modal Handlers (Đổi máy trực tiếp trong Canvas) ---
+  protected openModelModal(): void {
+    this.modalSelectedBrandId.set(this.state.selectedModel().brandId || 'brand-apple');
+    this.modalSelectedModelId.set(this.state.selectedModel().id || 'iphone-15-pro-max');
+    this.showModelModal.set(true);
+  }
+
+  protected closeModelModal(): void {
+    this.showModelModal.set(false);
+  }
+
+  protected selectModalBrand(brandId: string): void {
+    this.modalSelectedBrandId.set(brandId);
+    const models = this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+    if (models.length > 0) {
+      this.modalSelectedModelId.set(models[0].id);
+    }
+  }
+
+  protected selectModalModel(modelId: string): void {
+    this.modalSelectedModelId.set(modelId);
+  }
+
+  protected applySelectedModel(): void {
+    const modelId = this.modalSelectedModelId();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('caseyes_active_model', modelId);
+    }
+    this.catalog.selectModel(modelId);
+    this.state.requestModelChange(modelId);
+    this.closeModelModal();
+    this.showToast(`Đã chuyển sang phôi ốp ${this.state.selectedModel().name}`);
+    this.trigger3dTextureSync(true);
   }
 
   // --- Tool Switching ---
@@ -1602,6 +1675,10 @@ export class StudioWorkspace implements OnDestroy {
 
     // 5. Deselect or close modal: Escape
     if (event.key === 'Escape') {
+      if (this.showModelModal()) {
+        this.showModelModal.set(false);
+        return;
+      }
       if (this.showShortcutsModal()) {
         this.showShortcutsModal.set(false);
         return;

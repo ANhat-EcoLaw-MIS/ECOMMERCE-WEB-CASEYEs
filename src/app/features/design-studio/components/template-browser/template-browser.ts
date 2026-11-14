@@ -1,4 +1,4 @@
-import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
@@ -497,10 +497,38 @@ export class TemplateBrowser {
   protected readonly hasMoreMyDesigns = computed(() => this.myDesigns().length > 4);
 
   // Modal & Popup States
+  protected readonly showModelSelectorModal = signal<boolean>(false);
+  protected readonly modalSelectedBrandId = signal<string>('brand-apple');
+  protected readonly modalSelectedModelId = signal<string>('iphone-15-pro-max');
+
+  protected readonly brands = this.catalog.brands;
+  protected readonly allModels = this.catalog.models;
+
+  protected readonly modalAvailableModels = computed(() => {
+    const brandId = this.modalSelectedBrandId();
+    return this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+  });
+
   protected readonly showAllDesignsModal = signal<boolean>(false);
   protected readonly searchMyDesignQuery = signal<string>('');
   protected readonly previewTemplate = signal<TemplateCard | null>(null);
   protected readonly activeMenuDesignId = signal<string | null>(null);
+
+  // Delete & Rename Modals
+  protected readonly designToDelete = signal<SavedDesignItem | null>(null);
+  protected readonly designToRename = signal<SavedDesignItem | null>(null);
+  protected readonly renameInput = signal<string>('');
+
+  /** Computes whether ANY modal is currently open to freeze body scrolling */
+  protected readonly isAnyModalOpen = computed(() => {
+    return (
+      this.showModelSelectorModal() ||
+      this.showAllDesignsModal() ||
+      this.previewTemplate() !== null ||
+      this.designToDelete() !== null ||
+      this.designToRename() !== null
+    );
+  });
 
   // 3D View Controls
   protected readonly viewMode = signal<'3d' | '2d'>('3d');
@@ -521,12 +549,56 @@ export class TemplateBrowser {
 
   constructor() {
     this.preloadTemplateArtworks();
+
+    // Freeze body scroll when ANY modal is open
+    effect(() => {
+      if (typeof document === 'undefined') return;
+      if (this.isAnyModalOpen()) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
   }
 
-  // Delete & Rename Modals
-  protected readonly designToDelete = signal<SavedDesignItem | null>(null);
-  protected readonly designToRename = signal<SavedDesignItem | null>(null);
-  protected readonly renameInput = signal<string>('');
+  ngOnDestroy(): void {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Model Selector Modal Handlers
+  protected openModelSelectorModal(): void {
+    this.modalSelectedBrandId.set(this.state.selectedModel().brandId || 'brand-apple');
+    this.modalSelectedModelId.set(this.state.selectedModel().id || 'iphone-15-pro-max');
+    this.showModelSelectorModal.set(true);
+  }
+
+  protected closeModelSelectorModal(): void {
+    this.showModelSelectorModal.set(false);
+  }
+
+  protected selectModalBrand(brandId: string): void {
+    this.modalSelectedBrandId.set(brandId);
+    const models = this.allModels().filter((m) => m.brandId === brandId && m.isActive);
+    if (models.length > 0) {
+      this.modalSelectedModelId.set(models[0].id);
+    }
+  }
+
+  protected selectModalModel(modelId: string): void {
+    this.modalSelectedModelId.set(modelId);
+  }
+
+  protected applySelectedModel(): void {
+    const modelId = this.modalSelectedModelId();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('caseyes_active_model', modelId);
+    }
+    this.catalog.selectModel(modelId);
+    this.state.requestModelChange(modelId);
+    this.closeModelSelectorModal();
+  }
 
   // Favorites Set & Count
   protected readonly favoriteTemplates = signal<Set<string>>(new Set(['tpl-001', 'tpl-004']));
@@ -1556,6 +1628,14 @@ export class TemplateBrowser {
     if (event) event.stopPropagation();
     this.closeCardMenu();
     this.designToDelete.set(item);
+  }
+
+  protected openDeleteConfirmModal(item: SavedDesignItem, event?: MouseEvent): void {
+    this.onDeleteSavedDesign(item, event);
+  }
+
+  protected openRenameModal(item: SavedDesignItem, event?: MouseEvent): void {
+    this.startRenameDesign(item, event);
   }
 
   protected confirmDelete(): void {
