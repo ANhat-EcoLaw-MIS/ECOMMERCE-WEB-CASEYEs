@@ -148,27 +148,6 @@ const TEMPLATE_SVG_MINIMAL_CAT = `<svg xmlns="http://www.w3.org/2000/svg" viewBo
   </g>
 </svg>`;
 
-const TEMPLATE_SVG_ANIME = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420" width="360" height="420">
-  <defs>
-    <radialGradient id="animeHalo" cx="50%" cy="40%" r="50%">
-      <stop offset="0%" stop-color="#818cf8"/>
-      <stop offset="100%" stop-color="#4f46e5"/>
-    </radialGradient>
-  </defs>
-  <circle cx="180" cy="180" r="140" fill="url(#animeHalo)"/>
-  <circle cx="180" cy="190" r="85" fill="#fef3c7"/>
-  <path d="M 100,160 Q 140,210 160,190 Q 180,220 200,190 Q 220,210 260,160 Q 220,110 180,115 Q 140,110 100,160 Z" fill="#4338ca"/>
-  <ellipse cx="145" cy="190" rx="15" ry="18" fill="#1e1b4b"/>
-  <ellipse cx="215" cy="190" rx="15" ry="18" fill="#1e1b4b"/>
-  <circle cx="140" cy="184" r="6" fill="#ffffff"/>
-  <circle cx="210" cy="184" r="6" fill="#ffffff"/>
-  <ellipse cx="130" cy="212" rx="14" ry="7" fill="#f472b6" opacity="0.8"/>
-  <ellipse cx="230" cy="212" rx="14" ry="7" fill="#f472b6" opacity="0.8"/>
-  <path d="M 172,216 Q 180,224 188,216" fill="none" stroke="#db2777" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M 95,290 L 140,380 L 220,380 L 265,290 Z" fill="#312e81"/>
-  <polygon points="160,290 180,335 200,290" fill="#f43f5e"/>
-</svg>`;
-
 const TEMPLATE_SVG_WAVES = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 650" width="400" height="650">
   <path d="M -20,150 Q 120,70 200,200 T 420,160 L 420,700 L -20,700 Z" fill="#fed7aa"/>
   <path d="M -20,250 Q 100,170 230,300 T 420,270 L 420,700 L -20,700 Z" fill="#fbcfe8"/>
@@ -261,7 +240,6 @@ export interface TemplateCard {
     | 'sakura-bloom'
     | 'mountain-escape'
     | 'minimal-cat'
-    | 'anime-girl'
     | 'abstract-waves'
     | 'dino-friend'
     | 'starry-night'
@@ -381,29 +359,7 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     isTrending: true,
     artType: 'minimal-cat',
   },
-  // 5. Anime Girl (#anime)
-  {
-    id: 'tpl-005',
-    name: 'Anime Girl',
-    creator: 'AnimeArtisan',
-    category: 'cartoon',
-    categories: ['cartoon', 'all'],
-    styleLabel: 'Hoạt hình',
-    gradient: 'linear-gradient(180deg, #c7d2fe 0%, #a5b4fc 40%, #818cf8 100%)',
-    tagText: 'KAWAII SOUL',
-    description: 'Cô gái anime tóc xanh xinh xắn trong ánh sao lấp lánh huyền ảo.',
-    detailedDescription:
-      'Tác phẩm minh họa phong cách anime hiện đại với mái tóc xanh óng ánh và những hạt sao vũ trụ lung linh. Kỹ thuật in phủ bóng cục bộ tạo độ sâu quang học sống động dưới mọi góc nhìn.',
-    tagLabel: '#anime',
-    tagColor: '#6366f1',
-    rating: 4.8,
-    reviews: '933',
-    reviewCount: 933,
-    hashtags: ['#anime', '#kawaii', '#manga', '#bluehair', '#aesthetic', '#otaku', '#cyber'],
-    isTrending: true,
-    artType: 'anime-girl',
-  },
-  // 6. Abstract Waves (#abstract)
+  // 5. Abstract Waves (#abstract)
   {
     id: 'tpl-006',
     name: 'Abstract Waves',
@@ -598,6 +554,26 @@ export class TemplateBrowser {
     const model = this.state.selectedModel();
     return model?.model3dUrl || '/models/iphone-15-pro-max.glb';
   });
+
+  /**
+   * Bộ artwork SVG vector 1:1 đồng bộ tuyệt đối với Canvas Studio
+   */
+  protected readonly artworkMap: Record<
+    string,
+    { url: string; x: number; y: number; width: number; height: number; text?: string; textY?: number }
+  > = {
+    'dreamy-kitten': { url: svgToDataUri(TEMPLATE_SVG_KITTEN), x: 50, y: 72, width: 85, height: 60 },
+    'sakura-bloom': { url: svgToDataUri(TEMPLATE_SVG_SAKURA), x: 50, y: 50, width: 94, height: 86 },
+    'mountain-escape': { url: svgToDataUri(TEMPLATE_SVG_MOUNTAIN), x: 50, y: 64, width: 96, height: 72 },
+    'minimal-cat': { url: svgToDataUri(TEMPLATE_SVG_MINIMAL_CAT), x: 50, y: 68, width: 62, height: 62 },
+    'abstract-waves': { url: svgToDataUri(TEMPLATE_SVG_WAVES), x: 50, y: 58, width: 100, height: 92 },
+    'dino-friend': { url: svgToDataUri(TEMPLATE_SVG_DINO), x: 50, y: 70, width: 75, height: 68 },
+    'starry-night': { url: svgToDataUri(TEMPLATE_SVG_MOON), x: 50, y: 48, width: 86, height: 70, text: 'STARRY', textY: 83 },
+  };
+
+  protected getArtwork(artType: string) {
+    return this.artworkMap[artType] || null;
+  }
 
   // --- Category and Hashtag Handlers ---
   protected selectCategory(catId: string): void {
@@ -1213,35 +1189,6 @@ export class TemplateBrowser {
       ctx.quadraticCurveTo(cX + 120, cY + 50, cX + 100, cY - 10);
       ctx.stroke();
       ctx.restore();
-    } else if (art === 'anime-girl') {
-      ctx.save();
-      ctx.fillStyle = '#6366f1';
-      ctx.beginPath();
-      ctx.arc(W / 2, H * 0.65, 135, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fef3c7';
-      ctx.beginPath();
-      ctx.arc(W / 2, H * 0.67, 88, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#312e81';
-      ctx.beginPath();
-      ctx.arc(W / 2 - 36, H * 0.67, 14, 0, Math.PI * 2);
-      ctx.arc(W / 2 + 36, H * 0.67, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#f472b6';
-      ctx.beginPath();
-      ctx.arc(W / 2 - 42, H * 0.71, 12, 0, Math.PI * 2);
-      ctx.arc(W / 2 + 42, H * 0.71, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#4f46e5';
-      ctx.beginPath();
-      if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(W / 2 - 82, H * 0.76, 164, 140, [32, 32, 0, 0]);
-      } else {
-        ctx.rect(W / 2 - 82, H * 0.76, 164, 140);
-      }
-      ctx.fill();
-      ctx.restore();
     } else if (art === 'abstract-waves') {
       ctx.save();
       const colors = ['#fed7aa', '#fbcfe8', '#ddd6fe', '#bae6fd'];
@@ -1460,29 +1407,6 @@ export class TemplateBrowser {
         fileSizeBytes: 3100,
         pixelWidth: 300,
         pixelHeight: 360,
-        dpi: 300,
-        isLowResAcknowledged: true,
-      };
-      return [imgLayer];
-    }
-
-    if (art === 'anime-girl') {
-      const imgLayer: ImageElement = {
-        id: 'tpl_layer_anime_' + Date.now(),
-        type: 'image',
-        zIndex: 1,
-        x: 50,
-        y: 68,
-        width: 75,
-        height: 68,
-        rotation: 0,
-        opacity: 1,
-        isLocked: false,
-        storageUrl: svgToDataUri(TEMPLATE_SVG_ANIME),
-        fileType: 'image/png',
-        fileSizeBytes: 4500,
-        pixelWidth: 360,
-        pixelHeight: 420,
         dpi: 300,
         isLowResAcknowledged: true,
       };

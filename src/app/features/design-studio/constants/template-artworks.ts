@@ -137,27 +137,6 @@ export const TEMPLATE_SVG_MINIMAL_CAT = `<svg xmlns="http://www.w3.org/2000/svg"
   </g>
 </svg>`;
 
-export const TEMPLATE_SVG_ANIME = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420" width="360" height="420">
-  <defs>
-    <radialGradient id="animeHalo" cx="50%" cy="40%" r="50%">
-      <stop offset="0%" stop-color="#818cf8"/>
-      <stop offset="100%" stop-color="#4f46e5"/>
-    </radialGradient>
-  </defs>
-  <circle cx="180" cy="180" r="140" fill="url(#animeHalo)"/>
-  <circle cx="180" cy="190" r="85" fill="#fef3c7"/>
-  <path d="M 100,160 Q 140,210 160,190 Q 180,220 200,190 Q 220,210 260,160 Q 220,110 180,115 Q 140,110 100,160 Z" fill="#4338ca"/>
-  <ellipse cx="145" cy="190" rx="15" ry="18" fill="#1e1b4b"/>
-  <ellipse cx="215" cy="190" rx="15" ry="18" fill="#1e1b4b"/>
-  <circle cx="140" cy="184" r="6" fill="#ffffff"/>
-  <circle cx="210" cy="184" r="6" fill="#ffffff"/>
-  <ellipse cx="130" cy="212" rx="14" ry="7" fill="#f472b6" opacity="0.8"/>
-  <ellipse cx="230" cy="212" rx="14" ry="7" fill="#f472b6" opacity="0.8"/>
-  <path d="M 172,216 Q 180,224 188,216" fill="none" stroke="#db2777" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M 95,290 L 140,380 L 220,380 L 265,290 Z" fill="#312e81"/>
-  <polygon points="160,290 180,335 200,290" fill="#f43f5e"/>
-</svg>`;
-
 export const TEMPLATE_SVG_WAVES = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 650" width="400" height="650">
   <path d="M -20,150 Q 120,70 200,200 T 420,160 L 420,700 L -20,700 Z" fill="#fed7aa"/>
   <path d="M -20,250 Q 100,170 230,300 T 420,270 L 420,700 L -20,700 Z" fill="#fbcfe8"/>
@@ -311,29 +290,6 @@ export function buildTemplateLayers(art: string): CanvasLayer[] {
       fileSizeBytes: 3100,
       pixelWidth: 300,
       pixelHeight: 360,
-      dpi: 300,
-      isLowResAcknowledged: true,
-    };
-    return [imgLayer];
-  }
-
-  if (art === 'anime-girl') {
-    const imgLayer: ImageElement = {
-      id: 'tpl_layer_anime_' + ts,
-      type: 'image',
-      zIndex: 1,
-      x: 50,
-      y: 68,
-      width: 75,
-      height: 68,
-      rotation: 0,
-      opacity: 1,
-      isLocked: false,
-      storageUrl: svgToDataUri(TEMPLATE_SVG_ANIME),
-      fileType: 'image/png',
-      fileSizeBytes: 4500,
-      pixelWidth: 360,
-      pixelHeight: 420,
       dpi: 300,
       isLowResAcknowledged: true,
     };

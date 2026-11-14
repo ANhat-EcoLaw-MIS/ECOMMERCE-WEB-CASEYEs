@@ -2,7 +2,7 @@
 
 Tài liệu tóm tắt nhanh kiến trúc, luồng hoạt động, các tính năng đã hoàn thiện và những điểm còn đang mock/chờ tích hợp của module **Design Studio** (Phòng thiết kế ốp lưng 2D + 3D) để các thành viên trong nhóm dễ nắm bắt và phối hợp khi merge vào `develop`.
 
-> **Cập nhật:** 12/11/2026 · **Branch:** `feature/design-studio` · **Trạng thái build:** `npx ng build` thành công (xuất `dist/DoAnWEB`, kèm warning vượt budget nhẹ).
+> **Cập nhật:** 14/11/2026 · **Branch:** `feature/design-studio` · **Trạng thái build:** `npx ng build` thành công (xuất `dist/DoAnWEB`).
 
 ---
 
@@ -66,7 +66,7 @@ src/app/features/design-studio/
 
 ### B. Kho mẫu & My Designs (`TemplateBrowser`)
 - **My Designs:** Hiển thị tối đa 4 card trên trang chính; khi `> 4` bản vẽ thì hiện nút **Xem tất cả** mở popup có ô tìm kiếm. Menu `⋮` hỗ trợ: *Tiếp tục chỉnh sửa*, *Nhân bản*, *Đổi tên*, *Xóa* (có modal xác nhận).
-- **Kho mẫu (`TEMPLATE_CATALOG`):** 10 mẫu (vị trí `#1` là **Ốp Lưng Trắng Tiêu Chuẩn** để vẽ từ đầu + 9 mẫu artwork: *Dreamy Kitten, Sakura Bloom, Mountain Escape, Minimal Cat, Anime Girl, Abstract Waves, Dino Friend, Starry Night, That Girl Era*). Đã bỏ hiển thị giá trên card/modal theo thiết kế tinh gọn, lọc theo 8 danh mục và hashtag. (Phần AI gợi ý mẫu đã được bóc tách để nhóm phát triển thành module tìm kiếm thông minh riêng).
+- **Kho mẫu (`TEMPLATE_CATALOG`):** 9 mẫu (vị trí `#1` là **Ốp Lưng Trắng Tiêu Chuẩn** để vẽ từ đầu + 8 mẫu artwork chuẩn: *Dreamy Kitten, Sakura Bloom, Mountain Escape, Minimal Cat, Abstract Waves, Dino Friend, Starry Night, That Girl Era* — đã loại bỏ mẫu Anime Girl). Khung card mockup đã được cố định kích thước tỉ lệ thực (134×266px photorealistic smartphone chassis, viewport 124×256px), không bị biến dạng/co dẹp khi thu nhỏ hoặc co giãn màn hình. Đồng bộ 100% hình vẽ vector SVG sắc nét giữa card kho mẫu, modal chi tiết và Canvas editor. Đã bỏ hiển thị giá trên card/modal theo thiết kế tinh gọn, lọc theo 8 danh mục và hashtag. (Phần AI gợi ý mẫu đã được bóc tách để nhóm phát triển thành module tìm kiếm thông minh riêng).
 - **Modal Chi tiết & Xem trước 3D thật:** Dùng `<model-viewer>` nạp `.glb` + `syncTemplate3dTexture()` vẽ nền, artwork, lỗ cắt camera và viền bumper lên mô hình 3D; chuyển đổi qua lại giữa **Mô hình 3D xoay** và **Mặt lưng 2D**; có nút snap về mặt lưng & bật/tắt tự xoay.
 - **Đánh giá mẫu:** Đã xóa toàn bộ comment NPC giả lập, hiển thị empty state khi chưa có đánh giá và cho phép người dùng chọn 1–5 sao + gửi nhận xét ngay trong modal.
 - **Đồng bộ 1:1 vào Studio Canvas:** Chọn bất kỳ mẫu nào đều nạp chính xác màu nền/gradient và toàn bộ `CanvasLayer[]` từ `buildTemplateLayers()` (`constants/template-artworks.ts`) vào editor.
