@@ -1,5 +1,7 @@
 # Hướng dẫn áp migration Quản lý đơn hàng (M1–M7)
 
+> **Trạng thái 15/11/2026: đã áp M1–M7 lên project.** Ba câu kiểm tra sau khi áp đều đạt. Kiểm lại từ web bằng publishable key: đọc được 12 sản phẩm, 11 dòng máy, 76 biến thể; các bảng mới đã có và RLS chặn khách chưa đăng nhập; RPC nhân viên từ chối `anon`.
+
 Dành cho người giữ project Supabase `qkshedamkirnpkqxfspk`. Plan và lý do: [`docs/integration/SUPABASE_MIGRATION_PLAN.md`](../docs/integration/SUPABASE_MIGRATION_PLAN.md).
 
 ## Các file
