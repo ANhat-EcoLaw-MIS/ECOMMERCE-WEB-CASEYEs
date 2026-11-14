@@ -10,6 +10,9 @@ import { MESSAGES, OrderTrackingService } from './order-tracking.service';
 import { ScheduledJobs } from './scheduled-jobs';
 import { lateness, productionSlot } from '../domain/schedule';
 
+/** Local (mock) mode: every action answers synchronously; remote (Supabase) mode is async. */
+type Sync<T> = { [K in keyof T]: T[K] extends (...a: infer A) => infer R ? (...a: A) => Exclude<R, Promise<unknown>> : T[K] };
+
 /** End-to-end scenarios (v8 prompt §8 and UI review §8), run against the real service + localStorage mock. */
 describe('OrderTrackingService scenarios (v8)', () => {
   const HOUR = 3_600_000;
@@ -17,7 +20,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
   const ADMIN: Actor = { type: 'Admin', id: 'ad' };
   const CSKH: Actor = { type: 'CustomerService', id: 'cs' };
 
-  let service: OrderTrackingService;
+  let service: Sync<OrderTrackingService>;
   let jobs: ScheduledJobs;
   let clock: Clock;
   let factory: DemoOrderFactory;
@@ -46,7 +49,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: SupabaseAuthService, useValue: { user: signal(null), isAuthenticated: signal(false) } }],
     });
-    service = TestBed.inject(OrderTrackingService);
+    service = TestBed.inject(OrderTrackingService) as unknown as Sync<OrderTrackingService>;
     jobs = TestBed.inject(ScheduledJobs);
     clock = TestBed.inject(Clock);
     factory = TestBed.inject(DemoOrderFactory);

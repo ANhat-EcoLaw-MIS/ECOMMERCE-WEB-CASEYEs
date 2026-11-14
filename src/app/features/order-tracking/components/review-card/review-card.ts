@@ -42,9 +42,9 @@ export class ReviewCard {
     this.photos.set(Array.from(input.files ?? []).slice(0, 3).map((f) => f.name));
   }
 
-  protected send(): void {
+  protected async send(): Promise<void> {
     if (this.stars() === 0) return;
-    const r = this.service.submitReview(this.order().id, {
+    const r = await this.service.submitReview(this.order().id, {
       stars: this.stars(),
       tags: this.picked(),
       comment: this.comment(),

@@ -68,11 +68,11 @@ export class RefundProgress {
     return list;
   });
 
-  protected submit(): void {
+  protected async submit(): Promise<void> {
     const choice = this.choice();
     if (!choice || this.busy()) return;
     this.busy.set(true);
-    const res = this.service.submitRefundAccount(this.order().id, this.refund().id, choice);
+    const res = await this.service.submitRefundAccount(this.order().id, this.refund().id, choice);
     this.busy.set(false);
     if (!res.error) track('refund_method_chosen', { method: choice.method }, this.order().orderCode);
     this.toast.show(

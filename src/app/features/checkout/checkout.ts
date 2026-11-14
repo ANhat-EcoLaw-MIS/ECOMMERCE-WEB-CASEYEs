@@ -98,11 +98,11 @@ export class Checkout implements OnInit {
   }
 
   /** Integration: hand the paid (or COD) order to Quản lý đơn hàng exactly once. */
-  private placeOrderOnce(): void {
+  private async placeOrderOnce(): Promise<void> {
     const order = this.checkoutService.activeOrder();
     if (!order || this.placedForOrderId === order.id || this.checkoutService.placedOrderCode()) return;
     this.placedForOrderId = order.id;
-    const result = this.orderIntake.placeOrder(this.toHandoff(order));
+    const result = await this.orderIntake.placeOrder(this.toHandoff(order));
     if (result.error) {
       this.checkoutService.placeOrderError.set(result.error.message);
       return;
@@ -131,6 +131,7 @@ export class Checkout implements OnInit {
         transitDays: standard.transitDays ?? { min: 1, max: 2 },
       },
       paymentMethod: order.paymentMethod === 'cod' ? ('COD' as const) : ('QR_Transfer' as const),
+      paymentChannel: order.paymentMethod,
       paymentTxnRef: order.paymentMethod === 'cod' ? undefined : order.transactionId,
       discount: order.discountAmount,
       policyVersion: ORDER_POLICY_VERSION,

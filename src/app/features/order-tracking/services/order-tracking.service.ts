@@ -1,4 +1,4 @@
-import { Injectable, computed, inject } from '@angular/core';
+import { Injectable, Injector, computed, effect, inject, untracked } from '@angular/core';
 import { SupabaseAuthService } from '../../../core/supabase/supabase-auth.service';
 import { Result, fail, ok } from '../../../core/supabase/supabase.types';
 import { CANCEL_REASON_LABELS, DELIVERY_CONFIG, FAILURE_CAUSES } from '../config/delivery-config';
@@ -51,6 +51,7 @@ import {
   ShipmentEventType,
 } from '../models/order-tracking.model';
 import { Clock } from './clock';
+import { SupabaseOrderStore } from './supabase-order-store';
 import { DemoSettings } from './demo-settings';
 import {
   ComplaintService,
@@ -114,7 +115,18 @@ export class OrderTrackingService implements OrderIntake {
   private readonly payment = inject(PaymentService);
 
   readonly db = this.repo.state;
-  readonly orders = computed(() => this.repo.state().orders);
+  private readonly injector = inject(Injector);
+  /** Supabase store, created only when used (tests and demo mode never touch the Supabase client). */
+  private get store(): SupabaseOrderStore {
+    return this.injector.get(SupabaseOrderStore);
+  }
+  /**
+   * Signed in (customer or staff): orders live in Supabase and every action is an RPC.
+   * Not signed in with the simulator's demo customer: the local mock data, as before.
+   */
+  readonly remote = computed(() => !!this.auth?.isAuthenticated());
+  readonly orders = computed(() => (this.remote() ? this.store.orders() : this.repo.state().orders));
+  private loadedFor: string | null = null;
 
   /** Logged-in Supabase user, or the demo customer when nobody is logged in (demo mode only). */
   readonly customer = computed(() => {
@@ -124,6 +136,29 @@ export class OrderTrackingService implements OrderIntake {
     const name = typeof meta?.['full_name'] === 'string' ? (meta['full_name'] as string) : u.email?.split('@')[0];
     return { id: u.id, name: name || DEMO_CUSTOMER.name, phone: DEMO_CUSTOMER.phone, email: u.email ?? DEMO_CUSTOMER.email };
   });
+
+  private readonly syncRemote = effect(() => {
+    const id = this.remote() ? (this.auth?.user()?.id ?? null) : null;
+    if (id === this.loadedFor) return;
+    this.loadedFor = id;
+    untracked(() => (id ? void this.store.load() : this.injector.get(SupabaseOrderStore, null)?.clear()));
+  });
+
+  /** RPC + reload, returned as the same OpResult the local actions return. */
+  private async remoteOp(fn: string, args: Record<string, unknown>, orderId: string): Promise<OpResult> {
+    const r = await this.store.rpc(fn, args);
+    if (r.error) return fail(r.error);
+    const order = this.store.orders().find((o) => o.id === orderId);
+    return order ? ok(order) : fail({ message: MESSAGES.staleOrder });
+  }
+
+  /** Cancel RPC, then the refund account when the customer entered it in the same dialog. */
+  private async remoteCancelWithRefund(fn: string, orderId: string, refund: RefundChoice | undefined): Promise<OpResult> {
+    const r = await this.remoteOp(fn, { p_order_id: orderId }, orderId);
+    if (r.error || !refund || refund.method !== 'Bank') return r;
+    const pending = r.data.refunds.find((x) => x.status === 'Pending_Approval' && !x.refundMethod);
+    return pending ? this.submitRefundAccount(orderId, pending.id, refund) : r;
+  }
 
   /** FR-OT-03: newest first. */
   readonly myOrders = computed(() => {
@@ -139,6 +174,10 @@ export class OrderTrackingService implements OrderIntake {
 
   /** UC-OT-01 exception 2.2 can be simulated from the Demo Console. */
   load(): Result<true> {
+    if (this.remote()) {
+      void this.store.load();
+      return ok(true);
+    }
     this.repo.reload();
     if (this.demo.state().loadError) {
       return fail({ message: 'Không thể tải dữ liệu đơn hàng. Vui lòng kiểm tra kết nối mạng và thử lại' });
@@ -156,7 +195,8 @@ export class OrderTrackingService implements OrderIntake {
    * OrderIntake port (shared/services/order-intake.ts) used by Thanh toán. The customer defaults to
    * the signed-in user (or the demo customer when nobody is signed in).
    */
-  placeOrder(request: OrderIntakeRequest): Result<{ readonly orderCode: string }> {
+  placeOrder(request: OrderIntakeRequest): Result<{ readonly orderCode: string }> | Promise<Result<{ readonly orderCode: string }>> {
+    if (this.remote()) return this.placeRemoteOrder(request);
     // createdAt is dropped: time rules (COD window, cut-offs) follow this module's clock, which the
     // simulator can move; Checkout's wall-clock time would make them inconsistent.
     const { recipient, createdAt: _ignored, ...handoff } = request;
@@ -262,7 +302,8 @@ export class OrderTrackingService implements OrderIntake {
   // ------------------------------------------------------------------ customer actions
 
   /** FR-OT-05 / EX-01: COD orders only, inside the hidden change-of-mind window. No refund. */
-  cancelCodOrder(orderId: string, input: { reason: CancelReason; note?: string }, opts: MutateOptions): OpResult {
+  cancelCodOrder(orderId: string, input: { reason: CancelReason; note?: string }, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('cancel_order', { p_order_id: orderId }, orderId);
     return this.mutate(orderId, { ...opts, staleMessage: MESSAGES.codConfirmed }, (o, db, now) => {
       if (o.status === 'Cancelled') throw new BusinessError('Đơn hàng đã được hủy trước đó');
       if (!canCancelCod(o, now)) throw new BusinessError(MESSAGES.codConfirmed);
@@ -279,7 +320,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** FR-OT-19 / EX-15: prepaid orders ask CSKH; the order is held in the same transaction. */
-  requestCancel(orderId: string, input: { reason: CancelReason; note?: string }, opts: MutateOptions): OpResult {
+  requestCancel(orderId: string, input: { reason: CancelReason; note?: string }, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('request_cancel', { p_order_id: orderId, p_reason: input.reason, p_note: input.note ?? null }, orderId);
     return this.mutate(orderId, opts, (o, db, now) => {
       if (isOnHold(o)) throw new BusinessError(MESSAGES.requestExists);
       if (!canRequestCancel(o)) throw new BusinessError(MESSAGES.inProduction);
@@ -308,7 +350,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** Customer withdraws a pending request: the hold is released. */
-  withdrawCancelRequest(orderId: string, opts: MutateOptions): OpResult {
+  withdrawCancelRequest(orderId: string, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('withdraw_cancel_request', { p_order_id: orderId }, orderId);
     return this.mutate(orderId, opts, (o, _db, now) => {
       const r = pendingCancelRequest(o);
       if (!r) throw new BusinessError('Yêu cầu hủy đã có kết quả, không thể rút lại');
@@ -329,7 +372,8 @@ export class OrderTrackingService implements OrderIntake {
    * voucher in the refund progress block). Reject: reason required, hold time added to EDD
    * unless CSKH answered after slaDueAt (EX-16).
    */
-  decideCancelRequest(orderId: string, accept: boolean, reason: string, actor: Actor): OpResult {
+  decideCancelRequest(orderId: string, accept: boolean, reason: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('decide_cancel_request', { p_order_id: orderId, p_accept: accept, p_reason: reason }, orderId);
     if (actor.type !== 'CustomerService') return fail({ message: 'Chỉ nhân viên CSKH được xử lý yêu cầu hủy' });
     return this.mutate(orderId, {}, (o, db, now) => {
       const r = pendingCancelRequest(o);
@@ -368,7 +412,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-02 AF 1.2: Action_Required -> "Hủy đơn & nhận hoàn tiền" (situation 2). */
-  cancelRejectedOrder(orderId: string, refund: RefundChoice | undefined, opts: MutateOptions): OpResult {
+  cancelRejectedOrder(orderId: string, refund: RefundChoice | undefined, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteCancelWithRefund('cancel_rejected_order', orderId, refund);
     return this.mutate(orderId, opts, (o, db, now) => {
       if (o.status !== 'Action_Required') throw new BusinessError(MESSAGES.staleOrder);
       this.assertRefundChoice(o, refund);
@@ -383,7 +428,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-11 AF 3.2: back to the moderation queue (max 2 re-submissions). */
-  resubmitDesign(orderId: string, opts: MutateOptions): OpResult {
+  resubmitDesign(orderId: string, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('resubmit_design', { p_order_id: orderId }, orderId);
     return this.mutate(orderId, opts, (o, _db, now) => {
       if (!canResubmitDesign(o)) throw new BusinessError('Đã hết lượt gửi lại thiết kế, bạn chỉ có thể hủy và nhận hoàn 100%');
       const nowIso = now.toISOString();
@@ -400,7 +446,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-03. */
-  confirmReceived(orderId: string, opts: MutateOptions): OpResult {
+  confirmReceived(orderId: string, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('confirm_received', { p_order_id: orderId }, orderId);
     return this.mutate(orderId, opts, (o, db, now) => {
       if (o.status !== 'Delivered' || hasOpenTicket(o)) throw new BusinessError(MESSAGES.staleOrder);
       const nowIso = now.toISOString();
@@ -410,7 +457,8 @@ export class OrderTrackingService implements OrderIntake {
     });
   }
 
-  submitReview(orderId: string, input: { stars: number; tags?: readonly string[]; comment?: string; photoNames?: readonly string[] }): OpResult {
+  submitReview(orderId: string, input: { stars: number; tags?: readonly string[]; comment?: string; photoNames?: readonly string[] }): OpResult | Promise<OpResult> {
+    if (this.remote()) return Promise.resolve(fail({ message: 'Đánh giá sẽ được lưu khi nối với chức năng Đánh giá sản phẩm.' }));
     return this.mutate(orderId, {}, (o, _db, now) => {
       if (o.status !== 'Completed' || o.review) throw new BusinessError('Đơn hàng không thể đánh giá');
       if (input.stars < 1 || input.stars > 5) throw new BusinessError('Vui lòng chọn từ 1 đến 5 sao');
@@ -419,7 +467,8 @@ export class OrderTrackingService implements OrderIntake {
     });
   }
 
-  dismissReviewInvite(orderId: string): OpResult {
+  dismissReviewInvite(orderId: string): OpResult | Promise<OpResult> {
+    if (this.remote()) return Promise.resolve(fail({ message: '' }));
     return this.mutate(orderId, {}, (o) => ({ ...o, reviewInvitePending: false }));
   }
 
@@ -428,7 +477,8 @@ export class OrderTrackingService implements OrderIntake {
     orderId: string,
     input: { issueType: IssueType; description: string; evidenceNames: readonly string[] },
     opts: MutateOptions,
-  ): OpResult {
+  ): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('report_issue', { p_order_id: orderId, p_ticket_id: `TK-${Date.now().toString(36).toUpperCase()}` }, orderId);
     if (this.demo.state().networkDown) return fail({ message: MESSAGES.network, code: 'NETWORK' });
     const current = this.orders().find((o) => o.id === orderId);
     if (!current) return fail({ message: 'Không tìm thấy đơn hàng' });
@@ -484,7 +534,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-05 main flow: back to Ready_for_Pickup, EDD recalculated. */
-  requestRedelivery(orderId: string, opts: MutateOptions): OpResult {
+  requestRedelivery(orderId: string, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('request_redelivery', { p_order_id: orderId }, orderId);
     const current = this.orders().find((o) => o.id === orderId);
     if (!current) return fail({ message: 'Không tìm thấy đơn hàng' });
     const fee = faultParty(current) === 'Customer' ? redeliveryFee(current) : 0;
@@ -515,7 +566,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-05 AF 2.1 / 3.1: cancel and refund after a failed delivery (3a / 3b). */
-  cancelAfterFailure(orderId: string, refund: RefundChoice | undefined, opts: MutateOptions): OpResult {
+  cancelAfterFailure(orderId: string, refund: RefundChoice | undefined, opts: MutateOptions): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteCancelWithRefund('cancel_after_failure', orderId, refund);
     return this.mutate(orderId, opts, (o, db, now) => {
       if (!canCancelAfterFailure(o, now)) throw new BusinessError(MESSAGES.staleOrder);
       this.assertRefundChoice(o, refund);
@@ -532,7 +584,11 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** "Chờ bạn cung cấp tài khoản" form, or re-confirming after a failed transfer (EX-11, EX-13). */
-  submitRefundAccount(orderId: string, refundId: string, choice: RefundChoice): OpResult {
+  submitRefundAccount(orderId: string, refundId: string, choice: RefundChoice): OpResult | Promise<OpResult> {
+    if (this.remote()) {
+      if (choice.method !== 'Bank') return Promise.resolve(fail({ message: 'Vui lòng nhập tài khoản ngân hàng.' }));
+      return this.remoteOp('submit_refund_account', { p_refund_id: refundId, p_bank: choice.bank, p_account_no: choice.accountNo, p_holder: choice.holder }, orderId);
+    }
     return this.mutate(orderId, {}, (o) => {
       this.assertRefundChoice(o, choice);
       const r = o.refunds.find((x) => x.id === refundId);
@@ -550,7 +606,8 @@ export class OrderTrackingService implements OrderIntake {
     detail: { violationGroup?: string; reason?: string },
     actor: Actor,
     opts: MutateOptions = {},
-  ): OpResult {
+  ): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('moderate_design', { p_order_id: orderId, p_approve: decision === 'Approved', p_violation: detail.violationGroup ?? null, p_reason: detail.reason ?? null }, orderId);
     return this.mutate(orderId, opts, (o, db, now) => {
       if (o.status === 'Cancelled') throw new BusinessError(MESSAGES.cancelledByCustomer);
       if (o.status !== 'Pending_Review') throw new BusinessError(MESSAGES.handledByOther);
@@ -596,7 +653,12 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-06 step 4: "Chốt mẻ" at 16:00 on working days. */
-  closeBatch(actor: Actor): Result<{ count: number; groups: Record<string, number> }> {
+  closeBatch(actor: Actor): Result<{ count: number; groups: Record<string, number> }> | Promise<Result<{ count: number; groups: Record<string, number> }>> {
+    if (this.remote()) {
+      return this.store.rpc<number>('start_production').then((r) =>
+        r.error ? fail(r.error) : r.data ? ok({ count: r.data, groups: {} }) : fail({ message: 'Không có đơn nào cần đưa vào sản xuất' }),
+      );
+    }
     const now = this.clock.now();
     try {
       return this.repo.transact((db) => {
@@ -626,7 +688,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-06 step 7 / AF 4.1: QC passed and packed (mixed orders ship as one parcel). */
-  markPacked(orderId: string, actor: Actor, opts: MutateOptions = {}): OpResult {
+  markPacked(orderId: string, actor: Actor, opts: MutateOptions = {}): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('mark_packed', { p_order_id: orderId }, orderId);
     return this.mutate(orderId, opts, (o, _db, now) => {
       if (o.status === 'Cancelled') throw new BusinessError(MESSAGES.cancelledByCustomer);
       if (isOnHold(o)) throw new BusinessError(MESSAGES.onHold);
@@ -644,7 +707,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** FR-OT-EX-05: stays In_Production, next batch, EDD + 1 working day. */
-  markQcReprint(orderId: string, actor: Actor): OpResult {
+  markQcReprint(orderId: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('mark_qc_reprint', { p_order_id: orderId }, orderId);
     return this.mutate(orderId, {}, (o, db, now) => {
       if (o.status !== 'In_Production') throw new BusinessError(MESSAGES.handledByOther);
       const nowIso = now.toISOString();
@@ -669,8 +733,20 @@ export class OrderTrackingService implements OrderIntake {
     orderId: string,
     type: ShipmentEventType,
     input: { eventId?: string; failureCause?: FailureCause } = {},
-  ): Result<{ result: 'Applied' | 'Duplicate' | 'Rejected'; message: string; eventId: string }> {
+  ):
+    | Result<{ result: 'Applied' | 'Duplicate' | 'Rejected'; message: string; eventId: string }>
+    | Promise<Result<{ result: 'Applied' | 'Duplicate' | 'Rejected'; message: string; eventId: string }>> {
     const eventId = input.eventId ?? newId('whk');
+    if (this.remote()) {
+      // Real orders: the simulator plays the carrier through the apply_carrier_event RPC.
+      return this.store
+        .rpc<string>('apply_carrier_event', { p_event_id: eventId, p_order_id: orderId, p_type: type, p_failure_cause: input.failureCause ?? null })
+        .then((r) =>
+          r.error
+            ? fail(r.error)
+            : ok({ result: r.data === 'duplicate' ? ('Duplicate' as const) : ('Applied' as const), message: r.data === 'duplicate' ? 'Sự kiện trùng, đã bỏ qua' : 'Đã cập nhật đơn', eventId }),
+        );
+    }
     const now = this.clock.now();
     const nowIso = now.toISOString();
     try {
@@ -809,7 +885,8 @@ export class OrderTrackingService implements OrderIntake {
   // ------------------------------------------------------------------ CSKH & Khiếu nại results
 
   /** UC-OT-08 / FR-OT-16 for Return_Requested orders. */
-  applyComplaintResult(orderId: string, resolution: Resolution, note: string, actor: Actor, voucherValue = 30_000): OpResult {
+  applyComplaintResult(orderId: string, resolution: Resolution, note: string, actor: Actor, voucherValue = 30_000): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('apply_ticket_result', { p_order_id: orderId, p_resolution: resolution, p_note: note }, orderId);
     return this.mutate(orderId, {}, (o, db, now) => {
       const ticket = o.tickets.find((t) => t.open);
       if (o.status !== 'Return_Requested' || !ticket) throw new BusinessError('Đơn không có khiếu nại đang mở');
@@ -853,7 +930,8 @@ export class OrderTrackingService implements OrderIntake {
   }
 
   /** UC-OT-08 AF 1.1 / EX-03: dispute about the failure cause. */
-  resolveDispute(orderId: string, customerRight: boolean, note: string, actor: Actor): OpResult {
+  resolveDispute(orderId: string, customerRight: boolean, note: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return Promise.resolve(fail({ message: 'Khiếu nại nguyên nhân giao hàng chưa có trên cơ sở dữ liệu.' }));
     return this.mutate(orderId, {}, (o, db, now) => {
       const ticket = o.tickets.find((t) => t.open && t.issueType === 'Dispute_Failure_Cause');
       const hold = o.warehouseHold;
@@ -906,7 +984,8 @@ export class OrderTrackingService implements OrderIntake {
   // ------------------------------------------------------------------ admin refund
 
   /** Approve: goes to Processing (Admin transfers manually, then records the bank reference). */
-  approveRefund(orderId: string, refundId: string, actor: Actor): OpResult {
+  approveRefund(orderId: string, refundId: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('approve_refund', { p_refund_id: refundId }, orderId);
     return this.refundOp(orderId, refundId, actor, (o, r, db, nowIso) => {
       if (r.status !== 'Pending_Approval') throw new BusinessError(MESSAGES.handledByOther);
       if (!r.refundMethod) throw new BusinessError('Khách chưa cung cấp tài khoản nhận hoàn');
@@ -915,7 +994,8 @@ export class OrderTrackingService implements OrderIntake {
     });
   }
 
-  completeRefund(orderId: string, refundId: string, bankRef: string, actor: Actor): OpResult {
+  completeRefund(orderId: string, refundId: string, bankRef: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('complete_refund', { p_refund_id: refundId, p_bank_ref: bankRef }, orderId);
     return this.refundOp(orderId, refundId, actor, (o, r, db, nowIso) => {
       if (!['Processing', 'Refund_Pending_Manual'].includes(r.status)) throw new BusinessError(MESSAGES.handledByOther);
       if (!bankRef.trim()) throw new BusinessError('Nhập mã tham chiếu ngân hàng');
@@ -924,7 +1004,8 @@ export class OrderTrackingService implements OrderIntake {
     });
   }
 
-  markTransferFailed(orderId: string, refundId: string, actor: Actor): OpResult {
+  markTransferFailed(orderId: string, refundId: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('mark_transfer_failed', { p_refund_id: refundId }, orderId);
     return this.refundOp(orderId, refundId, actor, (o, r, db, nowIso) => {
       if (r.status !== 'Processing') throw new BusinessError(MESSAGES.handledByOther);
       const attempts = r.transferAttempts + 1;
@@ -936,14 +1017,16 @@ export class OrderTrackingService implements OrderIntake {
     });
   }
 
-  retryTransfer(orderId: string, refundId: string, actor: Actor): OpResult {
+  retryTransfer(orderId: string, refundId: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('retry_transfer', { p_refund_id: refundId }, orderId);
     return this.refundOp(orderId, refundId, actor, (o, r) => {
       if (r.status !== 'Refund_Pending_Retry') throw new BusinessError(MESSAGES.handledByOther);
       return this.replaceRefund(o, { ...r, status: 'Processing' });
     });
   }
 
-  rejectRefund(orderId: string, refundId: string, reason: string, actor: Actor): OpResult {
+  rejectRefund(orderId: string, refundId: string, reason: string, actor: Actor): OpResult | Promise<OpResult> {
+    if (this.remote()) return this.remoteOp('reject_refund', { p_refund_id: refundId, p_reason: reason }, orderId);
     return this.refundOp(orderId, refundId, actor, (o, r, db, nowIso) => {
       if (r.status !== 'Pending_Approval') throw new BusinessError(MESSAGES.handledByOther);
       if (!reason.trim()) throw new BusinessError('Nhập lý do từ chối');
@@ -1037,4 +1120,77 @@ export class OrderTrackingService implements OrderIntake {
     console.error(e);
     return fail({ message: 'Có lỗi xảy ra, vui lòng thử lại' });
   }
+  /**
+   * Thanh toán → Supabase place_order. Shop items are matched to product variants (slug + phone
+   * model), designs are saved to the designs table first. Delivery dates come from domain/edd.ts.
+   */
+  private async placeRemoteOrder(h: OrderIntakeRequest): Promise<Result<{ readonly orderCode: string }>> {
+    const db = this.store.client;
+    const userId = this.auth?.user()?.id;
+    if (!userId) return fail({ message: 'Vui lòng đăng nhập để đặt hàng.' });
+    const hasCustom = h.items.some((i) => i.isCustom);
+    const createdAt = this.clock.now();
+    const isCod = h.paymentMethod === 'COD';
+    const edd = computeEdd({
+      confirmedAt: isCod ? new Date(createdAt.getTime() + DELIVERY_CONFIG.codRegretMinutes * 60_000) : createdAt,
+      hasCustomItem: hasCustom,
+      tier: h.shippingTier,
+      transitDays: h.shipping.transitDays,
+    });
+    const items: { type: 'product' | 'design'; id: string; qty: number }[] = [];
+    for (const it of h.items) {
+      const modelName = toCatalogModelName(it.phoneModel);
+      if (it.isCustom) {
+        const { data: model } = await db.from('phone_models').select('id').eq('name', modelName).maybeSingle();
+        if (!model) return fail({ message: `Chưa có dòng máy ${it.phoneModel} trong hệ thống.` });
+        const { data: design, error } = await db
+          .from('designs')
+          .insert({ user_id: userId, phone_model_id: model.id, name: it.productName, canvas_json: {}, preview_url: it.design?.previewUrl ?? it.imageUrl ?? null })
+          .select('id')
+          .single();
+        if (error || !design) return fail({ message: 'Chưa lưu được bản thiết kế. Vui lòng thử lại.' });
+        items.push({ type: 'design', id: design.id, qty: it.quantity });
+      } else {
+        const slug = it.baseSku === 'GIFT-HOLOGRAM' ? 'gift-hologram' : it.baseSku;
+        const { data: product } = await db.from('products').select('id, product_variants(id, phone_model_id, phone_models(name))').eq('slug', slug).maybeSingle();
+        const variants = ((product as { product_variants?: { id: string; phone_models: { name: string } | null }[] } | null)?.product_variants ?? []);
+        const variant = variants.find((v) => v.phone_models?.name === modelName) ?? (variants.length === 1 ? variants[0] : undefined);
+        if (!variant) return fail({ message: `Sản phẩm ${it.productName} (${it.phoneModel}) chưa có trong kho.` });
+        items.push({ type: 'product', id: variant.id, qty: it.quantity });
+      }
+    }
+    const parts = h.shippingAddress.split(',').map((p) => p.trim()).filter(Boolean);
+    const shipping = {
+      recipient: h.recipient?.name ?? h.payerName,
+      phone: h.recipient?.phone ?? '',
+      line: parts.slice(0, Math.max(1, parts.length - 3)).join(', ') || h.shippingAddress,
+      ward: parts.at(-3) ?? '',
+      district: parts.at(-2) ?? null,
+      city: parts.at(-1) ?? '',
+      payment_method: isCod ? 'cod' : 'prepaid',
+      payment_channel: h.paymentChannel ?? (isCod ? 'cod' : 'vietqr'),
+      payment_txn_ref: h.paymentTxnRef ?? null,
+      tier: h.shippingTier === 'Express' ? 'express' : 'standard',
+      fee: h.shipping.fee,
+      standard_fee: h.shipping.standardFee,
+      express_surcharge: h.shipping.expressSurcharge,
+      transit_min: h.shipping.transitDays.min,
+      transit_max: h.shipping.transitDays.max,
+      discount: h.discount ?? 0,
+      policy_version: h.policyVersion,
+      earliest_edd: edd.earliest,
+      latest_edd: edd.latest,
+      batch_date: edd.batchDate,
+    };
+    const r = await this.store.rpc<string>('place_order', { p_items: items, p_shipping: shipping });
+    if (r.error) return fail(r.error);
+    const order = this.store.orders().find((o) => o.id === r.data);
+    return order ? ok({ orderCode: order.orderCode }) : fail({ message: MESSAGES.staleOrder });
+  }
+
+}
+
+/** Shop and Checkout say "Samsung S24", the catalog says "Galaxy S24". */
+export function toCatalogModelName(name: string): string {
+  return name.replace(/^Samsung S/, 'Galaxy S');
 }

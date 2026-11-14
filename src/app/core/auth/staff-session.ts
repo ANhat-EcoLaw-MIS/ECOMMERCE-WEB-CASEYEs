@@ -1,4 +1,4 @@
-import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
 import { SUPABASE_CLIENT } from '../supabase/supabase.client';
 import { SupabaseAuthService } from '../supabase/supabase-auth.service';
 
@@ -22,7 +22,11 @@ const VIEW_KEY = 'caseyes.staff.view.v1';
 @Injectable({ providedIn: 'root' })
 export class StaffSession {
   private readonly auth = inject(SupabaseAuthService);
-  private readonly db = inject(SUPABASE_CLIENT);
+  private readonly injector = inject(Injector);
+  /** Created on first use, so pages that never need a staff role never touch the client. */
+  private get db() {
+    return this.injector.get(SUPABASE_CLIENT);
+  }
 
   /** Role stored in profiles.role for the signed-in user (null = customer or signed out). */
   private readonly _dbRole = signal<StaffRole | null>(null);

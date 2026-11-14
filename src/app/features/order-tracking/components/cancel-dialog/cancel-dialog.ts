@@ -142,14 +142,14 @@ export class CancelDialog {
     const note = this.form.controls.note.value;
     const choice = this.needsRefundChoice() ? (this.refundChoice() ?? undefined) : undefined;
     const opts = { opKey: this.opKey, expectedUpdatedAt: this.openedAt };
-    const result =
+    const result = await (
       this.mode() === 'cod'
         ? this.service.cancelCodOrder(o.id, { reason, note }, opts)
         : this.mode() === 'request'
           ? this.service.requestCancel(o.id, { reason, note }, opts)
           : this.mode() === 'rejected'
             ? this.service.cancelRejectedOrder(o.id, choice, opts)
-            : this.service.cancelAfterFailure(o.id, choice, opts);
+            : this.service.cancelAfterFailure(o.id, choice, opts));
 
     this.busy.set(false);
     if (result.error) {

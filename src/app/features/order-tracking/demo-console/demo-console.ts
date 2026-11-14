@@ -255,8 +255,8 @@ export class DemoConsole {
     this.log(true, `Tạo đơn ${r.data.orderCode} (${DEMO_TEMPLATES[v.template].label}, ${paymentMethod === 'COD' ? 'COD' : 'trả trước'}, ${tier === 'Express' ? 'Hỏa tốc' : 'Standard'}) – EDD ${formatShortDate(r.data.earliestEDD)}–${formatShortDate(r.data.latestEDD)}`);
   }
 
-  protected moderate(o: Order, approve: boolean): void {
-    const r = this.service.moderateDesign(
+  protected async moderate(o: Order, approve: boolean): Promise<void> {
+    const r = await this.service.moderateDesign(
       o.id,
       approve ? 'Approved' : 'Rejected',
       { violationGroup: this.violation(), reason: this.rejectReason() },
@@ -266,8 +266,8 @@ export class DemoConsole {
     if (!r.error) this.rejectReason.set('');
   }
 
-  protected closeBatch(): void {
-    const r = this.service.closeBatch(this.actor());
+  protected async closeBatch(): Promise<void> {
+    const r = await this.service.closeBatch(this.actor());
     if (r.error) return this.log(false, r.error.message);
     const groups = Object.entries(r.data.groups).map(([m, n]) => `${m}: ${n}`).join(', ');
     this.log(true, `Chốt mẻ: ${r.data.count} đơn vào In_Production (gom theo dòng máy – ${groups})`);
@@ -281,18 +281,18 @@ export class DemoConsole {
     this.report(this.service.markQcReprint(o.id, this.actor()), `${o.orderCode}: in lại do lỗi QC`);
   }
 
-  protected webhook(o: Order, type: ShipmentEventType): void {
+  protected async webhook(o: Order, type: ShipmentEventType): Promise<void> {
     const cause = type === 'Delivery_Failed' ? this.failureCause() : undefined;
-    const r = this.service.applyWebhook(o.id, type, { failureCause: cause });
+    const r = await this.service.applyWebhook(o.id, type, { failureCause: cause });
     if (r.error) return this.log(false, r.error.message);
     this.lastEventId.set({ orderId: o.id, type, eventId: r.data.eventId, cause });
     this.log(r.data.result === 'Applied', `Webhook ${type} [${r.data.eventId}] → ${r.data.result}: ${r.data.message}`);
   }
 
-  protected replayLastWebhook(): void {
+  protected async replayLastWebhook(): Promise<void> {
     const last = this.lastEventId();
     if (!last) return;
-    const r = this.service.applyWebhook(last.orderId, last.type, { eventId: last.eventId, failureCause: last.cause });
+    const r = await this.service.applyWebhook(last.orderId, last.type, { eventId: last.eventId, failureCause: last.cause });
     if (r.error) return this.log(false, r.error.message);
     this.log(r.data.result === 'Applied', `Gửi lại webhook trùng [${last.eventId}] → ${r.data.result}: ${r.data.message}`);
   }
@@ -386,7 +386,8 @@ export class DemoConsole {
     this.log(true, 'Đã xóa dữ liệu demo');
   }
 
-  private report(r: { error: { message: string } | null }, text: string): void {
+  private async report(pending: { error: { message: string } | null } | Promise<{ error: { message: string } | null }>, text: string): Promise<void> {
+    const r = await pending;
     this.log(!r.error, r.error ? `${text} – ${r.error.message}` : text);
   }
 

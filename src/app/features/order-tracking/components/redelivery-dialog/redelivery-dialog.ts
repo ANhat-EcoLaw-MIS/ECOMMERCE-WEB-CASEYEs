@@ -104,7 +104,7 @@ export class RedeliveryDialog {
     this.busy.set(true);
     this.error.set(null);
     await simulateLatency();
-    const result = this.service.requestRedelivery(this.order().id, { opKey: this.opKey });
+    const result = await this.service.requestRedelivery(this.order().id, { opKey: this.opKey });
     this.busy.set(false);
     if (result.error) {
       this.error.set(result.error.message);

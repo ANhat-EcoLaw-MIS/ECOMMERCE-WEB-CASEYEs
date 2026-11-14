@@ -43,7 +43,7 @@ export class CancelRequestPanel {
     if (this.busy()) return;
     this.busy.set(true);
     await simulateLatency();
-    const r = this.service.withdrawCancelRequest(this.order().id, { opKey: crypto.randomUUID() });
+    const r = await this.service.withdrawCancelRequest(this.order().id, { opKey: crypto.randomUUID() });
     this.busy.set(false);
     if (!r.error) track('cancel_withdrawn', {}, this.order().orderCode);
     this.toast.show(
