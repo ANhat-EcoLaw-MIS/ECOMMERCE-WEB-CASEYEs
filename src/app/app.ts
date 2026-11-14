@@ -1,19 +1,19 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { CartState } from './core/cart-state/cart-state';
 import { Header } from './core/layout/header/header';
-import { Placeholder } from './shared/ui/placeholder/placeholder';
-import {Footer} from './core/layout/footer/footer';
+import { Footer } from './core/layout/footer/footer';
+import { SupportChat } from './core/support-chat/support-chat';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Placeholder, Footer],
+  imports: [RouterOutlet, Header, Footer, SupportChat],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  // TODO(cart team): replace with a computed() from the CartService
-  protected readonly cartCount = signal(0);
+  protected readonly cartCount = inject(CartState).itemCount;
 
   protected onSearchRequested(): void {
     // TODO(search): open the search overlay

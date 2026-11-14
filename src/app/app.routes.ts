@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { AuthState } from './core/auth-state/auth-state';
 
 export const routes: Routes = [
   {
@@ -14,13 +16,18 @@ export const routes: Routes = [
   },
   {
     path:'cart',
+    canActivate: [() => inject(AuthState).requireLogin('/cart')],
     pathMatch: 'full',
     loadChildren: ()=>import("./features/cart/cart.routes").then((m) => m.CART_ROUTES),
   },
   {
     path:'shop',
-    pathMatch: 'full',
     loadChildren: ()=>import("./features/shop/shop.routes").then((m) => m.SHOP_ROUTES),
+  },
+  {
+    path:'auth/login',
+    title:"Đăng nhập | CasEYE's",
+    loadComponent: () => import('./features/auth/login').then(m => m.Login),
   },
   {
     path:'account',

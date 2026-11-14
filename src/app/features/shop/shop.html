@@ -1,1 +1,56 @@
-<p>shop works!</p>
+<div class="shop-shell">
+  <div class="shop-announcement">MADE TO BE YOURS <span>✦</span> KHÁM PHÁ BỘ SƯU TẬP ĐỘC QUYỀN CỦA CASEYE'S <span>✦</span> FREESHIP TỪ 500K</div>
+  <section class="shop-hero shop-hero-v5">
+    <div class="hero-copy"><span class="eyebrow">CASEYE'S ORIGINAL · BLOOM CLUB</span><h1>ỐP LƯNG<br><em>CÓ GU</em> CỦA BẠN.</h1><p>Bộ sưu tập độc quyền, họa tiết tinh tế và gam màu kể câu chuyện riêng của bạn.</p><a class="hero-link" href="#discover">Khám phá ngay <span>→</span></a><div class="hero-notes"><span>✦ Bảo vệ & phong cách</span><span>✦ Thiết kế độc quyền CasEYE's</span></div></div>
+    <div class="hero-art hero-art-v5" aria-label="Ảnh bộ sưu tập CasEYE's"><img src="/products/shop-hero.webp" alt="Bộ sưu tập Bloom Club và Purple Orbit" (error)="onHeroImageError($event)"/></div>
+  </section>
+  <nav class="shop-category-strip" aria-label="Khám phá theo phong cách"><button type="button" [class.active]="style()==='Tất cả'" (click)="style.set('Tất cả')">Tất cả</button><button type="button" [class.active]="style()==='Pastel'" (click)="style.set('Pastel')">Mới nhất · Pastel</button><button type="button" [class.active]="style()==='Cá tính'" (click)="style.set('Cá tính')">Cá tính</button><button type="button" [class.active]="style()==='Hoa lá'" (click)="style.set('Hoa lá')">Bloom Club</button><button type="button" [class.active]="style()==='Trừu tượng'" (click)="style.set('Trừu tượng')">Cosmic Edit</button></nav>
+  <section id="discover" class="shop-content">
+    <div class="section-heading"><div><span class="eyebrow">THE CASE EDIT</span><h2>Tìm chiếc ốp <em>hợp gu</em> bạn.</h2><p>Khám phá những thiết kế chỉ có tại CasEYE's.</p></div><span class="result-count">{{visible().length}} THIẾT KẾ</span></div>
+    <div class="shop-layout">
+      <aside class="filters" aria-label="Bộ lọc cửa hàng">
+        <div class="filter-title"><h3>Bộ lọc</h3><button type="button" (click)="style.set('Tất cả'); maxPrice.set(400000); query.set('')">Đặt lại ↗</button></div>
+        <label class="field-label" for="model-filter">Dòng máy của bạn</label>
+        <select id="model-filter" [value]="model()" (change)="updateModel($event)">@for (item of models; track item) { <option [value]="item">{{item}}</option> }</select>
+        <label class="field-label" for="style-filter">Phong cách</label>
+        <select id="style-filter" [value]="style()" (change)="updateStyle($event)">@for (item of styles; track item) { <option [value]="item">{{item}}</option> }</select>
+        <label class="field-label" for="price-filter">Mức giá <strong>{{money(maxPrice())}}</strong></label>
+        <input id="price-filter" type="range" min="250000" max="400000" step="10000" [value]="maxPrice()" (input)="updatePrice($event)" />
+        <div class="price-markers"><span>250.000đ</span><span>400.000đ</span></div>
+      </aside>
+      <div class="catalog">
+        <div class="catalog-toolbar"><button type="button" class="omni-open-hint" (click)="clearImageSearch();query.set('')">{{imageSearchActive() ? 'Đang xếp hạng theo ảnh' : (query() ? 'Đang tìm: ' + query() : 'Khám phá thiết kế độc quyền')}}</button><label class="sort-label">Sắp xếp <select [value]="sort()" (change)="updateSort($event)"><option value="featured">Nổi bật</option><option value="low">Giá thấp trước</option><option value="high">Giá cao trước</option><option value="name">Tên A–Z</option></select></label></div>
+        @if (imageMessage()) { <div class="image-search-result" role="status">@if(imagePreview()){<img [src]="imagePreview()" alt="Ảnh tham khảo đã tải lên" />}<div><strong>Tìm bằng ảnh · Kết quả tương đồng</strong><p>{{imageMessage()}}</p>@if (imageSearchActive()) { <div class="color-info"><span class="sample-color" [style.background]="imageColor()"></span> Màu trung bình từ ảnh</div> }</div><button type="button" (click)="clearImageSearch()">Xóa ảnh ✕</button></div> }
+        @if (visible().length) {
+          <div class="product-grid">
+            @for (product of visible(); track product.id) {
+              <article class="product-card">
+                <div class="product-visual" [class.is-dark]="product.tone === 'dark'" [class.is-light]="product.tone === 'light'">
+                  @if (product.badge) { <span class="product-badge">{{product.badge}}</span> }
+                  <button type="button" class="favorite" [class.liked]="wishlist().includes(product.id)" [attr.aria-label]="wishlist().includes(product.id) ? 'Bỏ yêu thích '+product.name : 'Yêu thích '+product.name" (click)="toggleFavorite(product.id)">{{wishlist().includes(product.id) ? '♥' : '♡'}}</button>
+                  <button type="button" class="product-view" (click)="open(product)" [attr.aria-label]="'Xem chi tiết '+ product.name"><img class="catalog-photo" [src]="productImage(product.id)" [alt]="'Ốp lưng '+product.name" loading="lazy" (error)="onProductImageError($event)" /></button>
+                  <button type="button" class="quick-view" (click)="open(product)">Xem nhanh ↗</button>
+                </div>
+                <div class="product-meta"><div><span>{{product.collection}}</span><h3><a [routerLink]="['/shop',product.id]">{{product.name}}</a></h3><p>{{product.material}}</p></div><strong>{{money(product.price)}}</strong></div>
+                <button class="add-to-cart" type="button" (click)="add(product,$event)">{{product.stock ? '+ Thêm vào giỏ' : 'Tạm hết hàng'}}</button>
+              </article>
+            }
+          </div>
+        } @else { <div class="no-results"><span>◌</span><h3>Không tìm thấy chiếc ốp phù hợp.</h3><p>Thử thay đổi phong cách hoặc khoảng giá nhé.</p><button type="button" (click)="query.set('');style.set('Tất cả');maxPrice.set(400000)">Xóa bộ lọc</button></div> }
+      </div>
+    </div>
+    <div class="shop-bottom"><span>CASEYE'S DESIGN STUDIO</span><h2>Không tìm thấy chiếc ốp đúng gu?<span class="shop-bottom-subtitle">Vậy hãy tự tạo một chiếc.</span></h2><a routerLink="/design-studio">Bắt đầu thiết kế ↗</a></div>
+  </section>
+</div>
+@if (selected(); as p) {
+  <div class="detail-backdrop" (click)="close()"><section class="detail-panel" role="dialog" aria-modal="true" [attr.aria-label]="'Chi tiết '+p.name" (click)="$event.stopPropagation()">
+    <button type="button" class="detail-close" aria-label="Đóng chi tiết" (click)="close()">✕</button>
+    <div class="detail-image">
+      <div class="preview-switch"><button type="button" [class.active]="view3D()" (click)="view3D.set(true)">3D · 360°</button><button type="button" [class.active]="!view3D()" (click)="view3D.set(false)">2D</button></div>
+      @if (view3D()) { <app-case-3d [tone]="p.tone" [caption]="p.caption" [productId]="p.id" [model]="model()" /> }
+      @else { <img class="quickview-product-photo" [src]="productImage(p.id)" [alt]="p.name" (error)="onProductImageError($event)" /> }
+    </div>
+    <div class="detail-info"><span class="eyebrow">{{p.collection}} / CASEYE'S ORIGINAL</span><h2>{{p.name}}</h2><p class="detail-description">{{p.description}}</p><div class="detail-price">{{money(p.price)}}</div><hr/><label for="detail-model">Chọn dòng máy <span>*</span></label><select id="detail-model" [value]="model()" (change)="updateModel($event)">@for (m of models; track m){<option [value]="m">{{m}}</option>}</select><p class="detail-stock" [class.out]="!p.stock">{{p.stock ? '● Còn '+p.stock+' sản phẩm trong kho (giả lập)' : '● Tạm hết hàng'}}</p><div class="detail-spec"><span>✓ {{p.material}}</span><span>✓ Thiết kế độc quyền</span><span>✓ Preview minh họa theo màu thiết kế</span></div><button class="detail-buy" type="button" (click)="add(p,$event)">Thêm vào giỏ — {{money(p.price)}} ↗</button><button type="button" class="detail-custom detail-full-page" (click)="openDetail(p)">Xem trang chi tiết đầy đủ →</button><p class="detail-note">Preview 3D hiện dùng mô hình CSS minh họa, có thể kéo xoay 360° và đổi bố trí camera theo dòng máy. Cần GLB riêng cho từng model để hiển thị kích thước/phôi chính xác.</p></div>
+  </section></div>
+}
+@if (toast()) { <div class="shop-toast" role="status"><span>♡</span> {{toast()}} <button type="button" (click)="openDrawer()">Xem giỏ ↗</button><button type="button" aria-label="Đóng thông báo" (click)="toast.set('')">✕</button></div> }

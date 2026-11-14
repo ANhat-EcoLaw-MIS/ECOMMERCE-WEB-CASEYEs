@@ -1,0 +1,26 @@
+@if (drawer.open()) {
+  <div class="caseye-drawer-overlay" (click)="drawer.close()"></div>
+  <aside class="caseye-drawer" role="dialog" aria-modal="true" aria-label="Giỏ hàng của bạn">
+    <header class="drawer-heading"><h2>Giỏ hàng của bạn ({{ cart.itemCount() }})</h2><button type="button" aria-label="Đóng giỏ hàng" (click)="drawer.close()">✕</button></header>
+    @if (drawer.justAdded()) { <p class="drawer-added" role="status">✓ Đã thêm sản phẩm vào giỏ hàng thành công!</p> }
+    <div class="drawer-scroll">
+      @if (cart.items().length) {
+        @for (item of cart.items(); track item.id) {
+          <article class="drawer-item">
+            <div class="drawer-thumbnail"><img class="drawer-product-photo" [src]="item.custom && item.snapshot ? item.snapshot : productImage(item.id)" [alt]="item.name" loading="lazy" (error)="onImageError($event)"/></div>
+            <div class="drawer-item-content">
+              <div class="drawer-item-row"><h3>{{item.name}}</h3><button type="button" (click)="cart.remove(item.id)" [attr.aria-label]="'Xóa '+item.name">✕</button></div>
+              <p>{{item.model}} · {{item.finish}}</p>
+              <strong>{{money(item.unitPrice)}}</strong><p class="drawer-available" [class.out]="item.quantity > item.stock">{{item.stock ? "Còn "+item.stock+" sản phẩm (kho giả lập)" : "Hết hàng"}}</p>
+              <div class="drawer-item-controls"><div class="drawer-quantity"><button type="button" [disabled]="item.quantity <= 1" (click)="cart.decrease(item.id)" aria-label="Giảm số lượng">−</button><span>{{item.quantity}}</span><button type="button" [disabled]="item.quantity >= item.stock" (click)="cart.increase(item.id)" aria-label="Tăng số lượng">+</button></div><button type="button" class="drawer-save" (click)="cart.saveForLater(item.id)">Lưu để mua sau</button></div>
+              @if (item.quantity > item.stock) { <p class="drawer-error">Số lượng vượt tồn kho dự kiến.</p> }
+            </div>
+          </article>
+        }
+      } @else {
+        <div class="drawer-empty"><span>♡</span><h3>Giỏ hàng đang trống</h3><p>Tìm một chiếc ốp đúng gu bạn nhé.</p><a routerLink="/shop" (click)="drawer.close()">Khám phá cửa hàng</a></div>
+      }
+    </div>
+    <footer class="drawer-footer"><div><span>Tạm tính</span><strong>{{money(cart.subtotal())}}</strong></div><p>Phí vận chuyển và ưu đãi sẽ được tính ở bước tiếp theo.</p><div class="drawer-actions"><a routerLink="/cart" (click)="drawer.close()">Xem giỏ hàng</a><a routerLink="/cart" (click)="drawer.close()" class="drawer-checkout">Tiếp tục thanh toán</a></div></footer>
+  </aside>
+}

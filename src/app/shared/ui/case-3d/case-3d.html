@@ -1,0 +1,25 @@
+<div class="viewer" [class.dragging]="isDragging()" [class.dark]="tone() === 'dark'" [class.light]="tone() === 'light'">
+  <div class="viewer-studio" (pointerdown)="begin($event)" (pointermove)="move($event)" (pointerup)="end()" (pointercancel)="end()" role="img" [attr.aria-label]="'Mô hình CSS 3D minh họa của ' + model() + '. Kéo chuột để xoay.'">
+    <div class="orbit orbit-1"></div><div class="orbit orbit-2"></div>
+    <div class="case-object" [style.transform]="'rotateX(' + rotateX() + 'deg) rotateY(' + rotateY() + 'deg)'">
+      <div class="case-face case-back" [attr.data-design]="productId()">
+        <div class="camera-island" [class.triple]="cameraCount() === 3"><i></i><i></i>@if(cameraCount()===3){<i></i>}</div>
+        <div class="case-art" [attr.data-design]="productId()">
+          <img class="case-photo-texture" [src]="imageUrl()" [attr.data-fallback]="coverUrl()" alt="" draggable="false" onerror="if(this.dataset.fallback){this.src=this.dataset.fallback; this.dataset.fallback='';}" />
+        </div>
+        <img class="eye-signature-img" src="/brand_signature/eyes-mark.png" alt="" />
+      </div>
+      <div class="case-face case-front"><div class="front-screen"></div></div>
+      <div class="case-side case-side-left"></div><div class="case-side case-side-right"><i></i><i></i></div>
+      <div class="case-side case-top"></div><div class="case-side case-bottom"></div>
+      <div class="case-frame case-frame-back"></div>
+    </div>
+  </div>
+  <div class="viewer-controls">
+    <button type="button" (click)="spin(-1)" aria-label="Xoay 45 độ sang trái">↶</button>
+    <span>Kéo chuột để xoay 360°</span>
+    <button type="button" (click)="spin(1)" aria-label="Xoay 45 độ sang phải">↷</button>
+    <button type="button" (click)="reset()" aria-label="Đặt lại góc nhìn">⟲</button>
+  </div>
+  <p class="model-label">{{model()}} · bản xem xoay 360° dựa trên texture thiết kế. Muốn 3D thật cần model GLB/GLTF theo từng phôi.</p>
+</div>
