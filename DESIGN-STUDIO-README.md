@@ -34,7 +34,7 @@ src/app/features/design-studio/
 ├── components/
 │   ├── model-picker/                       # Chọn hãng (Apple, Samsung, Xiaomi) & dòng máy + thông số phôi in
 │   ├── model-selector/                     # Dropdown chọn nhanh model/SKU
-│   ├── template-browser/                   # My Designs + AI gợi ý mẫu + Kho mẫu + Modal Chi tiết & 3D
+│   ├── template-browser/                   # My Designs + Kho mẫu + Modal Chi tiết & 3D (AI gợi ý tách sang module riêng)
 │   └── studio-workspace/                   # Trình chỉnh sửa Canvas 2D + Preview 3D thời gian thực
 ├── constants/
 │   └── template-artworks.ts                # Vector SVG artworks + `buildTemplateLayers()` đồng bộ 1:1 vào Canvas
@@ -66,8 +66,7 @@ src/app/features/design-studio/
 
 ### B. Kho mẫu & My Designs (`TemplateBrowser`)
 - **My Designs:** Hiển thị tối đa 4 card trên trang chính; khi `> 4` bản vẽ thì hiện nút **Xem tất cả** mở popup có ô tìm kiếm. Menu `⋮` hỗ trợ: *Tiếp tục chỉnh sửa*, *Nhân bản*, *Đổi tên*, *Xóa* (có modal xác nhận).
-- **AI gợi ý mẫu (`F13`):** Ô nhập ý tưởng (`0/200` ký tự) tự nhận diện từ khóa để lọc danh mục phù hợp và cuộn xuống lưới mẫu.
-- **Kho mẫu (`TEMPLATE_CATALOG`):** 10 mẫu (vị trí `#1` là **Ốp Lưng Trắng Tiêu Chuẩn** để vẽ từ đầu + 9 mẫu artwork: *Dreamy Kitten, Sakura Bloom, Mountain Escape, Minimal Cat, Anime Girl, Abstract Waves, Dino Friend, Starry Night, That Girl Era*). Đã bỏ hiển thị giá trên card/modal theo thiết kế tinh gọn, lọc theo 8 danh mục và hashtag.
+- **Kho mẫu (`TEMPLATE_CATALOG`):** 10 mẫu (vị trí `#1` là **Ốp Lưng Trắng Tiêu Chuẩn** để vẽ từ đầu + 9 mẫu artwork: *Dreamy Kitten, Sakura Bloom, Mountain Escape, Minimal Cat, Anime Girl, Abstract Waves, Dino Friend, Starry Night, That Girl Era*). Đã bỏ hiển thị giá trên card/modal theo thiết kế tinh gọn, lọc theo 8 danh mục và hashtag. (Phần AI gợi ý mẫu đã được bóc tách để nhóm phát triển thành module tìm kiếm thông minh riêng).
 - **Modal Chi tiết & Xem trước 3D thật:** Dùng `<model-viewer>` nạp `.glb` + `syncTemplate3dTexture()` vẽ nền, artwork, lỗ cắt camera và viền bumper lên mô hình 3D; chuyển đổi qua lại giữa **Mô hình 3D xoay** và **Mặt lưng 2D**; có nút snap về mặt lưng & bật/tắt tự xoay.
 - **Đánh giá mẫu:** Đã xóa toàn bộ comment NPC giả lập, hiển thị empty state khi chưa có đánh giá và cho phép người dùng chọn 1–5 sao + gửi nhận xét ngay trong modal.
 - **Đồng bộ 1:1 vào Studio Canvas:** Chọn bất kỳ mẫu nào đều nạp chính xác màu nền/gradient và toàn bộ `CanvasLayer[]` từ `buildTemplateLayers()` (`constants/template-artworks.ts`) vào editor.
@@ -98,7 +97,7 @@ src/app/features/design-studio/
    - `StudioCatalogService` (hãng, dòng máy, SKU) và `TEMPLATE_CATALOG` hiện là dữ liệu tĩnh ở frontend, chưa query bảng `phone_models` trong Supabase (`database.types.ts`).
    - `savedDesigns`, bản nháp (`StudioDraft`) và đánh giá mẫu (`reviewsMap`) đang lưu ở `localStorage` / signal state, chưa đồng bộ CRUD lên bảng `designs` của Supabase.
    - Ảnh upload của người dùng hiện lưu dưới dạng Data URL base64 trong layer, chưa upload lên Supabase Storage.
-3. **AI gợi ý mẫu (`F13`):** Hàm `onAiSearch()` trong `template-browser.ts` hiện dùng regex/keyword matching phía client, chưa gọi API AI backend.
+3. **AI gợi ý mẫu & Tìm kiếm thông minh:** Nhóm đã thống nhất tách phần này ra khỏi template browser để phát triển thành một module tìm kiếm độc lập kết hợp với thanh search trên navbar.
 
 ### Một số điểm nhỏ cần lưu ý khi review / dọn PR
 - **3D trên Samsung / Xiaomi:** Thư mục `public/models/` đã có `galaxy-s24.glb` và `xiaomi-14-ultra.glb`, nhưng `StudioCatalogService` hiện vẫn đặt `has3dModel: false` và chưa gán `model3dUrl` cho 2 máy này (chỉ 3 mẫu iPhone đang bật `has3dModel: true`).

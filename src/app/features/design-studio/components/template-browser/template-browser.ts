@@ -554,9 +554,6 @@ export class TemplateBrowser {
   // Filter & Search Signals
   protected readonly activeCategory = signal<string>('all');
   protected readonly activeHashtagFilter = signal<string | null>(null);
-  protected readonly aiPrompt = signal<string>('');
-  protected readonly isAiSearching = signal<boolean>(false);
-  protected readonly showNoResults = signal<boolean>(false);
 
   // Categories matching the image tabs
   protected readonly categories = [
@@ -606,7 +603,6 @@ export class TemplateBrowser {
   protected selectCategory(catId: string): void {
     this.activeCategory.set(catId);
     this.activeHashtagFilter.set(null);
-    this.showNoResults.set(false);
   }
 
   protected filterByHashtag(tag: string): void {
@@ -619,72 +615,6 @@ export class TemplateBrowser {
   }
 
   protected clearHashtagFilter(): void {
-    this.activeHashtagFilter.set(null);
-  }
-
-  protected setPrompt(text: string): void {
-    this.aiPrompt.set(text);
-    this.showNoResults.set(false);
-  }
-
-  protected onPromptInput(event: Event): void {
-    const input = event.target as HTMLInputElement | HTMLTextAreaElement;
-    this.aiPrompt.set(input.value);
-    this.showNoResults.set(false);
-  }
-
-  /** Trigger AI suggestion based on user's prompt (F13 shortcut or click) */
-  protected onAiSearch(): void {
-    const query = this.aiPrompt().trim().toLowerCase();
-    if (!query) return;
-
-    this.isAiSearching.set(true);
-    setTimeout(() => {
-      this.isAiSearching.set(false);
-
-      // Intelligent keyword matching
-      let matchedCategory = 'all';
-      if (/hoa|cherry|blossom|sakura|rose/i.test(query)) {
-        matchedCategory = 'floral';
-      } else if (/tối giản|minimal|đơn giản|clean/i.test(query)) {
-        matchedCategory = 'minimalist';
-      } else if (/núi|sơn thủy|phong cảnh|nature|mountain|hồ/i.test(query)) {
-        matchedCategory = 'nature';
-      } else if (/anime|hoạt hình|manga|chibi/i.test(query)) {
-        matchedCategory = 'cartoon';
-      } else if (/chữ|quote|typography|slogan/i.test(query)) {
-        matchedCategory = 'typography';
-      } else if (/sóng|abstract|loang|wave/i.test(query)) {
-        matchedCategory = 'abstract';
-      } else if (/mèo|cat|dino|khủng long|cute|dễ thương|pastel/i.test(query)) {
-        matchedCategory = 'cute';
-      }
-
-      this.activeCategory.set(matchedCategory);
-
-      // Check if any template matches
-      const hasDirectMatch = this.templates.some(
-        (t) =>
-          t.name.toLowerCase().includes(query) ||
-          t.description.toLowerCase().includes(query) ||
-          t.tagLabel.toLowerCase().includes(query) ||
-          t.categories.includes(matchedCategory)
-      );
-
-      this.showNoResults.set(!hasDirectMatch);
-
-      // Smooth scroll to template section
-      const target = document.getElementById('template-grid-section');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 650);
-  }
-
-  protected onRetry(): void {
-    this.aiPrompt.set('');
-    this.showNoResults.set(false);
-    this.activeCategory.set('all');
     this.activeHashtagFilter.set(null);
   }
 
