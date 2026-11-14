@@ -499,6 +499,10 @@ export class TemplateBrowser {
   protected readonly userReviewText = signal<string>('');
   protected readonly reviewSubmittedSuccess = signal<boolean>(false);
 
+  constructor() {
+    this.preloadTemplateArtworks();
+  }
+
   // Delete & Rename Modals
   protected readonly designToDelete = signal<SavedDesignItem | null>(null);
   protected readonly designToRename = signal<SavedDesignItem | null>(null);
@@ -573,6 +577,46 @@ export class TemplateBrowser {
 
   protected getArtwork(artType: string) {
     return this.artworkMap[artType] || null;
+  }
+
+  protected getSavedDesignArtwork(item: SavedDesignItem): {
+    url?: string;
+    x: number;
+    y: number;
+    width: number;
+    text?: string;
+    textY?: number;
+  } | null {
+    if (item.thumbnailType === 'dreamy-sky') return this.artworkMap['dreamy-kitten'] || null;
+    if (item.thumbnailType === 'sakura') return this.artworkMap['sakura-bloom'] || null;
+    if (item.thumbnailType === 'cat') return this.artworkMap['minimal-cat'] || null;
+    if (item.thumbnailType === 'mountain') return this.artworkMap['mountain-escape'] || null;
+    if (item.thumbnailType === 'starry') return this.artworkMap['starry-night'] || null;
+
+    if (item.layers && item.layers.length > 0) {
+      const imgLayer = item.layers.find((l) => l.type === 'image' && (l as any).storageUrl);
+      const txtLayer = item.layers.find((l) => l.type === 'text');
+      if (imgLayer) {
+        return {
+          url: (imgLayer as any).storageUrl,
+          x: imgLayer.x,
+          y: imgLayer.y,
+          width: imgLayer.width,
+          text: txtLayer ? (txtLayer as any).content : undefined,
+          textY: txtLayer ? txtLayer.y : undefined,
+        };
+      }
+      if (txtLayer) {
+        return {
+          x: txtLayer.x,
+          y: txtLayer.y,
+          width: 80,
+          text: (txtLayer as any).content,
+          textY: txtLayer.y,
+        };
+      }
+    }
+    return null;
   }
 
   // --- Category and Hashtag Handlers ---
@@ -1009,7 +1053,29 @@ export class TemplateBrowser {
   }
 
   /**
-   * Vẽ tác phẩm đặc trưng của từng Template lên Canvas 2D phục vụ 3D Texture
+   * Bộ nhớ đệm Image cho SVG vector phục vụ render 3D texture
+   */
+  private readonly templateArtImageCache = new Map<string, HTMLImageElement>();
+
+  /**
+   * Preload toàn bộ các artwork SVG vector ngay khi khởi tạo
+   */
+  private preloadTemplateArtworks(): void {
+    if (typeof window === 'undefined') return;
+    Object.values(this.artworkMap).forEach((art) => {
+      if (art.url && !this.templateArtImageCache.has(art.url)) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          this.templateArtImageCache.set(art.url, img);
+        };
+        img.src = art.url;
+      }
+    });
+  }
+
+  /**
+   * Vẽ tác phẩm đặc trưng của từng Template lên Canvas 2D phục vụ 3D Texture (1:1 với Artwork Vector)
    */
   private drawTemplateArtworkToCanvas(
     ctx: CanvasRenderingContext2D,
@@ -1017,253 +1083,54 @@ export class TemplateBrowser {
     W: number,
     H: number
   ): void {
-    const art = template.artType;
+    const artInfo = this.getArtwork(template.artType);
 
-    if (art === 'dreamy-kitten') {
-      ctx.save();
-      // Fluffy clouds at bottom
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(W * 0.5, H * 0.85, 170, 0, Math.PI * 2);
-      ctx.arc(W * 0.28, H * 0.88, 130, 0, Math.PI * 2);
-      ctx.arc(W * 0.72, H * 0.88, 130, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Kitten 1 (Left)
-      const catX = W * 0.42;
-      const catY = H * 0.75;
-      ctx.beginPath();
-      ctx.arc(catX, catY, 78, 0, Math.PI * 2);
-      ctx.fill();
-      // Ears
-      ctx.beginPath();
-      ctx.moveTo(catX - 65, catY - 40);
-      ctx.lineTo(catX - 35, catY - 115);
-      ctx.lineTo(catX - 5, catY - 60);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(catX + 5, catY - 60);
-      ctx.lineTo(catX + 35, catY - 115);
-      ctx.lineTo(catX + 65, catY - 40);
-      ctx.fill();
-      // Pink inner ears
-      ctx.fillStyle = '#fbcfe8';
-      ctx.beginPath();
-      ctx.moveTo(catX - 52, catY - 45);
-      ctx.lineTo(catX - 35, catY - 98);
-      ctx.lineTo(catX - 15, catY - 58);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(catX + 15, catY - 58);
-      ctx.lineTo(catX + 35, catY - 98);
-      ctx.lineTo(catX + 52, catY - 45);
-      ctx.fill();
-      // Eyes ^ ^
-      ctx.strokeStyle = '#f472b6';
-      ctx.lineWidth = 4.5;
-      ctx.beginPath();
-      ctx.arc(catX - 25, catY - 5, 14, Math.PI, 0, false);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(catX + 25, catY - 5, 14, Math.PI, 0, false);
-      ctx.stroke();
-      // Blush
-      ctx.fillStyle = '#f472b6';
-      ctx.beginPath();
-      ctx.arc(catX - 38, catY + 16, 11, 0, Math.PI * 2);
-      ctx.arc(catX + 38, catY + 16, 11, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Kitten 2 (Right)
-      const cat2X = W * 0.63;
-      const cat2Y = H * 0.78;
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(cat2X, cat2Y, 65, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cat2X - 50, cat2Y - 30);
-      ctx.lineTo(cat2X - 28, cat2Y - 90);
-      ctx.lineTo(cat2X, cat2Y - 45);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cat2X, cat2Y - 45);
-      ctx.lineTo(cat2X + 28, cat2Y - 90);
-      ctx.lineTo(cat2X + 50, cat2Y - 30);
-      ctx.fill();
-      ctx.restore();
-    } else if (art === 'sakura-bloom') {
-      ctx.save();
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.1, H * 0.96);
-      ctx.quadraticCurveTo(W * 0.45, H * 0.65, W * 0.35, H * 0.36);
-      ctx.quadraticCurveTo(W * 0.3, H * 0.16, W * 0.75, H * 0.08);
-      ctx.stroke();
-      ctx.lineWidth = 9;
-      ctx.beginPath();
-      ctx.moveTo(W * 0.38, H * 0.46);
-      ctx.quadraticCurveTo(W * 0.62, H * 0.38, W * 0.86, H * 0.32);
-      ctx.stroke();
-      const blossoms = [
-        { x: W * 0.35, y: H * 0.36, r: 38 },
-        { x: W * 0.75, y: H * 0.15, r: 42 },
-        { x: W * 0.58, y: H * 0.33, r: 34 },
-        { x: W * 0.84, y: H * 0.33, r: 38 },
-        { x: W * 0.22, y: H * 0.6, r: 32 },
-        { x: W * 0.48, y: H * 0.22, r: 30 },
-        { x: W * 0.68, y: H * 0.46, r: 28 },
-      ];
-      for (const b of blossoms) {
-        ctx.fillStyle = '#fda4af';
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#f43f5e';
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r * 0.45, 0, Math.PI * 2);
-        ctx.fill();
+    if (artInfo?.url) {
+      let img = this.templateArtImageCache.get(artInfo.url);
+      if (!img) {
+        img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          this.templateArtImageCache.set(artInfo.url, img!);
+          if (this.previewTemplate()?.id === template.id) {
+            this.syncTemplate3dTexture(template);
+          }
+        };
+        img.src = artInfo.url;
       }
-      ctx.restore();
-    } else if (art === 'mountain-escape') {
-      ctx.save();
-      ctx.fillStyle = '#0284c7';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.1, H * 0.72);
-      ctx.lineTo(W * 0.5, H * 0.22);
-      ctx.lineTo(W * 0.9, H * 0.72);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.5, H * 0.22);
-      ctx.lineTo(W * 0.38, H * 0.4);
-      ctx.lineTo(W * 0.5, H * 0.35);
-      ctx.lineTo(W * 0.62, H * 0.4);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#0369a1';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.35, H * 0.75);
-      ctx.lineTo(W * 0.7, H * 0.36);
-      ctx.lineTo(W, H * 0.75);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#0f766e';
-      ctx.beginPath();
-      ctx.moveTo(0, H * 0.85);
-      ctx.lineTo(W * 0.25, H * 0.52);
-      ctx.lineTo(W * 0.6, H * 0.85);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(0, H * 0.78, W, H * 0.22);
-      ctx.restore();
-    } else if (art === 'minimal-cat') {
-      ctx.save();
-      ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 52px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('♥', W / 2, H * 0.54);
-      ctx.strokeStyle = '#18181b';
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      const cX = W / 2;
-      const cY = H * 0.75;
-      ctx.beginPath();
-      ctx.moveTo(cX - 70, cY - 80);
-      ctx.lineTo(cX - 60, cY - 170);
-      ctx.lineTo(cX - 20, cY - 130);
-      ctx.quadraticCurveTo(cX, cY - 135, cX + 20, cY - 130);
-      ctx.lineTo(cX + 60, cY - 170);
-      ctx.lineTo(cX + 70, cY - 80);
-      ctx.quadraticCurveTo(cX + 90, cY + 40, cX + 65, cY + 90);
-      ctx.quadraticCurveTo(cX, cY + 100, cX - 65, cY + 90);
-      ctx.quadraticCurveTo(cX - 90, cY + 40, cX - 70, cY - 80);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cX + 55, cY + 70);
-      ctx.quadraticCurveTo(cX + 120, cY + 50, cX + 100, cY - 10);
-      ctx.stroke();
-      ctx.restore();
-    } else if (art === 'abstract-waves') {
-      ctx.save();
-      const colors = ['#fed7aa', '#fbcfe8', '#ddd6fe', '#bae6fd'];
-      const waveHeights = [H * 0.35, H * 0.52, H * 0.7, H * 0.85];
-      colors.forEach((col, idx) => {
-        ctx.fillStyle = col;
-        ctx.beginPath();
-        ctx.moveTo(0, waveHeights[idx]);
-        ctx.bezierCurveTo(W * 0.35, waveHeights[idx] - 90, W * 0.65, waveHeights[idx] + 110, W, waveHeights[idx] - 40);
-        ctx.lineTo(W, H);
-        ctx.lineTo(0, H);
-        ctx.closePath();
-        ctx.fill();
-      });
-      ctx.restore();
-    } else if (art === 'dino-friend') {
-      ctx.save();
-      const dX = W / 2;
-      const dY = H * 0.74;
-      ctx.fillStyle = '#facc15';
-      [-75, -40, -5].forEach((offset) => {
-        ctx.beginPath();
-        ctx.arc(dX - 76, dY + offset, 16, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      ctx.fillStyle = '#86efac';
-      ctx.beginPath();
-      if ((ctx as any).roundRect) {
-        (ctx as any).roundRect(dX - 72, dY - 115, 144, 185, [52, 52, 42, 42]);
-      } else {
-        ctx.rect(dX - 72, dY - 115, 144, 185);
+
+      if (img.complete && img.naturalWidth > 0) {
+        const artW = (artInfo.width / 100) * W;
+        const artH = artW * (img.naturalHeight / (img.naturalWidth || 1));
+        const artX = (artInfo.x / 100) * W;
+        const artY = (artInfo.y / 100) * H;
+        ctx.save();
+        ctx.drawImage(img, artX - artW / 2, artY - artH / 2, artW, artH);
+        ctx.restore();
       }
-      ctx.fill();
-      ctx.fillStyle = '#064e3b';
-      ctx.beginPath();
-      ctx.arc(dX - 25, dY - 60, 12, 0, Math.PI * 2);
-      ctx.arc(dX + 25, dY - 60, 12, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#bbf7d0';
-      ctx.beginPath();
-      ctx.ellipse(dX, dY + 15, 46, 56, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    } else if (art === 'starry-night') {
+    }
+
+    if (template.artType === 'that-girl-era') {
       ctx.save();
-      ctx.fillStyle = '#fde047';
-      ctx.shadowColor = '#fde047';
-      ctx.shadowBlur = 30;
-      ctx.beginPath();
-      ctx.arc(W * 0.76, H * 0.28, 55, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#4c1d95';
-      ctx.beginPath();
-      ctx.arc(W * 0.72, H * 0.26, 48, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-      ctx.beginPath();
-      ctx.arc(W * 0.5, H * 0.72, 90, 0, Math.PI * 2);
-      ctx.arc(W * 0.35, H * 0.75, 70, 0, Math.PI * 2);
-      ctx.arc(W * 0.65, H * 0.75, 70, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 32px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('STARRY', W / 2, H * 0.83);
-      ctx.restore();
-    } else if (art === 'that-girl-era') {
-      ctx.save();
+      ctx.font = '900 50px "Plus Jakarta Sans", sans-serif';
       ctx.fillStyle = '#db2777';
-      ctx.font = '900 48px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('THAT GIRL', W / 2, H * 0.65);
-      ctx.fillText('ERA', W / 2, H * 0.72);
+      ctx.shadowColor = 'rgba(219, 39, 119, 0.35)';
+      ctx.shadowBlur = 8;
+      ctx.fillText('THAT GIRL', W / 2, H * 0.58);
+      ctx.font = '900 56px "Plus Jakarta Sans", sans-serif';
+      ctx.fillText('ERA', W / 2, H * 0.65);
+      ctx.restore();
+    } else if (artInfo?.text && artInfo.textY) {
+      ctx.save();
+      ctx.font = '800 32px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+      ctx.shadowBlur = 8;
+      ctx.fillText(artInfo.text, (artInfo.x / 100) * W, (artInfo.textY / 100) * H);
       ctx.restore();
     }
   }
