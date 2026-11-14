@@ -1135,7 +1135,7 @@
       (click)="closePreviewModal()"
     >
       <div
-        class="w-full max-w-4xl max-h-[92vh] rounded-[28px] border border-purple-200/90 bg-gradient-to-br from-white via-purple-50/20 to-indigo-50/25 shadow-2xl flex flex-col overflow-hidden text-left"
+        class="w-full max-w-5xl max-h-[94vh] rounded-[28px] border border-purple-200/90 bg-gradient-to-br from-white via-purple-50/20 to-indigo-50/25 shadow-2xl flex flex-col overflow-hidden text-left"
         (click)="$event.stopPropagation()"
       >
 
@@ -1190,11 +1190,11 @@
           </div>
         </div>
 
-        <!-- Modal Body: 2 Columns Layout (Left: 3D Stage | Right: Details & Reviews) -->
-        <div class="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 min-h-0">
+        <!-- Modal Body: 2 Columns Layout (Left: Frozen 3D/2D Stage | Right: Scrollable Details & Reviews) -->
+        <div class="flex-1 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-0">
 
-          <!-- Left Column (5/12): 3D Model WebGL Canvas & Controls (Gom gọn lên trên cùng) -->
-          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/70 via-white/80 to-purple-50/50 flex flex-col items-center justify-start gap-3.5 border-b lg:border-b-0 lg:border-r border-purple-100/80">
+          <!-- Left Column (5/12): Frozen/Sticky Preview (Cố định không bị trôi khi cuộn phần nội dung bên phải) -->
+          <div class="lg:col-span-5 p-5 bg-gradient-to-b from-purple-50/70 via-white/80 to-purple-50/50 flex flex-col items-center justify-start gap-3.5 border-b lg:border-b-0 lg:border-r border-purple-100/80 shrink-0 select-none lg:sticky lg:top-0 lg:h-full lg:overflow-hidden">
 
             <!-- View Mode Switcher: 3D Model vs 2D Graphic -->
             <div class="flex items-center gap-1 rounded-full bg-purple-100/80 p-1 shadow-2xs text-xs font-semibold shrink-0">
@@ -1216,9 +1216,9 @@
               </button>
             </div>
 
-            <!-- Stage Display (Chuẩn Studio Canvas: Background Iridescent Gradient sang trọng & 3D WebGL đồng bộ 1:1) -->
+            <!-- Stage Display (Kéo dài khung hình h-[420px] sm:h-[450px], phôi ốp to rõ thanh lịch) -->
             <div
-              class="relative w-full h-[380px] flex items-center justify-center rounded-2xl overflow-hidden shadow-inner border border-purple-200/70 shrink-0"
+              class="relative w-full h-[420px] sm:h-[450px] flex items-center justify-center rounded-2xl overflow-hidden shadow-inner border border-purple-200/70 shrink-0"
               style="background: linear-gradient(135deg, #ede7fe 0%, #fce7f3 35%, #e0e7ff 70%, #f3e8ff 100%);"
             >
               <!-- Ambient Soft Lighting Overlay -->
@@ -1309,22 +1309,22 @@
                 }
 
               } @else {
-                <!-- 2D Photorealistic Studio Phone Case (Proportional 1:1 with Canvas Studio, Sleek & Non-distorted) -->
+                <!-- 2D Photorealistic Studio Phone Case (Proportional 1:1 with Canvas Studio, Sleek, Taller & Non-distorted) -->
                 <div class="animate-float-case flex items-center justify-center p-2 z-10">
                   <div
                     class="relative p-[6px] rounded-[34px] select-none transition-all duration-200 shrink-0"
-                    style="width: 178px; height: 362px;
+                    style="width: 190px; height: 388px;
                            background: linear-gradient(155deg, #3d414a 0%, #1e2026 50%, #121317 100%);
-                           box-shadow: 0 25px 60px -10px rgba(15, 23, 42, 0.4), 0 10px 20px -6px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 2px rgba(0, 0, 0, 0.7);"
+                           box-shadow: 0 20px 48px -10px rgba(15, 23, 42, 0.4), 0 8px 18px -5px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.28), inset 0 -1px 2px rgba(0, 0, 0, 0.7);"
                   >
                     <!-- Titanium Side Buttons (Khớp chuẩn Canvas) -->
                     <!-- Left: Power / Lock Button -->
-                    <div class="pointer-events-none absolute -left-[2px] top-[88px] h-[34px] w-[2px] rounded-l-xs bg-[#52525b] shadow-[-1px_0_1px_rgba(0,0,0,0.5)]"></div>
+                    <div class="pointer-events-none absolute -left-[2px] top-[92px] h-[34px] w-[2px] rounded-l-xs bg-[#52525b] shadow-[-1px_0_1px_rgba(0,0,0,0.5)]"></div>
 
                     <!-- Right: Action Button + Volume Up/Down -->
-                    <div class="pointer-events-none absolute -right-[2px] top-[60px] h-[12px] w-[2px] rounded-r-xs bg-[#52525b] shadow-[1px_0_1px_rgba(0,0,0,0.5)]"></div>
-                    <div class="pointer-events-none absolute -right-[2px] top-[80px] h-[25px] w-[2px] rounded-r-xs bg-[#52525b] shadow-[1px_0_1px_rgba(0,0,0,0.5)]"></div>
-                    <div class="pointer-events-none absolute -right-[2px] top-[112px] h-[25px] w-[2px] rounded-r-xs bg-[#52525b] shadow-[1px_0_1px_rgba(0,0,0,0.5)]"></div>
+                    <div class="pointer-events-none absolute -right-[2px] top-[65px] h-[13px] w-[2px] rounded-r-xs bg-[#52525b] shadow-[1px_0_1px_rgba(0,0,0,0.5)]"></div>
+                    <div class="pointer-events-none absolute -right-[2px] top-[85px] h-[25px] w-[2px] rounded-r-xs bg-[#52525b] shadow-[1px_0_1px_rgba(0,0,0,0.5)]"></div>
+                    <div class="pointer-events-none absolute -right-[2px] top-[118px] h-[25px] w-[2px] rounded-r-xs bg-[#52525b] shadow-[1px_0_1px_rgba(0,0,0,0.5)]"></div>
 
                     <!-- Chassis Antenna Bands -->
                     <div class="pointer-events-none absolute -left-[1.5px] top-[42px] h-[2px] w-[1.5px] bg-[#27272a]"></div>
@@ -1332,10 +1332,10 @@
                     <div class="pointer-events-none absolute -left-[1.5px] bottom-[42px] h-[2px] w-[1.5px] bg-[#27272a]"></div>
                     <div class="pointer-events-none absolute -right-[1.5px] bottom-[42px] h-[2px] w-[1.5px] bg-[#27272a]"></div>
 
-                    <!-- Case Viewport (166px × 350px, rounded-[28px] matching Canvas aspect ratio & curvature 1:1) -->
+                    <!-- Case Viewport (178px × 376px, rounded-[28px] matching Canvas aspect ratio 1:2.11 & curvature 1:1) -->
                     <div
-                      class="relative z-20 h-[350px] w-[166px] overflow-hidden rounded-[28px] transition-all flex flex-col justify-between shrink-0"
-                      style="box-shadow: 0 0 0 3.5px #18181b, 0 10px 20px -5px rgba(0,0,0,0.35), inset 0 1px 1.5px rgba(255,255,255,0.4), inset 0 -1px 1.5px rgba(0,0,0,0.2);"
+                      class="relative z-20 h-[376px] w-[178px] overflow-hidden rounded-[28px] transition-all flex flex-col justify-between shrink-0"
+                      style="box-shadow: 0 0 0 3px #18181b, 0 8px 18px -4px rgba(0,0,0,0.35), inset 0 1px 1.5px rgba(255,255,255,0.4), inset 0 -1px 1.5px rgba(0,0,0,0.2);"
                       [style.background]="activeTpl.gradient"
                     >
                       <!-- Polycarbonate Specular Highlight -->
@@ -1343,91 +1343,91 @@
                         class="pointer-events-none absolute inset-0 z-30 opacity-40 mix-blend-overlay"
                         style="background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.12) 28%, transparent 52%);"
                       ></div>
-                      <div class="pointer-events-none absolute inset-0 z-30 rounded-[28px] ring-1 ring-inset ring-white/30"></div>
+                      <div class="pointer-events-none absolute inset-0 z-30 rounded-[30px] ring-1 ring-inset ring-white/30"></div>
 
                       <!-- Dynamic Camera Cutout per Model on 2D Modal (Đồng bộ chuẩn 1:1 với model máy đang chọn) -->
                       @if (state.selectedModel().id === 'galaxy-s24') {
                         <!-- Samsung Galaxy S24: 3 vertical camera lenses -->
-                        <div class="pointer-events-none absolute left-[12px] top-[14px] z-20 flex flex-col gap-3 items-center">
-                          <div class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                        <div class="pointer-events-none absolute left-[14px] top-[16px] z-20 flex flex-col gap-3.5 items-center">
+                          <div class="h-[27px] w-[27px] rounded-full flex items-center justify-center"
                             style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
                                    box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3);">
-                            <div class="h-[18px] w-[18px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                            <div class="h-[20px] w-[20px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
                               <span class="h-1.5 w-1.5 rounded-full bg-[#020203]"></span>
                             </div>
                           </div>
-                          <div class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                          <div class="h-[27px] w-[27px] rounded-full flex items-center justify-center"
                             style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
                                    box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3);">
-                            <div class="h-[18px] w-[18px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                            <div class="h-[20px] w-[20px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
                               <span class="h-1.5 w-1.5 rounded-full bg-[#020203]"></span>
                             </div>
                           </div>
-                          <div class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                          <div class="h-[27px] w-[27px] rounded-full flex items-center justify-center"
                             style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46);
                                    box-shadow: 0 3px 6px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.3);">
-                            <div class="h-[18px] w-[18px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
+                            <div class="h-[20px] w-[20px] rounded-full border border-[#27272a] flex items-center justify-center bg-[#0d0e11]">
                               <span class="h-1.5 w-1.5 rounded-full bg-[#020203]"></span>
                             </div>
                           </div>
-                          <div class="absolute -right-[10px] top-[6px] h-[7px] w-[7px] rounded-full bg-slate-200 shadow-xs border border-white/40"></div>
+                          <div class="absolute -right-[12px] top-[8px] h-[8px] w-[8px] rounded-full bg-slate-200 shadow-xs border border-white/40"></div>
                         </div>
                       } @else if (state.selectedModel().id === 'xiaomi-14-ultra') {
                         <!-- Xiaomi 14 Ultra: Large Leica circular camera bump -->
                         <div
-                          class="pointer-events-none absolute left-[18px] top-[18px] z-20 h-[106px] w-[130px] rounded-full flex items-center justify-center"
+                          class="pointer-events-none absolute left-[20px] top-[20px] z-20 h-[122px] w-[152px] rounded-full flex items-center justify-center"
                           style="background: linear-gradient(145deg, #22242a 0%, #141417 70%, #09090b 100%);
                                  box-shadow: 0 8px 18px -2px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.2), 0 0 0 2px #c09d3b;
                                  border: 1.5px solid #3f3f46;"
                         >
-                          <div class="grid grid-cols-2 gap-2.5 place-items-center">
-                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                          <div class="grid grid-cols-2 gap-3 place-items-center">
+                            <span class="h-[28px] w-[28px] rounded-full flex items-center justify-center"
                               style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
-                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                              <span class="h-[18px] w-[18px] rounded-full block bg-[#0d0e11]"></span>
                             </span>
-                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                            <span class="h-[28px] w-[28px] rounded-full flex items-center justify-center"
                               style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
-                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                              <span class="h-[18px] w-[18px] rounded-full block bg-[#0d0e11]"></span>
                             </span>
-                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                            <span class="h-[28px] w-[28px] rounded-full flex items-center justify-center"
                               style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
-                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                              <span class="h-[18px] w-[18px] rounded-full block bg-[#0d0e11]"></span>
                             </span>
-                            <span class="h-[24px] w-[24px] rounded-full flex items-center justify-center"
+                            <span class="h-[28px] w-[28px] rounded-full flex items-center justify-center"
                               style="background: conic-gradient(from 45deg, #3f3f46, #18181b, #27272a, #18181b, #3f3f46); border: 0.5px solid #27272a;">
-                              <span class="h-[16px] w-[16px] rounded-full block bg-[#0d0e11]"></span>
+                              <span class="h-[18px] w-[18px] rounded-full block bg-[#0d0e11]"></span>
                             </span>
                           </div>
                         </div>
                       } @else {
                         <!-- Apple iPhone Pro Obsidian Camera Island (Default) -->
                         <div
-                          class="pointer-events-none absolute z-20 rounded-[18px] select-none overflow-hidden"
+                          class="pointer-events-none absolute z-20 rounded-[20px] select-none overflow-hidden"
                           style="left: 7.33%; top: 4.43%; width: 41.33%; height: 19.62%;
                                  background: linear-gradient(145deg, #1e2025 0%, #121316 50%, #0a0b0d 100%);
                                  box-shadow: 0 8px 16px -2px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -1px 2px rgba(0, 0, 0, 0.8);
                                  border: 1.2px solid rgba(255, 255, 255, 0.08);"
                         >
-                          <div class="absolute inset-[1.5px] rounded-[16px] border border-white/5 pointer-events-none"></div>
+                          <div class="absolute inset-[1.5px] rounded-[18px] border border-white/5 pointer-events-none"></div>
 
                           <!-- Laser-Engraved Rim Text -->
-                          <div class="absolute top-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
-                            <span class="font-mono text-[4.5px] font-bold tracking-[0.14em] text-slate-500/80 uppercase">
+                          <div class="absolute top-[3px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                            <span class="font-mono text-[5px] font-bold tracking-[0.14em] text-slate-500/80 uppercase">
                               • CASEYE LABS •
                             </span>
                           </div>
-                          <div class="absolute bottom-[2.5px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
-                            <span class="font-mono text-[4px] font-semibold tracking-[0.12em] text-slate-500/80 uppercase">
+                          <div class="absolute bottom-[3px] left-0 right-0 flex items-center justify-center pointer-events-none select-none z-10">
+                            <span class="font-mono text-[4.5px] font-semibold tracking-[0.12em] text-slate-500/80 uppercase">
                               2.5M DROP TESTED
                             </span>
                           </div>
 
                           <!-- Lens 1 (Top-Left) -->
-                          <div class="absolute left-[8%] top-[12%] h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
+                          <div class="absolute left-[8%] top-[12%] h-[28px] w-[28px] rounded-full flex items-center justify-center z-10"
                             style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
                                    box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
-                            <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                              <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
+                            <div class="h-[23px] w-[23px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                              <div class="relative h-[18px] w-[18px] rounded-full overflow-hidden flex items-center justify-center"
                                 style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
                                 <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
                                   <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
@@ -1439,11 +1439,11 @@
                           </div>
 
                           <!-- Lens 2 (Bottom-Left) -->
-                          <div class="absolute left-[8%] bottom-[12%] h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
+                          <div class="absolute left-[8%] bottom-[12%] h-[28px] w-[28px] rounded-full flex items-center justify-center z-10"
                             style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
                                    box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
-                            <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                              <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
+                            <div class="h-[23px] w-[23px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                              <div class="relative h-[18px] w-[18px] rounded-full overflow-hidden flex items-center justify-center"
                                 style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
                                 <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
                                   <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
@@ -1453,11 +1453,11 @@
                           </div>
 
                           <!-- Lens 3 (Middle-Right) -->
-                          <div class="absolute right-[8%] top-1/2 -translate-y-1/2 h-[25px] w-[25px] rounded-full flex items-center justify-center z-10"
+                          <div class="absolute right-[8%] top-1/2 -translate-y-1/2 h-[28px] w-[28px] rounded-full flex items-center justify-center z-10"
                             style="background: conic-gradient(from 45deg, #383b45 0%, #1c1d22 25%, #2d3038 50%, #15161a 75%, #383b45 100%);
                                    box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.3);">
-                            <div class="h-[21px] w-[21px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
-                              <div class="relative h-[16px] w-[16px] rounded-full overflow-hidden flex items-center justify-center"
+                            <div class="h-[23px] w-[23px] rounded-full border border-[#202228] flex items-center justify-center" style="background: #0d0e11;">
+                              <div class="relative h-[18px] w-[18px] rounded-full overflow-hidden flex items-center justify-center"
                                 style="background: radial-gradient(circle at 40% 35%, #1e2027 0%, #0f1013 55%, #040405 100%);">
                                 <span class="h-1.5 w-1.5 rounded-full bg-[#020203] ring-1 ring-white/10 flex items-center justify-center">
                                   <span class="h-0.8 w-0.8 rounded-full bg-black"></span>
@@ -1467,23 +1467,23 @@
                           </div>
 
                           <!-- Frosted Silver Flash -->
-                          <div class="absolute right-[16%] top-[12%] h-[11px] w-[11px] rounded-full flex items-center justify-center z-10"
+                          <div class="absolute right-[16%] top-[12%] h-[12px] w-[12px] rounded-full flex items-center justify-center z-10"
                             style="background: linear-gradient(135deg, #64748b 0%, #334155 100%);">
-                            <div class="h-[7px] w-[7px] rounded-full flex items-center justify-center overflow-hidden border border-white/30"
+                            <div class="h-[8px] w-[8px] rounded-full flex items-center justify-center overflow-hidden border border-white/30"
                               style="background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 55%, #94a3b8 100%);">
-                              <div class="h-[2.5px] w-[2.5px] rounded-full bg-white shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
+                              <div class="h-[3px] w-[3px] rounded-full bg-white shadow-[0_0_2px_rgba(255,255,255,0.9)]"></div>
                             </div>
                           </div>
 
                           <!-- LiDAR Scanner -->
-                          <div class="absolute right-[17%] bottom-[13%] h-[9px] w-[9px] rounded-full flex items-center justify-center z-10"
+                          <div class="absolute right-[17%] bottom-[13%] h-[10px] w-[10px] rounded-full flex items-center justify-center z-10"
                             style="background: linear-gradient(135deg, #27272a 0%, #18181b 100%);">
-                            <div class="h-[6px] w-[6px] rounded-full overflow-hidden bg-[#09090b]"></div>
+                            <div class="h-[7px] w-[7px] rounded-full overflow-hidden bg-[#09090b]"></div>
                           </div>
 
                           <!-- Pinholes -->
-                          <div class="absolute left-[47%] top-[12%] h-[2px] w-[2px] rounded-full bg-[#050608] z-10"></div>
-                          <div class="absolute right-[9%] top-[37%] h-[2px] w-[2px] rounded-full bg-[#050608] z-10"></div>
+                          <div class="absolute left-[47%] top-[12%] h-[2.5px] w-[2.5px] rounded-full bg-[#050608] z-10"></div>
+                          <div class="absolute right-[9%] top-[37%] h-[2.5px] w-[2.5px] rounded-full bg-[#050608] z-10"></div>
                         </div>
                       }
 
@@ -1536,8 +1536,8 @@
 
           </div>
 
-          <!-- Right Column (7/12): Descriptions, Hashtags, Reviews & User Input (Restyled với các Card tao nhã) -->
-          <div class="lg:col-span-7 p-6 space-y-4 bg-gradient-to-b from-white/95 via-purple-50/20 to-white/95">
+          <!-- Right Column (7/12): Descriptions, Hashtags, Reviews & User Input (Scrollable independently, left stays frozen) -->
+          <div class="lg:col-span-7 p-6 space-y-4 bg-gradient-to-b from-white/95 via-purple-50/20 to-white/95 lg:overflow-y-auto min-h-0">
 
             <!-- Section 1: Detailed Description Card -->
             <div class="rounded-2xl border border-purple-150/80 bg-white/95 p-4.5 shadow-2xs">

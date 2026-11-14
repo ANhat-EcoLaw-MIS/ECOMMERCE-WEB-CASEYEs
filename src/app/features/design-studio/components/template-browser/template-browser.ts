@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
 import { CanvasLayer, ImageElement, TextElement } from '../../models/canvas-element.model';
@@ -275,7 +275,51 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     isBlankCanvas: true,
     artType: 'blank',
   },
-  // 2. Dreamy Kitten (#pastel)
+  // 2. The Creators • Đội Ngũ CasEYE (#creators)
+  {
+    id: 'tpl-creators-real',
+    name: 'The Creators • Đội Ngũ CasEYE',
+    creator: 'CasEYE Team',
+    category: 'typography',
+    categories: ['typography', 'cute', 'all'],
+    styleLabel: 'Đội ngũ CasEYE',
+    gradient: 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 45%, #e0e7ff 100%)',
+    tagText: 'WE ARE THE CREATORS',
+    description: 'Bản thiết kế chân dung độc quyền tôn vinh tinh thần sáng tạo từ đội ngũ CasEYE.',
+    detailedDescription:
+      'Tác phẩm "We Are The Creators" phiên bản đời thật tôn vinh tinh thần sáng tạo không giới hạn của các bạn trẻ tài năng. Tone màu tím mộng mơ kết hợp sắc nét với chân dung các thành viên CasEYE, in nhiệt UV siêu bền màu.',
+    tagLabel: '#creators',
+    tagColor: '#7c3aed',
+    rating: 5.0,
+    reviews: '2.8k',
+    reviewCount: 2800,
+    hashtags: ['#thecreators', '#caseye', '#teamwork', '#creators', '#youth', '#purplevibe'],
+    isTrending: true,
+    artType: 'the-creators-real',
+  },
+  // 3. The Creators • Chibi Squad (#chibi)
+  {
+    id: 'tpl-creators-chibi',
+    name: 'The Creators • Chibi Squad',
+    creator: 'CasEYE Team',
+    category: 'cute',
+    categories: ['cute', 'cartoon', 'all'],
+    styleLabel: 'Chibi đáng yêu',
+    gradient: 'linear-gradient(180deg, #fdf4ff 0%, #fae8ff 50%, #ede9fe 100%)',
+    tagText: 'CHIBI CREATORS',
+    description: 'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên Thắm, Đức, Nhật, Mai Anh, Thy.',
+    detailedDescription:
+      'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên sáng lập CasEYE: Thắm, Đức, Nhật, Mai Anh, Thy. Phong cách chibi ngộ nghĩnh, tươi vui, lan tỏa năng lượng tích cực và sự gắn kết cho chiếc ốp lưng của bạn.',
+    tagLabel: '#chibi',
+    tagColor: '#ec4899',
+    rating: 5.0,
+    reviews: '3.1k',
+    reviewCount: 3100,
+    hashtags: ['#chibi', '#creators', '#cute', '#friends', '#squad', '#caseye'],
+    isTrending: true,
+    artType: 'the-creators-chibi',
+  },
+  // 4. Dreamy Kitten (#pastel)
   {
     id: 'tpl-001',
     name: 'Dreamy Kitten',
@@ -451,50 +495,6 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
     isTrending: false,
     artType: 'that-girl-era',
   },
-  // 10. The Creators • Đội Ngũ CasEYE (#creators)
-  {
-    id: 'tpl-creators-real',
-    name: 'The Creators • Đội Ngũ CasEYE',
-    creator: 'CasEYE Team',
-    category: 'typography',
-    categories: ['typography', 'cute', 'all'],
-    styleLabel: 'Đội ngũ CasEYE',
-    gradient: 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 45%, #e0e7ff 100%)',
-    tagText: 'WE ARE THE CREATORS',
-    description: 'Bản thiết kế chân dung độc quyền tôn vinh tinh thần sáng tạo từ đội ngũ CasEYE.',
-    detailedDescription:
-      'Tác phẩm "We Are The Creators" phiên bản đời thật tôn vinh tinh thần sáng tạo không giới hạn của các bạn trẻ tài năng. Tone màu tím mộng mơ kết hợp sắc nét với chân dung các thành viên CasEYE, in nhiệt UV siêu bền màu.',
-    tagLabel: '#creators',
-    tagColor: '#7c3aed',
-    rating: 5.0,
-    reviews: '2.8k',
-    reviewCount: 2800,
-    hashtags: ['#thecreators', '#caseye', '#teamwork', '#creators', '#youth', '#purplevibe'],
-    isTrending: true,
-    artType: 'the-creators-real',
-  },
-  // 11. The Creators • Chibi Squad (#chibi)
-  {
-    id: 'tpl-creators-chibi',
-    name: 'The Creators • Chibi Squad',
-    creator: 'CasEYE Team',
-    category: 'cute',
-    categories: ['cute', 'cartoon', 'all'],
-    styleLabel: 'Chibi đáng yêu',
-    gradient: 'linear-gradient(180deg, #fdf4ff 0%, #fae8ff 50%, #ede9fe 100%)',
-    tagText: 'CHIBI CREATORS',
-    description: 'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên Thắm, Đức, Nhật, Mai Anh, Thy.',
-    detailedDescription:
-      'Phiên bản hoạt hình Chibi siêu đáng yêu của 5 thành viên sáng lập CasEYE: Thắm, Đức, Nhật, Mai Anh, Thy. Phong cách chibi ngộ nghĩnh, tươi vui, lan tỏa năng lượng tích cực và sự gắn kết cho chiếc ốp lưng của bạn.',
-    tagLabel: '#chibi',
-    tagColor: '#ec4899',
-    rating: 5.0,
-    reviews: '3.1k',
-    reviewCount: 3100,
-    hashtags: ['#chibi', '#creators', '#cute', '#friends', '#squad', '#caseye'],
-    isTrending: true,
-    artType: 'the-creators-chibi',
-  },
 ];
 
 const INITIAL_REVIEWS: Record<string, TemplateReview[]> = {};
@@ -502,7 +502,7 @@ const INITIAL_REVIEWS: Record<string, TemplateReview[]> = {};
 @Component({
   selector: 'app-template-browser',
   standalone: true,
-  imports: [RouterLink],
+  imports: [],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './template-browser.html',
   styleUrl: './template-browser.scss',

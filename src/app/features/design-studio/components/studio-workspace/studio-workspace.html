@@ -125,27 +125,42 @@
         <span class="flex-1">{{ state.rejectionMessage() }}</span>
       </div>
     }
-    @if (draft.hasDraftToRestore()) {
-      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800 shrink-0">
-        <div class="flex items-center gap-2">
-          <svg class="h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span class="font-semibold">Phát hiện bản nháp chưa lưu</span>
-          @if (draft.draftSavedAt()) { <span class="text-amber-600">· {{ draft.draftSavedAt()! | date:'HH:mm, dd/MM' }}</span> }
-        </div>
-        <div class="flex gap-2">
-          <button type="button" (click)="draft.restoreDraft()" class="rounded-pill bg-amber-600 px-4 py-1 font-bold text-white hover:bg-amber-700 cursor-pointer">Khôi phục</button>
-          <button type="button" (click)="draft.dismissDraft()" class="rounded-pill border border-amber-300 px-4 py-1 font-medium text-amber-700 hover:bg-amber-100 cursor-pointer">Bỏ qua</button>
-        </div>
-      </div>
-    }
 
     <!-- 3-Column Studio Grid: Drawer | Canvas | Specs -->
     <div class="studio-shell">
 
+      <!-- Responsive Mobile Drawer Overlay Backdrop (Click to dismiss on smaller screens) -->
+      @if (isMobileDrawerOpen()) {
+        <div
+          class="lg:hidden absolute inset-0 z-35 bg-brand-950/25 backdrop-blur-[1px] transition-opacity cursor-pointer animate-fade-in"
+          (click)="closeMobileDrawer()"
+        ></div>
+      }
+
       <!-- ───────────────────────────────────
            COL 1 · Tool Drawer
       ─────────────────────────────────────── -->
-      <aside class="tool-drawer">
+      <aside class="tool-drawer" [class.tool-drawer--open]="isMobileDrawerOpen()">
+
+        <!-- Mobile Drawer Header with Close Button -->
+        <div class="lg:hidden flex items-center justify-between pb-3 mb-2 border-b border-line shrink-0">
+          <span class="text-xs font-bold text-ink flex items-center gap-1.5">
+            <svg class="h-4 w-4 text-brand-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            <span>Tùy chọn công cụ</span>
+          </span>
+          <button
+            type="button"
+            (click)="closeMobileDrawer()"
+            class="rounded-full p-1.5 text-ink-soft hover:bg-purple-100 hover:text-ink cursor-pointer transition-colors"
+            title="Đóng bảng tùy chọn"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
     <!-- ── Thêm ảnh panel ── -->
     @if (state.activeTool() === 'img') {

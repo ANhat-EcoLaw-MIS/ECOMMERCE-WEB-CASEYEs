@@ -12,7 +12,6 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { CanvasLayer } from '../../models/canvas-element.model';
 import {
   BANNED_KEYWORDS,
@@ -30,7 +29,7 @@ import { AuthModal } from '../../../../core/auth/auth-modal';
 @Component({
   selector: 'app-studio-workspace',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './studio-workspace.html',
   styleUrl: './studio-workspace.scss',
@@ -230,6 +229,13 @@ export class StudioWorkspace implements OnDestroy {
 
   // Canva Shortcuts Modal State
   protected readonly showShortcutsModal = signal<boolean>(false);
+
+  // Responsive Tool Drawer (Canvas Drawer Toggle on Smaller Screens)
+  protected readonly isMobileDrawerOpen = signal<boolean>(false);
+
+  protected closeMobileDrawer(): void {
+    this.isMobileDrawerOpen.set(false);
+  }
 
   // Canva-style Flip Transform
   protected toggleFlipH(layerId: string): void {
@@ -560,7 +566,12 @@ export class StudioWorkspace implements OnDestroy {
 
   // --- Tool Switching ---
   protected selectTool(tool: 'txt' | 'stk' | 'img' | 'bg' | 'tpl'): void {
-    this.state.activeTool.set(tool);
+    if (this.state.activeTool() === tool && this.isMobileDrawerOpen()) {
+      this.isMobileDrawerOpen.set(false);
+    } else {
+      this.state.activeTool.set(tool);
+      this.isMobileDrawerOpen.set(true);
+    }
   }
 
   // --- Real-time Banned Keyword Validation (Issue 5) ---
