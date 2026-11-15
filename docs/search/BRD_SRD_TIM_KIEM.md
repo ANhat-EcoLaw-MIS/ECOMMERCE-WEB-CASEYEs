@@ -1,6 +1,6 @@
 # BRD + SRD: Function Tìm kiếm và Gợi ý ốp theo mô tả
 
-Phiên bản 1.0 · 15/11/2026 · Nhánh `integration/local` · Sơ đồ quy trình: [`tim-kiem.bpmn`](tim-kiem.bpmn) (mở bằng Camunda Modeler hoặc demo.bpmn.io)
+Phiên bản 1.1 · 15/11/2026 · Nhánh `integration/local` · Sơ đồ quy trình: [`tim-kiem.bpmn`](tim-kiem.bpmn) (mở bằng Camunda Modeler hoặc demo.bpmn.io)
 
 ---
 
@@ -68,14 +68,14 @@ Khách gõ "mèo" ở header sẽ không thấy mẫu thiết kế mèo. Khách 
 
 | Mã | Yêu cầu | Tiêu chí chấp nhận |
 |---|---|---|
-| FR1 | Mở tìm kiếm | Có ba cách mở: bấm ô ở header, phím Ctrl K, hoặc nút ✨ ở header / Design Studio. Lớp phủ mở với con trỏ sẵn trong ô. Esc đóng |
+| FR1 | Mở tìm kiếm | Có ba cách mở: bấm ô ở header, phím Ctrl K, hoặc nút ✨ ở header / Design Studio. Mỗi lần mở là một lượt tìm mới: ô trống (trừ khi mở kèm ý tưởng), không còn ảnh cũ; từ đã tìm nằm ở "Tìm gần đây". Nền phía sau bị khóa, chỉ còn một thanh cuộn. Esc đóng |
 | FR2 | Trước khi gõ | Hiện: Tìm gần đây (8, có nút Xóa), Từ khóa phổ biến, Dòng máy, 4 mẫu đang hot |
 | FR3 | Khi gõ (sau 150 ms) | Kết quả chia nhóm: Mẫu thiết kế (3), Ốp có sẵn (3), Hỗ trợ (≤ 2). Cuối có nút "Xem tất cả N kết quả". ↑↓ di chuyển giữa các kết quả |
 | FR4 | Hiểu tiếng Việt | Gõ không dấu vẫn ra ("hoa la" ra Hoa lá). Gõ sai 1 chữ với từ từ 4 ký tự vẫn ra. Từ đồng nghĩa có tác dụng ("dẻo" ra ốp TPU). Từ ngắn dưới 4 ký tự không bị khớp như tiền tố ("hoa" không ra "hoàn") |
 | FR5 | Nhận dòng máy | "ốp mèo ip15 pro max" hiện "dòng máy iPhone 15 Pro Max" và tìm "ốp mèo" |
 | FR6 | Lối tắt mã đơn | Gõ `cc-261115-0001` hiện "📦 Mở đơn CC-261115-0001". Enter mở `/order-tracking/CC-261115-0001` |
 | FR7 | Gợi ý theo mô tả | Ô nhập nhiều dòng, có câu mẫu. Hiện "Mình hiểu bạn muốn: …" và tối đa 12 thẻ kèm lý do. Có nút "Tự thiết kế với ý tưởng này" |
-| FR8 | Tìm bằng ảnh | Ảnh sai định dạng hoặc quá 5 MB thì báo lỗi. Ảnh hợp lệ hiện ảnh thu nhỏ, màu chủ đạo và 12 mẫu gần màu nhất |
+| FR8 | Tìm bằng ảnh | Ảnh sai định dạng hoặc quá 5 MB thì báo lỗi. Ảnh hợp lệ hiện thanh bảng màu và tên tông ("Ảnh của bạn có tông: xanh lá · xanh dương"). Chỉ hiện mẫu cùng tông (độ giống ≥ 0,4), kèm lý do. Không có mẫu nào cùng tông thì nói thật, hiện 6 mẫu gần nhất và nút "Tự thiết kế theo tông này" |
 | FR9 | Trang kết quả `/tim-kiem?q=` | Có tab Tất cả / Mẫu thiết kế / Ốp có sẵn (kèm số lượng), lọc phong cách (≤ 6 chip phổ biến nhất), sắp xếp theo phù hợp hoặc giá. Không có ô tìm thứ hai: nút "Sửa tìm kiếm" mở lại lớp phủ |
 | FR10 | Không có kết quả | Có hai nút: "✨ Gợi ý theo mô tả" và "Tự thiết kế với ý tưởng này". Nút thứ hai mở `/design-studio/templates?y=<ý tưởng>`, ở đó hiện băng "Ý tưởng của bạn" với nút "Bắt đầu từ phôi trắng" |
 | FR11 | Mở mẫu từ kết quả | Thẻ mẫu dẫn tới `/design-studio/templates?template=<id>`, trang tự mở cửa sổ chi tiết mẫu đó |
@@ -119,6 +119,23 @@ Cộng thêm vào tổng điểm:
 
 Cần khớp ít nhất 60% số từ, hoặc khớp một khái niệm.
 
+**Hồ sơ màu dùng chung cho ảnh và mô tả** (`shared/search/color.ts`, `core/search/color-index.ts`):
+
+1. Mỗi ảnh (ảnh khách tải lên, ảnh ốp, artwork mẫu) được thu về 48×48 điểm ảnh, gom thành tối đa 4 màu chủ đạo kèm tỷ lệ (bảng màu).
+2. Ảnh sản phẩm: lấy 75% từ vùng giữa (nơi có chiếc ốp) và 25% từ cả ảnh, để nền studio giống nhau không làm mọi ốp trông như nhau. Mẫu thiết kế: 70% artwork + 30% màu nền gradient.
+3. Bảng màu được đặt tên theo cùng bộ khái niệm màu của từ điển (tím, hồng, đỏ, cam, vàng, xanh lá, xanh dương, đen, trắng, pastel).
+4. So hai bảng màu bằng ΔE trong không gian CIELAB (gần với cách mắt người nhìn màu), ra độ giống 0–1.
+
+Nhờ vậy ba đường tìm khớp nhau:
+
+| Đường tìm | Dùng hồ sơ màu thế nào |
+|---|---|
+| Tìm bằng ảnh | Bảng màu ảnh ↔ bảng màu từng ốp (×10) + số tên tông trùng (×1,5) |
+| Gợi ý theo mô tả | Mô tả có màu ("xanh lá") thì so màu chuẩn của tên đó với bảng màu từng ốp (tối đa +2 mỗi màu); ốp không khớp màu nào bị trừ 3 |
+| Từ khóa | Chỉ cộng nhẹ +1 khi ảnh trông đúng màu đã gõ, không tự tạo kết quả, để tìm theo chữ vẫn chính xác |
+
+Bảng màu tính một lần cho mỗi ảnh (khoảng 1 ms/ảnh) và lưu trong trình duyệt.
+
 **Gợi ý theo mô tả:** điểm theo nhóm khái niệm.
 
 | Nhóm | Trọng số |
@@ -133,7 +150,7 @@ Lý do hiển thị chính là các khái niệm khớp.
 
 ### B4. Kiểm thử
 
-- Unit: `shared/search/rank.spec.ts` có 9 ca (bỏ dấu, sai chữ, từ đồng nghĩa, dòng máy, mã đơn, gợi ý có lý do, mô tả vô nghĩa thì không gợi ý, tiền tố ngắn, màu). Kết quả: 9/9 đạt.
+- Unit: `shared/search/rank.spec.ts` có 11 ca (bỏ dấu, sai chữ, từ đồng nghĩa, dòng máy, mã đơn, gợi ý có lý do, mô tả vô nghĩa thì không gợi ý, tiền tố ngắn, toán màu ΔE/bảng màu/tên màu, ảnh cùng tông và "gần nhất", mô tả màu khớp qua ảnh). Kết quả: 11/11 đạt.
 - Thử trên trình duyệt:
   - Ctrl K mở lớp phủ;
   - "mèo ip15 pro max" ra mẫu mèo và nhận đúng dòng máy;
@@ -142,7 +159,17 @@ Lý do hiển thị chính là các khái niệm khớp.
   - `/tim-kiem?q=hủy đơn` ra 2 trang hỗ trợ;
   - `?template=` mở đúng mẫu; `?y=` hiện băng ý tưởng.
 
-### B5. Hướng phát triển
+### B5. Đánh giá quy mô
+
+| Quy mô kho | Cách làm phù hợp |
+|---|---|
+| Hiện tại: khoảng 45 mục (ốp, phụ kiện, mẫu) | Tính hết trên trình duyệt. Đọc màu lần đầu dưới 0,1 giây; tìm và xếp hạng dưới 5 ms |
+| Đến vài nghìn mục | Vẫn chạy trên trình duyệt, nhưng nên tính sẵn bảng màu khi đăng sản phẩm và lưu cùng sản phẩm, thay vì đọc ảnh lúc khách tìm |
+| Trên vài nghìn mục, hoặc cần hiểu nghĩa ảnh (con mèo, phong cảnh…) | Chuyển sang Supabase: tìm chữ bằng `unaccent` + `pg_trgm`; tìm ảnh và mô tả theo nghĩa bằng vector nhúng (pgvector + mô hình ảnh-chữ kiểu CLIP). Giao diện và kiểu `SearchHit` giữ nguyên |
+
+Giới hạn hiện tại cần nói rõ: tìm bằng ảnh so **màu**, không nhận ra **nội dung** ảnh.
+
+### B6. Hướng phát triển
 
 - Khi bảng `products` trên Supabase đủ dữ liệu, `ShopSearchSource` đọc từ đó thay cho `catalog.ts`.
 - Đưa nhật ký từ khóa lên một bảng Supabase để admin xem thống kê thật. Hiện thống kê có sẵn trong `SearchService.stats`, chưa gắn màn admin.

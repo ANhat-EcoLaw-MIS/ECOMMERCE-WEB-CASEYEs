@@ -22,7 +22,10 @@ export const CONCEPTS: readonly Concept[] = [
   { id: 'hong', group: 'color', label: 'hồng', words: ['hồng', 'pink', 'rose', 'sakura'] },
   { id: 'den', group: 'color', label: 'đen', words: ['đen', 'black', 'noir', 'dark', 'tối màu', 'midnight'] },
   { id: 'trang', group: 'color', label: 'trắng', words: ['trắng', 'white', 'trong suốt', 'clear'] },
-  { id: 'xanh', group: 'color', label: 'xanh', words: ['xanh', 'blue', 'green', 'mint', 'matcha', 'biển', 'bầu trời'] },
+  { id: 'xanh-la', group: 'color', label: 'xanh lá', words: ['xanh lá', 'xanh', 'green', 'mint', 'matcha', 'lá cây', 'olive'] },
+  { id: 'xanh-duong', group: 'color', label: 'xanh dương', words: ['xanh dương', 'xanh biển', 'xanh', 'blue', 'navy', 'biển', 'bầu trời', 'ocean'] },
+  { id: 'do', group: 'color', label: 'đỏ', words: ['đỏ', 'red', 'cherry', 'đỏ rượu'] },
+  { id: 'cam', group: 'color', label: 'cam', words: ['cam', 'orange', 'đào', 'peach'] },
   { id: 'vang', group: 'color', label: 'vàng', words: ['vàng', 'yellow', 'gold', 'nắng', 'sunset', 'hoàng hôn'] },
   { id: 'pastel', group: 'color', label: 'pastel', words: ['pastel', 'nhẹ nhàng', 'dịu', 'mộng mơ', 'dreamy', 'soft'] },
   // styles
@@ -78,7 +81,10 @@ function hasPhrase(text: string, phrase: string): boolean {
 /** Concepts mentioned in a text (name, tags, description or a customer's request). */
 export function conceptsIn(text: string): Concept[] {
   const t = normalizeVi(text);
-  return NORMALIZED.filter((c) => c.words.some((w) => hasPhrase(t, w))).map((c) => c.concept);
+  const found = NORMALIZED.filter((c) => c.words.some((w) => hasPhrase(t, w))).map((c) => c.concept);
+  // "xanh" alone may be green or blue; "xanh dương" / "xanh lá" picks one.
+  const blue = /\bxanh (duong|bien)\b/.test(t), green = /\bxanh la\b/.test(t);
+  return found.filter((c) => !(c.id === 'xanh-la' && blue && !green) && !(c.id === 'xanh-duong' && green && !blue));
 }
 
 /**

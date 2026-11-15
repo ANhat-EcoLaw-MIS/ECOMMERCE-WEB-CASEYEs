@@ -1,6 +1,8 @@
-import { Injectable, InjectionToken, computed, inject, signal } from '@angular/core';
+import { Injectable, InjectionToken, computed, effect, inject, signal } from '@angular/core';
+import { Swatch, cssOf, paletteOfImage } from '../../shared/search/color';
 import { deviceIn, orderCodeIn } from '../../shared/search/lexicon';
-import { averageColor, rankByColor, rankByText, suggestByDescription } from '../../shared/search/rank';
+import { rankByImage, rankByText, suggestByDescription } from '../../shared/search/rank';
+import { ColorIndex } from './color-index';
 import { SearchDoc, SearchHit } from '../../shared/search/search.types';
 
 /** A function's searchable things. Registered in app.config.ts, so core never imports features. */
@@ -34,6 +36,19 @@ export const SUGGEST_EXAMPLES: readonly string[] = [
   'Phong cảnh Nhật Bản nhẹ nhàng',
 ];
 
+export interface ImageResult {
+  readonly preview: string;
+  /** Main colors of the photo, biggest first (shown as dots). */
+  readonly palette: readonly { css: string; w: number }[];
+  readonly names: readonly string[];
+  readonly hits: readonly SearchHit[];
+  readonly nearest: readonly SearchHit[];
+}
+
+function swatchView(sw: Swatch): { css: string; w: number } {
+  return { css: cssOf(sw.rgb), w: sw.w };
+}
+
 const RECENT_KEY = 'caseyes.search.recent.v1';
 const LOG_KEY = 'caseyes.search.log.v1';
 
@@ -46,18 +61,30 @@ const LOG_KEY = 'caseyes.search.log.v1';
 export class SearchService {
   private readonly sources = inject(SEARCH_SOURCES, { optional: true }) ?? [];
 
-  readonly docs = computed(() => this.sources.flatMap((s) => s.docs()));
+  private readonly colors = inject(ColorIndex);
+  private readonly rawDocs = computed(() => this.sources.flatMap((s) => s.docs()));
+  /** Every searchable thing, with the palette read from its picture when available. */
+  readonly docs = computed(() => this.rawDocs().map((d) => this.colors.withPalette(d)));
   readonly isOpen = signal(false);
   readonly mode = signal<SearchMode>('text');
   readonly query = signal('');
   readonly recent = signal<readonly string[]>(readList(RECENT_KEY));
-  readonly image = signal<{ preview: string; color: string; hits: readonly SearchHit[] } | null>(null);
+  readonly image = signal<ImageResult | null>(null);
   readonly imageMessage = signal('');
   readonly imageBusy = signal(false);
 
+  constructor() {
+    // Read the pictures' colors in the background while the search is open.
+    effect(() => {
+      if (this.isOpen()) void this.colors.ensure(this.rawDocs());
+    });
+  }
+
+  /** Opens a fresh search: empty box (unless prefilled), no old photo. Past searches stay in "Tìm gần đây". */
   open(mode: SearchMode = 'text', prefill = ''): void {
     this.mode.set(mode);
-    if (prefill) this.query.set(prefill);
+    this.query.set(prefill);
+    this.clearImage();
     this.isOpen.set(true);
   }
 
@@ -94,9 +121,12 @@ export class SearchService {
     }
     this.imageBusy.set(true);
     try {
-      const rgb = await averageColor(file);
-      const preview = URL.createObjectURL(file);
-      this.image.set({ preview, color: `rgb(${rgb.join(', ')})`, hits: rankByColor(this.docs(), rgb).slice(0, 12) });
+      const palette = await paletteOfImage(file);
+      if (!palette.length) throw new Error('empty');
+      await this.colors.ensure(this.rawDocs());
+      const match = rankByImage(this.docs().filter((d) => d.type !== 'help'), palette);
+      this.clearImage();
+      this.image.set({ preview: URL.createObjectURL(file), palette: palette.map(swatchView), ...match });
       this.imageMessage.set('');
       return true;
     } catch {

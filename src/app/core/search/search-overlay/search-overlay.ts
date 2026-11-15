@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { POPULAR_DEVICES, POPULAR_KEYWORDS, SUGGEST_EXAMPLES, SearchMode, SearchService } from '../search.service';
 import { SearchCard } from '../search-card/search-card';
@@ -41,6 +41,23 @@ export class SearchOverlay {
       this.settled.set(this.search.query());
       this.search.mode();
       setTimeout(() => this.input()?.nativeElement.focus());
+    });
+
+    // Lock the page behind while open: one scrollbar (the overlay's), the page does not move.
+    effect(() => {
+      if (typeof document === 'undefined') return;
+      const root = document.documentElement;
+      if (this.search.isOpen()) {
+        const gap = window.innerWidth - root.clientWidth;
+        root.style.overflow = 'hidden';
+        root.style.paddingRight = gap > 0 ? `${gap}px` : '';
+      } else {
+        root.style.overflow = '';
+        root.style.paddingRight = '';
+      }
+    });
+    inject(DestroyRef).onDestroy(() => {
+      if (typeof document !== 'undefined') document.documentElement.style.overflow = document.documentElement.style.paddingRight = '';
     });
   }
 
@@ -92,6 +109,12 @@ export class SearchOverlay {
     const idea = this.search.query().trim();
     this.picked();
     void this.router.navigate(['/design-studio/templates'], { queryParams: idea ? { y: idea } : {} });
+  }
+
+  /** No case of the photo's tones: Design Studio with the tones as the idea. */
+  protected designFromImage(names: readonly string[]): void {
+    this.search.close();
+    void this.router.navigate(['/design-studio/templates'], { queryParams: names.length ? { y: `Ốp tông ${names.join(', ')}` } : {} });
   }
 
   protected async pickImage(event: Event): Promise<void> {

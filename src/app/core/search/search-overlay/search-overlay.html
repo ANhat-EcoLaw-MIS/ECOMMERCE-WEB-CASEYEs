@@ -1,5 +1,5 @@
 @if (search.isOpen()) {
-  <div class="fixed inset-0 z-[95] bg-ink/40 backdrop-blur-sm" (click)="search.close()" aria-hidden="true"></div>
+  <div class="fixed inset-0 z-[95] touch-none bg-ink/40 backdrop-blur-sm" (click)="search.close()" aria-hidden="true"></div>
   <section
     role="dialog"
     aria-modal="true"
@@ -71,26 +71,45 @@
     </div>
 
     <!-- ===== Body ===== -->
-    <div class="min-h-0 flex-1 overflow-y-auto" aria-live="polite">
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain" aria-live="polite">
       <div class="mx-auto max-w-[1180px] px-4 py-5 lg:px-6">
 
         @if (search.image(); as img) {
-          <!-- Photo -->
+          <!-- Photo: palette → color names → cases of the same tones -->
           <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-3">
             <div class="flex items-center gap-3">
               <img [src]="img.preview" alt="Ảnh bạn tải lên" class="size-14 rounded-xl object-cover" />
               <div>
-                <p class="text-sm font-semibold text-ink">Mẫu có màu gần giống ảnh của bạn</p>
-                <p class="flex items-center gap-1.5 text-xs text-ink-soft"><span class="size-3 rounded-full ring-1 ring-line" [style.background]="img.color"></span> Tìm theo màu sắc chủ đạo của ảnh</p>
+                <p class="text-sm font-semibold text-ink">
+                  @if (img.names.length) { Ảnh của bạn có tông: {{ img.names.join(' · ') }} } @else { Màu chủ đạo trong ảnh của bạn }
+                </p>
+                <div class="mt-1.5 flex h-3 w-40 overflow-hidden rounded-full ring-1 ring-line" aria-hidden="true">
+                  @for (sw of img.palette; track $index) {
+                    <span class="h-full" [style.background]="sw.css" [style.width.%]="sw.w * 100"></span>
+                  }
+                </div>
               </div>
             </div>
             <button type="button" (click)="search.clearImage()" class="min-h-10 rounded-full px-3 text-sm font-semibold text-brand-800 hover:bg-brand-50">Xóa ảnh</button>
           </div>
-          <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-            @for (h of img.hits; track h.doc.id) {
-              <app-search-card [hit]="h" (picked)="picked()" />
-            }
-          </div>
+          @if (img.hits.length) {
+            <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              @for (h of img.hits; track h.doc.id) {
+                <app-search-card [hit]="h" [showReasons]="true" (picked)="picked()" />
+              }
+            </div>
+          } @else {
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-(image:--grad-soft) p-4">
+              <p class="text-sm text-ink">Chưa có mẫu cùng tông với ảnh này. Bạn có thể tự thiết kế ốp theo tông màu đó, hoặc xem các mẫu gần nhất bên dưới.</p>
+              <button type="button" data-search-item (click)="designFromImage(img.names)" class="min-h-11 rounded-full bg-brand-800 px-5 text-sm font-semibold text-white hover:bg-brand-600">Tự thiết kế theo tông này</button>
+            </div>
+            <p class="mt-4 text-xs font-semibold uppercase tracking-widest text-ink-soft">Gần nhất</p>
+            <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              @for (h of img.nearest; track h.doc.id) {
+                <app-search-card [hit]="h" (picked)="picked()" />
+              }
+            </div>
+          }
         } @else if (search.mode() === 'suggest') {
           <!-- Description → suggestions -->
           @if (suggestion(); as s) {

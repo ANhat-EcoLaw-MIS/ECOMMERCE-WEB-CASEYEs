@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { SearchSource } from '../../core/search/search.service';
-import { colorOf } from '../../shared/search/rank';
+import { paletteFromCss } from '../../shared/search/color';
 import { SearchDoc } from '../../shared/search/search.types';
 
 /**
@@ -33,7 +33,8 @@ export class DesignTemplateSearchSource implements SearchSource {
               queryParams: { template: t.id },
               badge: t.isTrending ? 'Đang hot' : undefined,
               boost: t.isTrending ? 2 : t.isBlankCanvas ? 1 : 0,
-              color: colorOf(t.gradient),
+              // Background colors until ColorIndex reads the artwork itself.
+              palette: paletteFromCss(t.gradient),
             }),
           ),
         ),

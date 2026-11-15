@@ -1,3 +1,4 @@
+import { COLOR_REFERENCE, Palette, colorLabel, paletteNames, paletteSimilarity } from './color';
 import { Concept, conceptsIn } from './lexicon';
 import { editDistance, normalizeVi, tokensOf } from './normalize-vi';
 import { SearchDoc, SearchHit } from './search.types';
@@ -12,7 +13,10 @@ interface Prepared {
   readonly sub: string;
   readonly body: string;
   readonly allTokens: readonly string[];
+  /** Concepts from words + main colors of the picture (used by suggestions and photo search). */
   readonly concepts: ReadonlySet<string>;
+  /** Concepts from words only (keyword search stays precise). */
+  readonly textConcepts: ReadonlySet<string>;
 }
 
 const cache = new WeakMap<SearchDoc, Prepared>();
@@ -23,6 +27,7 @@ function prepare(doc: SearchDoc): Prepared {
     const title = normalizeVi(doc.title);
     const sub = normalizeVi(`${doc.subtitle ?? ''} ${doc.style ?? ''}`);
     const body = normalizeVi(doc.text ?? '');
+    const words = conceptsIn(`${doc.title} ${doc.subtitle ?? ''} ${doc.style ?? ''} ${doc.text ?? ''}`).map((c) => c.id);
     p = {
       doc,
       title,
@@ -30,7 +35,9 @@ function prepare(doc: SearchDoc): Prepared {
       sub,
       body,
       allTokens: `${title} ${sub} ${body}`.split(' ').filter(Boolean),
-      concepts: new Set(conceptsIn(`${doc.title} ${doc.subtitle ?? ''} ${doc.style ?? ''} ${doc.text ?? ''}`).map((c) => c.id)),
+      textConcepts: new Set(words),
+      // plus the 2 main color names seen in the picture (same names a photo gets)
+      concepts: new Set([...words, ...paletteNames(doc.palette ?? []).slice(0, 2)]),
     };
     cache.set(doc, p);
   }
@@ -71,8 +78,10 @@ export function rankByText(docs: readonly SearchDoc[], query: string): SearchHit
       if (s > 0) matched++;
       score += s;
     }
-    const conceptHits = concepts.filter((c) => p.concepts.has(c.id));
+    const conceptHits = concepts.filter((c) => p.textConcepts.has(c.id));
     score += conceptHits.length * 3;
+    // A picture that looks like the color asked adds a little, but never makes a result on its own.
+    score += concepts.filter((c) => !p.textConcepts.has(c.id) && p.concepts.has(c.id)).length;
     const needed = Math.max(1, Math.ceil(words.length * 0.6));
     if (matched < needed && conceptHits.length === 0) continue;
     if (phrase.length > 2 && (' ' + p.title + ' ').includes(phrase.length >= 4 ? ' ' + phrase : ` ${phrase} `)) score += 6;
@@ -85,13 +94,21 @@ export function rankByText(docs: readonly SearchDoc[], query: string): SearchHit
 
 const GROUP_WEIGHT: Record<Concept['group'], number> = { theme: 4, style: 3, color: 2.5, material: 1.5, occasion: 1 };
 
+/** How much a document's picture looks like a named color (0–1), from its palette. */
+function looksLike(doc: SearchDoc, colorId: string): number {
+  const ref = COLOR_REFERENCE[colorId];
+  return ref && doc.palette?.length ? paletteSimilarity([{ rgb: ref, w: 1 }], doc.palette) : 0;
+}
+
 /**
  * "Gợi ý theo mô tả": read colors, styles, themes, occasions and materials from a free-text
- * description and rank cases/templates by how many of them they match. Runs in the browser
- * (no external AI); every suggestion explains which wishes it matches.
+ * description and rank cases/templates by how many of them they match. Colors are checked twice:
+ * in the words (tags) and in the picture itself (palette), the same way a photo is matched.
+ * Runs in the browser (no external AI); every suggestion explains which wishes it matches.
  */
 export function suggestByDescription(docs: readonly SearchDoc[], description: string): { concepts: Concept[]; hits: SearchHit[] } {
   const concepts = conceptsIn(description);
+  const colors = concepts.filter((c) => c.group === 'color');
   const textHits = new Map(rankByText(docs, description).map((h) => [h.doc, h.score]));
   const hits: SearchHit[] = [];
   for (const doc of docs) {
@@ -100,49 +117,47 @@ export function suggestByDescription(docs: readonly SearchDoc[], description: st
     // "quà / cặp đôi / gen z" fit any design, they only add a little when other wishes match
     const strong = matched.filter((c) => c.group !== 'occasion');
     let score = matched.reduce((s, c) => s + GROUP_WEIGHT[c.group], 0) + (textHits.get(doc) ?? 0) * 0.3;
+    // Visual color closeness (0–2 per color asked), so a purple-looking case counts as "tím" even untagged.
+    score += colors.reduce((s, c) => s + 2 * looksLike(doc, c.id), 0);
     if (!strong.length && !textHits.has(doc)) continue;
+    // When colors were asked, a case that matches none of them (neither tag nor look) drops back.
+    if (colors.length && !colors.some((c) => p.concepts.has(c.id) || looksLike(doc, c.id) > 0.5)) score -= 3;
     score += (doc.boost ?? 0) * 0.4;
     if (doc.outOfStock) score -= 2;
-    hits.push({ doc, score, reasons: matched.map((c) => c.label) });
+    if (score > 0) hits.push({ doc, score, reasons: matched.map((c) => c.label) });
   }
   return { concepts, hits: hits.sort((a, b) => b.score - a.score) };
 }
 
-/** "Tìm bằng ảnh": order documents by distance to the photo's average color. */
-export function rankByColor(docs: readonly SearchDoc[], rgb: readonly [number, number, number]): SearchHit[] {
-  const dist = (c: readonly [number, number, number]) => (c[0] - rgb[0]) ** 2 * 0.299 + (c[1] - rgb[1]) ** 2 * 0.587 + (c[2] - rgb[2]) ** 2 * 0.114;
-  return docs
-    .filter((d) => d.color)
-    .map((doc) => ({ doc, score: -dist(doc.color!), reasons: [] }))
+export interface ImageMatch {
+  /** Color names read from the photo ("xanh lá", "trắng"…), main first. */
+  readonly names: readonly string[];
+  /** Cases/templates of the same tones (similarity ≥ 0.4). */
+  readonly hits: readonly SearchHit[];
+  /** Nearest ones, shown only when nothing is close enough. */
+  readonly nearest: readonly SearchHit[];
+}
+
+/**
+ * "Tìm bằng ảnh": photo palette ↔ each case's palette (ΔE in CIELAB), plus the shared color names.
+ * Returns an honest split: same tones, or "nothing alike, here are the nearest".
+ */
+export function rankByImage(docs: readonly SearchDoc[], photo: Palette): ImageMatch {
+  const names = paletteNames(photo).slice(0, 3);
+  const scored = docs
+    .filter((d) => d.palette?.length)
+    .map((doc) => {
+      const p = prepare(doc);
+      const sim = paletteSimilarity(photo, doc.palette!);
+      const shared = names.filter((n) => p.concepts.has(n));
+      return { doc, sim, score: sim * 10 + shared.length * 1.5 + (doc.boost ?? 0) * 0.3 - (doc.outOfStock ? 2 : 0), reasons: shared.map(colorLabel) };
+    })
     .sort((a, b) => b.score - a.score);
-}
-
-/** Average color of an image file (64×64 sample, transparent pixels ignored). */
-export async function averageColor(file: File): Promise<[number, number, number]> {
-  const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 64;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('canvas');
-  ctx.drawImage(bitmap, 0, 0, 64, 64);
-  bitmap.close();
-  const px = ctx.getImageData(0, 0, 64, 64).data;
-  let r = 0, g = 0, b = 0, n = 0;
-  for (let i = 0; i < px.length; i += 4) {
-    if (px[i + 3] < 80) continue;
-    r += px[i];
-    g += px[i + 1];
-    b += px[i + 2];
-    n++;
-  }
-  if (!n) throw new Error('transparent');
-  return [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
-}
-
-/** First hex color of a CSS gradient/color string (template backgrounds). */
-export function colorOf(css: string | undefined): [number, number, number] | undefined {
-  const m = css?.match(/#([0-9a-f]{6}|[0-9a-f]{3})\b/i);
-  if (!m) return undefined;
-  const hex = m[1].length === 3 ? m[1].split('').map((c) => c + c).join('') : m[1];
-  return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+  const close = scored.filter((h) => h.sim >= 0.4);
+  const strip = ({ doc, score, reasons }: (typeof scored)[number]): SearchHit => ({ doc, score, reasons });
+  return {
+    names: names.map(colorLabel),
+    hits: close.slice(0, 12).map(strip),
+    nearest: close.length ? [] : scored.slice(0, 6).map(strip),
+  };
 }

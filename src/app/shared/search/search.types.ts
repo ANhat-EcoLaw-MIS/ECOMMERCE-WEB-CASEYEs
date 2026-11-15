@@ -1,3 +1,5 @@
+import { Palette } from './color';
+
 /** Kinds of things the site-wide search can find. Orders are not listed (only order-code shortcut). */
 export type SearchDocType = 'product' | 'template' | 'help';
 
@@ -22,8 +24,8 @@ export interface SearchDoc {
   /** Popularity bonus (best seller, trending…), 0–3. */
   readonly boost?: number;
   readonly outOfStock?: boolean;
-  /** Average color for "search by image". */
-  readonly color?: readonly [number, number, number];
+  /** Main colors of the picture (filled from the image by ColorIndex; see color.ts). */
+  readonly palette?: Palette;
   /** Style label used as a results filter (e.g. "Pastel", "Dễ thương"). */
   readonly style?: string;
 }

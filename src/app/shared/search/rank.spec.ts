@@ -1,13 +1,15 @@
 import { conceptsIn, deviceIn, orderCodeIn } from './lexicon';
 import { normalizeVi } from './normalize-vi';
-import { colorOf, rankByColor, rankByText, suggestByDescription } from './rank';
+import { deltaE, namesOf, paletteFromCss, paletteFromPixels, paletteNames, paletteSimilarity } from './color';
+import { rankByImage, rankByText, suggestByDescription } from './rank';
 import { SearchDoc } from './search.types';
 
 const docs: SearchDoc[] = [
-  { id: 'kitten', type: 'template', title: 'Dreamy Kitten', subtitle: 'Mèo mộng mơ', text: '#pastel #cute #mèo_con #dreamy', link: '/a', color: [236, 220, 250] },
+  { id: 'kitten', type: 'template', title: 'Dreamy Kitten', subtitle: 'Mèo mộng mơ', text: '#pastel #cute #mèo_con #dreamy', link: '/a', palette: [{ rgb: [236, 220, 250], w: 0.7 }, { rgb: [190, 160, 235], w: 0.3 }] },
   { id: 'sakura', type: 'template', title: 'Sakura Night', subtitle: 'Hoa anh đào', text: '#hoa_lá #japan #night', link: '/b', boost: 2 },
-  { id: 'noir', type: 'product', title: 'Noir Muse', subtitle: 'After Hours', text: 'Đen Minimal Art Hybrid TPU', style: 'Cá tính', link: '/c', color: [45, 39, 53] },
+  { id: 'noir', type: 'product', title: 'Noir Muse', subtitle: 'After Hours', text: 'Đen Minimal Art Hybrid TPU', style: 'Cá tính', link: '/c', palette: [{ rgb: [45, 39, 53], w: 1 }] },
   { id: 'lilac', type: 'product', title: 'Lavender Daydream', subtitle: 'Soft Intentions', text: 'Tím Minimal Hoa TPU chống sốc', style: 'Pastel', link: '/d' },
+  { id: 'matcha', type: 'template', title: 'Matcha Boba', subtitle: 'Foodie', text: '#foodie', link: '/f', palette: [{ rgb: [200, 235, 190], w: 0.6 }, { rgb: [95, 160, 90], w: 0.4 }] },
   { id: 'help', type: 'help', title: 'Hủy đơn hàng', text: 'hủy đơn yêu cầu hủy hoàn tiền', link: '/e' },
 ];
 
@@ -49,9 +51,36 @@ describe('search core', () => {
     expect(suggestByDescription(docs, 'xyz qwe').hits).toEqual([]);
   });
 
-  it('ranks by color and reads template gradients', () => {
-    expect(rankByColor(docs, [40, 35, 50])[0].doc.id).toBe('noir');
-    expect(colorOf('linear-gradient(180deg, #fdf4ff 0%, #ede9fe 100%)')).toEqual([253, 244, 255]);
+  it('color math: ΔE, color names, palettes', () => {
+    expect(deltaE([255, 0, 0], [255, 0, 0])).toBe(0);
+    expect(deltaE([150, 110, 210], [160, 120, 215])).toBeLessThan(10);
+    expect(namesOf([150, 110, 210])).toEqual(['tim']);
+    expect(namesOf([90, 170, 100])).toEqual(['xanh-la']);
+    expect(namesOf([20, 20, 25])).toEqual(['den']);
+    expect(namesOf([236, 220, 250])).toEqual(expect.arrayContaining(['pastel']));
+    expect(paletteFromCss('linear-gradient(180deg, #fdf4ff 0%, #ede9fe 100%)').map((s) => s.rgb)).toEqual([[253, 244, 255], [237, 233, 254]]);
+    // 3 green pixels + 1 purple pixel → green first, weight 0.75
+    const px = [90, 170, 100, 255, 90, 170, 100, 255, 92, 171, 99, 255, 150, 110, 210, 255];
+    const pal = paletteFromPixels(px);
+    expect(paletteNames(pal)[0]).toBe('xanh-la');
+    expect(pal[0].w).toBeCloseTo(0.75);
+    expect(paletteSimilarity(pal, pal)).toBeGreaterThan(0.9);
+  });
+
+  it('photo search: same tones first, honest "nearest" when nothing is alike', () => {
+    const green = rankByImage(docs, [{ rgb: [100, 165, 95], w: 0.7 }, { rgb: [240, 240, 235], w: 0.3 }]);
+    expect(green.names[0]).toBe('xanh lá');
+    expect(green.hits[0].doc.id).toBe('matcha');
+    const red = rankByImage(docs, [{ rgb: [215, 30, 40], w: 1 }]);
+    expect(red.hits).toEqual([]);
+    expect(red.nearest.length).toBeGreaterThan(0);
+  });
+
+  it('description colors also use the picture: "xanh lá" finds the green template with no green tag', () => {
+    const r = suggestByDescription(docs, 'ốp xanh lá dễ thương');
+    expect(r.concepts.map((c) => c.id)).toContain('xanh-la');
+    expect(r.concepts.map((c) => c.id)).not.toContain('xanh-duong');
+    expect(r.hits[0].doc.id).toBe('matcha');
   });
 
   it('concepts are found in product text', () => {
