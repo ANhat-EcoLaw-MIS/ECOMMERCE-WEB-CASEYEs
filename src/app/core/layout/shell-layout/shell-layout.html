@@ -6,7 +6,8 @@
 </a>
 
 @if (!isCanvasEditor()) {
-  <app-header [cartCount]="cartCount()" (searchRequested)="onSearchRequested()" />
+  <app-header [cartCount]="cartCount()" />
+  <app-search-overlay />
 }
 
 <main id="main" [class.h-screen]="isCanvasEditor()" [class.overflow-hidden]="isCanvasEditor()">

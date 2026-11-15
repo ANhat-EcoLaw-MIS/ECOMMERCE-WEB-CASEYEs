@@ -1,5 +1,6 @@
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SearchService } from '../../../../core/search/search.service';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
 import { CanvasLayer, ImageElement, TextElement } from '../../models/canvas-element.model';
@@ -643,6 +644,11 @@ export class TemplateBrowser {
   private readonly router = inject(Router);
   private readonly auth = inject(SupabaseAuthService);
   private readonly authModal = inject(AuthModal);
+  private readonly route = inject(ActivatedRoute);
+  /** Site-wide search: "Gợi ý theo mô tả" button next to the title. */
+  private readonly search = inject(SearchService);
+  /** Idea typed in search ("Tự thiết kế với ý tưởng này", ?y=…). */
+  protected readonly idea = signal('');
 
   // Authentication & Designs State
   protected readonly isLoggedIn = this.auth.isAuthenticated;
@@ -724,6 +730,12 @@ export class TemplateBrowser {
 
   constructor() {
     this.preloadTemplateArtworks();
+
+    // Links from the site-wide search: ?template=ID opens that template, ?y=… shows the idea banner.
+    const params = this.route.snapshot.queryParamMap;
+    this.idea.set((params.get('y') ?? '').trim().slice(0, 200));
+    const fromSearch = TEMPLATE_CATALOG.find((t) => t.id === params.get('template'));
+    if (fromSearch) setTimeout(() => this.openDetailModal(fromSearch));
 
     // Freeze body scroll when ANY modal is open
     effect(() => {
@@ -1059,6 +1071,16 @@ export class TemplateBrowser {
 
   protected isFavorite(templateId: string): boolean {
     return this.favoriteTemplates().has(templateId);
+  }
+
+  protected openSuggest(): void {
+    this.search.open('suggest', this.idea());
+  }
+
+  /** Idea banner: start from the blank case. */
+  protected startFromIdea(): void {
+    const blank = TEMPLATE_CATALOG.find((t) => t.isBlankCanvas);
+    if (blank) this.openDetailModal(blank);
   }
 
   // --- Detail & 3D Preview Modal ---

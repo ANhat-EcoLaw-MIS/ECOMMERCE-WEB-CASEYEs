@@ -88,6 +88,11 @@ export const routes: Routes = [
           import('./features/order-tracking/order-tracking.routes').then((m) => m.ORDER_TRACKING_ROUTES),
       },
       {
+        path: 'tim-kiem',
+        title: "Tìm kiếm | CasEYE's",
+        loadComponent: () => import('./features/search/search-page').then((m) => m.SearchPage),
+      },
+      {
         path: 'test',
         title: "Kiểm thử | CasEYE's",
         loadComponent: () => import('./core/demo/demo').then((m) => m.Demo),

@@ -7,7 +7,7 @@ import {AuthModal} from '../../auth/auth-modal';
 import { CartState } from '../../cart-state/cart-state';
 import { CartDrawerState } from '../../cart-state/cart-drawer-state';
 import { CartDrawer } from '../../cart-state/cart-drawer';
-import { OmniSearchState } from '../../search/omni-search-state';
+import { SearchService } from '../../search/search.service';
 
 @Component({
   selector: 'app-header',
@@ -22,12 +22,11 @@ export class Header {
   protected readonly auth = inject(SupabaseAuthService);
   private readonly notifications = inject(NotificationManager);
   private readonly authModal = inject(AuthModal);
-  // Shop (Mua sắm): cart drawer, add-to-bag animation and omni search.
+  // Shop (Mua sắm): cart drawer and add-to-bag animation.
   protected readonly cartState = inject(CartState);
   private readonly drawer = inject(CartDrawerState);
-  protected readonly omni = inject(OmniSearchState);
-  protected readonly searchOpen = signal(false);
-  protected readonly draggingImage = signal(false);
+  /** Site-wide search (overlay mounted in ShellLayout). */
+  private readonly search = inject(SearchService);
   /** Number of items in the cart. Provided by the parent. */
   readonly cartCount = input(0);
 
@@ -54,15 +53,18 @@ export class Header {
   protected openSearch(): void {
     this.closeMenu();
     this.searchRequested.emit();
-    this.searchOpen.set(true);
+    this.search.open('text');
+  }
+
+  protected openSuggest(): void {
+    this.closeMenu();
+    this.search.open('suggest');
   }
 
   protected onKeydown(event: KeyboardEvent): void {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       this.openSearch();
-    } else if (event.key === 'Escape' && this.searchOpen()) {
-      this.searchOpen.set(false);
     } else if (event.key === 'Escape' && this.menuOpen()) {
       this.closeMenu();
     }
@@ -114,29 +116,5 @@ export class Header {
         })
       }
       })
-  }
-
-  protected submitSearch(): void {
-    this.searchOpen.set(false);
-    void this.router.navigate(['/shop'], { queryParams: this.omni.query().trim() ? { q: this.omni.query().trim() } : {} }).then(() => {
-      if (typeof document !== 'undefined') document.getElementById('discover')?.scrollIntoView({ behavior: 'smooth' });
-    });
-  }
-
-  protected async imageSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (await this.omni.searchByImage(file)) this.submitSearch();
-  }
-
-  protected async imageDropped(event: DragEvent): Promise<void> {
-    event.preventDefault();
-    this.draggingImage.set(false);
-    if (await this.omni.searchByImage(event.dataTransfer?.files?.[0])) this.submitSearch();
-  }
-
-  protected onQueryChanged(event: Event): void {
-    this.omni.search((event.target as HTMLInputElement).value);
   }
 }

@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { OmniSearchState } from '../../core/search/omni-search-state';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
+import { SearchService } from '../../core/search/search.service';
 import { CartState } from '../../core/cart-state/cart-state';
 import { injectRequireLogin } from '../../core/auth/require-login';
 import { CartDrawerState } from '../../core/cart-state/cart-drawer-state';
@@ -12,7 +14,8 @@ export class Shop {
   protected readonly cart = inject(CartState);
   private readonly requireLogin = injectRequireLogin();
   private readonly drawer = inject(CartDrawerState);
-  protected readonly omni = inject(OmniSearchState);
+  /** Site-wide search (header box). Shop only keeps a ?q filter for links like /shop?q=mèo. */
+  private readonly search = inject(SearchService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected openDrawer(): void { if (this.requireLogin('/cart')) this.drawer.show(); }
@@ -20,7 +23,7 @@ export class Shop {
   protected readonly products = PRODUCTS;
   protected readonly models = MODELS;
   protected readonly styles = ['Tất cả', 'Pastel', 'Cá tính', 'Hoa lá', 'Trừu tượng', 'Tối giản'];
-  protected readonly query = this.omni.query;
+  protected readonly query = signal('');
   protected readonly style = signal('Tất cả');
   protected readonly maxPrice = signal(400000);
   protected readonly sort = signal('featured');
@@ -29,21 +32,16 @@ export class Shop {
   protected readonly wishlist = signal<string[]>(this.readWishlist());
   protected readonly toast = signal('');
   protected readonly view3D = signal(false);
-  protected readonly imageMessage=this.omni.message;
-  protected readonly imageSearchActive=this.omni.imageSearchActive;
-  protected readonly imagePreview=this.omni.imagePreview;
-  protected readonly imageColor=this.omni.imageColor;
-  protected readonly colorMatches=this.omni.colorMatches;
   protected readonly consent = signal(false);
-  constructor(){const q=this.route.snapshot.queryParamMap.get('q');if(q!==null)this.omni.search(q);}
+  private readonly urlQuery = toSignal(this.route.queryParamMap.pipe(map((p) => p.get('q') ?? '')), { initialValue: this.route.snapshot.queryParamMap.get('q') ?? '' });
+  constructor(){ effect(() => this.query.set(this.urlQuery())); }
   protected readonly visible = computed(() => {
     const needle = this.query().trim().toLocaleLowerCase('vi');
     const matched = this.products.filter((p) => (this.style() === 'Tất cả' || p.style === this.style()) && p.price <= this.maxPrice() && (!needle || [p.name,p.collection,p.style,...p.tags].join(' ').toLocaleLowerCase('vi').includes(needle)));
-    return [...matched].sort((a,b) => this.imageSearchActive() ? this.colorMatches().indexOf(a.id) - this.colorMatches().indexOf(b.id) : this.sort() === 'low' ? a.price-b.price : this.sort() === 'high' ? b.price-a.price : this.sort() === 'name' ? a.name.localeCompare(b.name) : 0);
+    return [...matched].sort((a,b) => this.sort() === 'low' ? a.price-b.price : this.sort() === 'high' ? b.price-a.price : this.sort() === 'name' ? a.name.localeCompare(b.name) : 0);
   });
   private readonly formatter = new Intl.NumberFormat('vi-VN', { style:'currency',currency:'VND',maximumFractionDigits:0 });
   protected money(amount: number): string { return this.formatter.format(amount); }
-  protected updateSearch(e: Event): void { this.query.set((e.target as HTMLInputElement).value); }
   protected updateStyle(e: Event): void { this.style.set((e.target as HTMLSelectElement).value); }
   protected updateSort(e: Event): void { this.sort.set((e.target as HTMLSelectElement).value); }
   protected updateModel(e: Event): void { this.model.set((e.target as HTMLSelectElement).value); }
@@ -81,7 +79,7 @@ export class Shop {
     const animation = dot.animate([{transform:'translate(-50%, -50%) scale(1)',opacity:1},{transform:`translate(${dx*.55-40}px,${dy*.45-90}px) scale(1.4)`,opacity:1,offset:.55},{transform:`translate(${dx}px,${dy}px) scale(.2)`,opacity:.25}],{duration:850,easing:'cubic-bezier(.25,.7,.25,1)'});
     animation.finished.then(() => dot.remove()).catch(() => dot.remove());
   }
-  protected clearImageSearch(): void { this.omni.clearImage(); }
+  protected openSearch(): void { this.search.open('text', this.query()); }
 
   protected onProductImageError(event: Event): void {
     const img = event.target as HTMLImageElement;

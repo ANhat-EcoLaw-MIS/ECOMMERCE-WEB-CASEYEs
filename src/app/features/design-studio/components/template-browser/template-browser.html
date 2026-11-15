@@ -327,6 +327,19 @@
     </div>
   </div>
 
+  @if (idea()) {
+    <div class="relative z-10 mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+      <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-50 px-4 py-3 ring-1 ring-brand-100">
+        <p class="text-sm text-ink">Ý tưởng của bạn: <b>“{{ idea() }}”</b></p>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" (click)="openSuggest()" class="min-h-10 rounded-full bg-white px-4 text-sm font-semibold text-brand-800 ring-1 ring-brand-200 hover:ring-brand-400">✨ Xem mẫu gợi ý</button>
+          <button type="button" (click)="startFromIdea()" class="min-h-10 rounded-full bg-brand-800 px-4 text-sm font-semibold text-white hover:bg-brand-600">Bắt đầu từ phôi trắng</button>
+          <button type="button" (click)="idea.set('')" aria-label="Ẩn ý tưởng" class="grid size-10 place-items-center rounded-full text-ink-soft hover:bg-white">✕</button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- ══════════════════════════════════════════════════════
        SECTION 1: KHO MẪU THIẾT KẾ & DÒNG MÁY HIỆN TẠI
   ══════════════════════════════════════════════════════ -->
@@ -339,6 +352,10 @@
         <p class="mt-1 text-xs sm:text-sm text-ink-soft">
           Lựa chọn mẫu có sẵn hoặc bắt đầu sáng tạo với mẫu trắng tự do
         </p>
+        <button type="button" (click)="openSuggest()"
+          class="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-full bg-(image:--grad-primary) px-4 text-sm font-semibold text-white shadow-soft transition-transform hover:-translate-y-0.5 motion-reduce:transition-none">
+          <span aria-hidden="true">✨</span> Gợi ý mẫu theo mô tả
+        </button>
       </div>
 
       <!-- Current Active Device Switcher Indicator (Thiết kế sang xịn, hiện đại theo nhận diện CasEYE) -->
