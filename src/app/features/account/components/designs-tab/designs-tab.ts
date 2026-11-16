@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { DESIGNS } from '../../models/account.model';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { StudioState } from '../../../design-studio/services/studio-state';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -7,6 +7,6 @@ import { DESIGNS } from '../../models/account.model';
   templateUrl: './designs-tab.html',
 })
 export class DesignsTab {
-  protected readonly designs = DESIGNS;
-  // TODO: load designs from the database when a designs table is available.
+  private readonly state = inject(StudioState);
+  protected readonly savedDesigns = this.state.savedDesigns;
 }

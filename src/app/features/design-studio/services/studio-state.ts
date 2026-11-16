@@ -76,77 +76,16 @@ function loadInitialSavedDesigns(): SavedDesignItem[] {
       const data = localStorage.getItem(SAVED_DESIGNS_KEY);
       if (data) {
         const parsed = JSON.parse(data);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
   }
-  return [
-    {
-      id: 'saved_sample_1',
-      name: 'Dreamy Sky Vibes',
-      modelId: 'iphone-15-pro-max',
-      modelName: 'iPhone 15 Pro Max',
-      material: 'standard',
-      bg: 'linear-gradient(160deg, #c4b5fd 0%, #93c5fd 50%, #fbcfe8 100%)',
-      layerCount: 2,
-      layers: buildTemplateLayers('dreamy-kitten'),
-      savedAt: 'Chỉnh sửa lần cuối: 2h trước',
-      thumbnailText: 'Dreamy Sky',
-      thumbnailType: 'dreamy-sky',
-    },
-    {
-      id: 'saved_sample_2',
-      name: 'Sakura Bloom',
-      modelId: 'iphone-15-pro',
-      modelName: 'iPhone 15 Pro',
-      material: 'standard',
-      bg: 'linear-gradient(160deg, #fce7f3 0%, #fbcfe8 50%, #fda4af 100%)',
-      layerCount: 1,
-      layers: buildTemplateLayers('sakura-bloom'),
-      savedAt: 'Chỉnh sửa lần cuối: 1 ngày trước',
-      thumbnailText: 'Sakura Bloom',
-      thumbnailType: 'sakura',
-    },
-    {
-      id: 'saved_sample_3',
-      name: 'Minimal Cat',
-      modelId: 'iphone-15-pro',
-      modelName: 'iPhone 15 Pro',
-      material: 'standard',
-      bg: '#FAF8F5',
-      layerCount: 1,
-      layers: buildTemplateLayers('minimal-cat'),
-      savedAt: 'Chỉnh sửa lần cuối: 3 ngày trước',
-      thumbnailText: 'Minimal Cat',
-      thumbnailType: 'cat',
-    },
-    {
-      id: 'saved_sample_4',
-      name: 'Mountain Escape',
-      modelId: 'iphone-15',
-      modelName: 'iPhone 15',
-      material: 'standard',
-      bg: 'linear-gradient(160deg, #dbeafe 0%, #60a5fa 50%, #1e3a8a 100%)',
-      layerCount: 1,
-      layers: buildTemplateLayers('mountain-escape'),
-      savedAt: 'Chỉnh sửa lần cuối: 4 ngày trước',
-      thumbnailText: 'Mountain Peak',
-      thumbnailType: 'mountain',
-    },
-    {
-      id: 'saved_sample_5',
-      name: 'Starry Night Cosmos',
-      modelId: 'iphone-15-plus',
-      modelName: 'iPhone 15 Plus',
-      material: 'standard',
-      bg: 'linear-gradient(160deg, #1e1b4b 0%, #4338ca 50%, #a855f7 100%)',
-      layerCount: 2,
-      layers: buildTemplateLayers('starry-night'),
-      savedAt: 'Chỉnh sửa lần cuối: 5 ngày trước',
-      thumbnailText: 'Starry Night',
-      thumbnailType: 'starry',
-    },
-  ];
+  return [];
+}
+
+export interface CanvasSnapshot {
+  readonly layers: CanvasLayer[];
+  readonly caseBg: string;
 }
 
 export interface SavedDesignItem {
@@ -203,8 +142,8 @@ export class StudioState {
   );
 
   // Undo / Redo history
-  private readonly _undoStack = signal<CanvasLayer[][]>([]);
-  private readonly _redoStack = signal<CanvasLayer[][]>([]);
+  private readonly _undoStack = signal<CanvasSnapshot[]>([]);
+  private readonly _redoStack = signal<CanvasSnapshot[]>([]);
   readonly canUndo = computed(() => this._undoStack().length > 0);
   readonly canRedo = computed(() => this._redoStack().length > 0);
 
@@ -256,9 +195,20 @@ export class StudioState {
     this.selectedMaterial.set(material);
   }
 
+  // --- Background Management with History ---
+  setCaseBg(bg: string, recordHistory: boolean = true): void {
+    if (this.caseBg() === bg) return;
+    if (recordHistory) {
+      this.recordHistory();
+    }
+    this.caseBg.set(bg);
+  }
+
   // --- Layer Management ---
-  setLayers(layers: CanvasLayer[]): void {
-    this.recordHistory();
+  setLayers(layers: CanvasLayer[], recordHistory: boolean = false): void {
+    if (recordHistory) {
+      this.recordHistory();
+    }
     this._layers.set(layers);
   }
 
@@ -353,12 +303,14 @@ export class StudioState {
     return newImg;
   }
 
-  updateLayer(id: string, partial: Partial<CanvasLayer>): void {
+  updateLayer(id: string, partial: Partial<CanvasLayer>, recordHistory: boolean = true): void {
     if ('content' in partial && typeof (partial as any).content === 'string') {
       if (this.checkBanned((partial as any).content)) return;
     }
 
-    this.recordHistory();
+    if (recordHistory) {
+      this.recordHistory();
+    }
     this._layers.update((layers) =>
       layers.map((l) => (l.id === id ? ({ ...l, ...partial } as CanvasLayer) : l))
     );
@@ -490,8 +442,17 @@ export class StudioState {
   }
 
   // --- History (Undo / Redo) ---
-  private recordHistory(): void {
-    this._undoStack.update((stack) => [...stack, this._layers()]);
+  recordHistory(): void {
+    const snapshot: CanvasSnapshot = {
+      layers: JSON.parse(JSON.stringify(this._layers())),
+      caseBg: this.caseBg(),
+    };
+    this._undoStack.update((stack) => [...stack.slice(-30), snapshot]);
+    this._redoStack.set([]);
+  }
+
+  resetHistory(): void {
+    this._undoStack.set([]);
     this._redoStack.set([]);
   }
 
@@ -499,23 +460,72 @@ export class StudioState {
     const stack = this._undoStack();
     if (stack.length === 0) return;
 
+    const currentSnapshot: CanvasSnapshot = {
+      layers: JSON.parse(JSON.stringify(this._layers())),
+      caseBg: this.caseBg(),
+    };
     const previous = stack[stack.length - 1];
-    this._redoStack.update((redo) => [...redo, this._layers()]);
+    this._redoStack.update((redo) => [...redo, currentSnapshot]);
     this._undoStack.update((s) => s.slice(0, -1));
-    this._layers.set(previous);
+    this._layers.set(previous.layers);
+    this.caseBg.set(previous.caseBg);
   }
 
   redo(): void {
     const stack = this._redoStack();
     if (stack.length === 0) return;
 
+    const currentSnapshot: CanvasSnapshot = {
+      layers: JSON.parse(JSON.stringify(this._layers())),
+      caseBg: this.caseBg(),
+    };
     const next = stack[stack.length - 1];
-    this._undoStack.update((undo) => [...undo, this._layers()]);
+    this._undoStack.update((undo) => [...undo, currentSnapshot]);
     this._redoStack.update((s) => s.slice(0, -1));
-    this._layers.set(next);
+    this._layers.set(next.layers);
+    this.caseBg.set(next.caseBg);
   }
 
   // --- Model Switching (FR-DES-02 / US-DES-08) ---
+  updateSavedDesignsModel(newModelId: string): void {
+    const model = this.catalog.models().find((m) => m.id === newModelId);
+    if (!model) return;
+
+    const oldModel = this.selectedModel();
+    const oldModelName = oldModel?.name;
+    const currentName = this.designName();
+
+    // 1. Update design name if it contained the old model name
+    if (oldModelName && currentName.includes(oldModelName)) {
+      const updatedName = currentName.replace(oldModelName, model.name);
+      this.designName.set(updatedName);
+    }
+
+    // 2. Update any matching saved design in savedDesigns (My Designs)
+    this.savedDesigns.update((list) => {
+      if (list.length === 0) return list;
+      return list.map((item) => {
+        const isCurrent =
+          item.name === currentName ||
+          (oldModelName && item.name.includes(oldModelName)) ||
+          item.modelId === oldModel?.id;
+        if (isCurrent) {
+          const newName =
+            oldModelName && item.name.includes(oldModelName)
+              ? item.name.replace(oldModelName, model.name)
+              : item.name;
+          return {
+            ...item,
+            name: newName,
+            modelId: model.id,
+            modelName: model.name,
+          };
+        }
+        return item;
+      });
+    });
+  }
+
   requestModelChange(modelId: string): void {
     if (modelId === this.selectedModel().id) return;
 
@@ -523,6 +533,7 @@ export class StudioState {
       this.pendingModelId.set(modelId);
       this.isModelChangeModalOpen.set(true);
     } else {
+      this.updateSavedDesignsModel(modelId);
       this.catalog.selectModel(modelId);
     }
   }
@@ -530,6 +541,7 @@ export class StudioState {
   confirmModelChange(): void {
     const targetId = this.pendingModelId();
     if (targetId) {
+      this.updateSavedDesignsModel(targetId);
       this.catalog.selectModel(targetId);
       this.pendingModelId.set(null);
     }

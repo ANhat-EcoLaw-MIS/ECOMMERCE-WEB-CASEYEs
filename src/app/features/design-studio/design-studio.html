@@ -6,7 +6,7 @@
 
         <!-- Left: Logo, Title & History Controls (Canva / Figma layout standard) -->
         <div class="flex items-center gap-3 shrink-0">
-          <a routerLink="/" aria-label="CasEYE's, về trang chủ" class="flex shrink-0 items-center transition-transform hover:scale-105">
+          <a (click)="onExitTo('/')" aria-label="CasEYE's, về trang chủ" class="flex shrink-0 items-center transition-transform hover:scale-105 cursor-pointer">
             <img
               src="/logo.png"
               alt="CasEYE's"
@@ -93,8 +93,9 @@
 
         <!-- Right: Action & Exit Button -->
         <div class="flex items-center gap-2.5 shrink-0">
-          <a
-            routerLink="/design-studio/templates"
+          <button
+            type="button"
+            (click)="onExitTo('/design-studio/templates')"
             class="inline-flex items-center gap-1.5 rounded-pill border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:border-red-400/70 hover:bg-red-500/20 hover:text-red-200 cursor-pointer"
             title="Thoát khỏi Studio về kho mẫu"
           >
@@ -102,7 +103,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
             </svg>
             <span>Thoát</span>
-          </a>
+          </button>
         </div>
 
       </div>
@@ -288,6 +289,39 @@
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Exit Confirmation Modal (Module 6) -->
+  @if (showExitConfirmModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      (click)="$event.stopPropagation()">
+      <div class="relative w-full max-w-md rounded-3xl border border-white/20 bg-brand-900 p-6 text-white shadow-2xl">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="h-10 w-10 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-display font-bold text-base text-white">Xác nhận rời khỏi Studio</h3>
+            <p class="text-xs text-white/70">Bản thiết kế đang được chỉnh sửa</p>
+          </div>
+        </div>
+        <p class="text-xs text-white/80 leading-relaxed mb-6">
+          Bạn có các chi tiết chưa lưu hoàn tất. Bạn có chắc chắn muốn rời khỏi bàn thiết kế không? Bản nháp của bạn đã được tự động lưu tạm trên thiết bị này.
+        </p>
+        <div class="flex items-center justify-end gap-3">
+          <button type="button" (click)="cancelExit()"
+            class="rounded-full px-4 py-2 text-xs font-bold text-white/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer">
+            Ở lại chỉnh sửa
+          </button>
+          <button type="button" (click)="confirmExit()"
+            class="rounded-full bg-red-600 hover:bg-red-700 px-5 py-2 text-xs font-bold text-white shadow-soft transition-all cursor-pointer">
+            Rời khỏi Studio
           </button>
         </div>
       </div>

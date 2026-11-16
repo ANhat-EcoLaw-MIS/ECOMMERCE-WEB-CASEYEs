@@ -7,7 +7,8 @@ import { OnboardingModal } from './components/onboarding-modal/onboarding-modal'
 import { OrdersTab } from './components/orders-tab/orders-tab';
 import { ProfileTab } from './components/profile-tab/profile-tab';
 import { SecurityTab } from './components/security-tab/security-tab';
-import { DESIGNS, type ProfileSetupPreferences, type TabId } from './models/account.model';
+import { StudioState } from '../design-studio/services/studio-state';
+import { type ProfileSetupPreferences, type TabId } from './models/account.model';
 
 const TABS: { id: TabId; label: string; icon: string; count: 'designs' | 'orders' | null }[] = [
   { id: 'profile', label: 'Hồ sơ cá nhân', icon: '◉', count: null },
@@ -25,10 +26,11 @@ const TABS: { id: TabId; label: string; icon: string; count: 'designs' | 'orders
 })
 export class Account implements OnInit {
   protected readonly accountState = inject(AccountState);
+  private readonly studioState = inject(StudioState);
   protected readonly toast = inject(AccountToast);
   protected readonly tabs = TABS;
   protected readonly activeTab = signal<TabId>('profile');
-  protected readonly designCount = computed(() => DESIGNS.length);
+  protected readonly designCount = computed(() => this.studioState.savedDesigns().length);
   // Integration: real orders from Quản lý đơn hàng; `?tab=orders` opens the orders tab.
   protected readonly orderCount = computed(() => this.orderFeed.orders().length);
   private readonly orderFeed = inject(CustomerOrderFeed);

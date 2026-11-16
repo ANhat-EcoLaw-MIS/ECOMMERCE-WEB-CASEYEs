@@ -42,6 +42,14 @@ export class StudioDraft implements OnDestroy {
   constructor() {
     this.checkForExistingDraft();
     this.startAutoSave();
+
+    // Auto-persist whenever design changes
+    effect(() => {
+      const snap = this.snapshot();
+      if (snap.layers && snap.layers.length > 0) {
+        this.saveDraft();
+      }
+    });
   }
 
   /** Check localStorage for an existing draft on page load (US-DES-16) */
