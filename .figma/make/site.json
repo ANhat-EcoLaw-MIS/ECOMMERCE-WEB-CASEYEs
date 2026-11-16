@@ -1,0 +1,10 @@
+{
+  "description": "Helps teams verify initial project setup and prepare deployment and preview configurations, ensuring imported projects are ready for reliable releases.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
