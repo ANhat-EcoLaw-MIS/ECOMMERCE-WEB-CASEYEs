@@ -526,6 +526,16 @@ export class StudioState {
     });
   }
 
+  restoreSavedDesign(design: SavedDesignItem): void {
+    this.clearCanvas();
+    this.caseBg.set(design.bg);
+    this.designName.set(design.name);
+    this.selectMaterial(design.material);
+    if (design.modelId) this.catalog.selectModel(design.modelId);
+    if (design.layers.length > 0) this.setLayers(design.layers, false);
+    this.resetHistory();
+  }
+
   requestModelChange(modelId: string): void {
     if (modelId === this.selectedModel().id) return;
 

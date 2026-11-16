@@ -16,6 +16,8 @@ import type { Result } from '../../core/supabase/supabase.types';
 import { AuthModal, type AuthMode as Mode } from '../../core/auth/auth-modal';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { sanitizeReturnUrl } from '../../shared/utils/safe-return-url';
+import { DEMO_GOOGLE_EMAIL } from '../../shared/utils/demo-user';
+import { ProfileRepository } from '../account/services/profile.repository';
 
 const TEXT: Record<Mode, { title: string; submit: string }> = {
   login: { title: 'Đăng nhập', submit: 'Đăng nhập' },
@@ -39,8 +41,8 @@ const ERRORS: Record<string, string> = {
   'Email not confirmed': 'Vui lòng xác nhận email trước khi đăng nhập',
 };
 
-/** Stand-in for Google OAuth: one fixed demo account, created on first use. */
-const MOCK_GOOGLE = { email: 'google.demo.user@gmail.com', password: 'Mock-Google-123' };
+/** Stand-in for Google OAuth: use the existing demo account's password session. */
+const MOCK_GOOGLE_PASSWORD = 'Mock-Google-123';
 
 /** Form classes (brand tokens only). Tailwind scans .ts files, so these work. */
 const UI = {
@@ -77,6 +79,7 @@ export class Auth {
   readonly success = output<void>(); // login or register finished
   readonly modeChange = output<Mode>(); // user clicked "Đăng ký", "Quên mật khẩu"...
   private readonly auth = inject(SupabaseAuthService);
+  private readonly profileRepository = inject(ProfileRepository);
   private readonly authModal = inject(AuthModal);
   private readonly router = inject(Router);
 
@@ -169,13 +172,43 @@ export class Auth {
   protected async google(): Promise<void> {
     const mode = this.mode();
     this.start();
-    let res: Result<object> = await this.auth.signIn(MOCK_GOOGLE);
-    let signedUp = false;
+    // MOCK: Resolve Google sign-in directly to the existing demo user's password session.
+    const res: Result<object> = await this.auth.signIn({
+      email: DEMO_GOOGLE_EMAIL,
+      password: MOCK_GOOGLE_PASSWORD,
+    });
     if (res.error) {
-      res = await this.auth.signUp(MOCK_GOOGLE); // first time: create the account
-      signedUp = !res.error;
+      this.loading.set(false);
+      this.error.set(
+        'Không thể đăng nhập tài khoản Google demo. Vui lòng xác nhận tài khoản đã tồn tại và được cấu hình trong Supabase Auth.',
+      );
+      return;
     }
-    await this.finish(res, mode, mode === 'register' && signedUp);
+    if (mode === 'login') {
+      this.loading.set(false);
+      await this.leave(this.safeReturnUrl());
+      return;
+    }
+    if (mode === 'register') {
+      const userId = this.auth.user()?.id;
+      if (!userId) {
+        this.loading.set(false);
+        this.error.set('Không thể xác định tài khoản Google demo. Vui lòng đăng nhập lại.');
+        return;
+      }
+
+      // MOCK: A new demo signup clears the previously recorded onboarding data.
+      const reset = await this.profileRepository.resetOnboardingData(userId);
+      if (reset.error) {
+        this.loading.set(false);
+        this.error.set(`Không thể đặt lại dữ liệu thiết lập: ${reset.error.message}`);
+        return;
+      }
+      this.loading.set(false);
+      await this.leaveForOnboarding(true);
+      return;
+    }
+    await this.finish(res, mode);
   }
 
   private request(mode: Mode, email: string, password: string): Promise<Result<object>> {
@@ -207,7 +240,7 @@ export class Auth {
         break;
       case 'register': {
         const signedIn = 'session' in res.data && res.data.session !== null;
-        if (signedIn && signupFlow) await this.leaveForOnboarding();
+        if (signedIn && signupFlow) await this.leaveForOnboarding(true);
         else if (signedIn) await this.leave(this.safeReturnUrl());
         else this.notice.set('Vui lòng kiểm tra email và nhấn vào liên kết để kích hoạt tài khoản.');
         break;
@@ -234,14 +267,15 @@ export class Auth {
     return url?.startsWith('/') && !url.startsWith('//') ? url : '/';
   }
 
-  private async leaveForOnboarding(): Promise<void> {
+  private async leaveForOnboarding(signupFlow = false): Promise<void> {
     const rawReturnUrl = this.embedded()
       ? this.authModal.signupReturnUrl()
       : this.returnUrl();
     const returnUrl = sanitizeReturnUrl(rawReturnUrl);
     if (this.embedded()) this.authModal.close();
+    const signupParam = signupFlow ? '&flow=signup' : '';
     await this.router.navigateByUrl(
-      `/account/onboarding?returnUrl=${encodeURIComponent(returnUrl)}`,
+      `/account/onboarding?returnUrl=${encodeURIComponent(returnUrl)}${signupParam}`,
       { replaceUrl: true },
     );
   }

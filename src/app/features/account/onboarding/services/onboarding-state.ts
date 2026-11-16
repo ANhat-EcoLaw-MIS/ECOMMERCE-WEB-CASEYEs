@@ -47,11 +47,13 @@ export class OnboardingState {
   );
   readonly draft = computed<OnboardingPreferences>(() => {
     const selectedDevice = this.deviceModel();
+    const device = selectedDevice
+      ? this.devicesForBrand().find((option) => option.id === selectedDevice)
+      : null;
     return {
       displayName: this.creatorName().trim(),
-      deviceBrand: selectedDevice ? this.brand() : null,
-      deviceModel: selectedDevice,
-      styleKey: this.styleKey(),
+      deviceName: device?.name ?? null,
+      stylePreferences: this.styleKey() ? [this.activePreset().label] : [],
     };
   });
 

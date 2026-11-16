@@ -81,9 +81,8 @@
           <button class="min-h-[44px] rounded px-2 text-xs font-semibold text-brand-800 underline hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-400" (click)="onboardingVisible.set(true)" type="button">Thay đổi</button>
         </div>
         <div class="flex flex-wrap gap-2">
-          <span class="rounded-pill bg-brand-100 px-3 py-1.5 text-xs font-semibold text-brand-800">{{ deviceType() || 'Chưa thiết lập thiết bị' }}</span>
+          <span class="rounded-pill bg-brand-100 px-3 py-1.5 text-xs font-semibold text-brand-800">{{ deviceLabel() }}</span>
           <span class="rounded-pill bg-brand-100 px-3 py-1.5 text-xs font-semibold text-brand-800">{{ stylesLabel() }}</span>
-          <span class="rounded-pill border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink-soft">Chất liệu: {{ caseMaterial() }}</span>
         </div>
       </div>
       <div class="flex flex-wrap justify-end gap-3 border-t border-line pt-6">
@@ -94,6 +93,95 @@
   </div>
 
   <section class="rounded-card border border-line bg-surface-alt p-6 shadow-soft sm:p-8">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h3 class="font-display text-lg font-bold text-ink">Địa chỉ giao hàng</h3>
+        <p class="mt-1 text-sm text-ink-soft">Quản lý các địa chỉ dùng cho đơn hàng của bạn.</p>
+      </div>
+      @if (!addressFormVisible()) {
+        <button class="min-h-[44px] rounded-pill bg-brand-800 px-5 text-sm font-semibold text-white shadow-soft hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-brand-400" (click)="addAddress()" type="button">+ Thêm địa chỉ</button>
+      }
+    </div>
+    @if (addressError()) {
+      <p class="mb-4 rounded-xl border border-danger/30 bg-danger-bg p-3 text-sm text-danger" role="alert">{{ addressError() }}</p>
+    }
+    @if (addressFormVisible()) {
+      <form class="mb-5 space-y-4 rounded-xl border border-brand-200 bg-brand-50/50 p-4 sm:p-5" (ngSubmit)="saveAddress()" [formGroup]="addressForm" novalidate>
+        <h4 class="font-semibold text-ink">{{ editingAddressId() ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới' }}</h4>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-ink" for="address-recipient">Người nhận</label>
+            <input id="address-recipient" formControlName="recipient" autocomplete="name" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-400"/>
+            @if (addressForm.controls.recipient.touched && addressForm.controls.recipient.invalid) {
+              <p class="mt-1 text-xs text-danger">Vui lòng nhập tên người nhận.</p>
+            }
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-ink" for="address-phone">Số điện thoại</label>
+            <input id="address-phone" formControlName="phone" autocomplete="tel" inputmode="tel" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-400"/>
+            @if (addressForm.controls.phone.touched && addressForm.controls.phone.invalid) {
+              <p class="mt-1 text-xs text-danger">Vui lòng nhập số điện thoại hợp lệ.</p>
+            }
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-ink" for="address-line">Địa chỉ cụ thể</label>
+            <input id="address-line" formControlName="line" autocomplete="address-line1" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-400"/>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-ink" for="address-ward">Phường / Xã</label>
+            <input id="address-ward" formControlName="ward" autocomplete="address-level3" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-400"/>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-ink" for="address-district">Quận / Huyện (không bắt buộc)</label>
+            <input id="address-district" formControlName="district" autocomplete="address-level2" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-400"/>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-ink" for="address-city">Tỉnh / Thành phố</label>
+            <input id="address-city" formControlName="city" autocomplete="address-level1" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand-400"/>
+          </div>
+          <label class="flex items-center gap-2 self-end pb-2 text-sm font-medium text-ink">
+            <input type="checkbox" formControlName="is_default" class="size-4 accent-brand-800"/>
+            Đặt làm địa chỉ mặc định
+          </label>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button class="min-h-[44px] rounded-pill border border-line px-4 text-sm font-semibold text-ink-soft hover:bg-surface" (click)="cancelAddressEdit()" type="button">Hủy</button>
+          <button [disabled]="addressSaving()" class="min-h-[44px] rounded-pill bg-brand-800 px-5 text-sm font-semibold text-white disabled:opacity-60" type="submit">{{ addressSaving() ? 'Đang lưu...' : 'Lưu địa chỉ' }}</button>
+        </div>
+      </form>
+    }
+    @if (accountState.profile()?.addresses?.length) {
+      <ul class="space-y-3">
+        @for (address of accountState.profile()?.addresses ?? []; track address.id) {
+          <li class="rounded-xl border border-line bg-surface p-4 sm:p-5">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <p class="font-semibold text-ink">{{ address.recipient }}</p>
+                  @if (address.is_default) {
+                    <span class="rounded-pill bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800">Mặc định</span>
+                  }
+                </div>
+                <p class="mt-1 text-sm text-ink-soft">{{ address.phone }}</p>
+                <p class="mt-2 text-sm leading-relaxed text-ink">{{ address.line }}, {{ address.ward }}{{ address.district ? ', ' + address.district : '' }}, {{ address.city }}</p>
+              </div>
+              <div class="flex flex-wrap gap-2 sm:justify-end">
+                @if (!address.is_default) {
+                  <button [disabled]="addressSaving()" class="min-h-[40px] rounded-lg border border-brand-200 px-3 text-xs font-semibold text-brand-800 hover:bg-brand-50 disabled:opacity-60" (click)="setDefaultAddress(address)" type="button">Đặt mặc định</button>
+                }
+                <button [disabled]="addressSaving()" class="min-h-[40px] rounded-lg border border-line px-3 text-xs font-semibold text-ink hover:bg-surface-alt disabled:opacity-60" (click)="editAddress(address)" type="button">Sửa</button>
+                <button [disabled]="addressSaving()" class="min-h-[40px] rounded-lg border border-danger/30 px-3 text-xs font-semibold text-danger hover:bg-danger-bg disabled:opacity-60" (click)="deleteAddress(address)" type="button">Xóa</button>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-sm text-ink-soft">Bạn chưa lưu địa chỉ giao hàng nào.</p>
+    }
+  </section>
+
+  <section class="rounded-card border border-line bg-surface-alt p-6 shadow-soft sm:p-8">
     <h3 class="mb-1 font-display text-lg font-bold text-ink">Tài khoản liên kết</h3>
     <p class="mb-6 text-sm text-ink-soft">Đăng nhập nhanh và chia sẻ mẫu ốp trực tiếp lên mạng xã hội.</p>
     <div class="space-y-3">
@@ -101,16 +189,12 @@
         <div><p class="text-sm font-semibold text-ink">Google Workspace</p><p class="text-xs font-medium text-success">Đã kết nối: {{ email.value }}</p></div>
         <button class="min-h-[44px] rounded-pill border border-line bg-surface-alt px-3 text-xs font-semibold text-ink-soft hover:text-danger focus-visible:outline-2 focus-visible:outline-brand-400" type="button">Hủy liên kết</button>
       </div>
-      <div class="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4">
-        <div><p class="text-sm font-semibold text-ink">TikTok Creator</p><p class="text-xs text-ink-soft">Chưa liên kết</p></div>
-        <button class="min-h-[44px] rounded-pill bg-brand-800 px-4 text-xs font-semibold text-white hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-brand-400" type="button">Kết nối ngay</button>
-      </div>
     </div>
   </section>
 </section>
 
 @if (onboardingVisible()) {
-  <app-onboarding-modal [initialDevice]="deviceType() || 'iPhone 15 Pro Max'" [initialStyles]="stylePreferences()" [initialMaterial]="caseMaterial()" (closed)="onboardingVisible.set(false)" (saved)="savePreferences($event)" />
+  <app-onboarding-modal [initialDevice]="deviceType() || 'iPhone 15 Pro Max'" [initialStyles]="stylePreferences()" (closed)="onboardingVisible.set(false)" (saved)="savePreferences($event)" />
 }
 @if (otpVisible()) {
   <app-otp-modal [target]="otpTarget()" (closed)="otpVisible.set(false)" (confirmed)="onOtpConfirmed()" />

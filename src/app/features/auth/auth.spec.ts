@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Auth } from './auth';
 import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
+import { ProfileRepository } from '../account/services/profile.repository';
 
 describe('Auth', () => {
   let component: Auth;
@@ -21,6 +22,12 @@ describe('Auth', () => {
             resetPassword: () => Promise.resolve({ data: null, error: null }),
             updatePassword: () => Promise.resolve({ data: null, error: null }),
             signOut: () => Promise.resolve({ data: null, error: null }),
+          },
+        },
+        {
+          provide: ProfileRepository,
+          useValue: {
+            resetOnboardingData: () => Promise.resolve({ data: null, error: null }),
           },
         },
       ],

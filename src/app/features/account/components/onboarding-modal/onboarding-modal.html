@@ -28,14 +28,30 @@
           }
         </div>
       </fieldset>
-      <div>
-        <label class="mb-1.5 block text-sm font-semibold text-ink" for="pref-material">Chất liệu ốp lưng yêu thích</label>
-        <select class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="material" id="pref-material">
-          <option value="Chống sốc viền nhôm Matt">Chống sốc viền nhôm Matt</option>
-          <option value="Dẻo trong suốt TPU cao cấp">Dẻo trong suốt TPU cao cấp</option>
-          <option value="Ốp cứng nhám chống trầy">Ốp cứng nhám chống trầy</option>
-        </select>
-      </div>
+      <section aria-labelledby="featured-designs-heading" class="border-t border-line pt-5">
+        <div class="mb-3">
+          <h3 id="featured-designs-heading" class="font-display text-base font-bold text-ink">Mẫu thiết kế từ Design Studio</h3>
+          <p class="mt-1 text-xs text-ink-soft">Khám phá toàn bộ mẫu hiện có trong kho thiết kế.</p>
+        </div>
+        @if (templatesLoading()) {
+          <p class="py-6 text-center text-sm text-ink-soft" aria-live="polite">Đang tải mẫu thiết kế...</p>
+        } @else if (templatesError(); as error) {
+          <p class="rounded-xl border border-danger/30 bg-danger-bg p-3 text-sm text-danger" role="alert">{{ error }}</p>
+        } @else {
+          <div class="max-h-80 space-y-3 overflow-y-auto overflow-x-hidden p-1">
+            @for (row of templateRows(); track row.id) {
+              <div class="flex gap-3 overflow-x-auto pb-2">
+                @for (template of row.cases; track template.id) {
+                  <a [routerLink]="['/design-studio/templates']" [queryParams]="{ template: template.id }"
+                    class="shrink-0 rounded-xl focus-visible:outline-2 focus-visible:outline-brand-400">
+                    <app-case-card [case]="template" />
+                  </a>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
       <div class="flex justify-end gap-3 border-t border-line pt-5">
         <button class="min-h-[44px] rounded-pill border border-line px-5 text-sm font-semibold text-ink-soft hover:bg-surface focus-visible:outline-2 focus-visible:outline-brand-400" (click)="close()" type="button">Đóng</button>
         <button class="min-h-[44px] rounded-pill bg-brand-800 px-6 text-sm font-semibold text-white shadow-soft hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-brand-400" type="submit">Lưu sở thích</button>

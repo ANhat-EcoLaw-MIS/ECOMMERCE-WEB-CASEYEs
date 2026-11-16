@@ -4,26 +4,35 @@
       <h2 class="font-display text-xl font-bold text-ink sm:text-2xl">Đổi mật khẩu tài khoản</h2>
       <p class="mt-1 text-sm text-ink-soft">Nên sử dụng mật khẩu mạnh gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p>
     </div>
+    <!-- MOCK: The demo Google account cannot change its password. -->
+    @if (demoGoogleUser()) {
+      <p role="status" class="mb-5 flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 font-medium text-brand-800 shadow-soft">
+        <span aria-hidden="true" class="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-lg">🔒</span>
+        <span>Mật khẩu của tài khoản này được Google quản lý.</span>
+      </p>
+    }
     <form class="max-w-xl space-y-5" (ngSubmit)="updatePassword()" [formGroup]="passwordForm" novalidate>
-      <div>
-        <label class="mb-1.5 block text-sm font-semibold text-ink" for="currentPassword">Mật khẩu hiện tại</label>
-        <input autocomplete="current-password" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="currentPassword" id="currentPassword" placeholder="Nhập mật khẩu đang dùng" type="password"/>
-      </div>
-      <div>
-        <label class="mb-1.5 block text-sm font-semibold text-ink" for="newPassword">Mật khẩu mới</label>
-        <input autocomplete="new-password" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="newPassword" id="newPassword" placeholder="Tối thiểu 8 ký tự" type="password"/>
-      </div>
-      <div>
-        <label class="mb-1.5 block text-sm font-semibold text-ink" for="confirmNewPassword">Xác nhận mật khẩu mới</label>
-        <input autocomplete="new-password" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="confirmPassword" id="confirmNewPassword" placeholder="Nhập lại mật khẩu mới" type="password"/>
-        @if (passwordSubmitted() && passwordMismatch()) {
-          <p class="mt-1.5 text-xs text-danger">Mật khẩu xác nhận không khớp!</p>
-        }
-        @if (passwordSubmitted() && passwordForm.controls.newPassword.invalid) {
-          <p class="mt-1.5 text-xs text-danger">Mật khẩu mới phải có ít nhất 8 ký tự.</p>
-        }
-      </div>
-      <button [disabled]="passwordSaving()" class="min-h-[44px] rounded-pill bg-brand-800 px-6 py-2.5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-600 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-brand-400" type="submit">{{ passwordSaving() ? 'Đang cập nhật...' : 'Cập nhật mật khẩu' }}</button>
+      <fieldset [disabled]="demoGoogleUser()" class="space-y-5 disabled:opacity-60">
+        <div>
+          <label class="mb-1.5 block text-sm font-semibold text-ink" for="currentPassword">Mật khẩu hiện tại</label>
+          <input autocomplete="current-password" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="currentPassword" id="currentPassword" placeholder="Nhập mật khẩu đang dùng" type="password"/>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-semibold text-ink" for="newPassword">Mật khẩu mới</label>
+          <input autocomplete="new-password" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="newPassword" id="newPassword" placeholder="Tối thiểu 8 ký tự" type="password"/>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-semibold text-ink" for="confirmNewPassword">Xác nhận mật khẩu mới</label>
+          <input autocomplete="new-password" class="min-h-[44px] w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm text-ink focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-400" formControlName="confirmPassword" id="confirmNewPassword" placeholder="Nhập lại mật khẩu mới" type="password"/>
+          @if (passwordSubmitted() && passwordMismatch()) {
+            <p class="mt-1.5 text-xs text-danger">Mật khẩu xác nhận không khớp!</p>
+          }
+          @if (passwordSubmitted() && passwordForm.controls.newPassword.invalid) {
+            <p class="mt-1.5 text-xs text-danger">Mật khẩu mới phải có ít nhất 8 ký tự.</p>
+          }
+        </div>
+        <button [disabled]="passwordSaving() || demoGoogleUser()" class="min-h-[44px] rounded-pill bg-brand-800 px-6 py-2.5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-600 disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-brand-400" type="submit">{{ passwordSaving() ? 'Đang cập nhật...' : 'Cập nhật mật khẩu' }}</button>
+      </fieldset>
     </form>
   </div>
 

@@ -2,8 +2,10 @@ import type { Database } from '../../../core/supabase/database.types';
 
 export type TabId = 'profile' | 'designs' | 'orders' | 'security';
 export type OnboardingStatus = 'pending' | 'completed' | 'skipped';
+export type Address = Database['public']['Tables']['addresses']['Row'];
 export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'onboarding_status'> & {
   onboarding_status: OnboardingStatus;
+  addresses: Address[];
 };
 
 export interface Design {
@@ -32,14 +34,12 @@ export interface ProfileFormValue {
 export interface ProfileSetupPreferences {
   deviceType: string;
   stylePreferences: string[];
-  caseMaterial: string;
 }
 
 export interface OnboardingPreferences {
   displayName: string;
-  deviceBrand: string | null;
-  deviceModel: string | null;
-  styleKey: string | null;
+  deviceName: string | null;
+  stylePreferences: string[];
 }
 
 export const DESIGNS: Design[] = [

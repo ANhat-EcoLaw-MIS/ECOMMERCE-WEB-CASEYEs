@@ -35,14 +35,19 @@ export class Account implements OnInit {
   protected readonly orderCount = computed(() => this.orderFeed.orders().length);
   private readonly orderFeed = inject(CustomerOrderFeed);
   readonly tab = input<string>();
-  protected readonly onboardingBannerVisible = signal(true);
+  protected readonly onboardingBannerVisible = signal(false);
   protected readonly onboardingVisible = signal(false);
   protected readonly deletionPending = signal(false);
 
   ngOnInit(): void {
     const tab = this.tab();
     if (tab && TABS.some((t) => t.id === tab)) this.activeTab.set(tab as TabId);
-    void this.accountState.load();
+    void this.accountState.load().then(() => {
+      const profile = this.accountState.profile();
+      this.onboardingBannerVisible.set(
+        profile !== null && profile.onboarding_status !== 'completed',
+      );
+    });
   }
 
   protected async dismissOnboarding(): Promise<void> {
@@ -63,7 +68,6 @@ export class Account implements OnInit {
       saved ? 'Hồ sơ sở thích đã được cá nhân hóa thành công!' : this.accountState.error() ?? 'Không thể lưu sở thích.',
       saved ? 'success' : 'info',
     );
-    // TODO: no column yet: persist the selected case material.
   }
 
   protected cancelDeletion(): void {

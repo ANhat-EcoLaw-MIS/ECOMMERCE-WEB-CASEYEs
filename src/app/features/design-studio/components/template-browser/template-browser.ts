@@ -7,13 +7,6 @@ import { CanvasLayer, ImageElement, TextElement } from '../../models/canvas-elem
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 import { AuthModal } from '../../../../core/auth/auth-modal';
 
-// Dynamically import @google/model-viewer for rich WebGL 3D rendering in browser
-if (typeof window !== 'undefined') {
-  import('@google/model-viewer').catch((err) => {
-    console.warn('Google Model Viewer dynamic import warning:', err);
-  });
-}
-
 /**
  * Universal SVG to Base64/UTF8 Data URI converter
  */
@@ -729,6 +722,12 @@ export class TemplateBrowser {
   protected readonly reviewSubmittedSuccess = signal<boolean>(false);
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      import('@google/model-viewer').catch((err) => {
+        console.warn('Google Model Viewer dynamic import warning:', err);
+      });
+    }
+
     this.preloadTemplateArtworks();
 
     // Links from the site-wide search: ?template=ID opens that template, ?y=… shows the idea banner.
@@ -2009,17 +2008,7 @@ export class TemplateBrowser {
   protected onContinueSavedDesign(saved: SavedDesignItem): void {
     this.closeCardMenu();
     this.closeAllDesignsModal();
-    this.state.clearCanvas();
-    this.state.caseBg.set(saved.bg);
-    this.state.designName.set(saved.name);
-    this.state.selectMaterial(saved.material);
-    if (saved.modelId) {
-      this.catalog.selectModel(saved.modelId);
-    }
-    if (saved.layers && saved.layers.length > 0) {
-      this.state.setLayers(saved.layers, false);
-    }
-    this.state.resetHistory();
+    this.state.restoreSavedDesign(saved);
     this.router.navigate(['/design-studio/editor']);
   }
 
