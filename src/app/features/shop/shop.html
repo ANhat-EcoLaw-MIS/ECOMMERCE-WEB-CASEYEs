@@ -19,8 +19,7 @@
         <div class="price-markers"><span>250.000đ</span><span>400.000đ</span></div>
       </aside>
       <div class="catalog">
-        <div class="catalog-toolbar"><button type="button" class="omni-open-hint" (click)="clearImageSearch();query.set('')">{{imageSearchActive() ? 'Đang xếp hạng theo ảnh' : (query() ? 'Đang tìm: ' + query() : 'Khám phá thiết kế độc quyền')}}</button><label class="sort-label">Sắp xếp <select [value]="sort()" (change)="updateSort($event)"><option value="featured">Nổi bật</option><option value="low">Giá thấp trước</option><option value="high">Giá cao trước</option><option value="name">Tên A–Z</option></select></label></div>
-        @if (imageMessage()) { <div class="image-search-result" role="status">@if(imagePreview()){<img [src]="imagePreview()" alt="Ảnh tham khảo đã tải lên" />}<div><strong>Tìm bằng ảnh · Kết quả tương đồng</strong><p>{{imageMessage()}}</p>@if (imageSearchActive()) { <div class="color-info"><span class="sample-color" [style.background]="imageColor()"></span> Màu trung bình từ ảnh</div> }</div><button type="button" (click)="clearImageSearch()">Xóa ảnh ✕</button></div> }
+        <div class="catalog-toolbar">@if (query()) { <button type="button" class="omni-open-hint" (click)="query.set('')" aria-label="Bỏ lọc từ khóa">Đang lọc: {{query()}} ✕</button> } @else { <button type="button" class="omni-open-hint" (click)="openSearch()">⌕ Tìm mẫu, dòng máy, phong cách…</button> }<label class="sort-label">Sắp xếp <select [value]="sort()" (change)="updateSort($event)"><option value="featured">Nổi bật</option><option value="low">Giá thấp trước</option><option value="high">Giá cao trước</option><option value="name">Tên A–Z</option></select></label></div>
         @if (visible().length) {
           <div class="product-grid">
             @for (product of visible(); track product.id) {

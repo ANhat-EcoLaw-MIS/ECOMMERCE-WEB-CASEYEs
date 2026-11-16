@@ -5,6 +5,7 @@ import { CheckoutService } from './services/checkout.service';
 import { PaymentSimulationMode } from './models/checkout.model';
 import { CheckoutStep } from './checkout.types';
 import { CartState } from '../../core/cart-state/cart-state';
+import { OnboardingStatusService } from '../../core/auth/onboarding-status';
 import { OrderIntake } from '../../shared/services/order-intake';
 import { ORDER_POLICY_VERSION } from '../../shared/policy/order-policy-ref';
 import { CheckoutOrder } from './models/checkout.model';
@@ -46,12 +47,20 @@ export class Checkout implements OnInit {
   readonly showAddressModal = signal(false);
   readonly toastMessage = signal<string | null>(null);
 
+  // --- Onboarding prompt (team decision 15/11): ask, never redirect on its own ---
+  private readonly onboarding = inject(OnboardingStatusService);
+  readonly askOnboarding = signal(false);
+  readonly onboardingBusy = signal(false);
+
   // Template reference to failed component for dev force actions
   readonly failedComp = viewChild<CheckoutFailed>('failedComp');
 
   private toastTimeout: any;
 
   ngOnInit(): void {
+    // A signed-in customer who has not set up their profile yet is asked first (cart and
+    // checkout data are kept in local/session storage, so nothing is lost either way).
+    void this.onboarding.current().then((status) => this.askOnboarding.set(status === 'pending'));
     // 1. Phục hồi đơn hàng từ sessionStorage nếu có (Single Source of Truth)
     this.checkoutService.restoreFromStorage();
     // Integration: the site cart (Shop + Design Studio) feeds Thanh toán.
@@ -183,6 +192,21 @@ export class Checkout implements OnInit {
     this.placedForOrderId = null;
     this.checkoutService.createNewOrder();
     this.setStep('form');
+  }
+
+  /** "Thiết lập ngay": go to onboarding, then come back to this checkout. */
+  goToOnboarding(): void {
+    this.askOnboarding.set(false);
+    void this.router.navigate(['/account/onboarding'], { queryParams: { returnUrl: '/checkout' } });
+  }
+
+  /** "Để sau": onboarding_status = skipped, stay on the checkout. */
+  async skipOnboarding(): Promise<void> {
+    this.onboardingBusy.set(true);
+    const ok = await this.onboarding.skip();
+    this.onboardingBusy.set(false);
+    this.askOnboarding.set(false);
+    if (!ok) this.showToast('Chưa lưu được lựa chọn, bạn vẫn có thể tiếp tục thanh toán.');
   }
 
   showToast(message: string): void {

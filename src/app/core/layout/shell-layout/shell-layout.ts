@@ -6,13 +6,14 @@ import { Footer } from '../footer/footer';
 import { Header } from '../header/header';
 import { CartState } from '../../cart-state/cart-state';
 import { SupportChat } from '../../support-chat/support-chat';
+import { SearchOverlay } from '../../search/search-overlay/search-overlay';
 
 const EDITOR_PATH = '/design-studio/editor';
 const onEditor = (url: string): boolean => url.includes(EDITOR_PATH);
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, Header, Footer, SupportChat],
+  imports: [RouterOutlet, Header, Footer, SupportChat, SearchOverlay],
   selector: 'app-shell-layout',
   templateUrl: './shell-layout.html',
 })
@@ -29,8 +30,4 @@ export class ShellLayout {
     ),
     { initialValue: onEditor(this.router.url) || (typeof window !== 'undefined' && onEditor(window.location.pathname)) },
   );
-
-  protected onSearchRequested(): void {
-    // TODO(search): open the search overlay
-  }
 }
