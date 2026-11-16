@@ -717,61 +717,6 @@
               class="rounded-lg object-contain pointer-events-none select-none block max-w-none" />
             }
           </div>
-
-          <!-- Canva-style Selection & 4-Side Crop Controls (Ghost Layer) -->
-          @if (state.selectedLayerId() === layer.id && editingTextLayerId() !== layer.id) {
-          <div class="pointer-events-none absolute border border-purple-400/60 z-30" [style.top.%]="layer.cropTop || 0"
-            [style.right.%]="layer.cropRight || 0" [style.bottom.%]="layer.cropBottom || 0"
-            [style.left.%]="layer.cropLeft || 0">
-            <!-- 4 Corner scale handles -->
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'tl')"
-              class="pointer-events-auto absolute -top-1.5 -left-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-purple-600 bg-white shadow-sm z-40">
-            </div>
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'tr')"
-              class="pointer-events-auto absolute -top-1.5 -right-1.5 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-purple-600 bg-white shadow-sm z-40">
-            </div>
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'bl')"
-              class="pointer-events-auto absolute -bottom-1.5 -left-1.5 h-3.5 w-3.5 cursor-nesw-resize rounded-full border-2 border-purple-600 bg-white shadow-sm z-40">
-            </div>
-            <div (pointerdown)="onResizeHandlePointerDown($event, layer.id, 'br')"
-              class="pointer-events-auto absolute -bottom-1.5 -right-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-purple-600 bg-white shadow-sm z-40">
-            </div>
-
-            <!-- Edge pill handles: Canva-style crop for images, width/word-wrap for text -->
-            @if (layer.type !== 'text') {
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'top')"
-              class="pointer-events-auto absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-              title="Cắt xén từ trên xuống">
-              <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
-            </div>
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'bottom')"
-              class="pointer-events-auto absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-6 cursor-ns-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-              title="Cắt xén từ dưới lên">
-              <span class="h-0.5 w-2.5 rounded-full bg-slate-400"></span>
-            </div>
-            }
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'left')"
-              class="pointer-events-auto absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-              [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên trái'">
-              <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
-            </div>
-            <div (pointerdown)="onCropHandlePointerDown($event, layer.id, 'right')"
-              class="pointer-events-auto absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-6 cursor-ew-resize rounded-full border border-slate-400 bg-white shadow-sm z-40 flex items-center justify-center"
-              [title]="layer.type === 'text' ? 'Kéo để đổi độ rộng khung / xuống dòng' : 'Cắt xén từ bên phải'">
-              <span class="h-2.5 w-0.5 rounded-full bg-slate-400"></span>
-            </div>
-
-            <!-- Rotate Handle -->
-            <div (pointerdown)="onRotateHandlePointerDown($event, layer.id)"
-              class="pointer-events-auto absolute -top-8 left-1/2 -translate-x-1/2 h-5 w-5 cursor-grab rounded-full border-2 border-purple-600 bg-white shadow-xs z-40 flex items-center justify-center"
-              title="Xoay">
-              <svg class="h-3 w-3 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </div>
-          </div>
-          }
         </div>
         }
         }
