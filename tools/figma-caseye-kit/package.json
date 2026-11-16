@@ -1,0 +1,14 @@
+{
+  "name": "caseye-figma-kit-generator",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild code.ts --bundle --outfile=code.js --target=es2017",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.117.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.0"
+  }
+}
