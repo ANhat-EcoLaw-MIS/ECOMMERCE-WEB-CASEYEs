@@ -43,3 +43,8 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 .agents/
+
+#Supabase
+/supabase/.temp/
+
+.codex/
