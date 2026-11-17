@@ -23,20 +23,3 @@ export interface StylePreset {
   titleGradientClass: string;
   glowClass: string;
 }
-
-export interface MarqueeCase {
-  id: string;
-  badge: string;
-  titleLines: readonly [string, string];
-  subtitle: string;
-  footerLabel: string;
-  footerDetail: string;
-  styleKey: StyleKey;
-  caseClass: string;
-  artworkClass: string;
-  cameraClass: string;
-  badgeClass: string;
-  titleClass: string;
-  subtitleClass: string;
-  footerClass: string;
-}

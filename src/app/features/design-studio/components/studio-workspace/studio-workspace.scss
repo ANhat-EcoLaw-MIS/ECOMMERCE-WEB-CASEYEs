@@ -131,7 +131,7 @@
   border-radius: 4px;
   box-sizing: border-box;
   word-break: break-word;
-  white-space: normal;
+  white-space: pre-wrap;
   user-select: text !important;
   -webkit-user-select: text !important;
   pointer-events: auto !important;
@@ -228,7 +228,7 @@
   height: 100%;
   min-height: calc(100vh - 108px);
   padding: 96px 16px 32px;
-  overflow: hidden;
+  overflow: clip !important;
   user-select: none;
   /* Studio lighting glow + subtle dot grid */
   background-color: #fcfbfe;
@@ -237,6 +237,10 @@
     radial-gradient(#d4c8fa 1.2px, transparent 1.2px);
   background-size: 100% 100%, 20px 20px;
   background-position: center, 0 0;
+}
+
+#case-viewport {
+  overflow: clip !important;
 }
 
 /* ── 3D Preview Panel (Col 4) ── */

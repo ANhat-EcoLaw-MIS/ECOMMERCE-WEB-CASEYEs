@@ -1,17 +1,18 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, Routes } from '@angular/router';
 
-const modelOnboardingGuard: CanActivateFn = () => {
+const designStudioEntryGuard: CanActivateFn = () => {
   const router = inject(Router);
   const activeModel =
     typeof localStorage !== 'undefined'
       ? localStorage.getItem('caseyes_active_model')
       : null;
 
-  if (activeModel) {
-    return router.parseUrl('/design-studio/templates');
+  // Khi mới vào Design Studio nếu chưa có model đã chọn, mở modal chọn dòng máy trên kho mẫu
+  if (!activeModel) {
+    return router.parseUrl('/design-studio/templates?selectModel=true');
   }
-  return router.parseUrl('/design-studio/select-model');
+  return router.parseUrl('/design-studio/templates');
 };
 
 export const DESIGN_STUDIO_ROUTES: Routes = [
@@ -23,14 +24,13 @@ export const DESIGN_STUDIO_ROUTES: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        canActivate: [modelOnboardingGuard],
+        canActivate: [designStudioEntryGuard],
         children: [],
       },
       {
         path: 'select-model',
-        title: "Chọn Dòng Máy | CasEYE's Design Studio",
-        loadComponent: () =>
-          import('./components/model-picker/model-picker').then((m) => m.ModelPicker),
+        pathMatch: 'full',
+        redirectTo: 'templates',
       },
       {
         path: 'templates',

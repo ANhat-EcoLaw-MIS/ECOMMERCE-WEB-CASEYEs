@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { StudioState } from './services/studio-state';
@@ -8,7 +8,7 @@ import { StudioCatalogService } from './services/studio-catalog';
 @Component({
   selector: 'app-design-studio',
   standalone: true,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet],
   templateUrl: './design-studio.html',
   styleUrl: './design-studio.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -75,6 +75,7 @@ export class DesignStudio implements OnDestroy {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('caseyes_active_model', modelId);
     }
+    this.state.updateSavedDesignsModel(modelId);
     this.catalog.selectModel(modelId);
     this.state.requestModelChange(modelId);
     this.closeModelModal();
@@ -90,19 +91,37 @@ export class DesignStudio implements OnDestroy {
     { initialValue: this.router.url }
   );
 
-  protected readonly isSelectModelPage = computed(() => {
-    return this.currentUrl().includes('/select-model');
-  });
-
-  // 1: Chọn dòng máy | 2: Kho mẫu (templates) | 3: Thiết kế (editor)
+  // 1: Kho mẫu (templates) | 2: Thiết kế (editor)
   protected readonly currentStep = computed(() => {
     const url = this.currentUrl();
-    if (url.includes('/editor')) return 3;
-    if (url.includes('/templates')) return 2;
+    if (url.includes('/editor')) return 2;
     return 1;
   });
 
-  protected readonly isEditor = computed(() => this.currentStep() === 3);
+  protected readonly isEditor = computed(() => this.currentUrl().includes('/editor'));
+
+  // Exit Confirmation Safeguard (Module 6)
+  protected readonly showExitConfirmModal = signal<boolean>(false);
+  private pendingExitUrl = '/design-studio/templates';
+
+  protected onExitTo(url: string): void {
+    if (this.state.hasUnsavedChanges()) {
+      this.pendingExitUrl = url;
+      this.showExitConfirmModal.set(true);
+    } else {
+      this.router.navigateByUrl(url);
+    }
+  }
+
+  protected confirmExit(): void {
+    this.state.hasUnsavedChanges.set(false);
+    this.showExitConfirmModal.set(false);
+    this.router.navigateByUrl(this.pendingExitUrl);
+  }
+
+  protected cancelExit(): void {
+    this.showExitConfirmModal.set(false);
+  }
 
   protected onConfirmModelChange(): void {
     this.state.confirmModelChange();

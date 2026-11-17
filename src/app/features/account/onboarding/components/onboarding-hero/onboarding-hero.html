@@ -57,7 +57,10 @@
     <div class="pointer-events-none absolute inset-y-0 left-0 z-20 w-24 bg-gradient-to-r from-onboarding-veil via-onboarding-veil/80 to-transparent md:w-48"></div>
     <div class="pointer-events-none absolute inset-y-0 right-0 z-20 w-24 bg-gradient-to-l from-onboarding-veil via-onboarding-veil/80 to-transparent md:w-48"></div>
 
-    @for (row of marqueeRows; track row.id) {
+    @if (marqueeError(); as error) {
+      <p class="px-4 text-center text-sm text-white/80" role="status">Không thể tải mẫu thiết kế: {{ error }}</p>
+    }
+    @for (row of marqueeRows(); track row.id) {
       <div class="flex select-none overflow-hidden py-2">
         <div
           class="flex w-max shrink-0 items-center gap-8"

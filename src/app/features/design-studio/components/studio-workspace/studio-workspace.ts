@@ -4,6 +4,7 @@ import {
   CUSTOM_ELEMENTS_SCHEMA,
   HostListener,
   ElementRef,
+  OnInit,
   OnDestroy,
   computed,
   effect,
@@ -38,7 +39,7 @@ import { UNIFIED_STUDIO_PRICE } from '../../services/studio-state';
   styleUrl: './studio-workspace.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StudioWorkspace implements OnDestroy {
+export class StudioWorkspace implements OnInit, OnDestroy {
   protected readonly state = inject(StudioState);
   protected readonly catalog = inject(StudioCatalogService);
   protected readonly draft = inject(StudioDraft);
@@ -167,6 +168,23 @@ export class StudioWorkspace implements OnDestroy {
   protected getStrokeColorName(): string {
     const found = this.strokePresets.find((s) => s.color === this.caseStrokeColor());
     return found ? found.name : 'Tùy chỉnh';
+  }
+
+  ngOnInit(): void {
+    // Tự động khôi phục bản nháp nếu người dùng mở lại trang và canvas chưa có template được chọn
+    if (this.draft.hasDraftToRestore() && !this.state.hasLayers()) {
+      this.draft.restoreDraft();
+      this.showToast('Đã tự động khôi phục bản thiết kế nháp của bạn!', 3000, false);
+    }
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  protected onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.state.hasLayers()) {
+      this.draft.saveDraft();
+      event.preventDefault();
+      event.returnValue = '';
+    }
   }
 
   // Material Info & Flat Price (Đồng nhất 1 chất liệu duy nhất: Polycarbonate cao cấp)
@@ -314,12 +332,40 @@ export class StudioWorkspace implements OnDestroy {
   }
 
   // ── Canva Background Studio (Solid Color Picker & Dual Gradient Generator) ──
-  protected readonly bgTab = signal<'solid' | 'gradient' | 'presets'>('solid');
+  protected readonly bgTab = signal<'solid' | 'gradient' | 'presets' | 'image'>('solid');
   protected readonly customSolidColor = signal<string>('#FAFAFA');
   protected readonly gradientColor1 = signal<string>('#433075');
   protected readonly gradientColor2 = signal<string>('#A58CF4');
   protected readonly gradientAngle = signal<number>(135);
   protected readonly gradientType = signal<'linear' | 'radial'>('linear');
+  protected readonly customBgImage = signal<string | null>(null);
+
+  protected onUploadBgImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.showToast('Vui lòng chọn file hình ảnh hợp lệ (PNG, JPG, WEBP).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      this.customBgImage.set(result);
+      this.state.setCaseBg(`url('${result}') center / cover no-repeat`);
+      this.trigger3dTextureSync(true);
+      this.showToast('Đã áp dụng ảnh làm nền ốp lưng thành công!', 2500, false);
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  protected removeCustomBgImage(): void {
+    this.customBgImage.set(null);
+    this.setSolidColor('#FFFFFF');
+  }
 
   protected readonly gradientAnglePresets = [
     { label: 'Dọc (180°)', angle: 180 },
@@ -350,13 +396,13 @@ export class StudioWorkspace implements OnDestroy {
   protected onCustomSolidColorInput(event: Event): void {
     const val = (event.target as HTMLInputElement).value;
     this.customSolidColor.set(val);
-    this.state.caseBg.set(val);
+    this.state.setCaseBg(val);
     this.trigger3dTextureSync(true);
   }
 
   protected setSolidColor(color: string): void {
     this.customSolidColor.set(color);
-    this.state.caseBg.set(color);
+    this.state.setCaseBg(color);
     this.trigger3dTextureSync(true);
   }
 
@@ -400,7 +446,7 @@ export class StudioWorkspace implements OnDestroy {
     } else {
       bgStr = `linear-gradient(${this.gradientAngle()}deg, ${this.gradientColor1()} 0%, ${this.gradientColor2()} 100%)`;
     }
-    this.state.caseBg.set(bgStr);
+    this.state.setCaseBg(bgStr);
     this.trigger3dTextureSync(true);
   }
 
@@ -571,8 +617,10 @@ export class StudioWorkspace implements OnDestroy {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('caseyes_active_model', modelId);
     }
+    this.state.updateSavedDesignsModel(modelId);
     this.catalog.selectModel(modelId);
     this.state.requestModelChange(modelId);
+    this.saveToGuestLocalStorage();
     this.closeModelModal();
     this.showToast(`Đã chuyển sang phôi ốp ${this.state.selectedModel().name}`);
     this.trigger3dTextureSync(true);
@@ -628,6 +676,14 @@ export class StudioWorkspace implements OnDestroy {
     }, 30);
   }
 
+  protected onPreventScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target) {
+      target.scrollLeft = 0;
+      target.scrollTop = 0;
+    }
+  }
+
   protected onInlineTextInput(event: Event, layerId: string): void {
     const textarea = event.target as HTMLTextAreaElement;
     const val = textarea.value;
@@ -638,6 +694,12 @@ export class StudioWorkspace implements OnDestroy {
     this.textInput.set(val);
     this.state.updateLayer(layerId, { content: val });
     this.trigger3dTextureSync(true);
+
+    const vp = document.getElementById('case-viewport');
+    if (vp) {
+      vp.scrollLeft = 0;
+      vp.scrollTop = 0;
+    }
 
     const hit = BANNED_KEYWORDS.find((w) => val.toLowerCase().includes(w));
     if (hit) {
@@ -651,12 +713,19 @@ export class StudioWorkspace implements OnDestroy {
 
   protected onInlineTextKeydown(event: KeyboardEvent, layerId: string): void {
     const textarea = event.target as HTMLTextAreaElement;
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' || (event.key === 'Enter' && (event.ctrlKey || event.metaKey))) {
       event.preventDefault();
       this.finishInlineTextEdit();
-    } else if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.finishInlineTextEdit();
+    } else if (event.key === 'Enter') {
+      setTimeout(() => {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.max(textarea.scrollHeight, 28) + 'px';
+        const vp = document.getElementById('case-viewport');
+        if (vp) {
+          vp.scrollLeft = 0;
+          vp.scrollTop = 0;
+        }
+      }, 0);
     } else if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.value.trim() === '') {
       event.preventDefault();
       this.finishInlineTextEdit();
@@ -711,7 +780,7 @@ export class StudioWorkspace implements OnDestroy {
     this.isSavePromptingName.set(false);
     this.namingInput.set(
       this.state.designName() === 'Thiết kế chưa đặt tên'
-        ? `Ốp lưng ${this.state.selectedModel().name}`
+        ? ''
         : this.state.designName()
     );
     this.showNamingModal.set(true);
@@ -734,9 +803,9 @@ export class StudioWorkspace implements OnDestroy {
       return;
     }
 
-    // Nếu chưa từng đặt tên riêng (vẫn là tên mặc định), hỏi tên khi bấm Lưu lần đầu
-    if (this.state.isFirstSave() && (this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName())) {
-      this.namingInput.set(`Ốp lưng ${this.state.selectedModel().name}`);
+    // Nếu là lưu lần đầu HOẶC tên vẫn là mặc định 'Thiết kế chưa đặt tên' -> BẮT BUỘC hiện MODAL-07 Đặt tên
+    if (this.state.isFirstSave() || this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName()) {
+      this.namingInput.set('');
       this.isSavePromptingName.set(true);
       this.showNamingModal.set(true);
     } else {
@@ -745,19 +814,20 @@ export class StudioWorkspace implements OnDestroy {
   }
 
   protected confirmNaming(): void {
-    const name = this.namingInput().trim();
-    if (name) {
-      const oldName = this.state.designName();
-      this.state.designName.set(name);
+    const rawName = this.namingInput().trim();
+    const finalName =
+      rawName || this.state.suggestedDesignName() || `Ốp lưng ${this.state.selectedModel().name}`;
 
-      // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
-      this.state.savedDesigns.update((list) =>
-        list.map((d) => (d.name === oldName ? { ...d, name } : d))
-      );
+    const oldName = this.state.designName();
+    this.state.designName.set(finalName);
 
-      // Cập nhật nháp localStorage
-      this.saveToGuestLocalStorage();
-    }
+    // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
+    this.state.savedDesigns.update((list) =>
+      list.map((d) => (d.name === oldName ? { ...d, name: finalName } : d))
+    );
+
+    // Cập nhật nháp localStorage
+    this.saveToGuestLocalStorage();
     this.showNamingModal.set(false);
 
     // Phân định rõ ràng: Nếu mở từ nút "Lưu thiết kế" thì thực hiện lưu
@@ -768,7 +838,7 @@ export class StudioWorkspace implements OnDestroy {
       this.startAutoSaveTimer();
     } else {
       // Nếu mở từ nút "Đổi tên", CHỈ cập nhật tên và thông báo, KHÔNG lưu thiết kế trùng lặp
-      this.showToast(`Đã đổi tên thiết kế thành "${name || this.state.designName()}"!`);
+      this.showToast(`Đã đổi tên thiết kế thành "${finalName}"!`);
     }
   }
 
@@ -785,6 +855,7 @@ export class StudioWorkspace implements OnDestroy {
       .padStart(2, '0')}`;
     this.state.lastSavedTime.set(timeStr);
     this.state.designStatus.set('SAVED');
+    this.state.hasUnsavedChanges.set(false);
 
     const currentName = this.state.designName();
     const model = this.state.selectedModel();
@@ -1373,6 +1444,7 @@ export class StudioWorkspace implements OnDestroy {
     }
     if (!layer || layer.isLocked) return;
 
+    this.state.recordHistory();
     this.activeDrag = {
       id: layerId,
       mode: 'move',
@@ -1434,6 +1506,7 @@ export class StudioWorkspace implements OnDestroy {
     const layer = this.state.layers().find((l) => l.id === layerId);
     if (!layer || layer.isLocked) return;
 
+    this.state.recordHistory();
     this.activeDrag = {
       id: layerId,
       mode: 'resize',
@@ -1466,6 +1539,7 @@ export class StudioWorkspace implements OnDestroy {
     const layer = this.state.layers().find((l) => l.id === layerId);
     if (!layer || layer.isLocked) return;
 
+    this.state.recordHistory();
     const parentContainer = (event.target as HTMLElement).closest('.cursor-move') as HTMLElement;
     const rect = parentContainer ? parentContainer.getBoundingClientRect() : null;
     const zoomFactor = this.state.zoom() / 100;
@@ -1498,6 +1572,7 @@ export class StudioWorkspace implements OnDestroy {
     const layer = this.state.layers().find((l) => l.id === layerId);
     if (!layer || layer.isLocked) return;
 
+    this.state.recordHistory();
     this.activeDrag = {
       id: layerId,
       mode: 'rotate',
@@ -1591,7 +1666,7 @@ export class StudioWorkspace implements OnDestroy {
         this.state.triggerSafeZoneAlert();
       }
 
-      this.state.updateLayer(id, { x: Math.round(finalX), y: Math.round(finalY) });
+      this.state.updateLayer(id, { x: Math.round(finalX), y: Math.round(finalY) }, false);
     } else if (mode === 'resize') {
       // No upper percentage limit! Scale as big as desired like Canva
       const deltaX = (event.clientX - startX) / (2 * zoomFactor);
@@ -1614,38 +1689,38 @@ export class StudioWorkspace implements OnDestroy {
         const initialFontSize = this.activeDrag.initialFontSize || 30;
         const scaleRatio = newWidth / Math.max(5, initialWidth);
         const newFontSize = Math.max(10, Math.min(250, Math.round(initialFontSize * scaleRatio)));
-        this.state.updateLayer(id, { width: Math.round(newWidth), fontSize: newFontSize } as any);
+        this.state.updateLayer(id, { width: Math.round(newWidth), fontSize: newFontSize } as any, false);
       } else {
-        this.state.updateLayer(id, { width: Math.round(newWidth) });
+        this.state.updateLayer(id, { width: Math.round(newWidth) }, false);
       }
     } else if (mode === 'rotate') {
       const angle = (event.clientX - startX) * 1.5;
-      this.state.updateLayer(id, { rotation: Math.round((initialRotation + angle) % 360) });
+      this.state.updateLayer(id, { rotation: Math.round((initialRotation + angle) % 360) }, false);
     } else if (mode === 'crop-top') {
       const deltaPixels = (event.clientY - startY) / zoomFactor;
       const deltaPercent = (deltaPixels / Math.max(20, elemPxHeight)) * 100;
       const maxCrop = 100 - initialCropBottom - 5;
       const newCrop = Math.max(0, Math.min(maxCrop, initialCropTop + deltaPercent));
-      this.state.updateLayer(id, { cropTop: Math.round(newCrop) });
+      this.state.updateLayer(id, { cropTop: Math.round(newCrop) }, false);
     } else if (mode === 'crop-bottom') {
       const deltaPixels = (startY - event.clientY) / zoomFactor;
       const deltaPercent = (deltaPixels / Math.max(20, elemPxHeight)) * 100;
       const maxCrop = 100 - initialCropTop - 5;
       const newCrop = Math.max(0, Math.min(maxCrop, initialCropBottom + deltaPercent));
-      this.state.updateLayer(id, { cropBottom: Math.round(newCrop) });
+      this.state.updateLayer(id, { cropBottom: Math.round(newCrop) }, false);
     } else if (mode === 'crop-left') {
       if (this.activeDrag.layerType === 'text') {
         // Dragging left handle on text box: changes box width to wrap words naturally (Canva behavior)
         const deltaPixels = (startX - event.clientX) / zoomFactor;
         const deltaPercent = (deltaPixels / 300) * 100;
         const newWidth = Math.max(15, Math.round(initialWidth + deltaPercent));
-        this.state.updateLayer(id, { width: newWidth });
+        this.state.updateLayer(id, { width: newWidth }, false);
       } else {
         const deltaPixels = (event.clientX - startX) / zoomFactor;
         const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
         const maxCrop = 100 - initialCropRight - 5;
         const newCrop = Math.max(0, Math.min(maxCrop, initialCropLeft + deltaPercent));
-        this.state.updateLayer(id, { cropLeft: Math.round(newCrop) });
+        this.state.updateLayer(id, { cropLeft: Math.round(newCrop) }, false);
       }
     } else if (mode === 'crop-right') {
       if (this.activeDrag.layerType === 'text') {
@@ -1653,13 +1728,13 @@ export class StudioWorkspace implements OnDestroy {
         const deltaPixels = (event.clientX - startX) / zoomFactor;
         const deltaPercent = (deltaPixels / 300) * 100;
         const newWidth = Math.max(15, Math.round(initialWidth + deltaPercent));
-        this.state.updateLayer(id, { width: newWidth });
+        this.state.updateLayer(id, { width: newWidth }, false);
       } else {
         const deltaPixels = (startX - event.clientX) / zoomFactor;
         const deltaPercent = (deltaPixels / Math.max(20, elemPxWidth)) * 100;
         const maxCrop = 100 - initialCropLeft - 5;
         const newCrop = Math.max(0, Math.min(maxCrop, initialCropRight + deltaPercent));
-        this.state.updateLayer(id, { cropRight: Math.round(newCrop) });
+        this.state.updateLayer(id, { cropRight: Math.round(newCrop) }, false);
       }
     }
   }

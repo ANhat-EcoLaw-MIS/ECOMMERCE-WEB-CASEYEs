@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AccountState } from '../../services/account-state';
 import { AccountToast } from '../../services/account-toast';
+import { isDemoGoogleUser } from '../../../../shared/utils/demo-user';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,6 +14,7 @@ export class SecurityTab {
   private readonly formBuilder = inject(FormBuilder);
   private readonly accountState = inject(AccountState);
   private readonly toast = inject(AccountToast);
+  protected readonly demoGoogleUser = computed(() => isDemoGoogleUser(this.accountState.email()));
   readonly deletionRequested = output<void>();
   protected readonly passwordForm = this.formBuilder.nonNullable.group({
     currentPassword: ['', Validators.required],
@@ -34,6 +36,9 @@ export class SecurityTab {
   }
 
   protected async updatePassword(): Promise<void> {
+    // MOCK: Prevent password changes even if the disabled form handler is invoked directly.
+    if (this.demoGoogleUser()) return;
+
     this.passwordSubmitted.set(true);
     if (this.passwordForm.invalid || this.passwordMismatch()) {
       this.passwordForm.markAllAsTouched();

@@ -7,13 +7,6 @@ import { CanvasLayer, ImageElement, TextElement } from '../../models/canvas-elem
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 import { AuthModal } from '../../../../core/auth/auth-modal';
 
-// Dynamically import @google/model-viewer for rich WebGL 3D rendering in browser
-if (typeof window !== 'undefined') {
-  import('@google/model-viewer').catch((err) => {
-    console.warn('Google Model Viewer dynamic import warning:', err);
-  });
-}
-
 /**
  * Universal SVG to Base64/UTF8 Data URI converter
  */
@@ -729,13 +722,33 @@ export class TemplateBrowser {
   protected readonly reviewSubmittedSuccess = signal<boolean>(false);
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      import('@google/model-viewer').catch((err) => {
+        console.warn('Google Model Viewer dynamic import warning:', err);
+      });
+    }
+
     this.preloadTemplateArtworks();
 
     // Links from the site-wide search: ?template=ID opens that template, ?y=… shows the idea banner.
     const params = this.route.snapshot.queryParamMap;
     this.idea.set((params.get('y') ?? '').trim().slice(0, 200));
     const fromSearch = TEMPLATE_CATALOG.find((t) => t.id === params.get('template'));
-    if (fromSearch) setTimeout(() => this.openDetailModal(fromSearch));
+    if (fromSearch) {
+      setTimeout(() => this.openDetailModal(fromSearch));
+    } else {
+      // Tự động mở modal chọn dòng máy khi mới vào chưa có model lưu hoặc có query param ?selectModel=true
+      const hasSavedModel =
+        typeof localStorage !== 'undefined'
+          ? !!localStorage.getItem('caseyes_active_model')
+          : false;
+      const shouldPromptModel =
+        params.get('selectModel') === 'true' || !hasSavedModel;
+
+      if (shouldPromptModel) {
+        setTimeout(() => this.openModelSelectorModal(), 150);
+      }
+    }
 
     // Freeze body scroll when ANY modal is open
     effect(() => {
@@ -763,6 +776,14 @@ export class TemplateBrowser {
 
   protected closeModelSelectorModal(): void {
     this.showModelSelectorModal.set(false);
+    if (this.route.snapshot.queryParamMap.has('selectModel')) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { selectModel: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
   }
 
   protected selectModalBrand(brandId: string): void {
@@ -787,14 +808,39 @@ export class TemplateBrowser {
     this.closeModelSelectorModal();
   }
 
-  // Favorites Set & Count
-  protected readonly favoriteTemplates = signal<Set<string>>(new Set(['tpl-001', 'tpl-004']));
+  private loadInitialFavorites(): Set<string> {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('caseyes_favorite_templates');
+        if (raw) {
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) return new Set(arr);
+        }
+      } catch {}
+    }
+    return new Set();
+  }
+
+  // Favorites Set & Count (Module 4: Synchronized with localStorage, starting cleanly at 0)
+  protected readonly favoriteTemplates = signal<Set<string>>(this.loadInitialFavorites());
   protected readonly favoriteCount = computed(() => this.favoriteTemplates().size);
 
   // Filter & Search Signals
   protected readonly selectedCategories = signal<string[]>(['all']);
   protected readonly isCategoriesExpanded = signal<boolean>(false);
   protected readonly activeHashtagFilter = signal<string | null>(null);
+
+  protected readonly hasActiveFilters = computed(() => {
+    const cats = this.selectedCategories();
+    const hasCat = !cats.includes('all') && cats.length > 0;
+    const hasTag = !!this.activeHashtagFilter();
+    return hasCat || hasTag;
+  });
+
+  protected clearAllFilters(): void {
+    this.selectedCategories.set(['all']);
+    this.activeHashtagFilter.set(null);
+  }
 
   // Categories matching the image tabs (Định dạng Hashtag #, đồng bộ 100% tất cả hashtag trong từng mẫu)
   protected readonly categories = this.generateSynchronizedCategories();
@@ -1064,6 +1110,11 @@ export class TemplateBrowser {
         next.delete(templateId);
       } else {
         next.add(templateId);
+      }
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('caseyes_favorite_templates', JSON.stringify([...next]));
+        } catch {}
       }
       return next;
     });
@@ -1925,7 +1976,9 @@ export class TemplateBrowser {
     if (template.isBlankCanvas) {
       this.state.clearCanvas();
       this.state.caseBg.set('#FFFFFF');
-      this.state.designName.set(`Ốp lưng ${this.state.selectedModel().name} - Trắng`);
+      this.state.designName.set('Thiết kế chưa đặt tên');
+      this.state.suggestedDesignName.set(`Ốp lưng ${this.state.selectedModel().name} - Trắng`);
+      this.state.isFirstSave.set(true);
     } else {
       this.state.clearCanvas();
       if (template.bgImage) {
@@ -1933,20 +1986,26 @@ export class TemplateBrowser {
       } else {
         this.state.caseBg.set(template.gradient);
       }
-      this.state.designName.set(`Ốp ${template.name} - ${this.state.selectedModel().name}`);
+      this.state.designName.set('Thiết kế chưa đặt tên');
+      this.state.suggestedDesignName.set(`Ốp ${template.name} - ${this.state.selectedModel().name}`);
+      this.state.isFirstSave.set(true);
       const layers = this.createTemplateLayers(template);
       if (layers.length > 0) {
-        this.state.setLayers(layers);
+        this.state.setLayers(layers, false);
         this.state.selectLayer(layers[0].id);
       }
     }
+    this.state.resetHistory();
     this.router.navigate(['/design-studio/editor']);
   }
 
   protected createNewDesign(): void {
     this.state.clearCanvas();
     this.state.caseBg.set('#FFFFFF');
-    this.state.designName.set(`Ốp lưng ${this.state.selectedModel().name} - Thiết kế mới`);
+    this.state.designName.set('Thiết kế chưa đặt tên');
+    this.state.suggestedDesignName.set(`Ốp lưng ${this.state.selectedModel().name} - Thiết kế mới`);
+    this.state.isFirstSave.set(true);
+    this.state.resetHistory();
     this.closeAllDesignsModal();
     this.router.navigate(['/design-studio/editor']);
   }
@@ -1955,16 +2014,7 @@ export class TemplateBrowser {
   protected onContinueSavedDesign(saved: SavedDesignItem): void {
     this.closeCardMenu();
     this.closeAllDesignsModal();
-    this.state.clearCanvas();
-    this.state.caseBg.set(saved.bg);
-    this.state.designName.set(saved.name);
-    this.state.selectMaterial(saved.material);
-    if (saved.modelId) {
-      this.catalog.selectModel(saved.modelId);
-    }
-    if (saved.layers && saved.layers.length > 0) {
-      this.state.setLayers(saved.layers);
-    }
+    this.state.restoreSavedDesign(saved);
     this.router.navigate(['/design-studio/editor']);
   }
 

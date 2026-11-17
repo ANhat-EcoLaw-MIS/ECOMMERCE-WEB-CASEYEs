@@ -58,9 +58,8 @@ export class OnboardingFlow {
         return;
       }
 
-      const currentPreferences = currentProfile.preferences;
-      let result = await this.completeOnce(userId, currentPreferences);
-      if (result.error) result = await this.completeOnce(userId, currentPreferences);
+      let result = await this.completeOnce(userId);
+      if (result.error) result = await this.completeOnce(userId);
 
       if (result.error) {
         const skipResult = await this.skipOnce(userId);
@@ -121,52 +120,28 @@ export class OnboardingFlow {
   }
 
   private async initialize(userId: string): Promise<void> {
-    const cachedProfile = this.accountState.profile();
-    if (cachedProfile?.id === userId) this.profile = cachedProfile;
-    const loadProfile = async (): Promise<Result<Profile>> => {
-      if (cachedProfile?.id === userId) return { data: cachedProfile, error: null };
-      const result = await this.profileRepository.getById(userId);
-      if (result.error) return result;
-      return result.data
-        ? { data: result.data, error: null }
-        : fail({ message: 'Không tìm thấy hồ sơ tài khoản.' });
-    };
+    try {
+      const profileResult = await this.profileRepository.getById(userId);
+      if (profileResult.error) {
+        this.errorMessage.set(profileResult.error.message);
+        return;
+      }
+      if (!profileResult.data) {
+        this.errorMessage.set('Không tìm thấy hồ sơ tài khoản.');
+        return;
+      }
 
-    const [pendingResult, profileResult] = await Promise.allSettled([
-      this.profileRepository.markOnboardingPending(userId),
-      loadProfile(),
-    ]);
-
-    if (profileResult.status === 'fulfilled' && !profileResult.value.error && profileResult.value.data) {
-      this.profile = profileResult.value.data;
+      this.profile = profileResult.data;
       this.onboardingState.prefillName(this.profile.display_name ?? '');
-      return;
-    }
-
-    if (profileResult.status === 'rejected') {
-      this.errorMessage.set(this.errorText(profileResult.reason));
-    } else if (profileResult.value.error || !profileResult.value.data) {
-      this.errorMessage.set(
-        profileResult.value.error?.message ?? 'Không thể tải hồ sơ tài khoản.',
-      );
-    }
-
-    if (pendingResult.status === 'rejected') {
-      this.errorMessage.set(this.errorText(pendingResult.reason));
+    } catch (error) {
+      this.errorMessage.set(this.errorText(error));
     }
   }
 
-  private async completeOnce(
-    userId: string,
-    currentPreferences: readonly string[],
-  ): Promise<Result<Profile>> {
+  private async completeOnce(userId: string): Promise<Result<Profile>> {
     try {
       const preferences: OnboardingPreferences = this.onboardingState.draft();
-      return await this.profileRepository.completeOnboarding(
-        userId,
-        preferences,
-        currentPreferences,
-      );
+      return await this.profileRepository.completeOnboarding(userId, preferences);
     } catch (error) {
       return fail({ message: this.errorText(error) });
     }
