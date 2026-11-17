@@ -29,6 +29,7 @@ import { AuthModal } from '../../../../core/auth/auth-modal';
 import { CartState } from '../../../../core/cart-state/cart-state';
 import { CASE_MATERIALS } from '../../models/studio-domain.model';
 import { UNIFIED_STUDIO_PRICE } from '../../services/studio-state';
+import { applyModelViewerTexture } from '../../../../shared/devices/apply-model-viewer-texture';
 
 @Component({
   selector: 'app-studio-workspace',
@@ -74,6 +75,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
 
   // File Upload & DPI calculation
   protected readonly fileInputRef = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly isFileDragging = signal<boolean>(false);
   protected readonly consentChecked = signal<boolean>(false);
   protected readonly consentError = signal<boolean>(false);
@@ -1953,12 +1955,17 @@ export class StudioWorkspace implements OnInit, OnDestroy {
   }
 
   // --- Real-time 3D Texture Projection on GLB Case Model ---
+  /**
+   * Every <model-viewer> in this workspace: the desktop sidebar preview and the floating 3D card on
+   * narrow screens. They were previously found with document.querySelector('model-viewer'), which only
+   * ever returned the first one, so the second viewer was never painted.
+   */
+  private modelViewers(): any[] {
+    return Array.from(this.hostEl.nativeElement.querySelectorAll('model-viewer')) as any[];
+  }
+
   protected onModelViewerLoad(): void {
-    const mv = document.querySelector('model-viewer') as any;
-    if (mv) {
-      mv.cameraOrbit = '0deg 85deg 105%';
-      if (mv.jumpCameraToGoal) mv.jumpCameraToGoal();
-    }
+    this.reset3dView();
     this.trigger3dTextureSync(true);
   }
 
@@ -1982,8 +1989,8 @@ export class StudioWorkspace implements OnInit, OnDestroy {
 
   private sync3dTexture(): void {
     if (typeof document === 'undefined') return;
-    const mv = document.querySelector('model-viewer') as any;
-    if (!mv || !mv.model) {
+    const viewers = this.modelViewers().filter((v) => v.model);
+    if (!viewers.length) {
       this.is3dSyncing.set(false);
       return;
     }
@@ -2298,279 +2305,20 @@ export class StudioWorkspace implements OnInit, OnDestroy {
 
     this.capturePreview(canvas);
 
-    // 2. Access Three.js Scene from <model-viewer>
-    const sceneSymbol = Object.getOwnPropertySymbols(mv).find((s) =>
-      s.toString().includes('scene')
-    );
-    const scene = sceneSymbol ? mv[sceneSymbol] : null;
-
-    if (scene) {
-      // Find back mesh & sample mesh to borrow Three.js constructors
-      let backMesh: any = null;
-      let sampleMesh: any = null;
-      let foundTex: any = null;
-
-      scene.traverse((o: any) => {
-        if (o.isMesh) {
-          if (!sampleMesh && o.name !== 'CaseOverlayMesh') sampleMesh = o;
-          if (o.material?.map && !foundTex) foundTex = o.material.map;
-          if (
-            o.name === 'wLfSXtbwRlBrwof' ||
-            o.material?.name === 'oZRkkORNzkufnGD' ||
-            o.material?.name === 'glass' ||
-            o.name?.toLowerCase().includes('back')
-          ) {
-            backMesh = o;
-          }
-          // Hide Apple logo mesh if present
-          if (o.name === 'IykfmVvLplTsTEW' || o.material?.name === 'PaletteMaterial004') {
-            o.visible = false;
-          }
-        }
-      });
-
-      if (!backMesh && sampleMesh) backMesh = sampleMesh;
-
-      if (backMesh && sampleMesh) {
-        const MeshConstructor = sampleMesh.constructor;
-        const MaterialConstructor = sampleMesh.material.constructor;
-        const BufferGeometryConstructor = sampleMesh.geometry.constructor;
-        const BufferAttributeConstructor = sampleMesh.geometry.attributes.position.constructor;
-        const TexConstructor = foundTex?.constructor;
-
-        if (TexConstructor) {
-          // Prepare WebGL Texture - Flipped horizontally and vertically to match 3D phone model back orientation
-          const glCvs = document.createElement('canvas');
-          glCvs.width = W;
-          glCvs.height = H;
-          const glCtx = glCvs.getContext('2d');
-          if (glCtx) {
-            glCtx.translate(W, H);
-            glCtx.scale(-1, -1);
-            glCtx.drawImage(canvas, 0, 0);
-
-            const tex = new TexConstructor(glCvs);
-            // Ensure sRGB color space is preserved (prevents washed-out/pale/glaring textures)
-            if ('colorSpace' in tex) {
-              tex.colorSpace = 'srgb';
-            }
-            if ('encoding' in tex) {
-              (tex as any).encoding = 3001; // sRGBEncoding
-            }
-            tex.needsUpdate = true;
-
-            // 1. Back Overlay Mesh: Full phone chassis dimensions (w: 7.80, h: 16.00, z: 0.425)
-            const hw = 3.90;
-            const hh = 8.00;
-            const z = 0.425;
-
-            const positions = new Float32Array([
-              -hw, -hh, z,
-               hw, -hh, z,
-               hw,  hh, z,
-              -hw,  hh, z
-            ]);
-            // Planar UV coordinates aligned with phone back view (cutout at top-left matching camera)
-            const uvs = new Float32Array([
-              1, 1, // vertex 0 (-hw, -hh): bottom-left
-              0, 1, // vertex 1 (+hw, -hh): bottom-right
-              0, 0, // vertex 2 (+hw,  hh): top-right
-              1, 0  // vertex 3 (-hw,  hh): top-left (camera lenses cutout)
-            ]);
-            const indices = new Uint16Array([
-              0, 1, 2,
-              0, 2, 3
-            ]);
-            const normals = new Float32Array([
-              0, 0, 1,
-              0, 0, 1,
-              0, 0, 1,
-              0, 0, 1
-            ]);
-
-            const geo = new BufferGeometryConstructor();
-            geo.setAttribute('position', new BufferAttributeConstructor(positions, 3));
-            geo.setAttribute('uv', new BufferAttributeConstructor(uvs, 2));
-            geo.setAttribute('normal', new BufferAttributeConstructor(normals, 3));
-            geo.setIndex(new BufferAttributeConstructor(indices, 1));
-
-            let overlay = backMesh.parent.getObjectByName('CaseOverlayMesh');
-            if (!overlay) {
-              const mat = new MaterialConstructor();
-              mat.map = tex;
-              mat.transparent = true;
-              mat.side = 2; // DoubleSide
-              mat.roughness = 0.88; // Matte finish to eliminate shiny specular white glare
-              mat.metalness = 0.0;  // Non-metallic case albedo
-
-              overlay = new MeshConstructor(geo, mat);
-              overlay.name = 'CaseOverlayMesh';
-              overlay.scale.copy(backMesh.scale);
-              backMesh.parent.add(overlay);
-            } else {
-              overlay.geometry = geo;
-              if (overlay.material) {
-                overlay.material.map = tex;
-                overlay.material.transparent = true;
-                overlay.material.roughness = 0.88;
-                overlay.material.metalness = 0.0;
-                overlay.material.needsUpdate = true;
-              }
-            }
-
-            // 2. 3D Protective Extrusion Bumper with Raised Bezel Lip & Full Sidewall Depth
-            const rOut = 1.20; // Rounded corners matching phone corner curvature
-            const hwIn = 3.74;
-            const hhIn = 7.85;
-            const rIn = 1.05;
-            const zBack = 0.435; // Raised protective lip above back plate
-            const zFront = -0.52; // Full extrusion wrapping towards front screen
-            const segmentsPerCorner = 12;
-            const N = segmentsPerCorner * 4; // 48 points for smooth curves
-
-            const generatePoints = (wVal: number, hVal: number, rVal: number) => {
-              const pts: { x: number; y: number }[] = [];
-              const corners = [
-                { cx: wVal - rVal, cy: hVal - rVal, startAngle: 0, endAngle: Math.PI / 2 },
-                { cx: -wVal + rVal, cy: hVal - rVal, startAngle: Math.PI / 2, endAngle: Math.PI },
-                { cx: -wVal + rVal, cy: -hVal + rVal, startAngle: Math.PI, endAngle: Math.PI * 1.5 },
-                { cx: wVal - rVal, cy: -hVal + rVal, startAngle: Math.PI * 1.5, endAngle: Math.PI * 2 }
-              ];
-              for (const c of corners) {
-                for (let i = 0; i < segmentsPerCorner; i++) {
-                  const theta = c.startAngle + (i / segmentsPerCorner) * (c.endAngle - c.startAngle);
-                  pts.push({
-                    x: c.cx + rVal * Math.cos(theta),
-                    y: c.cy + rVal * Math.sin(theta)
-                  });
-                }
-              }
-              return pts;
-            };
-
-            const ptsOut = generatePoints(hw, hh, rOut);
-            const ptsIn = generatePoints(hwIn, hhIn, rIn);
-
-            const bumperPos: number[] = [];
-            const bumperIndices: number[] = [];
-
-            // Layout:
-            // [0 .. N-1]: Outer Top (ptsOut, zBack)
-            // [N .. 2N-1]: Outer Bottom (ptsOut, zFront)
-            // [2N .. 3N-1]: Inner Top (ptsIn, zBack)
-            for (let i = 0; i < N; i++) bumperPos.push(ptsOut[i].x, ptsOut[i].y, zBack);
-            for (let i = 0; i < N; i++) bumperPos.push(ptsOut[i].x, ptsOut[i].y, zFront);
-            for (let i = 0; i < N; i++) bumperPos.push(ptsIn[i].x, ptsIn[i].y, zBack);
-
-            // Outer Sidewall Quads (Outer Top -> Outer Bottom)
-            for (let i = 0; i < N; i++) {
-              const next = (i + 1) % N;
-              const t0 = i;
-              const t1 = next;
-              const b0 = N + i;
-              const b1 = N + next;
-              bumperIndices.push(t0, b0, t1);
-              bumperIndices.push(t1, b0, b1);
-            }
-
-            // Raised Bevel Lip Quads (Inner Top -> Outer Top)
-            for (let i = 0; i < N; i++) {
-              const next = (i + 1) % N;
-              const out0 = i;
-              const out1 = next;
-              const in0 = 2 * N + i;
-              const in1 = 2 * N + next;
-              bumperIndices.push(in0, out0, in1);
-              bumperIndices.push(in1, out0, out1);
-            }
-
-            const bumperGeo = new BufferGeometryConstructor();
-            bumperGeo.setAttribute('position', new BufferAttributeConstructor(new Float32Array(bumperPos), 3));
-            bumperGeo.setIndex(new BufferAttributeConstructor(new Uint16Array(bumperIndices), 1));
-            bumperGeo.computeVertexNormals();
-
-            let bumper = backMesh.parent.getObjectByName('CaseExtrusionBumper');
-            if (!bumper) {
-              const bumperMat = new MaterialConstructor();
-              bumperMat.color.set('#18181b');
-              bumperMat.roughness = 0.85;
-              bumperMat.metalness = 0.1;
-              bumperMat.side = 2; // DoubleSide
-
-              bumper = new MeshConstructor(bumperGeo, bumperMat);
-              bumper.name = 'CaseExtrusionBumper';
-              bumper.scale.copy(backMesh.scale);
-              backMesh.parent.add(bumper);
-            } else {
-              bumper.geometry = bumperGeo;
-              if (bumper.material) {
-                bumper.material.color.set(this.caseStrokeColor());
-                bumper.material.roughness = 0.85;
-                bumper.material.metalness = 0.1;
-                bumper.material.needsUpdate = true;
-              }
-            }
-
-            // Force <model-viewer> WebGL render loop to wake up and repaint immediately (eliminates idle pause)
-            if (scene) {
-              scene.isDirty = true;
-              if (typeof scene.queueRender === 'function') {
-                scene.queueRender();
-                requestAnimationFrame(() => {
-                  if (typeof scene.queueRender === 'function') {
-                    scene.queueRender();
-                  }
-                });
-              }
-            }
-
-            if (this.syncFadeTimer) clearTimeout(this.syncFadeTimer);
-            this.syncFadeTimer = setTimeout(() => {
-              this.is3dSyncing.set(false);
-              this.syncFadeTimer = null;
-            }, 220);
-            return;
-          }
-        }
-      }
-    }
-
-    // Fallback: If Three scene injection not available, fallback to model-viewer texture API
-    const targetMat = mv.model?.materials?.find(
-      (m: any) =>
-        m.name === 'oZRkkORNzkufnGD' ||
-        m.name === 'glass' ||
-        m.name === 'back' ||
-        m.name?.toLowerCase().includes('case')
-    );
-    if (targetMat?.pbrMetallicRoughness?.baseColorTexture) {
-      mv.createTexture(canvas.toDataURL('image/png'))
-        .then((texture: any) => {
-          targetMat.pbrMetallicRoughness.baseColorTexture.setTexture(texture);
-          targetMat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
-          if (scene) {
-            scene.isDirty = true;
-            if (typeof scene.queueRender === 'function') scene.queueRender();
-          }
-          if (this.syncFadeTimer) clearTimeout(this.syncFadeTimer);
-          this.syncFadeTimer = setTimeout(() => {
-            this.is3dSyncing.set(false);
-            this.syncFadeTimer = null;
-          }, 220);
-        })
-        .catch(() => {
-          this.is3dSyncing.set(false);
-        });
-    } else {
-      this.is3dSyncing.set(false);
-    }
+    // 2. Paint the texture onto every loaded viewer (shared with the shop's 3D preview).
+    void Promise.all(viewers.map((v) => applyModelViewerTexture(v, canvas, this.caseStrokeColor()))).finally(() => {
+      if (this.syncFadeTimer) clearTimeout(this.syncFadeTimer);
+      this.syncFadeTimer = setTimeout(() => {
+        this.is3dSyncing.set(false);
+        this.syncFadeTimer = null;
+      }, 220);
+    });
   }
 
   protected reset3dView(): void {
-    const mv = document.querySelector('model-viewer') as any;
-    if (mv) {
+    for (const mv of this.modelViewers()) {
       mv.cameraOrbit = '0deg 85deg 105%';
-      if (mv.jumpCameraToGoal) mv.jumpCameraToGoal();
+      mv.jumpCameraToGoal?.();
     }
   }
 

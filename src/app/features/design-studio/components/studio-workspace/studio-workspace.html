@@ -1650,6 +1650,7 @@
         <model-viewer
           [src]="state.selectedModel().model3dUrl"
           [alt]="'Mô hình 3D ' + state.selectedModel().name"
+          (load)="onModelViewerLoad()"
           camera-controls
           camera-orbit="0deg 85deg 105%"
           tone-mapping="neutral"
