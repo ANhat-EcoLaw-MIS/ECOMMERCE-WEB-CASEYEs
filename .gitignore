@@ -44,4 +44,6 @@ __screenshots__/
 Thumbs.db
 .agents/
 
-graphify-out/
+# Supabase
+/supabase/.temp/
+.codex/

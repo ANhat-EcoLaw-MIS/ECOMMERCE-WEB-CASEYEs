@@ -1,5 +1,7 @@
 import {ChangeDetectionStrategy, Component, computed, inject, input, output, signal} from '@angular/core';
-import {Router, RouterLink, RouterLinkActive} from '@angular/router';
+import {NavigationEnd, Router, RouterLink, RouterLinkActive} from '@angular/router';
+import {toSignal} from '@angular/core/rxjs-interop';
+import {filter, map} from 'rxjs';
 import {NAV_ITEMS} from './nav-items';
 import {NotificationManager} from '../../../shared/ui/notification/notification.manager';
 import {SupabaseAuthService} from '../../supabase/supabase-auth.service';
@@ -32,6 +34,20 @@ export class Header {
 
   /** Fires when the user wants to search (click or Ctrl/Cmd + K). */
   readonly searchRequested = output<void>();
+
+  /** Current URL, kept in sync with the router. */
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+  /** On /account the page has its own tabs, so the account dropdown is turned off. */
+  protected readonly onAccountPage = computed(() => {
+    const path = this.currentUrl().split(/[?#]/)[0];
+    return path === '/account' || path.startsWith('/account/');
+  });
 
   protected readonly navItems = NAV_ITEMS;
   protected readonly menuOpen = signal(false);

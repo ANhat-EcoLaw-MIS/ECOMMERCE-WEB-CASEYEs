@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, OnInit, signal } from '@angular/core';
 import { CustomerOrderFeed } from '../../shared/services/customer-order-feed';
 import { AccountState } from './services/account-state';
 import { AccountToast } from './services/account-toast';
@@ -29,7 +29,14 @@ export class Account implements OnInit {
   private readonly studioState = inject(StudioState);
   protected readonly toast = inject(AccountToast);
   protected readonly tabs = TABS;
-  protected readonly activeTab = signal<TabId>('profile');
+  /**
+   * Follows `?tab=` (so the header dropdown can switch tabs even while /account is already open),
+   * and can still be set locally by the tab buttons.
+   */
+  protected readonly activeTab = linkedSignal<TabId>(() => {
+    const tab = this.tab();
+    return TABS.some((t) => t.id === tab) ? (tab as TabId) : 'profile';
+  });
   protected readonly designCount = computed(() => this.studioState.savedDesigns().length);
   // Integration: real orders from Quản lý đơn hàng; `?tab=orders` opens the orders tab.
   protected readonly orderCount = computed(() => this.orderFeed.orders().length);
@@ -40,8 +47,6 @@ export class Account implements OnInit {
   protected readonly deletionPending = signal(false);
 
   ngOnInit(): void {
-    const tab = this.tab();
-    if (tab && TABS.some((t) => t.id === tab)) this.activeTab.set(tab as TabId);
     void this.accountState.load().then(() => {
       const profile = this.accountState.profile();
       this.onboardingBannerVisible.set(
