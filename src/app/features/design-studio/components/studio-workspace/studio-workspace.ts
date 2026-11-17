@@ -676,6 +676,14 @@ export class StudioWorkspace implements OnInit, OnDestroy {
     }, 30);
   }
 
+  protected onPreventScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target) {
+      target.scrollLeft = 0;
+      target.scrollTop = 0;
+    }
+  }
+
   protected onInlineTextInput(event: Event, layerId: string): void {
     const textarea = event.target as HTMLTextAreaElement;
     const val = textarea.value;
@@ -686,6 +694,12 @@ export class StudioWorkspace implements OnInit, OnDestroy {
     this.textInput.set(val);
     this.state.updateLayer(layerId, { content: val });
     this.trigger3dTextureSync(true);
+
+    const vp = document.getElementById('case-viewport');
+    if (vp) {
+      vp.scrollLeft = 0;
+      vp.scrollTop = 0;
+    }
 
     const hit = BANNED_KEYWORDS.find((w) => val.toLowerCase().includes(w));
     if (hit) {
@@ -699,12 +713,19 @@ export class StudioWorkspace implements OnInit, OnDestroy {
 
   protected onInlineTextKeydown(event: KeyboardEvent, layerId: string): void {
     const textarea = event.target as HTMLTextAreaElement;
-    if (event.key === 'Escape') {
+    if (event.key === 'Escape' || (event.key === 'Enter' && (event.ctrlKey || event.metaKey))) {
       event.preventDefault();
       this.finishInlineTextEdit();
-    } else if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      this.finishInlineTextEdit();
+    } else if (event.key === 'Enter') {
+      setTimeout(() => {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.max(textarea.scrollHeight, 28) + 'px';
+        const vp = document.getElementById('case-viewport');
+        if (vp) {
+          vp.scrollLeft = 0;
+          vp.scrollTop = 0;
+        }
+      }, 0);
     } else if ((event.key === 'Backspace' || event.key === 'Delete') && textarea.value.trim() === '') {
       event.preventDefault();
       this.finishInlineTextEdit();
@@ -759,7 +780,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
     this.isSavePromptingName.set(false);
     this.namingInput.set(
       this.state.designName() === 'Thiết kế chưa đặt tên'
-        ? `Ốp lưng ${this.state.selectedModel().name}`
+        ? ''
         : this.state.designName()
     );
     this.showNamingModal.set(true);
@@ -782,9 +803,9 @@ export class StudioWorkspace implements OnInit, OnDestroy {
       return;
     }
 
-    // Nếu chưa từng đặt tên riêng (vẫn là tên mặc định), hỏi tên khi bấm Lưu lần đầu
-    if (this.state.isFirstSave() && (this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName())) {
-      this.namingInput.set(`Ốp lưng ${this.state.selectedModel().name}`);
+    // Nếu là lưu lần đầu HOẶC tên vẫn là mặc định 'Thiết kế chưa đặt tên' -> BẮT BUỘC hiện MODAL-07 Đặt tên
+    if (this.state.isFirstSave() || this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName()) {
+      this.namingInput.set('');
       this.isSavePromptingName.set(true);
       this.showNamingModal.set(true);
     } else {
@@ -793,19 +814,20 @@ export class StudioWorkspace implements OnInit, OnDestroy {
   }
 
   protected confirmNaming(): void {
-    const name = this.namingInput().trim();
-    if (name) {
-      const oldName = this.state.designName();
-      this.state.designName.set(name);
+    const rawName = this.namingInput().trim();
+    const finalName =
+      rawName || this.state.suggestedDesignName() || `Ốp lưng ${this.state.selectedModel().name}`;
 
-      // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
-      this.state.savedDesigns.update((list) =>
-        list.map((d) => (d.name === oldName ? { ...d, name } : d))
-      );
+    const oldName = this.state.designName();
+    this.state.designName.set(finalName);
 
-      // Cập nhật nháp localStorage
-      this.saveToGuestLocalStorage();
-    }
+    // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
+    this.state.savedDesigns.update((list) =>
+      list.map((d) => (d.name === oldName ? { ...d, name: finalName } : d))
+    );
+
+    // Cập nhật nháp localStorage
+    this.saveToGuestLocalStorage();
     this.showNamingModal.set(false);
 
     // Phân định rõ ràng: Nếu mở từ nút "Lưu thiết kế" thì thực hiện lưu
@@ -816,7 +838,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
       this.startAutoSaveTimer();
     } else {
       // Nếu mở từ nút "Đổi tên", CHỈ cập nhật tên và thông báo, KHÔNG lưu thiết kế trùng lặp
-      this.showToast(`Đã đổi tên thiết kế thành "${name || this.state.designName()}"!`);
+      this.showToast(`Đã đổi tên thiết kế thành "${finalName}"!`);
     }
   }
 
@@ -833,6 +855,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
       .padStart(2, '0')}`;
     this.state.lastSavedTime.set(timeStr);
     this.state.designStatus.set('SAVED');
+    this.state.hasUnsavedChanges.set(false);
 
     const currentName = this.state.designName();
     const model = this.state.selectedModel();
