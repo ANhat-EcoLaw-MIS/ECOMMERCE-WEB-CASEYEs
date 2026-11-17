@@ -17,5 +17,5 @@ export class CartDrawer {
  protected readonly productImage = productImage;
  protected readonly money = (value:number) => new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0}).format(value);
 
- protected onImageError(event: Event): void { const img = event.target as HTMLImageElement; if (!img || img.dataset['fallbackApplied'] === 'true') return; img.dataset['fallbackApplied'] = 'true'; img.src = '/products/bloom-club.webp'; }
+ protected onImageError(event: Event): void { const img = event.target as HTMLImageElement; if (!img || img.dataset['fallbackApplied'] === 'true') return; img.dataset['fallbackApplied'] = 'true'; img.src = '/products/Bg_Case/01_lavender_haze.png'; }
 }

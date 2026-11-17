@@ -1,65 +1,148 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { CartState } from '../../../core/cart-state/cart-state';
-import { CartDrawerState } from '../../../core/cart-state/cart-drawer-state';
-import { injectRequireLogin } from '../../../core/auth/require-login';
-import { Case3d } from '../../../shared/ui/case-3d/case-3d';
-import { MODELS, PRODUCTS, ACCESSORIES, productImage, type CatalogAccessory } from '../catalog';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { CasePreview } from '../../../shared/ui/case-preview/case-preview';
+import { CaseViewer3d } from '../../../shared/ui/case-viewer-3d/case-viewer-3d';
+import { BRANDS_DATA, DEFAULT_DEVICE, DEVICES, findDevice, type BaseSKU, type PhoneModel } from '../../../shared/devices/devices';
+import {
+  ACCESSORIES,
+  artworkUrl,
+  colorSkus,
+  DESIGNS,
+  findDesign,
+  pickSku,
+  productPhotos,
+  variantPrice,
+  variantStock,
+} from '../catalog';
+import { ShopCart } from '../services/shop-cart';
+import { onPhotoError, vnd } from '../format';
+import { VariantPicker } from '../components/variant-picker/variant-picker';
+import { ProductCard } from '../components/product-card/product-card';
+import { AccessoryCard } from '../components/accessory-card/accessory-card';
 
-@Component({ selector:'app-product-detail',standalone:true, imports:[RouterLink, Case3d], templateUrl:'./product-detail.html', styleUrl:'./product-detail.scss', changeDetection:ChangeDetectionStrategy.OnPush })
+type MediaMode = '2d' | '3d' | 'photos';
+type InfoTab = 'description' | 'specs' | 'reviews';
+
+@Component({
+  selector: 'app-product-detail',
+  imports: [RouterLink, CasePreview, CaseViewer3d, VariantPicker, ProductCard, AccessoryCard],
+  templateUrl: './product-detail.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block bg-surface' },
+})
 export class ProductDetail {
-  protected readonly route=inject(ActivatedRoute);
-  private readonly cart=inject(CartState);
-  private readonly drawer=inject(CartDrawerState);
-  private readonly requireLogin = injectRequireLogin();
-  protected readonly productImage = productImage;
-  protected readonly models=MODELS;
-  protected readonly accessories=ACCESSORIES;
-  protected readonly routeParams=toSignal(this.route.paramMap,{initialValue:this.route.snapshot.paramMap});
-  protected readonly product=computed(()=>PRODUCTS.find(p=>p.id===this.routeParams().get('id')));
-  protected readonly related=computed(()=>{
-    const current=this.product();
-    if(!current)return [];
-    return [...PRODUCTS].filter(p=>p.id!==current.id).sort((a,b)=>Number(b.collection===current.collection)-Number(a.collection===current.collection)).slice(0,4);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  protected readonly shopCart = inject(ShopCart);
+  protected readonly vnd = vnd;
+  protected readonly onPhotoError = onPhotoError;
+  protected readonly accessories = ACCESSORIES.filter((a) => a.stock > 0).slice(0, 4);
+  protected readonly colorSkus = colorSkus;
+
+  private readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+  private readonly query = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+
+  protected readonly design = computed(() => findDesign(this.params().get('id')));
+  /** Device and SKU live in the URL (?model=&sku=) so a configured case can be shared. */
+  protected readonly device = computed(() => findDevice(this.query().get('model')) ?? DEFAULT_DEVICE);
+  protected readonly sku = computed<BaseSKU | undefined>(() => {
+    const id = this.query().get('sku');
+    return this.device().skus.find((s) => s.skuId === id && s.isAvailable) ?? pickSku(this.device());
   });
-  protected readonly model=signal(MODELS[0]);
-  protected readonly view=signal<'3d'|'2d'>('2d');
-  protected readonly galleryIndex=signal(0);
-  protected readonly infoTab=signal<'description'|'specs'|'reviews'>('description');
-  protected readonly galleryPhotos=computed(()=>{const p=this.product();return p ? [productImage(p.id),`/products/${p.id}-detail.webp`,`/products/${p.id}-finish.webp`] : [];});
-  protected readonly accentColors=['#493077','#d5c6ee','#f5e9fb','#221d32'];
-  protected readonly color=signal('#493077');
-  protected readonly materials=['TPU chống sốc','PC cứng','Silicone mềm'];
-  protected readonly material=signal('TPU chống sốc');
-  protected readonly quantity=signal(1);
-  protected readonly notice=signal('');
-  protected readonly money=(amount:number)=>new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0}).format(amount);
-  constructor(){const m=this.route.snapshot.queryParamMap.get('model');if(m && MODELS.includes(m))this.model.set(m);}
-  protected setGallery(i:number):void{this.galleryIndex.set(Math.max(0,Math.min(this.galleryPhotos().length-1,i)));}
-  protected nextGallery():void{this.setGallery((this.galleryIndex()+1)%this.galleryPhotos().length);}
-  protected prevGallery():void{this.setGallery((this.galleryIndex()+this.galleryPhotos().length-1)%this.galleryPhotos().length);}
-  protected updateModel(e:Event):void{this.model.set((e.target as HTMLSelectElement).value);}
-  protected increase():void{this.quantity.update(v=>Math.min(20,v+1));}
-  protected decrease():void{this.quantity.update(v=>Math.max(1,v-1));}
-  protected resetView():void{this.view.set('2d');this.galleryIndex.set(0);this.quantity.set(1);if(typeof window !== 'undefined') window.scrollTo({top:0,behavior:'smooth'});}
-  protected addAccessory(item:CatalogAccessory):void{
-    if (!this.requireLogin(`/shop/${this.product()?.id || 'bloom-club'}`)) return;
-    this.cart.add({id:item.id,name:item.name,model:'Phụ kiện',finish:'Phụ kiện CasEYE’s (demo)',tone:'lilac',caption:'',unitPrice:item.price,quantity:1,stock:item.stock,custom:true,snapshot:item.image});
-    this.notice.set('Đã thêm phụ kiện vào giỏ');
-    this.drawer.show(true);
-  }
-  protected add():void{
-    const p=this.product();if(!p || p.stock<1)return;
-    if(!this.requireLogin(`/shop/${p.id}?model=${encodeURIComponent(this.model())}`))return;
-    this.cart.add({id:p.id+':'+this.model()+':'+this.material(),name:p.name,model:this.model(),finish:this.material()+' · '+p.material,tone:p.tone,caption:p.caption,unitPrice:p.price,quantity:this.quantity(),stock:p.stock,custom:false});
-    this.notice.set('Đã thêm vào giỏ hàng');this.drawer.show(true);
+
+  protected readonly brands = BRANDS_DATA.filter((b) => DEVICES.some((d) => d.brandId === b.id));
+  protected readonly devicesOfBrand = computed(() => DEVICES.filter((d) => d.brandId === this.device().brandId));
+
+  protected readonly artwork = computed(() => artworkUrl(this.design()?.id ?? ''));
+  protected readonly photos = computed(() => (this.design() ? productPhotos(this.design()!.id) : []));
+  protected readonly price = computed(() => {
+    const d = this.design(), s = this.sku();
+    return d && s ? variantPrice(d, s) : 0;
+  });
+  protected readonly stock = computed(() => {
+    const d = this.design(), s = this.sku();
+    return d && s ? variantStock(d, s) : 0;
+  });
+  protected readonly favorite = computed(() => this.shopCart.wishlist().includes(this.design()?.id ?? ''));
+
+  protected readonly related = computed(() => {
+    const current = this.design();
+    if (!current) return [];
+    return DESIGNS.filter((d) => d.id !== current.id)
+      .sort((a, b) => Number(b.collection === current.collection) - Number(a.collection === current.collection))
+      .slice(0, 4);
+  });
+
+  protected readonly mode = signal<MediaMode>('2d');
+  protected readonly photoIndex = signal(0);
+  protected readonly tab = signal<InfoTab>('description');
+  protected readonly quantity = signal(1);
+
+  constructor() {
+    // New design → back to the default view.
+    effect(() => {
+      this.design();
+      this.mode.set('2d');
+      this.photoIndex.set(0);
+      this.quantity.set(1);
+    });
+    // Keep quantity within stock when the variant changes.
+    effect(() => {
+      const max = Math.max(1, this.stock());
+      if (this.quantity() > max) this.quantity.set(max);
+    });
   }
 
-  protected onImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (!img || img.dataset['fallbackApplied'] === 'true') return;
-    img.dataset['fallbackApplied'] = 'true';
-    img.src = '/products/bloom-club.webp';
+  protected selectBrand(e: Event): void {
+    const brandId = (e.target as HTMLSelectElement).value;
+    const first = DEVICES.find((d) => d.brandId === brandId);
+    if (first) this.selectDevice(first);
+  }
+
+  protected onDevice(e: Event): void {
+    const d = findDevice((e.target as HTMLSelectElement).value);
+    if (d) this.selectDevice(d);
+  }
+
+  protected selectDevice(device: PhoneModel): void {
+    const current = this.sku();
+    const next = pickSku(device, current?.colorName);
+    this.setVariant(device, next);
+  }
+
+  protected selectSku(sku: BaseSKU): void {
+    this.setVariant(this.device(), sku);
+  }
+
+  private setVariant(device: PhoneModel, sku: BaseSKU | undefined): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { model: device.id, sku: sku?.skuId ?? null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  protected step(delta: number): void {
+    this.quantity.update((q) => Math.min(Math.max(1, this.stock()), Math.max(1, q + delta)));
+  }
+
+  protected showPhoto(i: number): void {
+    const n = this.photos().length;
+    this.photoIndex.set((i + n) % n);
+  }
+
+  protected add(event: MouseEvent): void {
+    const d = this.design(), s = this.sku();
+    if (d && s) this.shopCart.addVariant(d, this.device(), s, this.quantity(), event);
+  }
+
+  protected openDesign(id: string): void {
+    void this.router.navigate(['/shop', id], { queryParamsHandling: 'preserve' });
+  }
+
+  protected scrollTop(): void {
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

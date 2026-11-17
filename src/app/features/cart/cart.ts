@@ -33,5 +33,5 @@ export class Cart {
     void this.router.navigate(['/checkout']);
   }
 
-  protected onImageError(event: Event):void{const img=event.target as HTMLImageElement;if(!img||img.dataset['fallbackApplied']==='true')return;img.dataset['fallbackApplied']='true';img.src='/products/bloom-club.webp';}
+  protected onImageError(event: Event):void{const img=event.target as HTMLImageElement;if(!img||img.dataset['fallbackApplied']==='true')return;img.dataset['fallbackApplied']='true';img.src='/products/Bg_Case/01_lavender_haze.png';}
 }
