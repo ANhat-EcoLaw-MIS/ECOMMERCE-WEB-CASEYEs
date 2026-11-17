@@ -1,0 +1,1080 @@
+{
+"addresses": {
+"cols": [
+[
+"city",
+"string"
+],
+[
+"created_at",
+"string"
+],
+[
+"district",
+"string | null"
+],
+[
+"id",
+"string"
+],
+[
+"is_default",
+"boolean"
+],
+[
+"line",
+"string"
+],
+[
+"phone",
+"string"
+],
+[
+"recipient",
+"string"
+],
+[
+"user_id",
+"string"
+],
+[
+"ward",
+"string"
+]
+],
+"fks": [
+[
+"user_id",
+"profiles"
+]
+],
+"ddl": "\n                                id         uuid primary key default gen_random_uuid(),\n                                user_id    uuid not null references public.profiles (id) on delete cascade,\n                                recipient  text not null,\n                                phone      text not null,\n                                line       text not null,          -- street and house number\n                                ward       text not null,\n                                district   text,                   -- optional\n                                city       text not null,\n                                is_default boolean not null default false,\n                                created_at timestamptz not null default now()"
+},
+"cancel_requests": {
+"cols": [
+[
+"created_at",
+"string"
+],
+[
+"decided_at",
+"string | null"
+],
+[
+"decided_by",
+"string | null"
+],
+[
+"decision_reason",
+"string | null"
+],
+[
+"id",
+"string"
+],
+[
+"note",
+"string | null"
+],
+[
+"order_id",
+"string"
+],
+[
+"reason",
+"string"
+],
+[
+"sla_due_at",
+"string"
+],
+[
+"status",
+"string"
+]
+],
+"fks": [
+[
+"decided_by",
+"profiles"
+],
+[
+"order_id",
+"orders"
+]
+],
+"ddl": "\n  id              uuid primary key default gen_random_uuid(),\n  order_id        uuid not null references public.orders (id) on delete cascade,\n  reason          text not null check (reason in ('High_Shipping_Fee', 'Changed_Mind', 'Wrong_Phone_Model', 'Wrong_Address', 'Other')),\n  note            text,\n  status          text not null default 'pending' check (status in ('pending', 'accepted', 'rejected', 'withdrawn')),\n  sla_due_at      timestamptz not null,\n  created_at      timestamptz not null default now(),\n  decided_at      timestamptz,\n  decided_by      uuid references public.profiles (id) on delete set null,\n  decision_reason text"
+},
+"delivery_attempts": {
+"cols": [
+[
+"attempt_no",
+"number"
+],
+[
+"ended_at",
+"string | null"
+],
+[
+"failure_cause",
+"string | null"
+],
+[
+"id",
+"string"
+],
+[
+"result",
+"string | null"
+],
+[
+"shipment_id",
+"string"
+],
+[
+"started_at",
+"string"
+]
+],
+"fks": [
+[
+"shipment_id",
+"shipments"
+]
+],
+"ddl": "\n  id            uuid primary key default gen_random_uuid(),\n  shipment_id   uuid not null references public.shipments (id) on delete cascade,\n  attempt_no    smallint not null,\n  started_at    timestamptz not null default now(),\n  result        text check (result in ('delivered', 'failed')),\n  failure_cause text,\n  ended_at      timestamptz,\n  unique (shipment_id, attempt_no)"
+},
+"design_reviews": {
+"cols": [
+[
+"created_at",
+"string"
+],
+[
+"decision",
+"string"
+],
+[
+"design_id",
+"string | null"
+],
+[
+"id",
+"string"
+],
+[
+"order_id",
+"string"
+],
+[
+"reason",
+"string | null"
+],
+[
+"reviewer_id",
+"string | null"
+],
+[
+"round",
+"number"
+],
+[
+"violation_group",
+"string | null"
+]
+],
+"fks": [
+[
+"design_id",
+"designs"
+],
+[
+"order_id",
+"orders"
+],
+[
+"reviewer_id",
+"profiles"
+]
+],
+"ddl": "\n  id              uuid primary key default gen_random_uuid(),\n  order_id        uuid not null references public.orders (id) on delete cascade,\n  design_id       uuid references public.designs (id) on delete set null,\n  round           smallint not null,\n  decision        text not null check (decision in ('approved', 'rejected')),\n  violation_group text,\n  reason          text,\n  reviewer_id     uuid references public.profiles (id) on delete set null,\n  created_at      timestamptz not null default now()"
+},
+"designs": {
+"cols": [
+[
+"canvas_json",
+"Json"
+],
+[
+"created_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"name",
+"string"
+],
+[
+"phone_model_id",
+"string"
+],
+[
+"preview_url",
+"string | null"
+],
+[
+"updated_at",
+"string"
+],
+[
+"user_id",
+"string"
+]
+],
+"fks": [
+[
+"phone_model_id",
+"phone_models"
+],
+[
+"user_id",
+"profiles"
+]
+],
+"ddl": "\n                              id             uuid primary key default gen_random_uuid(),\n                              user_id        uuid not null references public.profiles (id) on delete cascade,\n                              phone_model_id uuid not null references public.phone_models (id),\n                              name           text not null default 'My design',\n                              canvas_json    jsonb not null,     -- editor state (objects, positions, colors)\n                              preview_url    text,               -- PNG of the finished design\n                              created_at     timestamptz not null default now(),\n                              updated_at     timestamptz not null default now()"
+},
+"inventory_items": {
+"cols": [
+[
+"created_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"kind",
+"Database[\"public\"][\"Enums\"][\"inventory_kind\"]"
+],
+[
+"name",
+"string"
+],
+[
+"phone_model_id",
+"string | null"
+],
+[
+"quantity_on_hand",
+"number"
+]
+],
+"fks": [
+[
+"phone_model_id",
+"phone_models"
+]
+],
+"ddl": "\n                                      id               uuid primary key default gen_random_uuid(),\n                                      kind             public.inventory_kind not null,\n                                      name             text not null,\n                                      phone_model_id   uuid references public.phone_models (id),\n                                      quantity_on_hand integer not null default 0 check (quantity_on_hand >= 0),\n                                      created_at       timestamptz not null default now(),\n\n  -- a blank must belong to a phone model; other kinds must not\n                                      constraint blank_needs_phone_model check ((kind = 'blank') = (phone_model_id is not null))"
+},
+"notifications": {
+"cols": [
+[
+"body",
+"string"
+],
+[
+"created_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"link",
+"string | null"
+],
+[
+"read_at",
+"string | null"
+],
+[
+"title",
+"string"
+],
+[
+"type",
+"string"
+],
+[
+"user_id",
+"string"
+]
+],
+"fks": [
+[
+"user_id",
+"profiles"
+]
+],
+"ddl": "\n  id         uuid primary key default gen_random_uuid(),\n  user_id    uuid not null references public.profiles (id) on delete cascade,\n  type       text not null check (type in ('order', 'design', 'payment', 'support')),\n  title      text not null,\n  body       text not null,\n  link       text,                                  -- in-app route, e.g. /order-tracking/CC-261114-0001\n  created_at timestamptz not null default now(),\n  read_at    timestamptz"
+},
+"order_items": {
+"cols": [
+[
+"design_id",
+"string | null"
+],
+[
+"design_version",
+"number"
+],
+[
+"id",
+"string"
+],
+[
+"image_url",
+"string | null"
+],
+[
+"inventory_item_id",
+"string"
+],
+[
+"is_custom",
+"boolean | null"
+],
+[
+"name",
+"string"
+],
+[
+"order_id",
+"string"
+],
+[
+"phone_model",
+"string | null"
+],
+[
+"qty",
+"number"
+],
+[
+"unit_price",
+"number"
+],
+[
+"variant_id",
+"string | null"
+]
+],
+"fks": [
+[
+"design_id",
+"designs"
+],
+[
+"inventory_item_id",
+"inventory_items"
+],
+[
+"inventory_item_id",
+"stock_availability"
+],
+[
+"order_id",
+"orders"
+],
+[
+"variant_id",
+"product_variants"
+]
+],
+"ddl": "\n                                  id                uuid primary key default gen_random_uuid(),\n                                  order_id          uuid not null references public.orders (id) on delete cascade,\n                                  variant_id        uuid references public.product_variants (id),\n                                  design_id         uuid references public.designs (id),\n                                  inventory_item_id uuid not null references public.inventory_items (id),  -- stock taken, used for cancel\n                                  name              text not null,\n                                  image_url         text,\n                                  unit_price        integer not null check (unit_price >= 0),\n                                  qty               integer not null check (qty > 0),\n\n  -- exactly one of variant / design\n                                  constraint one_source check (num_nonnulls(variant_id, design_id) = 1)"
+},
+"order_status_history": {
+"cols": [
+[
+"actor_id",
+"string | null"
+],
+[
+"actor_type",
+"string"
+],
+[
+"created_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"note",
+"string | null"
+],
+[
+"order_id",
+"string"
+],
+[
+"reason",
+"string | null"
+],
+[
+"status",
+"Database[\"public\"][\"Enums\"][\"order_status\"]"
+],
+[
+"status_detail",
+"string | null"
+]
+],
+"fks": [
+[
+"order_id",
+"orders"
+]
+],
+"ddl": "\n                                           id         uuid primary key default gen_random_uuid(),\n                                           order_id   uuid not null references public.orders (id) on delete cascade,\n                                           status     public.order_status not null,\n                                           note       text,\n                                           created_at timestamptz not null default now()"
+},
+"order_vouchers": {
+"cols": [
+[
+"code",
+"string"
+],
+[
+"created_at",
+"string"
+],
+[
+"expires_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"kind",
+"string"
+],
+[
+"order_id",
+"string"
+],
+[
+"used_at",
+"string | null"
+],
+[
+"value",
+"number"
+]
+],
+"fks": [
+[
+"order_id",
+"orders"
+]
+],
+"ddl": "\n  id         uuid primary key default gen_random_uuid(),\n  order_id   uuid not null references public.orders (id) on delete cascade,\n  kind       text not null check (kind in ('late_delivery', 'express_surcharge', 'complaint')),\n  code       text not null unique,\n  value      integer not null check (value >= 0),\n  expires_at timestamptz not null,\n  used_at    timestamptz,\n  created_at timestamptz not null default now()"
+},
+"orders": {
+"cols": [
+[
+"address_line",
+"string"
+],
+[
+"auto_complete_at",
+"string | null"
+],
+[
+"batch_date",
+"string | null"
+],
+[
+"city",
+"string"
+],
+[
+"confirm_due_at",
+"string | null"
+],
+[
+"confirmed_at",
+"string | null"
+],
+[
+"created_at",
+"string"
+],
+[
+"delivered_at",
+"string | null"
+],
+[
+"design_fix_reminded_at",
+"string | null"
+],
+[
+"design_resubmit_count",
+"number"
+],
+[
+"discount",
+"number"
+],
+[
+"district",
+"string | null"
+],
+[
+"earliest_edd",
+"string | null"
+],
+[
+"express_surcharge",
+"number"
+],
+[
+"failure_cause",
+"string | null"
+],
+[
+"fault_override",
+"string | null"
+],
+[
+"frozen_at",
+"string | null"
+],
+[
+"goods_total",
+"number"
+],
+[
+"id",
+"string"
+],
+[
+"late_voucher_issued",
+"boolean"
+],
+[
+"latest_edd",
+"string | null"
+],
+[
+"order_code",
+"string | null"
+],
+[
+"payment_channel",
+"string | null"
+],
+[
+"payment_method",
+"string"
+],
+[
+"payment_status",
+"string"
+],
+[
+"payment_txn_ref",
+"string | null"
+],
+[
+"phone",
+"string"
+],
+[
+"qc_reprint_count",
+"number"
+],
+[
+"recipient",
+"string"
+],
+[
+"redelivery_used",
+"boolean"
+],
+[
+"rejected_at",
+"string | null"
+],
+[
+"review_queued_at",
+"string | null"
+],
+[
+"shipping_fee",
+"number"
+],
+[
+"shipping_tier",
+"string"
+],
+[
+"standard_fee",
+"number"
+],
+[
+"status",
+"Database[\"public\"][\"Enums\"][\"order_status\"]"
+],
+[
+"status_detail",
+"string"
+],
+[
+"ticket_id",
+"string | null"
+],
+[
+"total",
+"number"
+],
+[
+"transit_max",
+"number"
+],
+[
+"transit_min",
+"number"
+],
+[
+"updated_at",
+"string"
+],
+[
+"user_id",
+"string"
+],
+[
+"version",
+"number"
+],
+[
+"ward",
+"string"
+],
+[
+"warehouse_disputed",
+"boolean"
+],
+[
+"warehouse_hold_until",
+"string | null"
+]
+],
+"fks": [
+[
+"user_id",
+"profiles"
+]
+],
+"ddl": "\n                             id             uuid primary key default gen_random_uuid(),\n                             user_id        uuid not null references public.profiles (id),\n                             status         public.order_status not null default 'pending',\n                             total          integer not null default 0 check (total >= 0),\n                             payment_method text not null default 'cod',\n  -- shipping snapshot\n                             recipient      text not null,\n                             phone          text not null,\n                             address_line   text not null,\n                             ward           text not null,\n                             district       text,\n                             city           text not null,\n                             created_at     timestamptz not null default now()"
+},
+"phone_models": {
+"cols": [
+[
+"brand",
+"string"
+],
+[
+"created_at",
+"string"
+],
+[
+"custom_price",
+"number"
+],
+[
+"id",
+"string"
+],
+[
+"is_active",
+"boolean"
+],
+[
+"mask_image_url",
+"string | null"
+],
+[
+"name",
+"string"
+],
+[
+"slug",
+"string"
+]
+],
+"fks": [],
+"ddl": "\n                                   id              uuid primary key default gen_random_uuid(),\n                                   brand           text not null,\n                                   name            text not null,\n                                   slug            text not null unique,\n                                   custom_price    integer not null check (custom_price >= 0),  -- price of a custom case\n                                   mask_image_url  text,                                        -- outline shown in the design studio\n                                   is_active       boolean not null default true,\n                                   created_at      timestamptz not null default now()"
+},
+"policy_consents": {
+"cols": [
+[
+"accepted_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"order_id",
+"string"
+],
+[
+"policy_version",
+"string"
+],
+[
+"user_id",
+"string"
+]
+],
+"fks": [
+[
+"order_id",
+"orders"
+],
+[
+"user_id",
+"profiles"
+]
+],
+"ddl": "\n  id             uuid primary key default gen_random_uuid(),\n  order_id       uuid not null unique references public.orders (id) on delete restrict,\n  user_id        uuid not null references public.profiles (id) on delete restrict,\n  policy_version text not null,\n  accepted_at    timestamptz not null default now()"
+},
+"product_variants": {
+"cols": [
+[
+"created_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"inventory_item_id",
+"string"
+],
+[
+"is_active",
+"boolean"
+],
+[
+"name",
+"string | null"
+],
+[
+"phone_model_id",
+"string | null"
+],
+[
+"price",
+"number"
+],
+[
+"product_id",
+"string"
+]
+],
+"fks": [
+[
+"inventory_item_id",
+"inventory_items"
+],
+[
+"inventory_item_id",
+"stock_availability"
+],
+[
+"phone_model_id",
+"phone_models"
+],
+[
+"product_id",
+"products"
+]
+],
+"ddl": "\n                                       id                uuid primary key default gen_random_uuid(),\n                                       product_id        uuid not null references public.products (id) on delete cascade,\n                                       name              text,                             -- label, e.g. \"iPhone 15\" or \"Black\"\n                                       phone_model_id    uuid references public.phone_models (id),  -- null if it fits no specific phone\n                                       inventory_item_id uuid not null references public.inventory_items (id),  -- what buying this uses up\n                                       price             integer not null check (price >= 0),\n                                       is_active         boolean not null default true,\n                                       created_at        timestamptz not null default now(),\n                                       unique (product_id, phone_model_id)"
+},
+"products": {
+"cols": [
+[
+"created_at",
+"string"
+],
+[
+"description",
+"string"
+],
+[
+"gallery_urls",
+"string[]"
+],
+[
+"id",
+"string"
+],
+[
+"image_url",
+"string | null"
+],
+[
+"is_active",
+"boolean"
+],
+[
+"name",
+"string"
+],
+[
+"product_type",
+"Database[\"public\"][\"Enums\"][\"product_type\"]"
+],
+[
+"slug",
+"string"
+]
+],
+"fks": [],
+"ddl": "\n                               id           uuid primary key default gen_random_uuid(),\n                               slug         text not null unique,\n                               name         text not null,\n                               description  text not null default '',\n                               product_type public.product_type not null,\n                               image_url    text,                                  -- main photo (cards, cart, order snapshot)\n                               gallery_urls text[] not null default '{}',          -- extra photos for the detail page\n                               is_active    boolean not null default true,\n                               created_at   timestamptz not null default now()"
+},
+"profiles": {
+"cols": [
+[
+"avatar_url",
+"string | null"
+],
+[
+"created_at",
+"string"
+],
+[
+"device_type",
+"string | null"
+],
+[
+"display_name",
+"string | null"
+],
+[
+"id",
+"string"
+],
+[
+"onboarding_status",
+"string"
+],
+[
+"preferences",
+"string[]"
+],
+[
+"role",
+"string"
+],
+[
+"updated_at",
+"string"
+]
+],
+"fks": [],
+"ddl": "\n                               id           uuid primary key references auth.users(id) on delete cascade,\n                               display_name text,\n                               avatar_url   text,\n                               device_type  text,\n                               preferences  text[] not null default '{}',\n                               status       text not null default 'ACTIVE' check (status in ('ACTIVE','LOCKED','BANNED')),\n                               created_at   timestamptz not null default now()"
+},
+"refund_requests": {
+"cols": [
+[
+"account_holder",
+"string | null"
+],
+[
+"account_no",
+"string | null"
+],
+[
+"amount",
+"number"
+],
+[
+"approved_by",
+"string | null"
+],
+[
+"bank",
+"string | null"
+],
+[
+"bank_ref",
+"string | null"
+],
+[
+"created_at",
+"string"
+],
+[
+"deducted_fee",
+"number"
+],
+[
+"escalated_at",
+"string | null"
+],
+[
+"id",
+"string"
+],
+[
+"order_id",
+"string"
+],
+[
+"refund_method",
+"string | null"
+],
+[
+"reject_reason",
+"string | null"
+],
+[
+"reminder_sent_at",
+"string | null"
+],
+[
+"resolved_at",
+"string | null"
+],
+[
+"situation",
+"string"
+],
+[
+"status",
+"string"
+],
+[
+"transfer_attempts",
+"number"
+]
+],
+"fks": [
+[
+"approved_by",
+"profiles"
+],
+[
+"order_id",
+"orders"
+]
+],
+"ddl": "\n  id                uuid primary key default gen_random_uuid(),\n  order_id          uuid not null references public.orders (id) on delete restrict,\n  situation         text not null check (situation in ('S1', 'S2', 'S3a', 'S3b', 'S3c', 'S4')),\n  amount            integer not null check (amount >= 0),\n  deducted_fee      integer not null default 0 check (deducted_fee >= 0),\n  status            text not null default 'Pending_Approval'\n                    check (status in ('Pending_Approval', 'Processing', 'Refunded', 'Rejected', 'Refund_Pending_Retry', 'Refund_Pending_Manual')),\n  refund_method     text check (refund_method in ('bank')),   -- bank transfer only (no voucher refunds)\n  bank              text,\n  account_no        text,\n  account_holder    text,\n  bank_ref          text,\n  transfer_attempts smallint not null default 0,\n  reminder_sent_at  timestamptz,\n  escalated_at      timestamptz,                               -- handed to CSKH after the deadline\n  approved_by       uuid references public.profiles (id) on delete set null,\n  reject_reason     text,\n  created_at        timestamptz not null default now(),\n  resolved_at       timestamptz"
+},
+"shipments": {
+"cols": [
+[
+"carrier",
+"string"
+],
+[
+"created_at",
+"string"
+],
+[
+"id",
+"string"
+],
+[
+"order_id",
+"string"
+],
+[
+"tracking_code",
+"string"
+]
+],
+"fks": [
+[
+"order_id",
+"orders"
+]
+],
+"ddl": "\n  id            uuid primary key default gen_random_uuid(),\n  order_id      uuid not null unique references public.orders (id) on delete cascade,\n  carrier       text not null,\n  tracking_code text not null unique,\n  created_at    timestamptz not null default now()"
+},
+"test": {
+"cols": [
+[
+"id",
+"string"
+],
+[
+"title",
+"string"
+]
+],
+"fks": [],
+"ddl": "id uuid primary key default gen_random_uuid(), title text not null);\nalter table public.test enable row level security;\ncreate policy \"anyone signed in can read\" on public.test for select to authenticated using (true);\ncreate policy \"signed in can add\"        on public.test for insert to authenticated with check (true);\n\n-- Move the old automatically-created profile rows to the onboarding model.\n-- These rows were created at sign-up, so they do not prove onboarding was completed.\ndrop trigger if exists on_auth_user_created on auth.users;\ndrop function if exists public.handle_new_user();\n\nalter table public.profiles\n  add column onboarding_status text;\n\n-- Keep existing users' profiles, marking them as skipped because their onboarding\n-- completion state was not recorded by the old schema.\nupdate public.profiles\nset onboarding_status = 'skipped';\n\nalter table public.profiles\n  alter column onboarding_status set not null,\n  add constraint profiles_onboarding_status_check\n    check (onboarding_status in ('completed', 'skipped')),\n  add column updated_at timestamptz not null default now(),\n  drop column status;\n\n-- Refresh updated_at whenever an existing profile changes.\ncreate or replace function public.set_updated_at()\nreturns trigger\nlanguage plpgsql\nset search_path = ''\nas $$\nbegin\n  new.updated_at = now();\n  return new;\nend;\n$$;\n\ncreate trigger set_profiles_updated_at\nbefore update on public.profiles\nfor each row\nexecute function public.set_updated_at();\n\n-- Rebuild the profile policies so users can only manage their own row.\ndrop policy if exists \"read own profile\" on public.profiles;\ndrop policy if exists \"update own profile\" on public.profiles;\n\ncreate policy \"read own profile\"\non public.profiles\nfor select\nto authenticated\nusing ((select auth.uid()) = id);\n\ncreate policy \"insert own profile\"\non public.profiles\nfor insert\nto authenticated\nwith check ((select auth.uid()) = id);\n\ncreate policy \"update own profile\"\non public.profiles\nfor update\nto authenticated\nusing ((select auth.uid()) = id)\nwith check ((select auth.uid()) = id);\n\n-- Anonymous users have no table privileges. Authenticated users get only the\n-- operations and columns needed by onboarding and profile editing.\nrevoke all on public.profiles from public, anon, authenticated;\ngrant select on public.profiles to authenticated;\ngrant insert (id, display_name, avatar_url, device_type, preferences, onboarding_status)\n  on public.profiles to authenticated;\ngrant update (display_name, avatar_url, device_type, preferences, onboarding_status)\n  on public.profiles to authenticated;\n\ncreate type public.order_status as enum ('pending', 'confirmed', 'shipping', 'delivered', 'cancelled');\ncreate type public.inventory_kind as enum ('blank', 'material', 'trade_good');\ncreate type public.product_type as enum ('case', 'accessory');\n\ncreate function public.handle_new_user()\n  returns trigger\n  language plpgsql\nsecurity definer\nset search_path = ''\nas $$\nbegin\ninsert into public.profiles (id, full_name)\nvalues (new.id, coalesce(new.raw_user_meta_data ->> 'full_name', ''));\nreturn new;\nend;\n$$;\n\ncreate trigger on_auth_user_created\n  after insert on auth.users\n  for each row execute function public.handle_new_user();\n\n-- Phone models (shared reference) + back-room inventory.\n-- Prices are whole VND (integer).\n\ncreate table public.phone_models (\n                                   id              uuid primary key default gen_random_uuid(),\n                                   brand           text not null,\n                                   name            text not null,\n                                   slug            text not null unique,\n                                   custom_price    integer not null check (custom_price >= 0),  -- price of a custom case\n                                   mask_image_url  text,                                        -- outline shown in the design studio\n                                   is_active       boolean not null default true,\n                                   created_at      timestamptz not null default now()"
+},
+"webhook_events": {
+"cols": [
+[
+"event_id",
+"string"
+],
+[
+"order_id",
+"string | null"
+],
+[
+"payload",
+"Json"
+],
+[
+"received_at",
+"string"
+],
+[
+"type",
+"string"
+]
+],
+"fks": [
+[
+"order_id",
+"orders"
+]
+],
+"ddl": "\n  event_id    text primary key,\n  order_id    uuid references public.orders (id) on delete cascade,\n  type        text not null,\n  payload     jsonb not null default '{}',\n  received_at timestamptz not null default now()"
+},
+"stock_availability": {
+"cols": [
+[
+"available",
+"number | null"
+],
+[
+"inventory_item_id",
+"string | null"
+]
+],
+"fks": [],
+"ddl": ""
+}
+}
