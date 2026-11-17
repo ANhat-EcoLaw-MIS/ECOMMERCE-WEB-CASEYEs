@@ -780,7 +780,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
     this.isSavePromptingName.set(false);
     this.namingInput.set(
       this.state.designName() === 'Thiết kế chưa đặt tên'
-        ? (this.state.suggestedDesignName() || `Ốp lưng ${this.state.selectedModel().name}`)
+        ? ''
         : this.state.designName()
     );
     this.showNamingModal.set(true);
@@ -805,7 +805,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
 
     // Nếu là lưu lần đầu HOẶC tên vẫn là mặc định 'Thiết kế chưa đặt tên' -> BẮT BUỘC hiện MODAL-07 Đặt tên
     if (this.state.isFirstSave() || this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName()) {
-      this.namingInput.set(this.state.suggestedDesignName() || `Ốp lưng ${this.state.selectedModel().name}`);
+      this.namingInput.set('');
       this.isSavePromptingName.set(true);
       this.showNamingModal.set(true);
     } else {
@@ -814,19 +814,20 @@ export class StudioWorkspace implements OnInit, OnDestroy {
   }
 
   protected confirmNaming(): void {
-    const name = this.namingInput().trim();
-    if (name) {
-      const oldName = this.state.designName();
-      this.state.designName.set(name);
+    const rawName = this.namingInput().trim();
+    const finalName =
+      rawName || this.state.suggestedDesignName() || `Ốp lưng ${this.state.selectedModel().name}`;
 
-      // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
-      this.state.savedDesigns.update((list) =>
-        list.map((d) => (d.name === oldName ? { ...d, name } : d))
-      );
+    const oldName = this.state.designName();
+    this.state.designName.set(finalName);
 
-      // Cập nhật nháp localStorage
-      this.saveToGuestLocalStorage();
-    }
+    // Cập nhật tên trong danh sách thiết kế đã lưu (nếu đã lưu trước đó)
+    this.state.savedDesigns.update((list) =>
+      list.map((d) => (d.name === oldName ? { ...d, name: finalName } : d))
+    );
+
+    // Cập nhật nháp localStorage
+    this.saveToGuestLocalStorage();
     this.showNamingModal.set(false);
 
     // Phân định rõ ràng: Nếu mở từ nút "Lưu thiết kế" thì thực hiện lưu
@@ -837,7 +838,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
       this.startAutoSaveTimer();
     } else {
       // Nếu mở từ nút "Đổi tên", CHỈ cập nhật tên và thông báo, KHÔNG lưu thiết kế trùng lặp
-      this.showToast(`Đã đổi tên thiết kế thành "${name || this.state.designName()}"!`);
+      this.showToast(`Đã đổi tên thiết kế thành "${finalName}"!`);
     }
   }
 

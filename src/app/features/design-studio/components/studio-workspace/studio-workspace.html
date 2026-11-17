@@ -1716,9 +1716,9 @@
       {{ isSavePromptingName() ? 'Đặt tên để dễ dàng tìm kiếm và vẽ tiếp trong mục My Designs.' : 'Nhập tên mới cho bản thiết kế của bạn.' }}
     </p>
     <input type="text" [value]="namingInput()" (input)="namingInput.set($any($event.target).value)"
-      (keyup.enter)="confirmNaming()"
+      (keyup.enter)="confirmNaming()" autofocus
       class="mt-4 w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-bold text-ink focus:border-brand-400 focus:outline-none"
-      placeholder="Ví dụ: Ốp hoa anh đào mùa xuân" />
+      placeholder="Nhập tên bản thiết kế (Ví dụ: Ốp hoa anh đào mùa xuân)" />
     <div class="mt-5 flex gap-2">
       <button type="button" (click)="closeNamingModal()"
         class="flex-1 rounded-pill border border-line py-2 text-xs font-semibold text-ink hover:bg-surface cursor-pointer">Hủy</button>
