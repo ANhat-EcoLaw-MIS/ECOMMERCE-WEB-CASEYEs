@@ -18,6 +18,7 @@
 .print {
   position: absolute;
   inset: var(--rim);
+  overflow: hidden;
   background-size: cover;
   background-position: center;
 }

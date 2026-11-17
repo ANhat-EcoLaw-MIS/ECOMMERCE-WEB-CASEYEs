@@ -12,6 +12,8 @@
     @if (tint(); as t) {
       <span class="tint" [style.background]="t" aria-hidden="true"></span>
     }
+    <!-- Extra print layers (e.g. a template's sticker), clipped to the case back. -->
+    <ng-content />
   </div>
 
   @if (caseType() === 'magsafe') {

@@ -1,0 +1,158 @@
+.trending {
+  background:
+    radial-gradient(60% 80% at 10% 0%, rgb(165 140 244 / 0.28), transparent 60%),
+    radial-gradient(50% 70% at 95% 30%, rgb(236 72 153 / 0.14), transparent 60%),
+    linear-gradient(180deg, var(--color-brand-50) 0%, var(--color-surface) 100%);
+}
+
+.glow {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.glow-a {
+  width: 420px;
+  height: 420px;
+  left: -120px;
+  bottom: -160px;
+  background: rgb(165 140 244 / 0.35);
+  animation: drift 20s ease-in-out infinite alternate;
+}
+
+.glow-b {
+  width: 360px;
+  height: 360px;
+  right: -100px;
+  top: -120px;
+  background: rgb(236 72 153 / 0.2);
+  animation: drift 26s ease-in-out -8s infinite alternate;
+}
+
+/* Padding keeps the first card aligned with the 1440px container while the rail bleeds edge to edge. */
+.rail {
+  --pad: max(1rem, calc((100vw - 1440px) / 2 + 2.5rem));
+  padding-inline: var(--pad);
+  scroll-padding-inline: var(--pad);
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .rail {
+    --pad: 1rem;
+  }
+}
+
+.nav-btn {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.85);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-line);
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--color-brand-800);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-brand-400);
+    outline-offset: 2px;
+  }
+}
+
+.card {
+  animation: card-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.stage-shine {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(70% 50% at 50% 0%, rgb(255 255 255 / 0.65), transparent 70%);
+  pointer-events: none;
+}
+
+.sticker {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 90%;
+  height: 82%;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+}
+
+.case {
+  filter: drop-shadow(0 18px 22px rgb(42 29 77 / 0.28));
+}
+
+.flame {
+  display: inline-block;
+  animation: flicker 1.6s ease-in-out infinite;
+}
+
+.skeleton {
+  background: linear-gradient(100deg, rgb(255 255 255 / 0.5) 20%, rgb(255 255 255 / 0.9) 40%, rgb(255 255 255 / 0.5) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+@keyframes drift {
+  to {
+    transform: translate(120px, -60px) scale(1.1);
+  }
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(-4deg);
+  }
+  50% {
+    transform: scale(1.15) rotate(4deg);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-a,
+  .glow-b,
+  .card,
+  .flame,
+  .skeleton {
+    animation: none;
+  }
+}

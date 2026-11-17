@@ -26,16 +26,15 @@ export class Footer {
   readonly currentYear = new Date().getFullYear();
   // Menu điều hướng nhanh (Dùng placeholder '#' theo yêu cầu)
   readonly quickLinks: readonly FooterLink[] = [
-    { label: 'Trang chủ', url: '#' },
-    { label: 'Cửa hàng', url: '#' },
-    { label: 'Studio Thiết Kế', url: '#' },
-    { label: 'How it Works', url: '#' },
+    { label: 'Trang chủ', url: '/' },
+    { label: 'Cửa hàng', url: '/shop' },
+    { label: 'Studio Thiết Kế', url: '/design-studio' },
   ];
 
   // Menu hỗ trợ khách hàng (Dùng placeholder '#')
   readonly supportLinks: readonly FooterLink[] = [
     { label: 'FAQ', url: '#' },
-    { label: 'Chính sách & Điều khoản', url: '#' },
+    { label: 'Chính sách & Điều khoản', url: '/customer-support' },
     { label: 'Liên hệ', url: '#' },
   ];
 

@@ -1,10 +1,9 @@
 <!-- Hero banner: mockup (dark, matches the header) -->
 <section aria-label="Banner" class="bg-(image:--grad-dark)">
-    <app-hero></app-hero>
+  <app-hero></app-hero>
 </section>
 
-@for (section of sections; track section.label) {
-  <section class="mx-auto max-w-[1280px] px-4 py-16 lg:px-6 lg:py-24">
-    <app-placeholder [label]="section.label" [hint]="section.hint" />
-  </section>
-}
+<!-- Full-bleed sections; each one centres its own content at 1440px. -->
+<app-trending />
+<app-landing-catalog />
+<app-reviews />

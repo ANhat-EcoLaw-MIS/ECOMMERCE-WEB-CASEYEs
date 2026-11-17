@@ -1,0 +1,107 @@
+<section class="trending relative isolate overflow-hidden py-16 lg:py-24" aria-labelledby="trending-title">
+  <div class="glow glow-a" aria-hidden="true"></div>
+  <div class="glow glow-b" aria-hidden="true"></div>
+
+  <div class="mx-auto max-w-[1440px] px-4 lg:px-10">
+    <div appReveal class="flex flex-wrap items-end justify-between gap-6">
+      <div class="max-w-2xl">
+        <p class="inline-flex items-center gap-2 rounded-pill bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-brand-800 shadow-soft backdrop-blur">
+          <span class="flame" aria-hidden="true">🔥</span> Đang thịnh hành
+        </p>
+        <h2 id="trending-title" class="mt-4 font-display text-[clamp(2rem,4vw,3.25rem)] font-extrabold leading-[1.05] tracking-[-0.02em] text-ink">
+          Mẫu thiết kế
+          <span class="bg-linear-90 from-brand-800 via-brand-600 to-[#ec4899] bg-clip-text text-transparent">được săn nhiều nhất</span>
+        </h2>
+        <p class="mt-3 text-base text-ink-soft">Mỗi lần ghé lại là một bộ sưu tập mới. Chọn một mẫu, tùy biến trong Studio và in ngay cho máy của bạn.</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="scroll(-1)" [disabled]="!canPrev()" aria-label="Mẫu trước" class="nav-btn">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="size-5"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <button type="button" (click)="scroll(1)" [disabled]="!canNext()" aria-label="Mẫu tiếp theo" class="nav-btn">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="size-5"><path d="m9 18 6-6-6-6" /></svg>
+        </button>
+        <a routerLink="/design-studio/templates" class="ml-2 inline-flex min-h-11 items-center gap-2 rounded-pill bg-ink px-5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">
+          Xem tất cả
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="size-4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rail: full-bleed, padded to line up with the container -->
+  <div
+    #rail
+    class="rail mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-6 pt-2"
+    (scroll)="measure()"
+    role="list"
+    aria-label="Mẫu thiết kế thịnh hành"
+  >
+    @for (tpl of items(); track tpl.id; let i = $index) {
+      <article
+        role="listitem"
+        data-card
+        class="card group relative flex w-[232px] shrink-0 snap-start flex-col overflow-hidden rounded-[28px] bg-white/80 shadow-soft ring-1 ring-white backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lift sm:w-[260px] motion-reduce:transition-none"
+        [style.--i]="i"
+      >
+        <!-- Stage -->
+        <div class="stage relative grid aspect-[4/5] place-items-center overflow-hidden" [style.background]="tpl.gradient">
+          <span class="stage-shine" aria-hidden="true"></span>
+          @if (i === 0) {
+            <span class="absolute left-3 top-3 z-10 rounded-pill bg-ink px-2.5 py-1 text-[10px] font-bold tracking-wider text-white">#1 TRENDING</span>
+          }
+          @if (tpl.id === 'tpl-creators-chibi') {
+            <span class="absolute right-3 top-3 z-10 rounded-pill bg-linear-90 from-[#ec4899] to-brand-600 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white shadow-soft">✦ ĐỘI NGŨ CASEYE</span>
+          }
+          <app-case-preview
+            class="case relative w-[46%] transition-transform duration-500 ease-out group-hover:-rotate-3 group-hover:scale-[1.06] motion-reduce:transition-none"
+            [model]="device"
+            [artworkUrl]="tpl.bgImage ?? ''"
+            [surface]="tpl.gradient"
+            [seed]="tpl.id"
+            colorHex="#0A0A0A"
+            caseType="snap"
+            [alt]="'Ốp ' + tpl.name"
+          >
+            @if (tpl.elementImage) {
+              <img [src]="tpl.elementImage" alt="" loading="lazy" decoding="async" class="sticker" />
+            }
+          </app-case-preview>
+        </div>
+
+        <!-- Info -->
+        <div class="flex flex-1 flex-col gap-2 p-4">
+          <span class="self-start rounded-pill px-2 py-0.5 text-[11px] font-semibold" [style.color]="tpl.tagColor" [style.background]="tpl.tagColor + '1a'">{{ tpl.tagLabel }}</span>
+          <h3 class="line-clamp-1 font-display text-base font-bold text-ink">{{ tpl.name }}</h3>
+          <p class="text-xs text-ink-soft">bởi <span class="font-semibold text-ink">{{ tpl.creator }}</span> · {{ tpl.styleLabel }}</p>
+          <div class="flex items-center gap-1.5 text-xs text-ink-soft">
+            <span class="flex text-[#f59e0b]" [attr.aria-label]="tpl.rating + ' trên 5 sao'">
+              @for (s of stars(tpl.rating); track $index) {
+                <svg aria-hidden="true" viewBox="0 0 24 24" class="size-3.5" [attr.fill]="s ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.5"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z" /></svg>
+              }
+            </span>
+            {{ tpl.rating.toFixed(1) }} · {{ tpl.reviews }} lượt dùng
+          </div>
+          <a
+            [routerLink]="['/design-studio/templates']"
+            [queryParams]="{ template: tpl.id }"
+            class="mt-auto inline-flex min-h-10 items-center justify-between rounded-pill bg-brand-50 px-4 text-sm font-semibold text-brand-800 transition-colors group-hover:bg-brand-800 group-hover:text-white focus-visible:outline-2 focus-visible:outline-brand-400"
+            [attr.aria-label]="'Dùng mẫu ' + tpl.name"
+          >
+            Dùng mẫu này
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="size-4 transition-transform group-hover:translate-x-0.5"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
+        </div>
+      </article>
+    } @empty {
+      @if (failed()) {
+        <p class="px-4 text-sm text-ink-soft">Không tải được mẫu thiết kế. Vui lòng thử lại sau.</p>
+      } @else {
+        @for (p of placeholders; track p) {
+          <div class="skeleton h-[420px] w-[232px] shrink-0 rounded-[28px] sm:w-[260px]" aria-hidden="true"></div>
+        }
+      }
+    }
+  </div>
+</section>

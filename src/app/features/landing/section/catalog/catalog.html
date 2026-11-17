@@ -1,0 +1,185 @@
+<section class="catalog relative isolate overflow-hidden py-16 lg:py-24" aria-labelledby="catalog-title">
+  <div class="mx-auto max-w-[1440px] px-4 lg:px-10">
+    <!-- Heading -->
+    <div appReveal class="mx-auto max-w-3xl text-center">
+      <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-600">Products catalog</p>
+      <h2 id="catalog-title" class="mt-3 font-display text-[clamp(2rem,4vw,3.25rem)] font-extrabold leading-[1.05] tracking-[-0.02em] text-ink">
+        Chọn chất riêng,
+        <span class="bg-linear-90 from-brand-600 via-[#c026d3] to-[#f97316] bg-clip-text text-transparent">khoác cho chiếc máy</span>
+      </h2>
+      <p class="mt-3 text-base text-ink-soft">Từ những mẫu in sẵn đang “cháy hàng” đến phụ kiện phối cùng: tất cả đều may đo cho đúng dòng máy của bạn.</p>
+    </div>
+
+    <!-- ===== 1. Best sellers ===== -->
+    <div class="mt-14 flex flex-wrap items-end justify-between gap-3" appReveal>
+      <div>
+        <h3 class="font-display text-2xl font-bold text-ink">Bán chạy nhất</h3>
+        <p class="text-sm text-ink-soft">Ngẫu nhiên từ top mẫu được đặt nhiều tuần này</p>
+      </div>
+      <a routerLink="/shop" class="inline-flex min-h-10 items-center gap-1.5 text-sm font-semibold text-brand-800 underline-offset-4 hover:underline">
+        Xem toàn bộ cửa hàng
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="size-4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      </a>
+    </div>
+
+    <div class="bento mt-6 grid auto-rows-[200px] grid-cols-2 gap-4 lg:auto-rows-[230px] lg:grid-cols-4 lg:gap-5">
+      @for (item of best; track item.design.id; let i = $index) {
+        <a
+          appReveal
+          [revealDelay]="i * 80"
+          [routerLink]="['/shop', item.design.id]"
+          [queryParams]="{ model: device.id }"
+          class="tile group"
+          [class]="item.span + ' tone-' + item.tone + (i === 0 ? ' max-lg:col-span-2' : '') + (item.tone === 'wide' ? ' max-lg:col-span-2' : '')"
+          [attr.aria-label]="item.design.name + ', từ ' + money(item.price)"
+        >
+          <span class="tile-art" aria-hidden="true">
+            <app-case-preview
+              class="tile-case"
+              [model]="device"
+              [artworkUrl]="artworkUrl(item.design.id)"
+              [seed]="item.design.id"
+              colorHex="#0A0A0A"
+              caseType="snap"
+              [alt]="''"
+            />
+            @if (item.tone === 'featured' || item.tone === 'wide') {
+              <app-case-preview
+                class="tile-case tile-case--back"
+                [model]="device"
+                [artworkUrl]="artworkUrl(item.design.id)"
+                [seed]="item.design.id"
+                colorHex="#A58CF4"
+                caseType="snap"
+                [alt]="''"
+              />
+            }
+          </span>
+
+          <span class="tile-body">
+            @if (i === 0) {
+              <span class="rank">#1 Best seller</span>
+            } @else if (item.design.badge) {
+              <span class="chip">{{ item.design.badge }}</span>
+            }
+            <span class="tile-name">{{ item.design.name }}</span>
+            <span class="tile-meta">{{ item.design.collection }} · từ <b>{{ money(item.price) }}</b></span>
+            @if (i === 0) {
+              <span class="tile-cta">
+                Mua ngay
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="size-4"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              </span>
+            }
+          </span>
+        </a>
+      }
+
+      <!-- Closing tile: count + link -->
+      <a appReveal [revealDelay]="420" routerLink="/shop" class="tile tile-more group col-span-2 row-span-1">
+        <span class="relative z-10 flex h-full flex-col justify-between p-6">
+          <span class="text-xs font-bold uppercase tracking-[0.2em] text-white/80">Cửa hàng</span>
+          <span>
+            <span class="block font-display text-5xl font-extrabold text-white">{{ designCount }}+</span>
+            <span class="mt-1 block text-sm text-white/85">mẫu ốp in sẵn cho {{ devices.length }} dòng máy</span>
+          </span>
+          <span class="inline-flex items-center gap-2 self-start rounded-pill bg-white px-4 py-2 text-sm font-bold text-brand-900 transition-transform group-hover:translate-x-1">
+            Khám phá ngay →
+          </span>
+        </span>
+      </a>
+    </div>
+
+    <!-- ===== 2. Product lines ===== -->
+    <div class="mt-20 flex flex-wrap items-end justify-between gap-3" appReveal>
+      <div>
+        <h3 class="font-display text-2xl font-bold text-ink">Dòng sản phẩm</h3>
+        <p class="text-sm text-ink-soft">Mọi thứ cho chiếc điện thoại của bạn, ở cùng một nơi</p>
+      </div>
+    </div>
+
+    <div class="bento mt-6 grid auto-rows-[190px] grid-cols-2 gap-4 lg:auto-rows-[210px] lg:grid-cols-6 lg:gap-5">
+      <!-- Ready-made cases (big) -->
+      <a appReveal routerLink="/shop" class="tile type-cases group col-span-2 row-span-2 lg:col-span-3">
+        <span class="fan" aria-hidden="true">
+          @for (d of fan; track d.id; let i = $index) {
+            <app-case-preview class="fan-case" [class]="'fan-' + i" [model]="device" [artworkUrl]="artworkUrl(d.id)" [seed]="d.id" colorHex="#0A0A0A" caseType="snap" [alt]="''" />
+          }
+        </span>
+        <span class="tile-body">
+          <span class="chip chip-light">{{ designCount }} mẫu</span>
+          <span class="tile-name text-3xl">Ốp lưng in sẵn</span>
+          <span class="tile-meta">In UV sắc nét, ôm khít cụm camera, giao trong 2–4 ngày.</span>
+          <span class="tile-cta">Vào cửa hàng →</span>
+        </span>
+      </a>
+
+      <!-- Design studio -->
+      <a appReveal [revealDelay]="80" routerLink="/design-studio" class="tile type-studio group col-span-2 row-span-1 lg:col-span-3">
+        <img src="/assets/templates/the-creators-chibi.webp" alt="" class="studio-art" loading="lazy" decoding="async" />
+        <span class="tile-body max-w-[60%]">
+          <span class="chip chip-light">✦ Tự thiết kế</span>
+          <span class="tile-name">Design Studio</span>
+          <span class="tile-meta">Ảnh, sticker, chữ và xem trước 3D trước khi in.</span>
+        </span>
+      </a>
+
+      <!-- MagSafe -->
+      @if (magsafe.length) {
+        <a appReveal [revealDelay]="140" routerLink="/shop" fragment="accessories" class="tile type-acc tone-mint group col-span-2 row-span-1 lg:col-span-2">
+          <span class="acc-stack" aria-hidden="true">
+            @for (a of magsafe.slice(0, 2); track a.id; let i = $index) {
+              <img [src]="a.image" alt="" loading="lazy" decoding="async" class="acc-img" [class]="'acc-' + i" />
+            }
+          </span>
+          <span class="tile-body max-w-[55%]">
+            <span class="chip">MagSafe</span>
+            <span class="tile-name">Phụ kiện từ tính</span>
+            <span class="tile-meta">Đế sạc, ví, giá đỡ, pin dự phòng</span>
+          </span>
+        </a>
+      }
+
+      <!-- Straps -->
+      @if (strap.length) {
+        <a appReveal [revealDelay]="200" routerLink="/shop" fragment="accessories" class="tile type-acc tone-peach group col-span-1 row-span-1">
+          <img [src]="strap[0].image" alt="" loading="lazy" decoding="async" class="acc-solo" />
+          <span class="tile-body">
+            <span class="tile-name text-base">Dây đeo</span>
+          </span>
+        </a>
+      }
+
+      <!-- Charms -->
+      @if (charm.length) {
+        <a appReveal [revealDelay]="260" routerLink="/shop" fragment="accessories" class="tile type-acc tone-sky group col-span-1 row-span-1 lg:col-span-2">
+          <img [src]="charm[0].image" alt="" loading="lazy" decoding="async" class="acc-solo" />
+          <span class="tile-body">
+            <span class="chip">Charm</span>
+            <span class="tile-name text-base">Charm treo ốp</span>
+          </span>
+        </a>
+      }
+
+      <!-- Devices -->
+      <div appReveal [revealDelay]="320" class="tile type-devices col-span-2 row-span-1 lg:col-span-4">
+        <span class="relative z-10 flex h-full flex-col justify-between gap-3 p-5 lg:p-6">
+          <span>
+            <span class="chip chip-light">{{ devices.length }} dòng máy</span>
+            <span class="tile-name mt-2 block">Khít chuẩn từng dòng máy</span>
+          </span>
+          <span class="device-row">
+            @for (m of devices; track m.id) {
+              <a [routerLink]="['/shop']" [queryParams]="{ model: m.id }" class="device-chip">
+                <app-case-preview class="w-5 shrink-0" [model]="m" colorHex="#0A0A0A" caseType="snap" [seed]="m.id" [alt]="''" aria-hidden="true" />
+                <span class="min-w-0">
+                  <span class="block truncate text-sm font-semibold">{{ m.name }}</span>
+                  <span class="block text-[11px] opacity-75">Từ {{ fromK(m) }}</span>
+                </span>
+              </a>
+            }
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>

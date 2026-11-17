@@ -35,6 +35,11 @@ export class CasePreview {
   readonly alt = input<string>('');
   /** Picks the fallback background; defaults to artwork URL + device. */
   readonly seed = input<string>('');
+  /**
+   * Optional CSS colour or gradient painted under the artwork (e.g. a studio template's gradient).
+   * When set, a case without artwork shows this instead of the seeded fallback art.
+   */
+  readonly surface = input<string>('');
 
   protected readonly label = computed(() => this.alt() || `Ốp lưng ${this.model().name}`);
   protected readonly ratio = computed(() => aspectRatio(this.model()));
@@ -51,7 +56,10 @@ export class CasePreview {
   protected readonly tint = computed(() => (this.state() === 'fallback' ? this.fallback().tint : null));
   protected readonly artwork = computed(() => {
     const url = this.state() === 'fallback' ? this.fallback().url : this.artworkUrl();
-    return url ? `url("${url}")` : 'none';
+    const s = this.surface();
+    const under = s ? (s.includes('gradient') ? s : `linear-gradient(${s}, ${s})`) : '';
+    const layers = [url ? `url("${url}")` : '', under].filter(Boolean);
+    return layers.length ? layers.join(', ') : 'none';
   });
 
   constructor() {
@@ -63,7 +71,7 @@ export class CasePreview {
       const url = this.artworkUrl();
       if (probe) probe.onload = probe.onerror = null;
       if (!url) {
-        this.state.set('fallback');
+        this.state.set(this.surface() ? 'ready' : 'fallback');
         return;
       }
       if (typeof Image === 'undefined') {
