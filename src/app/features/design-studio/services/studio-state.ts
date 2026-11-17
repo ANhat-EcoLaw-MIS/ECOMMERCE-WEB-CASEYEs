@@ -135,6 +135,9 @@ export class StudioState {
   private readonly _layers = signal<CanvasLayer[]>([]);
   readonly layers = this._layers.asReadonly();
 
+  // Dirty state tracking (Unsaved changes safeguard)
+  readonly hasUnsavedChanges = signal<boolean>(false);
+
   // Active selection
   readonly selectedLayerId = signal<string | null>(null);
   readonly selectedLayer = computed(() =>
@@ -311,6 +314,7 @@ export class StudioState {
     if (recordHistory) {
       this.recordHistory();
     }
+    this.hasUnsavedChanges.set(true);
     this._layers.update((layers) =>
       layers.map((l) => (l.id === id ? ({ ...l, ...partial } as CanvasLayer) : l))
     );
@@ -403,6 +407,7 @@ export class StudioState {
     this.recordHistory();
     this._layers.set([]);
     this.selectedLayerId.set(null);
+    this.hasUnsavedChanges.set(false);
   }
 
   selectLayer(id: string | null): void {
@@ -449,6 +454,7 @@ export class StudioState {
     };
     this._undoStack.update((stack) => [...stack.slice(-30), snapshot]);
     this._redoStack.set([]);
+    this.hasUnsavedChanges.set(true);
   }
 
   resetHistory(): void {
@@ -469,6 +475,7 @@ export class StudioState {
     this._undoStack.update((s) => s.slice(0, -1));
     this._layers.set(previous.layers);
     this.caseBg.set(previous.caseBg);
+    this.hasUnsavedChanges.set(true);
   }
 
   redo(): void {
@@ -484,6 +491,7 @@ export class StudioState {
     this._redoStack.update((s) => s.slice(0, -1));
     this._layers.set(next.layers);
     this.caseBg.set(next.caseBg);
+    this.hasUnsavedChanges.set(true);
   }
 
   // --- Model Switching (FR-DES-02 / US-DES-08) ---
@@ -534,6 +542,7 @@ export class StudioState {
     if (design.modelId) this.catalog.selectModel(design.modelId);
     if (design.layers.length > 0) this.setLayers(design.layers, false);
     this.resetHistory();
+    this.hasUnsavedChanges.set(false);
   }
 
   requestModelChange(modelId: string): void {

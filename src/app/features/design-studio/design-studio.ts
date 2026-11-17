@@ -105,7 +105,7 @@ export class DesignStudio implements OnDestroy {
   private pendingExitUrl = '/design-studio/templates';
 
   protected onExitTo(url: string): void {
-    if (this.state.hasLayers()) {
+    if (this.state.hasUnsavedChanges()) {
       this.pendingExitUrl = url;
       this.showExitConfirmModal.set(true);
     } else {
@@ -114,6 +114,7 @@ export class DesignStudio implements OnDestroy {
   }
 
   protected confirmExit(): void {
+    this.state.hasUnsavedChanges.set(false);
     this.showExitConfirmModal.set(false);
     this.router.navigateByUrl(this.pendingExitUrl);
   }
