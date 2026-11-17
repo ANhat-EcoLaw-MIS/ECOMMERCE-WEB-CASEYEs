@@ -780,7 +780,7 @@ export class StudioWorkspace implements OnInit, OnDestroy {
     this.isSavePromptingName.set(false);
     this.namingInput.set(
       this.state.designName() === 'Thiết kế chưa đặt tên'
-        ? `Ốp lưng ${this.state.selectedModel().name}`
+        ? (this.state.suggestedDesignName() || `Ốp lưng ${this.state.selectedModel().name}`)
         : this.state.designName()
     );
     this.showNamingModal.set(true);
@@ -803,9 +803,9 @@ export class StudioWorkspace implements OnInit, OnDestroy {
       return;
     }
 
-    // Nếu chưa từng đặt tên riêng (vẫn là tên mặc định), hỏi tên khi bấm Lưu lần đầu
-    if (this.state.isFirstSave() && (this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName())) {
-      this.namingInput.set(`Ốp lưng ${this.state.selectedModel().name}`);
+    // Nếu là lưu lần đầu HOẶC tên vẫn là mặc định 'Thiết kế chưa đặt tên' -> BẮT BUỘC hiện MODAL-07 Đặt tên
+    if (this.state.isFirstSave() || this.state.designName() === 'Thiết kế chưa đặt tên' || !this.state.designName()) {
+      this.namingInput.set(this.state.suggestedDesignName() || `Ốp lưng ${this.state.selectedModel().name}`);
       this.isSavePromptingName.set(true);
       this.showNamingModal.set(true);
     } else {

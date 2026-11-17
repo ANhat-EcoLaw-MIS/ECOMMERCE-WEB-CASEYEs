@@ -603,7 +603,12 @@
       <!-- Design name editable (with smart truncate) -->
       <div
         class="flex items-center gap-1 sm:gap-1.5 rounded-xl bg-surface/80 px-2 sm:px-3 py-1 shadow-2xs border border-line min-w-0 max-w-[140px] sm:max-w-[220px] shrink">
-        <span (click)="onOpenRenameModal()" class="text-xs font-bold text-ink truncate block cursor-pointer hover:text-brand-800 transition-colors" [title]="state.designName() + ' (Bấm để đổi tên)'">{{ state.designName() }}</span>
+        <span (click)="onOpenRenameModal()"
+          class="text-xs font-bold truncate block cursor-pointer hover:text-brand-800 transition-colors"
+          [class.text-ink-soft]="state.designName() === 'Thiết kế chưa đặt tên'"
+          [class.italic]="state.designName() === 'Thiết kế chưa đặt tên'"
+          [class.text-ink]="state.designName() !== 'Thiết kế chưa đặt tên'"
+          [title]="state.designName() + ' (Bấm để đổi tên)'">{{ state.designName() }}</span>
         <button type="button" (click)="onOpenRenameModal()"
           class="text-ink-soft hover:text-brand-800 transition-colors cursor-pointer shrink-0 p-0.5 rounded-md hover:bg-brand-50" title="Đổi tên thiết kế">
           <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

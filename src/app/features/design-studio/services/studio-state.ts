@@ -117,6 +117,7 @@ export class StudioState {
 
   // Metadata
   readonly designName = signal<string>('Thiết kế chưa đặt tên');
+  readonly suggestedDesignName = signal<string>('Ốp lưng iPhone 15 Pro Max');
   readonly designStatus = signal<DesignStatus>('DRAFT');
   readonly rejectionMessage = signal<string>(
     'Bản thiết kế này từng bị từ chối kiểm duyệt do vi phạm tiêu chuẩn nội dung. Vui lòng chỉnh sửa lại các chi tiết vi phạm trước khi tiến hành đặt mua'
@@ -408,6 +409,8 @@ export class StudioState {
     this._layers.set([]);
     this.selectedLayerId.set(null);
     this.hasUnsavedChanges.set(false);
+    this.designName.set('Thiết kế chưa đặt tên');
+    this.isFirstSave.set(true);
   }
 
   selectLayer(id: string | null): void {
@@ -543,6 +546,7 @@ export class StudioState {
     if (design.layers.length > 0) this.setLayers(design.layers, false);
     this.resetHistory();
     this.hasUnsavedChanges.set(false);
+    this.isFirstSave.set(false);
   }
 
   requestModelChange(modelId: string): void {

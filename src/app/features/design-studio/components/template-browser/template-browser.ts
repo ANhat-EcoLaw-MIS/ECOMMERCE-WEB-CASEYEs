@@ -1976,7 +1976,9 @@ export class TemplateBrowser {
     if (template.isBlankCanvas) {
       this.state.clearCanvas();
       this.state.caseBg.set('#FFFFFF');
-      this.state.designName.set(`Ốp lưng ${this.state.selectedModel().name} - Trắng`);
+      this.state.designName.set('Thiết kế chưa đặt tên');
+      this.state.suggestedDesignName.set(`Ốp lưng ${this.state.selectedModel().name} - Trắng`);
+      this.state.isFirstSave.set(true);
     } else {
       this.state.clearCanvas();
       if (template.bgImage) {
@@ -1984,7 +1986,9 @@ export class TemplateBrowser {
       } else {
         this.state.caseBg.set(template.gradient);
       }
-      this.state.designName.set(`Ốp ${template.name} - ${this.state.selectedModel().name}`);
+      this.state.designName.set('Thiết kế chưa đặt tên');
+      this.state.suggestedDesignName.set(`Ốp ${template.name} - ${this.state.selectedModel().name}`);
+      this.state.isFirstSave.set(true);
       const layers = this.createTemplateLayers(template);
       if (layers.length > 0) {
         this.state.setLayers(layers, false);
@@ -1998,7 +2002,9 @@ export class TemplateBrowser {
   protected createNewDesign(): void {
     this.state.clearCanvas();
     this.state.caseBg.set('#FFFFFF');
-    this.state.designName.set(`Ốp lưng ${this.state.selectedModel().name} - Thiết kế mới`);
+    this.state.designName.set('Thiết kế chưa đặt tên');
+    this.state.suggestedDesignName.set(`Ốp lưng ${this.state.selectedModel().name} - Thiết kế mới`);
+    this.state.isFirstSave.set(true);
     this.state.resetHistory();
     this.closeAllDesignsModal();
     this.router.navigate(['/design-studio/editor']);
