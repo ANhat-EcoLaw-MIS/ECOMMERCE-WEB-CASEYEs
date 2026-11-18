@@ -1,6 +1,7 @@
 <router-outlet />
 
-<div class="fixed bottom-4 right-4 z-50 flex flex-col gap-4 pointer-events-none">
+<!-- Global notifications: top-left, newest on top, above the header and dialogs. -->
+<div class="pointer-events-none fixed left-4 top-4 z-[1000] flex flex-col-reverse gap-2 sm:left-5 sm:top-5" aria-label="Thông báo">
   @for (notification of notificationManager.notifications(); track notification.id) {
     <app-notification
       [payload]="notification"

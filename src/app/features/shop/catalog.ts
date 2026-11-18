@@ -91,6 +91,32 @@ export function productImage(id: string): string {
   return findDesign(designId)?.art ?? fallbackArt(designId).url;
 }
 
+/** Old accessory photos (deleted with the original asset set) → their closest current product shot. */
+const LEGACY_ACCESSORY_IMAGES: Readonly<Record<string, string>> = {
+  'accessory-magsafe': '/products/Accessories/01_magnetic_charging_puck.png',
+  'accessory-strap': '/products/Accessories/06_lavender_beaded_wristlet.png',
+};
+
+/** Matches the old flat files: /products/{slug}.webp and its -texture/-detail/-finish variants. */
+const LEGACY_PRODUCT_IMAGE = /^\/products\/([a-z0-9-]+?)(?:-texture|-detail|-finish)?\.webp$/;
+
+/**
+ * Image for anything that stored a product picture before the asset change (orders, saved carts).
+ * Legacy `/products/*.webp` paths are mapped to what the shop shows today, so an order's thumbnail
+ * matches its product; any other URL (Bg_Case, Accessories, design previews, data URLs) is kept.
+ * Without a URL, the product name is used to find the design.
+ */
+export function resolveProductImage(url: string | null | undefined, productName?: string): string | undefined {
+  const byName = productName ? DESIGNS.find((d) => d.name === productName) : undefined;
+  if (!url) return byName ? productImage(byName.id) : undefined;
+  const legacy = LEGACY_PRODUCT_IMAGE.exec(url);
+  if (!legacy) return url;
+  const slug = legacy[1];
+  if (slug.startsWith('accessory-')) return LEGACY_ACCESSORY_IMAGES[slug] ?? fallbackArt(slug).url;
+  if (findDesign(slug)) return productImage(slug);
+  return byName ? productImage(byName.id) : fallbackArt(slug).url;
+}
+
 /** Lifestyle photos for the detail gallery (none in the current asset set). */
 export function productPhotos(_id: string): string[] {
   return [];

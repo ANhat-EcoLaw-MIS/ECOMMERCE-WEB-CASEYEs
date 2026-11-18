@@ -1,7 +1,6 @@
-import { Component, input, output, computed } from '@angular/core';
-import {ButtonComponent} from '../button/button';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
-export type NotificationVariant = 'information' | 'warning' | 'error' | 'functional';
+export type NotificationVariant = 'success' | 'information' | 'warning' | 'error' | 'functional';
 
 export interface NotificationPayload {
   id: string;
@@ -12,26 +11,36 @@ export interface NotificationPayload {
   duration?: number;
 }
 
+/** Accent per variant: icon chip, icon colour and the decaying time bar. */
+const TONES: Record<NotificationVariant, { chip: string; icon: string; bar: string }> = {
+  success: { chip: 'bg-success-bg', icon: 'text-success', bar: 'bg-success' },
+  information: { chip: 'bg-brand-50', icon: 'text-brand-800', bar: 'bg-brand-400' },
+  functional: { chip: 'bg-brand-50', icon: 'text-brand-800', bar: 'bg-brand-600' },
+  warning: { chip: 'bg-state-warning-surface', icon: 'text-state-warning', bar: 'bg-state-warning' },
+  error: { chip: 'bg-danger-bg', icon: 'text-danger', bar: 'bg-danger' },
+};
+
 @Component({
   selector: 'app-notification',
-  imports: [ButtonComponent],
-  standalone: true,
   templateUrl: './notification.html',
-  styleUrls: ['./notification.scss'],
+  styleUrl: './notification.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block' },
 })
 export class Notification {
-  payload = input.required<NotificationPayload>();
+  readonly payload = input.required<NotificationPayload>();
 
-  actionClicked = output<string>();
-  dismissed = output<string>();
+  readonly actionClicked = output<string>();
+  readonly dismissed = output<string>();
 
-  isFunctional = computed(() => this.payload().variant === 'functional');
+  protected readonly isFunctional = computed(() => this.payload().variant === 'functional');
+  protected readonly tone = computed(() => TONES[this.payload().variant] ?? TONES.information);
 
-  onAction() {
+  protected onAction(): void {
     this.actionClicked.emit(this.payload().id);
   }
 
-  onDismiss() {
+  protected onDismiss(): void {
     this.dismissed.emit(this.payload().id);
   }
 }

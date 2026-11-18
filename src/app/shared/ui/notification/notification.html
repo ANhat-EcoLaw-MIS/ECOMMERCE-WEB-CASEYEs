@@ -1,44 +1,65 @@
-<div class="relative overflow-hidden flex items-start gap-4 bg-surface-alt border border-line rounded-card p-4 shadow-lift w-full max-w-[360px] pointer-events-auto transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-glow animate-notification-pop motion-reduce:animate-none motion-reduce:transition-none motion-reduce:hover:transform-none motion-reduce:hover:shadow-lift" role="alert" [attr.aria-live]="payload().variant === 'error' ? 'assertive' : 'polite'">
-  <div class="shrink-0 flex items-center justify-center text-brand-800">
+<div
+  class="toast pointer-events-auto relative flex w-[min(360px,calc(100vw-2rem))] items-start gap-3 overflow-hidden rounded-2xl bg-white/85 py-3 pl-3 pr-2 ring-1 ring-black/5 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-0.5 animate-notification-pop motion-reduce:animate-none motion-reduce:transition-none motion-reduce:hover:transform-none"
+  [attr.role]="payload().variant === 'error' || payload().variant === 'warning' ? 'alert' : 'status'"
+  [attr.aria-live]="payload().variant === 'error' ? 'assertive' : 'polite'"
+>
+  <!-- Icon chip -->
+  <span class="grid size-8 shrink-0 place-items-center rounded-full" [class]="tone().chip + ' ' + tone().icon" aria-hidden="true">
     @switch (payload().variant) {
+      @case ('success') {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="m5 12 5 5L20 7" /></svg>
+      }
       @case ('error') {
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 8v5" /><path d="M12 16.5h.01" /><path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
       }
       @case ('warning') {
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5" /><path d="M12 16h.01" /></svg>
       }
       @case ('functional') {
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M13 3 4 14h7l-1 7 9-11h-7l1-7Z" /></svg>
       }
       @default {
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><circle cx="12" cy="12" r="9" /><path d="M12 11v5" /><path d="M12 7.5h.01" /></svg>
       }
     }
-  </div>
+  </span>
 
-  <div class="flex-1 flex flex-col gap-1">
-    <h4 class="font-display font-bold text-base text-ink m-0 leading-[1.2] tracking-[-0.02em]">
-      {{ payload().title }}
-    </h4>
-    <p class="font-body font-normal text-sm text-ink-soft m-0 leading-[1.6]">
-      {{ payload().message }}
-    </p>
-
+  <!-- Text -->
+  <div class="min-w-0 flex-1 pt-0.5">
+    <p class="font-display text-sm font-semibold leading-snug text-ink">{{ payload().title }}</p>
+    @if (payload().message) {
+      <p class="mt-0.5 text-[13px] leading-relaxed text-ink-soft">{{ payload().message }}</p>
+    }
     @if (isFunctional() && payload().actionLabel) {
-      <button class="mt-2 self-start bg-transparent border-[1.5px] border-brand-800 text-brand-800 rounded-pill min-h-[44px] px-6 font-body font-medium text-sm cursor-pointer transition-colors duration-200 ease-out hover:bg-brand-50 motion-reduce:transition-none" (click)="onAction()">
+      <button
+        type="button"
+        (click)="onAction()"
+        class="mt-2 inline-flex min-h-8 items-center gap-1 rounded-pill bg-brand-800 px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+      >
         {{ payload().actionLabel }}
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" class="size-3"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </button>
     }
   </div>
 
-  <button class="shrink-0 bg-transparent border-none text-ink-soft cursor-pointer w-[44px] h-[44px] flex items-center justify-center rounded-pill -mt-2 -mr-2 transition-colors duration-200 ease-out hover:text-ink motion-reduce:transition-none" (click)="onDismiss()" aria-label="Dismiss notification">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  <!-- Close -->
+  <button
+    type="button"
+    (click)="onDismiss()"
+    aria-label="Đóng thông báo"
+    class="grid size-8 shrink-0 place-items-center rounded-full text-ink-soft transition-colors hover:bg-black/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-400"
+  >
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="size-4"><path d="M6 6l12 12M18 6 6 18" /></svg>
   </button>
-  <!-- NEW: The Decaying Duration Bar -->
+
+  <!-- Decaying duration bar -->
   @if (payload().duration && payload().duration! > 0) {
-    <div
-      class="absolute bottom-0 left-0 h-1 bg-brand-400 origin-left animate-notification-shrink motion-reduce:hidden"
-      [style.animation-duration.ms]="payload().duration"
-    ></div>
+    <span class="absolute inset-x-0 bottom-0 h-[3px] bg-black/5" aria-hidden="true">
+      <span
+        class="block h-full origin-left animate-notification-shrink rounded-r-full motion-reduce:hidden"
+        [class]="tone().bar"
+        [style.animation-duration.ms]="payload().duration"
+      ></span>
+    </span>
   }
 </div>

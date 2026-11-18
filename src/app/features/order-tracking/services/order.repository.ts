@@ -8,6 +8,7 @@ import {
   WebhookEvent,
 } from '../models/order-tracking.model';
 import { SyncChannel } from './sync-channel';
+import { resolveProductImage } from '../../shop/catalog';
 
 /** Everything Quản lý đơn hàng persists. Mirrors docs/order-management-migration.sql. */
 export interface OrderTrackingDb {
@@ -93,9 +94,25 @@ export class LocalStorageOrderRepository extends OrderRepository {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return emptyDb();
       const parsed = JSON.parse(raw) as OrderTrackingDb;
-      return parsed.version === 2 ? { ...emptyDb(), ...parsed } : emptyDb();
+      return parsed.version === 2 ? withCurrentImages({ ...emptyDb(), ...parsed }) : emptyDb();
     } catch {
       return emptyDb();
     }
   }
+}
+
+/** Maps item images saved before the asset change to the pictures the shop shows today. */
+function withCurrentImages(db: OrderTrackingDb): OrderTrackingDb {
+  return {
+    ...db,
+    orders: db.orders.map((o) => ({
+      ...o,
+      items: o.items.map((i) => ({
+        ...i,
+        // Only legacy /products/*.webp paths change; studio previews and other URLs are kept.
+        imageUrl: resolveProductImage(i.imageUrl, i.isCustom ? undefined : i.productName),
+        design: i.design ? { ...i.design, previewUrl: resolveProductImage(i.design.previewUrl) } : undefined,
+      })),
+    })),
+  };
 }

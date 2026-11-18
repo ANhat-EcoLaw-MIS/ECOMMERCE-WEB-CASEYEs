@@ -18,6 +18,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { sanitizeReturnUrl } from '../../shared/utils/safe-return-url';
 import { DEMO_GOOGLE_EMAIL } from '../../shared/utils/demo-user';
 import { ProfileRepository } from '../account/services/profile.repository';
+import { NotificationManager } from '../../shared/ui/notification/notification.manager';
 
 const TEXT: Record<Mode, { title: string; submit: string }> = {
   login: { title: 'Đăng nhập', submit: 'Đăng nhập' },
@@ -82,6 +83,7 @@ export class Auth {
   private readonly profileRepository = inject(ProfileRepository);
   private readonly authModal = inject(AuthModal);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationManager);
 
   readonly mode = input.required<Mode>(); // from route data
   readonly returnUrl = input<string>(); // ?returnUrl=/design-studio
@@ -186,6 +188,7 @@ export class Auth {
     }
     if (mode === 'login') {
       this.loading.set(false);
+      this.notifyLoggedIn();
       await this.leave(this.safeReturnUrl());
       return;
     }
@@ -236,13 +239,22 @@ export class Auth {
     }
     switch (mode) {
       case 'login':
+        this.notifyLoggedIn();
         await this.leave(this.safeReturnUrl());
         break;
       case 'register': {
         const signedIn = 'session' in res.data && res.data.session !== null;
         if (signedIn && signupFlow) await this.leaveForOnboarding(true);
         else if (signedIn) await this.leave(this.safeReturnUrl());
-        else this.notice.set('Vui lòng kiểm tra email và nhấn vào liên kết để kích hoạt tài khoản.');
+        else {
+          this.notice.set('Vui lòng kiểm tra email và nhấn vào liên kết để kích hoạt tài khoản.');
+          this.notifications.show({
+            variant: 'success',
+            title: 'Đăng ký thành công',
+            message: 'Kiểm tra hộp thư và nhấn vào liên kết để kích hoạt tài khoản nhé.',
+            duration: 7000,
+          });
+        }
         break;
       }
       case 'forgot':
@@ -253,6 +265,15 @@ export class Auth {
         await this.router.navigate(['/login'], { queryParams: { done: '1' } });
         break;
     }
+  }
+
+  private notifyLoggedIn(): void {
+    const email = this.auth.user()?.email;
+    this.notifications.show({
+      variant: 'success',
+      title: 'Đăng nhập thành công',
+      message: email ? `Chào mừng trở lại, ${email}!` : "Chào mừng bạn trở lại CasEYE's!",
+    });
   }
 
   private start(): void {

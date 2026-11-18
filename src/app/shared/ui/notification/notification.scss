@@ -1,0 +1,6 @@
+/* Soft layered shadow: lighter than shadow-lift, still lifts the card off busy backgrounds. */
+.toast {
+  box-shadow:
+    0 1px 2px rgb(16 10 40 / 0.06),
+    0 12px 32px -12px rgb(42 29 77 / 0.28);
+}

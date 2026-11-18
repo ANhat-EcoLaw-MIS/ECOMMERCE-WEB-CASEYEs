@@ -1,5 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import type { CartItem } from '../../../core/cart-state/cart-state';
+import { productImage, resolveProductImage } from '../../shop/catalog';
 import {
   CheckoutOrder,
   CustomOrderItem,
@@ -358,7 +359,8 @@ export class CheckoutService {
         surface: '',
         quantity: c.quantity,
         price: c.unitPrice,
-        imageUrl: c.snapshot ?? (c.custom ? '/logo.png' : `/products/${c.id.split(':')[0]}.webp`),
+        // Same picture as the cart line (legacy snapshot paths are mapped to the current assets).
+        imageUrl: c.snapshot ? resolveProductImage(c.snapshot)! : c.custom ? '/logo.png' : productImage(c.id),
         resolutionText: c.custom ? 'Đã kiểm tra trong Design Studio' : 'Hàng có sẵn',
         resolutionPercent: 100,
         leadTime: c.custom ? 'Nhân viên duyệt thiết kế trước khi in' : 'Có sẵn trong kho',

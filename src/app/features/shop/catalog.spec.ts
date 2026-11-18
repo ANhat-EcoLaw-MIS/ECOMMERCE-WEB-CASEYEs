@@ -1,5 +1,5 @@
 import { findDevice } from '../../shared/devices/devices';
-import { ACCESSORIES, artworkUrl, cartItemId, catalogId, colorSkus, DESIGNS, findDesign, fromPrice, pickSku, productImage, productPhotos, variantPrice, variantStock } from './catalog';
+import { ACCESSORIES, artworkUrl, resolveProductImage, cartItemId, catalogId, colorSkus, DESIGNS, findDesign, fromPrice, pickSku, productImage, productPhotos, variantPrice, variantStock } from './catalog';
 import { pageList } from './components/pagination/pagination';
 import { fallbackArt } from '../../shared/devices/case-art';
 
@@ -50,6 +50,24 @@ describe('shop catalog', () => {
     const mono = DESIGNS.find((d) => d.soldOut)!;
     for (const sku of ip16.skus) expect(variantStock(mono, sku)).toBe(0);
     expect(variantStock(bloom, ip16.skus[0])).toBe(ip16.skus[0].stockQty);
+  });
+});
+
+describe('resolveProductImage (orders / saved carts)', () => {
+  it('maps old /products/{slug}.webp files to the image the shop shows now', () => {
+    expect(resolveProductImage('/products/bloom-club.webp')).toBe(productImage('bloom-club'));
+    expect(resolveProductImage('/products/midnight-eyes-texture.webp')).toBe(productImage('midnight-eyes'));
+    expect(resolveProductImage('/products/accessory-magsafe.webp')).toBe('/products/Accessories/01_magnetic_charging_puck.png');
+    expect(resolveProductImage('/products/accessory-airpods.webp')).toBe(fallbackArt('accessory-airpods').url);
+  });
+
+  it('keeps current and non-product URLs, and finds a design by name when the URL is missing', () => {
+    const glass = '/products/Bg_Case/02_lilac_liquid_glass.png';
+    expect(resolveProductImage(glass)).toBe(glass);
+    expect(resolveProductImage('data:image/png;base64,xx')).toBe('data:image/png;base64,xx');
+    expect(resolveProductImage('/order-tracking/clear-magnetic.svg')).toBe('/order-tracking/clear-magnetic.svg');
+    expect(resolveProductImage(undefined, 'Cosmic Orbit')).toBe('/products/Bg_Case/03_cosmic_orbit.png');
+    expect(resolveProductImage(undefined, 'Không tồn tại')).toBeUndefined();
   });
 });
 

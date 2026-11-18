@@ -120,9 +120,9 @@ export class Header {
       if (!r.error){
         this.router.navigate(['/'])
         this.notifications.show({
-          variant: "information",
-          title: "Thông tin",
-          message: "Đăng xuất thành công",
+          variant: 'success',
+          title: 'Đăng xuất thành công',
+          message: 'Hẹn gặp lại bạn sớm nhé!',
         })
       } else {
         this.notifications.show({

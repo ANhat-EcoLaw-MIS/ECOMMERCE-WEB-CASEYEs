@@ -1,4 +1,4 @@
-import { productImage } from '../shop/catalog';
+import { productImage, resolveProductImage } from '../shop/catalog';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CartState } from '../../core/cart-state/cart-state';
@@ -8,6 +8,7 @@ export class Cart {
   protected readonly cart = inject(CartState);
   private readonly router = inject(Router);
   protected readonly productImage = productImage;
+  protected readonly resolveImage = (url: string) => resolveProductImage(url) ?? url;
   protected readonly couponInput = signal('');
   protected readonly appliedCoupon = signal(false);
   protected readonly couponMessage = signal('');

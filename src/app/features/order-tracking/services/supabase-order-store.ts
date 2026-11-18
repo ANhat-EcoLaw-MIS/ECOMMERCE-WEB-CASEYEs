@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { SUPABASE_CLIENT } from '../../../core/supabase/supabase.client';
+import { resolveProductImage } from '../../shop/catalog';
 import { Result, fail, ok } from '../../../core/supabase/supabase.types';
 import {
   ActorType,
@@ -139,9 +140,10 @@ export function mapOrderRow(r: Row): Order {
         isCustom: custom,
         quantity: n(i['qty']),
         unitPrice: n(i['unit_price']),
-        imageUrl: opt(i['image_url']),
+        // Rows saved before the asset change still point at deleted /products/*.webp files.
+        imageUrl: resolveProductImage(opt(i['image_url']), custom ? undefined : s(i['name'])),
         design: custom
-          ? { id: s(i['design_id']), previewUrl: opt(i['image_url']), caption: s(i['name']), hasUploadedImage: false, version: n(i['design_version']) || 1 }
+          ? { id: s(i['design_id']), previewUrl: resolveProductImage(opt(i['image_url'])), caption: s(i['name']), hasUploadedImage: false, version: n(i['design_version']) || 1 }
           : undefined,
       };
     }),
