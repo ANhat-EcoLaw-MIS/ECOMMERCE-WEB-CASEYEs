@@ -38,28 +38,8 @@
       </nav>
       <div class="ml-auto flex flex-wrap items-center gap-2">
         <span class="text-xs text-ink-soft">{{ session.email() }}</span>
-        @if (session.canSwitchView()) {
-        <span class="text-xs text-ink-soft">· Xem theo:</span>
-        <div role="radiogroup" aria-label="Góc nhìn nhân viên" class="flex rounded-pill bg-brand-50 p-1">
-          @for (r of roles; track r.key) {
-            <button
-              type="button"
-              role="radio"
-              [attr.aria-checked]="session.role() === r.key"
-              [title]="r.hint"
-              (click)="switchRole(r.key)"
-              class="min-h-9 rounded-pill px-3 text-sm font-semibold transition-colors"
-              [class.bg-brand-800]="session.role() === r.key"
-              [class.text-white]="session.role() === r.key"
-              [class.text-brand-800]="session.role() !== r.key"
-            >
-              {{ r.label }}
-            </button>
-          }
-        </div>
-        } @else {
-          <span class="rounded-pill bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-800">{{ session.role() }}</span>
-        }
+        <!-- Admin acts for every role on one screen; no view switching needed. -->
+        <span class="rounded-pill bg-brand-50 px-3 py-1.5 text-sm font-semibold text-brand-800">{{ session.canSwitchView() ? 'Admin · toàn quyền' : (session.dbRole() ?? session.role()) }}</span>
         <button type="button" (click)="signOut()" class="min-h-11 rounded-pill px-3 text-sm font-semibold text-ink-soft hover:text-ink">Đăng xuất</button>
       </div>
     </header>

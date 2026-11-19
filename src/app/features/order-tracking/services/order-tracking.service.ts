@@ -150,6 +150,47 @@ export class OrderTrackingService implements OrderIntake {
     untracked(() => (id ? void this.store.load() : this.injector.get(SupabaseOrderStore, null)?.clear()));
   });
 
+  /**
+   * With real data the database clock is the only clock: a leftover offset from the old in-browser
+   * simulator would make this view disagree with the other one (e.g. hide a cancel button the
+   * database still allows). Time is moved per order with simTimeTravel() instead.
+   */
+  private readonly realClock = effect(() => {
+    if (this.remote() && this.clock.offsetMs() !== 0) untracked(() => this.clock.reset());
+  });
+
+  /** Time the order list was last fetched from Supabase. */
+  readonly syncedAt = computed(() => (this.remote() ? this.store.syncedAt() : null));
+
+  refresh(): void {
+    if (this.remote()) this.store.refresh();
+  }
+
+  // ------------------------------------------------------------ simulation (Admin, real data)
+  /** Moves time forward for one order in the database, then runs the background jobs. */
+  simTimeTravel(orderId: string, minutes: number): Promise<OpResult> {
+    if (!this.remote()) {
+      this.clock.advance(minutes * 60_000);
+      const o = this.orders().find((x) => x.id === orderId);
+      return Promise.resolve(o ? ok(o) : fail({ message: 'Không tìm thấy đơn hàng' }));
+    }
+    return this.remoteOp('sim_time_travel', { p_order_id: orderId, p_minutes: minutes }, orderId);
+  }
+
+  async simRunJobs(): Promise<Result<true>> {
+    if (!this.remote()) return fail({ message: 'Chỉ dùng khi đăng nhập.' });
+    const r = await this.store.rpc('sim_run_jobs');
+    return r.error ? fail(r.error) : ok(true as const);
+  }
+
+  async simCreateSample(email: string, kind: 'stock' | 'custom' | 'mixed', payment: 'cod' | 'prepaid', tier: 'standard' | 'express'): Promise<Result<{ orderCode: string }>> {
+    if (!this.remote()) return fail({ message: 'Chỉ dùng khi đăng nhập.' });
+    const r = await this.store.rpc<string>('sim_create_sample_order', { p_email: email, p_kind: kind, p_payment: payment, p_tier: tier });
+    if (r.error) return fail(r.error);
+    const o = this.store.orders().find((x) => x.id === r.data);
+    return ok({ orderCode: o?.orderCode ?? '' });
+  }
+
   /** RPC + reload, returned as the same OpResult the local actions return. */
   private async remoteOp(fn: string, args: Record<string, unknown>, orderId: string): Promise<OpResult> {
     const r = await this.store.rpc(fn, args);
@@ -937,7 +978,7 @@ export class OrderTrackingService implements OrderIntake {
 
   /** UC-OT-08 AF 1.1 / EX-03: dispute about the failure cause. */
   resolveDispute(orderId: string, customerRight: boolean, note: string, actor: Actor): OpResult | Promise<OpResult> {
-    if (this.remote()) return Promise.resolve(fail({ message: 'Khiếu nại nguyên nhân giao hàng chưa có trên cơ sở dữ liệu.' }));
+    if (this.remote()) return this.remoteOp('resolve_dispute', { p_order_id: orderId, p_customer_right: customerRight, p_note: note }, orderId);
     return this.mutate(orderId, {}, (o, db, now) => {
       const ticket = o.tickets.find((t) => t.open && t.issueType === 'Dispute_Failure_Cause');
       const hold = o.warehouseHold;
