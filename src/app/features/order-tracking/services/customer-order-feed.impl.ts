@@ -6,11 +6,21 @@ import { statusLabel } from '../domain/timeline';
 import { Clock } from './clock';
 import { OrderTrackingService } from './order-tracking.service';
 
+const LOYALTY_VND_PER_POINT = 1000;
+
 /** CustomerOrderFeed for Tài khoản (Lịch sử mua hàng), built from the customer's orders. */
 @Injectable({ providedIn: 'root' })
 export class OrderTrackingCustomerFeed extends CustomerOrderFeed {
   private readonly service = inject(OrderTrackingService);
   private readonly clock = inject(Clock);
+
+  /** Mock Loyalty rule (external system): 1 point per 1.000 ₫ of completed orders. */
+  readonly loyaltyPoints = computed(() =>
+    this.service
+      .myOrders()
+      .filter((o) => o.status === 'Completed')
+      .reduce((sum, o) => sum + Math.floor(orderTotal(o) / LOYALTY_VND_PER_POINT), 0),
+  );
 
   readonly orders = computed<readonly CustomerOrderSummary[]>(() => {
     const now = this.clock.nowSignal();

@@ -34,7 +34,9 @@ describe('search core', () => {
   });
 
   it('reads a phone model and an order code from the query', () => {
-    expect(deviceIn('ốp mèo ip15 pro max')).toEqual({ name: 'iPhone 15 Pro Max', rest: 'op meo' });
+    expect(deviceIn('ốp mèo ip15 pro max')).toEqual({ slug: 'iphone-15-pro-max', name: 'iPhone 15 Pro Max', rest: 'op meo' });
+    // A phone that is not sold is still read as itself, never as a shorter alias ("16 pro").
+    expect(deviceIn('ốp ip16 pro max')?.slug).toBe('iphone-16-pro-max');
     expect(deviceIn('ốp s24')?.name).toBe('Galaxy S24');
     expect(orderCodeIn(' cc-261115-0001 ')).toBe('CC-261115-0001');
     expect(orderCodeIn('ốp mèo')).toBeNull();

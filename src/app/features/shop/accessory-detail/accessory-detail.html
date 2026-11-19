@@ -1,0 +1,192 @@
+@if (item(); as a) {
+  <div class="page pb-20 pt-5">
+    <nav aria-label="Breadcrumb">
+      <ol class="flex flex-wrap items-center gap-1.5 text-xs text-ink-soft">
+        <li><a routerLink="/" class="hover:text-ink hover:underline">Trang chủ</a></li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/shop" class="hover:text-ink hover:underline">Cửa hàng</a></li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/shop" fragment="accessories" class="hover:text-ink hover:underline">Phụ kiện</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page" class="font-medium text-ink">{{ a.name }}</li>
+      </ol>
+    </nav>
+
+    <section class="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] lg:gap-12" aria-label="Chi tiết phụ kiện">
+      <!-- Media -->
+      <div class="lg:sticky lg:top-24 lg:self-start">
+        <button
+          type="button"
+          (click)="zoom.set(!zoom())"
+          [attr.aria-pressed]="zoom()"
+          aria-label="Phóng to ảnh"
+          class="group relative block aspect-[4/5] max-h-[min(760px,82vh)] w-full overflow-hidden rounded-card bg-white shadow-soft ring-1 ring-line sm:aspect-square"
+        >
+          <span class="absolute inset-0 bg-[radial-gradient(60%_55%_at_50%_40%,var(--color-brand-50),transparent_75%)]" aria-hidden="true"></span>
+          <img
+            [src]="a.image"
+            [alt]="a.name"
+            (error)="onPhotoError($event)"
+            class="relative h-full w-full object-contain p-6 mix-blend-multiply transition-transform duration-500 ease-out motion-reduce:transition-none"
+            [style.transform]="zoom() ? 'scale(1.6)' : null"
+            [class.cursor-zoom-out]="zoom()"
+            [class.cursor-zoom-in]="!zoom()"
+          />
+          @if (a.badge) {
+            <span class="absolute left-4 top-4 rounded-pill bg-ink px-3 py-1 text-[11px] font-bold tracking-wider text-white">{{ a.badge }}</span>
+          }
+          <span class="absolute bottom-4 right-4 rounded-pill bg-white/90 px-3 py-1.5 text-xs font-medium text-ink-soft shadow-soft backdrop-blur">
+            {{ zoom() ? 'Chạm để thu nhỏ' : 'Chạm để phóng to' }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Buy box -->
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">Phụ kiện · {{ a.category }}</p>
+        <div class="mt-1 flex items-start justify-between gap-3">
+          <h1 class="font-display text-3xl font-bold text-ink sm:text-4xl">{{ a.name }}</h1>
+          <button
+            type="button"
+            (click)="shopCart.toggleFavorite(a.id)"
+            [attr.aria-pressed]="favorite()"
+            [attr.aria-label]="favorite() ? 'Bỏ yêu thích' : 'Yêu thích'"
+            class="grid size-11 shrink-0 place-items-center rounded-full border border-line text-ink-soft hover:text-brand-800 aria-pressed:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-400"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [attr.fill]="favorite() ? 'currentColor' : 'none'"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z" /></svg>
+          </button>
+        </div>
+
+        @if (detail(); as d) {
+          <p class="mt-2 text-base font-medium text-ink">{{ d.tagline }}</p>
+          <div class="mt-2 flex items-center gap-2 text-sm text-ink-soft">
+            <span class="flex text-[#f59e0b]" [attr.aria-label]="d.rating + ' trên 5 sao'">
+              @for (s of stars(); track $index) {
+                <svg aria-hidden="true" viewBox="0 0 24 24" class="size-4" [attr.fill]="s ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.5"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z" /></svg>
+              }
+            </span>
+            {{ d.rating.toFixed(1) }} · {{ d.reviews }} đánh giá
+          </div>
+        } @else {
+          <p class="mt-2 text-sm text-ink-soft">{{ a.description }}</p>
+        }
+
+        <p class="mt-4 text-2xl font-bold text-ink">{{ vnd(a.price) }}</p>
+
+        <div class="mt-6 space-y-5 border-t border-line pt-6">
+          @if (detail(); as d) {
+            <ul class="grid gap-2 sm:grid-cols-2">
+              @for (h of d.highlights; track h) {
+                <li class="flex items-start gap-2 text-sm text-ink">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 size-4 shrink-0 text-success"><path d="m5 12 5 5L20 7" /></svg>
+                  {{ h }}
+                </li>
+              }
+            </ul>
+            <p class="flex items-start gap-2 rounded-2xl bg-brand-50 p-3.5 text-sm text-brand-800">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 size-4 shrink-0"><rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" /></svg>
+              {{ d.compatibility }}
+            </p>
+          }
+
+          <!-- Quantity + stock -->
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center rounded-pill border border-line" role="group" aria-label="Số lượng">
+              <button type="button" (click)="step(-1)" [disabled]="quantity() <= 1 || !a.stock" aria-label="Giảm" class="grid size-11 place-items-center text-lg text-ink disabled:opacity-30">−</button>
+              <span class="w-8 text-center text-sm font-semibold" aria-live="polite">{{ quantity() }}</span>
+              <button type="button" (click)="step(1)" [disabled]="quantity() >= a.stock" aria-label="Tăng" class="grid size-11 place-items-center text-lg text-ink disabled:opacity-30">+</button>
+            </div>
+            <p class="text-sm" [class.text-success]="a.stock" [class.text-danger]="!a.stock">
+              {{ a.stock ? 'Còn ' + a.stock + ' sản phẩm · giao 2–4 ngày' : 'Tạm hết hàng' }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            [disabled]="!a.stock"
+            (click)="add()"
+            class="min-h-12 w-full rounded-pill bg-brand-800 text-sm font-semibold text-white shadow-soft hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+          >
+            {{ a.stock ? 'Thêm vào giỏ · ' + vnd(a.price * quantity()) : 'Tạm hết hàng' }}
+          </button>
+
+          <ul class="grid grid-cols-2 gap-2 rounded-card border border-line bg-surface-alt p-4 text-xs font-medium text-ink-soft">
+            <li>🚚 Miễn phí giao từ 500k</li>
+            <li>↺ Đổi trả trong 7 ngày</li>
+            <li>✦ Bảo hành 6 tháng</li>
+            <li>♡ Đóng gói quà miễn phí</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info tabs -->
+    @if (detail(); as d) {
+      <section class="mt-14">
+        <div role="tablist" aria-label="Thông tin phụ kiện" class="flex gap-6 border-b border-line">
+          <button type="button" role="tab" [attr.aria-selected]="tab() === 'description'" (click)="tab.set('description')" class="-mb-px min-h-11 border-b-2 border-transparent text-sm font-semibold text-ink-soft aria-selected:border-brand-800 aria-selected:text-ink">Mô tả</button>
+          <button type="button" role="tab" [attr.aria-selected]="tab() === 'specs'" (click)="tab.set('specs')" class="-mb-px min-h-11 border-b-2 border-transparent text-sm font-semibold text-ink-soft aria-selected:border-brand-800 aria-selected:text-ink">Thông số</button>
+          <button type="button" role="tab" [attr.aria-selected]="tab() === 'box'" (click)="tab.set('box')" class="-mb-px min-h-11 border-b-2 border-transparent text-sm font-semibold text-ink-soft aria-selected:border-brand-800 aria-selected:text-ink">Trong hộp</button>
+        </div>
+        <div role="tabpanel" class="py-6">
+          @switch (tab()) {
+            @case ('specs') {
+              <dl class="grid max-w-4xl gap-x-10 sm:grid-cols-2">
+                @for (s of d.specs; track s[0]) {
+                  <div class="flex justify-between gap-4 border-b border-line py-3 text-sm"><dt class="font-medium text-ink">{{ s[0] }}</dt><dd class="text-right text-ink-soft">{{ s[1] }}</dd></div>
+                }
+              </dl>
+            }
+            @case ('box') {
+              <ul class="flex flex-wrap gap-3">
+                @for (b of d.inBox; track b) {
+                  <li class="flex items-center gap-2 rounded-2xl border border-line bg-surface-alt px-4 py-3 text-sm text-ink">
+                    <span aria-hidden="true" class="grid size-8 place-items-center rounded-full bg-brand-50 text-brand-800">✓</span>{{ b }}
+                  </li>
+                }
+              </ul>
+            }
+            @default {
+              <div class="grid max-w-5xl items-center gap-8 md:grid-cols-[1.3fr_1fr]">
+                <div>
+                  <h2 class="font-display text-xl font-bold text-ink">Về {{ a.name }}</h2>
+                  <p class="mt-2 text-sm leading-relaxed text-ink-soft">{{ d.story }}</p>
+                </div>
+                <img [src]="a.image" [alt]="'Cận cảnh ' + a.name" loading="lazy" class="aspect-[4/3] w-full rounded-card bg-white object-contain p-4 ring-1 ring-line" (error)="onPhotoError($event)" />
+              </div>
+            }
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Pair with cases -->
+    <section class="mt-6 border-t border-line pt-10">
+      <h2 class="font-display text-xl font-bold text-ink">Phối cùng ốp</h2>
+      <p class="mt-1 text-sm text-ink-soft">Những mẫu ốp đang được chọn nhiều cùng {{ a.name.toLowerCase() }}.</p>
+      <ul class="mt-5 grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] sm:gap-x-4">
+        @for (d of pairs(); track d.id) {
+          <li><app-product-card [design]="d" [model]="device" [sku]="pairSku()" (quickView)="openDesign(d.id)" /></li>
+        }
+      </ul>
+    </section>
+
+    <!-- More accessories -->
+    @if (related().length) {
+      <section class="mt-10 border-t border-line pt-10">
+        <h2 class="font-display text-xl font-bold text-ink">Phụ kiện khác</h2>
+        <ul class="mt-5 grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] sm:gap-x-4">
+          @for (r of related(); track r.id) {
+            <li><app-accessory-card [item]="r" /></li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+} @else {
+  <section class="page flex flex-col items-center gap-4 py-24 text-center">
+    <h1 class="font-display text-2xl font-bold text-ink">Không tìm thấy phụ kiện</h1>
+    <p class="text-sm text-ink-soft">Phụ kiện này không còn trong cửa hàng.</p>
+    <a routerLink="/shop" fragment="accessories" class="inline-flex min-h-11 items-center rounded-pill bg-brand-800 px-6 text-sm font-semibold text-white hover:bg-brand-600">← Xem phụ kiện khác</a>
+  </section>
+}

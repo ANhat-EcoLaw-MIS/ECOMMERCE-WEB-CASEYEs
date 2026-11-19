@@ -1,0 +1,855 @@
+{
+  "version": 1,
+  "note": "Canonical catalog: the database is the source of truth. Edit this file, then run `node scripts/gen-catalog-seed.mjs` and commit the generated migration.",
+  "phoneModels": [
+    {
+      "slug": "iphone-15-pro-max",
+      "brand": "Apple",
+      "name": "iPhone 15 Pro Max",
+      "has3dModel": true,
+      "model3dUrl": "/models/iphone-15-pro-max.glb",
+      "skus": [
+        {
+          "skuId": "sku-ip15pm-titanium",
+          "skuCode": "CASE-IP15PM-TITAN",
+          "caseType": "tough",
+          "colorName": "Titan Tự Nhiên",
+          "colorHex": "#9E9A93",
+          "price": 260000,
+          "stockQty": 95,
+          "isAvailable": true
+        },
+        {
+          "skuId": "sku-ip15pm-lilac",
+          "skuCode": "CASE-IP15PM-LILAC",
+          "caseType": "tough",
+          "colorName": "Tím Lilac",
+          "colorHex": "#A58CF4",
+          "price": 250000,
+          "stockQty": 80,
+          "isAvailable": true
+        },
+        {
+          "skuId": "sku-ip15pm-black",
+          "skuCode": "CASE-IP15PM-BLACK",
+          "caseType": "snap",
+          "colorName": "Đen Jet Black",
+          "colorHex": "#0A0A0A",
+          "price": 240000,
+          "stockQty": 110,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "slug": "iphone-16-pro",
+      "brand": "Apple",
+      "name": "iPhone 16 Pro",
+      "has3dModel": true,
+      "model3dUrl": "/models/iphone-16-pro.glb",
+      "skus": [
+        {
+          "skuId": "sku-ip16p-lilac",
+          "skuCode": "CASE-IP16P-LILAC",
+          "caseType": "tough",
+          "colorName": "Tím Lilac",
+          "colorHex": "#A58CF4",
+          "price": 250000,
+          "stockQty": 85,
+          "isAvailable": true
+        },
+        {
+          "skuId": "sku-ip16p-black",
+          "skuCode": "CASE-IP16P-BLACK",
+          "caseType": "snap",
+          "colorName": "Đen Jet Black",
+          "colorHex": "#0A0A0A",
+          "price": 230000,
+          "stockQty": 120,
+          "isAvailable": true
+        },
+        {
+          "skuId": "sku-ip16p-white",
+          "skuCode": "CASE-IP16P-WHITE",
+          "caseType": "snap",
+          "colorName": "Trắng Sữa",
+          "colorHex": "#FFFFFF",
+          "price": 230000,
+          "stockQty": 90,
+          "isAvailable": true
+        },
+        {
+          "skuId": "sku-ip16p-magsafe",
+          "skuCode": "CASE-IP16P-MAGSAFE",
+          "caseType": "magsafe",
+          "colorName": "Trong suốt MagSafe",
+          "colorHex": "#ECE6FD",
+          "price": 290000,
+          "stockQty": 45,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "slug": "iphone-15-pro",
+      "brand": "Apple",
+      "name": "iPhone 15 Pro",
+      "has3dModel": true,
+      "model3dUrl": "/models/iphone-15-pro-max.glb",
+      "skus": [
+        {
+          "skuId": "sku-ip15p-lilac",
+          "skuCode": "CASE-IP15P-LILAC",
+          "caseType": "tough",
+          "colorName": "Tím Lilac",
+          "colorHex": "#A58CF4",
+          "price": 240000,
+          "stockQty": 60,
+          "isAvailable": true
+        },
+        {
+          "skuId": "sku-ip15p-black",
+          "skuCode": "CASE-IP15P-BLACK",
+          "caseType": "snap",
+          "colorName": "Đen Jet Black",
+          "colorHex": "#0A0A0A",
+          "price": 220000,
+          "stockQty": 80,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "slug": "galaxy-s24",
+      "brand": "Samsung",
+      "name": "Galaxy S24",
+      "has3dModel": false,
+      "model3dUrl": null,
+      "skus": [
+        {
+          "skuId": "sku-s24-lilac",
+          "skuCode": "CASE-S24-LILAC",
+          "caseType": "tough",
+          "colorName": "Tím Lilac",
+          "colorHex": "#A58CF4",
+          "price": 240000,
+          "stockQty": 50,
+          "isAvailable": true
+        },
+        {
+          "skuId": "sku-s24-black",
+          "skuCode": "CASE-S24-BLACK",
+          "caseType": "snap",
+          "colorName": "Đen Jet Black",
+          "colorHex": "#0A0A0A",
+          "price": 220000,
+          "stockQty": 70,
+          "isAvailable": true
+        }
+      ]
+    },
+    {
+      "slug": "xiaomi-14-ultra",
+      "brand": "Xiaomi",
+      "name": "Xiaomi 14 Ultra",
+      "has3dModel": false,
+      "model3dUrl": null,
+      "skus": [
+        {
+          "skuId": "sku-mi14u-black",
+          "skuCode": "CASE-MI14U-BLACK",
+          "caseType": "tough",
+          "colorName": "Đen Jet Black",
+          "colorHex": "#0A0A0A",
+          "price": 260000,
+          "stockQty": 30,
+          "isAvailable": true
+        }
+      ]
+    }
+  ],
+  "designs": [
+    {
+      "id": "lavender-haze",
+      "art": "/products/Bg_Case/01_lavender_haze.png",
+      "name": "Lavender Haze",
+      "collection": "Soft Intentions",
+      "caption": "haze",
+      "tone": "lilac",
+      "style": "Pastel",
+      "tags": [
+        "Tím",
+        "Gradient",
+        "Minimal"
+      ],
+      "badge": "NEW DROP",
+      "description": "Sắc tím oải hương mờ ảo, nhẹ nhàng cho mọi ngày.",
+      "finish": "In UV bền màu",
+      "premium": 30000
+    },
+    {
+      "id": "lilac-liquid-glass",
+      "art": "/products/Bg_Case/02_lilac_liquid_glass.png",
+      "name": "Lilac Liquid Glass",
+      "collection": "Glass & Light",
+      "caption": "liquid glass",
+      "tone": "lilac",
+      "style": "Trừu tượng",
+      "tags": [
+        "Tím",
+        "Kính",
+        "Art"
+      ],
+      "badge": "HOT",
+      "description": "Hiệu ứng kính lỏng óng ánh, đổi sắc theo từng góc nhìn.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 70000
+    },
+    {
+      "id": "cosmic-orbit",
+      "art": "/products/Bg_Case/03_cosmic_orbit.png",
+      "name": "Cosmic Orbit",
+      "collection": "Cosmic Edit",
+      "caption": "orbit",
+      "tone": "lilac",
+      "style": "Trừu tượng",
+      "tags": [
+        "Tím",
+        "Không gian",
+        "Ngôi sao"
+      ],
+      "badge": "",
+      "description": "Một quỹ đạo sao băng lướt qua bầu trời tím.",
+      "finish": "In UV bền màu",
+      "premium": 50000
+    },
+    {
+      "id": "dreamy-clouds",
+      "art": "/products/Bg_Case/04_dreamy_clouds.png",
+      "name": "Dreamy Clouds",
+      "collection": "Soft Intentions",
+      "caption": "clouds",
+      "tone": "light",
+      "style": "Pastel",
+      "tags": [
+        "Mây",
+        "Pastel",
+        "Dễ thương"
+      ],
+      "badge": "",
+      "description": "Những áng mây bồng bềnh cho tâm hồn mơ mộng.",
+      "finish": "In UV bền màu",
+      "premium": 30000
+    },
+    {
+      "id": "violet-waves",
+      "art": "/products/Bg_Case/05_violet_waves.png",
+      "name": "Violet Waves",
+      "collection": "Glass & Light",
+      "caption": "waves",
+      "tone": "lilac",
+      "style": "Trừu tượng",
+      "tags": [
+        "Tím",
+        "Sóng",
+        "Art"
+      ],
+      "badge": "",
+      "description": "Những con sóng tím uốn lượn mềm mại.",
+      "finish": "In UV · phủ nhám",
+      "premium": 40000
+    },
+    {
+      "id": "galaxy-glow",
+      "art": "/products/Bg_Case/06_galaxy_glow.png",
+      "name": "Galaxy Glow",
+      "collection": "Cosmic Edit",
+      "caption": "glow",
+      "tone": "dark",
+      "style": "Cá tính",
+      "tags": [
+        "Không gian",
+        "Đậm",
+        "Ngôi sao"
+      ],
+      "badge": "BEST SELLER",
+      "description": "Ánh sáng thiên hà rực rỡ trong lòng bàn tay.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 60000
+    },
+    {
+      "id": "soft-geometry",
+      "art": "/products/Bg_Case/07_soft_geometry.png",
+      "name": "Soft Geometry",
+      "collection": "Glass & Light",
+      "caption": "geometry",
+      "tone": "light",
+      "style": "Tối giản",
+      "tags": [
+        "Hình học",
+        "Minimal",
+        "Pastel"
+      ],
+      "badge": "",
+      "description": "Hình khối mềm mại, tối giản mà vẫn cuốn hút.",
+      "finish": "In UV · phủ nhám",
+      "premium": 30000
+    },
+    {
+      "id": "satin-ribbons",
+      "art": "/products/Bg_Case/08_satin_ribbons.png",
+      "name": "Satin Ribbons",
+      "collection": "Glass & Light",
+      "caption": "ribbons",
+      "tone": "lilac",
+      "style": "Pastel",
+      "tags": [
+        "Ruy băng",
+        "Lụa",
+        "Nữ tính"
+      ],
+      "badge": "",
+      "description": "Dải lụa satin mềm mượt, sang trọng và nữ tính.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 60000
+    },
+    {
+      "id": "botanical-shadows",
+      "art": "/products/Bg_Case/09_botanical_shadows.png",
+      "name": "Botanical Shadows",
+      "collection": "Botanical",
+      "caption": "shadows",
+      "tone": "light",
+      "style": "Hoa lá",
+      "tags": [
+        "Lá",
+        "Bóng nắng",
+        "Minimal"
+      ],
+      "badge": "",
+      "description": "Bóng lá cây trong nắng chiều, bình yên và thư thái.",
+      "finish": "In UV bền màu",
+      "premium": 40000
+    },
+    {
+      "id": "lavender-gingham",
+      "art": "/products/Bg_Case/10_lavender_gingham.png",
+      "name": "Lavender Gingham",
+      "collection": "Soft Intentions",
+      "caption": "gingham",
+      "tone": "light",
+      "style": "Pastel",
+      "tags": [
+        "Caro",
+        "Tím",
+        "Vintage"
+      ],
+      "badge": "",
+      "description": "Họa tiết caro tím cổ điển, đáng yêu và dễ phối.",
+      "finish": "In UV bền màu",
+      "premium": 20000
+    },
+    {
+      "id": "lavender-water-caustics",
+      "art": "/products/Bg_Case/11_lavender_water_caustics.png",
+      "name": "Lavender Water Caustics",
+      "collection": "Glass & Light",
+      "caption": "caustics",
+      "tone": "lilac",
+      "style": "Trừu tượng",
+      "tags": [
+        "Nước",
+        "Ánh sáng",
+        "Tím"
+      ],
+      "badge": "LIMITED",
+      "description": "Ánh sáng khúc xạ trên mặt nước tím lung linh.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 80000
+    },
+    {
+      "id": "purple-botanical-blossoms",
+      "art": "/products/Bg_Case/12_purple_botanical_blossoms.png",
+      "name": "Purple Botanical Blossoms",
+      "collection": "Botanical",
+      "caption": "blossoms",
+      "tone": "lilac",
+      "style": "Hoa lá",
+      "tags": [
+        "Hoa",
+        "Tím",
+        "Thiên nhiên"
+      ],
+      "badge": "",
+      "description": "Những đóa hoa tím nở rộ cho ngày thêm tươi mới.",
+      "finish": "In UV bền màu",
+      "premium": 50000
+    },
+    {
+      "id": "pastel-paper-waves",
+      "art": "/products/Bg_Case/13_pastel_paper_waves.png",
+      "name": "Pastel Paper Waves",
+      "collection": "Soft Intentions",
+      "caption": "paper",
+      "tone": "light",
+      "style": "Pastel",
+      "tags": [
+        "Giấy",
+        "Sóng",
+        "Pastel"
+      ],
+      "badge": "",
+      "description": "Lớp giấy cắt xếp sóng pastel đầy chiều sâu.",
+      "finish": "In UV · phủ nhám",
+      "premium": 40000
+    },
+    {
+      "id": "stardust-lilac",
+      "art": "/products/Bg_Case/14_stardust_lilac.png",
+      "name": "Stardust Lilac",
+      "collection": "Cosmic Edit",
+      "caption": "stardust",
+      "tone": "lilac",
+      "style": "Cá tính",
+      "tags": [
+        "Lấp lánh",
+        "Tím",
+        "Ngôi sao"
+      ],
+      "badge": "NEW DROP",
+      "description": "Bụi sao lấp lánh trên nền tím lilac.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 70000
+    },
+    {
+      "id": "satin-sheen",
+      "art": "/products/Bg_Case/15_satin_sheen.png",
+      "name": "Satin Sheen",
+      "collection": "Glass & Light",
+      "caption": "sheen",
+      "tone": "light",
+      "style": "Tối giản",
+      "tags": [
+        "Lụa",
+        "Bóng",
+        "Minimal"
+      ],
+      "badge": "",
+      "description": "Ánh lụa satin bóng nhẹ, tinh tế và thanh lịch.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 50000
+    },
+    {
+      "id": "wyvern-crystal",
+      "art": "/products/Bg_Case/i16_wyvern_crystal.webp",
+      "name": "Wyvern Crystal",
+      "collection": "Jewel Tones",
+      "caption": "wyvern",
+      "tone": "dark",
+      "style": "Cá tính",
+      "tags": [
+        "Đỏ",
+        "Pha lê",
+        "Nhung"
+      ],
+      "badge": "NEW DROP",
+      "description": "Pha lê đỏ rực trồi lên giữa lớp nhung thẫm, mạnh mẽ và đầy bí ẩn như vảy rồng.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 80000
+    },
+    {
+      "id": "silver-pearl",
+      "art": "/products/Bg_Case/i17_silver_pearl.webp",
+      "name": "Silver Pearl",
+      "collection": "Jewel Tones",
+      "caption": "pearl",
+      "tone": "light",
+      "style": "Tối giản",
+      "tags": [
+        "Bạc",
+        "Ngọc trai",
+        "Sang trọng"
+      ],
+      "badge": "",
+      "description": "Ánh ngọc trai bạc dịu mát, thanh lịch cho những ngày cần một chút tinh tế.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 60000
+    },
+    {
+      "id": "midnight-moon",
+      "art": "/products/Bg_Case/i18_midnight_moon.webp",
+      "name": "Midnight Moon",
+      "collection": "Cosmic Edit",
+      "caption": "moon",
+      "tone": "dark",
+      "style": "Trừu tượng",
+      "tags": [
+        "Cực quang",
+        "Đêm",
+        "Không gian"
+      ],
+      "badge": "HOT",
+      "description": "Cực quang tím chảy trên bầu trời đầy sao, soi bóng xuống mặt nước đêm cùng những bong bóng pha lê.",
+      "finish": "In UV · phủ nhám",
+      "premium": 60000
+    },
+    {
+      "id": "summer-bloom",
+      "art": "/products/Bg_Case/i19_summer_bloom.webp",
+      "name": "Summer Bloom",
+      "collection": "Botanical",
+      "caption": "bloom",
+      "tone": "light",
+      "style": "Hoa lá",
+      "tags": [
+        "Hoa",
+        "Mùa hè",
+        "Tươi sáng"
+      ],
+      "badge": "",
+      "description": "Sắc hoa mùa hè rực rỡ, mang năng lượng tươi mới theo bạn suốt cả ngày.",
+      "finish": "In UV bền màu",
+      "premium": 40000
+    },
+    {
+      "id": "jasmine-dream",
+      "art": "/products/Bg_Case/i20_jasmine_dream.webp",
+      "name": "Jasmine Dream",
+      "collection": "Botanical",
+      "caption": "jasmine",
+      "tone": "light",
+      "style": "Pastel",
+      "tags": [
+        "Hoa nhài",
+        "Trắng",
+        "Dịu dàng"
+      ],
+      "badge": "",
+      "description": "Những cánh nhài trắng mỏng manh, nhẹ nhàng và thơm mát như một giấc mơ.",
+      "finish": "In UV bền màu",
+      "premium": 30000
+    },
+    {
+      "id": "golden-silk",
+      "art": "/products/Bg_Case/i21_golden_silk.webp",
+      "name": "Golden Silk",
+      "collection": "Glass & Light",
+      "caption": "golden",
+      "tone": "light",
+      "style": "Trừu tượng",
+      "tags": [
+        "Vàng",
+        "Lụa",
+        "Bong bóng"
+      ],
+      "badge": "LIMITED",
+      "description": "Dải lụa vàng óng uốn lượn giữa những bong bóng trong veo, rạng rỡ như nắng sớm.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 70000
+    },
+    {
+      "id": "fresh-iceflow",
+      "art": "/products/Bg_Case/i22_fresh_iceflow.webp",
+      "name": "Fresh Iceflow",
+      "collection": "Glass & Light",
+      "caption": "iceflow",
+      "tone": "light",
+      "style": "Tối giản",
+      "tags": [
+        "Xanh biển",
+        "Nước",
+        "Bong bóng"
+      ],
+      "badge": "",
+      "description": "Làn nước xanh trong vắt lấp lánh nắng và bong bóng, mát lạnh cho những ngày oi bức.",
+      "finish": "In UV · phủ nhám",
+      "premium": 50000
+    },
+    {
+      "id": "twilight-swirl",
+      "art": "/products/Bg_Case/i23_twilight_swirl.webp",
+      "name": "Twilight Swirl",
+      "collection": "Cosmic Edit",
+      "caption": "twilight",
+      "tone": "lilac",
+      "style": "Trừu tượng",
+      "tags": [
+        "Hoàng hôn",
+        "Xoáy",
+        "Tím"
+      ],
+      "badge": "",
+      "description": "Vòng xoáy hoàng hôn tím biếc, khoảnh khắc chuyển giao giữa ngày và đêm.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 60000
+    },
+    {
+      "id": "warm-flow",
+      "art": "/products/Bg_Case/i24_warm_flow.webp",
+      "name": "Warm Flow",
+      "collection": "Soft Intentions",
+      "caption": "warm",
+      "tone": "light",
+      "style": "Pastel",
+      "tags": [
+        "Cam đào",
+        "Hoa",
+        "Ấm áp"
+      ],
+      "badge": "NEW DROP",
+      "description": "Sắc cam đào ấm áp cùng cánh hoa trong suốt bay giữa mây, dịu dàng và đầy cảm xúc.",
+      "finish": "In UV bền màu",
+      "premium": 40000
+    },
+    {
+      "id": "sakura-silk",
+      "art": "/products/Bg_Case/i25_sakura_silk.webp",
+      "name": "Sakura Silk",
+      "collection": "Soft Intentions",
+      "caption": "sakura",
+      "tone": "light",
+      "style": "Hoa lá",
+      "tags": [
+        "Anh đào",
+        "Hồng",
+        "Lụa"
+      ],
+      "badge": "BEST SELLER",
+      "description": "Lụa hồng anh đào mềm mại, gợi nhớ mùa xuân Nhật Bản ngọt ngào.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 60000
+    },
+    {
+      "id": "lilac-dream",
+      "name": "Lavender Daydream",
+      "collection": "Soft Intentions",
+      "caption": "daydream",
+      "tone": "lilac",
+      "style": "Pastel",
+      "tags": [
+        "Tím",
+        "Minimal",
+        "Hoa"
+      ],
+      "badge": "BEST SELLER",
+      "description": "Một chút mộng mơ dành riêng cho những ngày đầy cảm hứng.",
+      "finish": "In UV bền màu",
+      "premium": 40000
+    },
+    {
+      "id": "midnight-eyes",
+      "name": "Midnight Eyes",
+      "collection": "After Hours",
+      "caption": "eyes on you",
+      "tone": "dark",
+      "style": "Cá tính",
+      "tags": [
+        "Tối giản",
+        "Đen",
+        "Typography"
+      ],
+      "badge": "NEW DROP",
+      "description": "Cá tính không cần quá nhiều lời.",
+      "finish": "In UV · phủ nhám",
+      "premium": 70000
+    },
+    {
+      "id": "bloom-club",
+      "name": "Bloom Club",
+      "collection": "Soft Intentions",
+      "caption": "bloom",
+      "tone": "light",
+      "style": "Hoa lá",
+      "tags": [
+        "Hoa",
+        "Pastel",
+        "Dễ thương"
+      ],
+      "badge": "",
+      "description": "Những đóa hoa nhỏ mang đến năng lượng tích cực.",
+      "finish": "In UV bền màu",
+      "premium": 30000
+    },
+    {
+      "id": "purple-orbit",
+      "name": "Purple Orbit",
+      "collection": "Cosmic Edit",
+      "caption": "orbit",
+      "tone": "lilac",
+      "style": "Trừu tượng",
+      "tags": [
+        "Tím",
+        "Không gian",
+        "Art"
+      ],
+      "badge": "LIMITED",
+      "description": "Một quỹ đạo tím dành cho những tâm hồn tò mò.",
+      "finish": "In UV · ánh nhũ",
+      "premium": 90000
+    },
+    {
+      "id": "little-love",
+      "name": "Little Love Notes",
+      "collection": "Soft Intentions",
+      "caption": "love more",
+      "tone": "light",
+      "style": "Pastel",
+      "tags": [
+        "Dễ thương",
+        "Typography",
+        "Trắng"
+      ],
+      "badge": "",
+      "description": "Một lời nhắn dễ thương theo bạn mỗi ngày.",
+      "finish": "In UV bền màu",
+      "premium": 20000
+    },
+    {
+      "id": "noir-muse",
+      "name": "Noir Muse",
+      "collection": "After Hours",
+      "caption": "muse",
+      "tone": "dark",
+      "style": "Cá tính",
+      "tags": [
+        "Đen",
+        "Minimal",
+        "Art"
+      ],
+      "badge": "HOT",
+      "description": "Sự tinh tế khi bạn chọn khác biệt.",
+      "finish": "In UV · phủ nhám",
+      "premium": 60000
+    },
+    {
+      "id": "cloud-nine",
+      "name": "Cloud Nine",
+      "collection": "Cosmic Edit",
+      "caption": "cloud 9",
+      "tone": "lilac",
+      "style": "Pastel",
+      "tags": [
+        "Tím",
+        "Dễ thương",
+        "Không gian"
+      ],
+      "badge": "",
+      "description": "Nhẹ tênh như đang bước trên mây.",
+      "finish": "In UV bền màu",
+      "premium": 50000
+    },
+    {
+      "id": "mono-heart",
+      "name": "Mono Heart",
+      "collection": "After Hours",
+      "caption": "<3",
+      "tone": "light",
+      "style": "Tối giản",
+      "tags": [
+        "Minimal",
+        "Trắng",
+        "Typography"
+      ],
+      "badge": "",
+      "description": "Một biểu tượng nhỏ, một cá tính rất riêng.",
+      "finish": "In UV bền màu",
+      "premium": 10000,
+      "soldOut": true
+    }
+  ],
+  "accessories": [
+    {
+      "id": "accessory-charging-puck",
+      "name": "Đế sạc từ tính",
+      "category": "MagSafe",
+      "description": "Đế sạc không dây hít từ, dùng cùng ốp MagSafe.",
+      "price": 490000,
+      "stock": 14,
+      "image": "/products/Accessories/01_magnetic_charging_puck.png",
+      "badge": "BEST SELLER"
+    },
+    {
+      "id": "accessory-magnetic-wallet",
+      "name": "Ví da từ tính",
+      "category": "MagSafe",
+      "description": "Ví đựng thẻ gắn từ phía sau ốp, gọn và chắc chắn.",
+      "price": 390000,
+      "stock": 18,
+      "image": "/products/Accessories/02_magnetic_wallet.png"
+    },
+    {
+      "id": "accessory-ring-holder",
+      "name": "Nhẫn giữ từ tính",
+      "category": "MagSafe",
+      "description": "Nhẫn đỡ máy hít từ, xoay 360° và làm giá đỡ.",
+      "price": 190000,
+      "stock": 25,
+      "image": "/products/Accessories/03_magnetic_ring_holder.png"
+    },
+    {
+      "id": "accessory-desk-stand",
+      "name": "Giá đỡ để bàn từ tính",
+      "category": "MagSafe",
+      "description": "Giá đỡ hít từ cho bàn làm việc, chỉnh được góc nghiêng.",
+      "price": 450000,
+      "stock": 9,
+      "image": "/products/Accessories/04_magnetic_desk_stand.png",
+      "badge": "NEW DROP"
+    },
+    {
+      "id": "accessory-power-bank",
+      "name": "Pin dự phòng từ tính",
+      "category": "MagSafe",
+      "description": "Pin dự phòng hít từ, mỏng nhẹ mang theo hằng ngày.",
+      "price": 690000,
+      "stock": 11,
+      "image": "/products/Accessories/05_magnetic_power_bank.png"
+    },
+    {
+      "id": "accessory-beaded-wristlet",
+      "name": "Dây đeo hạt Lavender",
+      "category": "Dây đeo",
+      "description": "Dây đeo cổ tay kết hạt tông tím oải hương.",
+      "price": 150000,
+      "stock": 20,
+      "image": "/products/Accessories/06_lavender_beaded_wristlet.png"
+    },
+    {
+      "id": "accessory-braided-strap",
+      "name": "Dây đeo cổ tay bện",
+      "category": "Dây đeo",
+      "description": "Dây bện dù chắc chắn, giữ máy an toàn khi di chuyển.",
+      "price": 120000,
+      "stock": 22,
+      "image": "/products/Accessories/07_braided_phone_wrist_strap.png"
+    },
+    {
+      "id": "accessory-flower-charm",
+      "name": "Charm hoa acrylic",
+      "category": "Charm",
+      "description": "Charm hoa acrylic trong trẻo để treo lên ốp.",
+      "price": 89000,
+      "stock": 30,
+      "image": "/products/Accessories/08_acrylic_flower_charm.png"
+    },
+    {
+      "id": "accessory-plush-star",
+      "name": "Charm ngôi sao bông",
+      "category": "Charm",
+      "description": "Ngôi sao bông mềm mại, đáng yêu.",
+      "price": 99000,
+      "stock": 16,
+      "image": "/products/Accessories/09_plush_star_charm.png",
+      "badge": "HOT"
+    },
+    {
+      "id": "accessory-astronaut-star",
+      "name": "Charm phi hành gia",
+      "category": "Charm",
+      "description": "Charm phi hành gia và ngôi sao cho người mê vũ trụ.",
+      "price": 119000,
+      "stock": 0,
+      "image": "/products/Accessories/10_astronaut_star_charm.png"
+    }
+  ]
+}

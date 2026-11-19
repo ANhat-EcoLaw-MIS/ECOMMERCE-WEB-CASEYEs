@@ -7,7 +7,7 @@ import type { Address, ProfileFormValue, ProfileSetupPreferences } from '../../m
 import { ProfileRepository } from '../../services/profile.repository';
 import { OnboardingModal } from '../onboarding-modal/onboarding-modal';
 import { OtpModal } from '../otp-modal/otp-modal';
-import { DEVICE_CATALOG, STYLE_PRESETS } from '../../onboarding/onboarding-presets';
+import { STYLE_PRESETS, findDeviceOption } from '../../onboarding/onboarding-presets';
 
 const vietnamesePhoneValidator = (value: string): boolean => /^0\d{9}$/.test(value.replace(/\s/g, ''));
 const phoneValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null =>
@@ -52,9 +52,7 @@ export class ProfileTab {
   protected readonly deviceType = signal('');
   protected readonly stylePreferences = signal<string[]>([]);
   protected readonly deviceLabel = computed(() => {
-    const device = Object.values(DEVICE_CATALOG)
-      .flat()
-      .find((option) => option.id === this.deviceType());
+    const device = findDeviceOption(this.deviceType());
     return device?.name ?? (this.deviceType() || 'Chưa thiết lập thiết bị');
   });
   protected readonly stylesLabel = computed(() => {
@@ -77,9 +75,9 @@ export class ProfileTab {
     this.form.patchValue({
       fullName: profile.display_name ?? '',
       email: this.accountState.email(),
-      phoneNumber: '',
-      dob: '',
-      gender: '',
+      phoneNumber: profile.phone ?? '',
+      dob: profile.birth_date ?? '',
+      gender: profile.gender ?? '',
     });
     this.deviceType.set(profile.device_type ?? '');
     this.stylePreferences.set(profile.preferences);
@@ -116,9 +114,9 @@ export class ProfileTab {
     this.form.reset({
       fullName: profile?.display_name ?? '',
       email: this.accountState.email(),
-      phoneNumber: '',
-      dob: '',
-      gender: '',
+      phoneNumber: profile?.phone ?? '',
+      dob: profile?.birth_date ?? '',
+      gender: profile?.gender ?? '',
     });
     this.deviceType.set(profile?.device_type ?? '');
     this.stylePreferences.set(profile?.preferences ?? []);
@@ -261,11 +259,15 @@ export class ProfileTab {
   }
 
   private currentProfileValues(): ProfileFormValue {
-    // TODO: no column yet: email, phone number, date of birth, and gender.
+    // E-mail belongs to Supabase Auth (changed through a verified flow), so it is not saved here.
+    const { phoneNumber, dob, gender } = this.form.getRawValue();
     return {
       fullName: this.fullName.value,
       deviceType: this.deviceType(),
       stylePreferences: this.stylePreferences(),
+      phone: phoneNumber,
+      birthDate: dob,
+      gender,
     };
   }
 }

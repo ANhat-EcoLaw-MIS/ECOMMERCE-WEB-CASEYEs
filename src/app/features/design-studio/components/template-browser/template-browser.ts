@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SearchService } from '../../../../core/search/search.service';
 import { StudioCatalogService } from '../../services/studio-catalog';
 import { SavedDesignItem, StudioState } from '../../services/studio-state';
+import { TemplateCommentsRepository, commentAge, type TemplateComment } from '../../services/template-comments';
 import { CanvasLayer, ImageElement, TextElement } from '../../models/canvas-element.model';
 import { SupabaseAuthService } from '../../../../core/supabase/supabase-auth.service';
 import { AuthModal } from '../../../../core/auth/auth-modal';
@@ -621,7 +622,19 @@ export const TEMPLATE_CATALOG: TemplateCard[] = [
   },
 ];
 
+/** Filled per template from Supabase when its preview opens (see loadReviews). */
 const INITIAL_REVIEWS: Record<string, TemplateReview[]> = {};
+
+function toTemplateReview(c: TemplateComment): TemplateReview {
+  return {
+    id: c.id,
+    userName: c.authorName,
+    date: commentAge(c.createdAt),
+    deviceModel: c.deviceModel ?? '',
+    comment: c.comment,
+    tag: 'Góp ý thẩm mỹ',
+  };
+}
 
 @Component({
   selector: 'app-template-browser',
@@ -716,6 +729,10 @@ export class TemplateBrowser {
     if (!tpl) return [];
     return this.reviewsMap()[tpl.id] || [];
   });
+
+  private readonly comments = inject(TemplateCommentsRepository);
+  protected readonly reviewSending = signal(false);
+  protected readonly reviewError = signal<string | null>(null);
 
   // User Interactive Review Submission State
   protected readonly userRating = signal<number>(5);
@@ -1149,6 +1166,7 @@ export class TemplateBrowser {
     this.userReviewText.set('');
     this.userRating.set(5);
     this.reviewSubmittedSuccess.set(false);
+    void this.loadReviews(template.id);
     if (has3d) {
       setTimeout(() => {
         this.syncTemplate3dTexture(template);
@@ -1446,34 +1464,40 @@ export class TemplateBrowser {
     this.userReviewText.set(target.value);
   }
 
-  protected onSubmitUserReview(): void {
+  /** Comments of a template, from Supabase (table `template_comments`). */
+  private async loadReviews(templateId: string): Promise<void> {
+    this.reviewError.set(null);
+    const result = await this.comments.list(templateId);
+    if (result.error) {
+      this.reviewError.set('Chưa tải được góp ý. Vui lòng thử lại sau.');
+      return;
+    }
+    this.reviewsMap.update((map) => ({ ...map, [templateId]: result.data.map(toTemplateReview) }));
+  }
+
+  protected async onSubmitUserReview(): Promise<void> {
     if (!this.isLoggedIn()) {
       this.openLoginModal();
       return;
     }
 
     const comment = this.userReviewText().trim();
-    if (!comment) return;
-
     const tpl = this.previewTemplate();
-    if (!tpl) return;
+    if (!comment || !tpl || this.reviewSending()) return;
 
-    const newRev: TemplateReview = {
-      id: 'rev-' + Date.now(),
-      userName: this.userDisplayName(),
-      date: 'Vừa xong',
-      deviceModel: this.state.selectedModel().name,
-      comment,
-      isVerifiedBuyer: true,
-      tag: 'Góp ý thẩm mỹ',
-    };
+    this.reviewSending.set(true);
+    this.reviewError.set(null);
+    const result = await this.comments.add(tpl.id, comment, this.state.selectedModel().name);
+    this.reviewSending.set(false);
+    if (result.error) {
+      this.reviewError.set('Chưa gửi được góp ý. Vui lòng thử lại.');
+      return;
+    }
 
-    const currentList = this.reviewsMap()[tpl.id] || [];
     this.reviewsMap.update((map) => ({
       ...map,
-      [tpl.id]: [newRev, ...currentList],
+      [tpl.id]: [toTemplateReview(result.data), ...(map[tpl.id] ?? [])],
     }));
-
     this.userReviewText.set('');
     this.reviewSubmittedSuccess.set(true);
 

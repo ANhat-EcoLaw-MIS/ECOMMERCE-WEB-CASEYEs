@@ -17,6 +17,18 @@
       </div>
 
       <!-- Thẻ địa chỉ -->
+      @if (!checkoutService.hasAddress()) {
+        <div class="address-box">
+          <p class="address-box__street">
+            <span class="material-symbols-outlined">add_location_alt</span>
+            <span>Bạn chưa có địa chỉ giao hàng. Thêm địa chỉ để đặt hàng — địa chỉ sẽ được lưu vào sổ địa chỉ của bạn.</span>
+          </p>
+          <button type="button" class="btn-link" (click)="openAddressModal.emit()">
+            <span class="material-symbols-outlined">add</span>
+            <span>Thêm địa chỉ</span>
+          </button>
+        </div>
+      } @else {
       <div class="address-box">
         <div class="address-box__details">
           <div class="address-box__recipient">
@@ -38,6 +50,7 @@
           </div>
         }
       </div>
+      }
 
       <!-- Ghi chú cho shipper -->
       <div class="form-group">
@@ -464,7 +477,7 @@
     <div class="summary-card">
       <div class="summary-card__header">
         <h3 class="summary-card__title">Tóm tắt đơn hàng</h3>
-        <span class="badge badge--purple">{{ checkoutService.items().length }} sản phẩm custom</span>
+        <span class="badge badge--purple">{{ checkoutService.items().length }} sản phẩm</span>
       </div>
 
       <!-- Danh sách sản phẩm -->

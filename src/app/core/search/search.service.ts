@@ -1,6 +1,7 @@
 import { Injectable, InjectionToken, computed, effect, inject, signal } from '@angular/core';
 import { Swatch, cssOf, paletteOfImage } from '../../shared/search/color';
 import { deviceIn, orderCodeIn } from '../../shared/search/lexicon';
+import { DEVICES } from '../../shared/devices/devices';
 import { rankByImage, rankByText, suggestByDescription } from '../../shared/search/rank';
 import { ColorIndex } from './color-index';
 import { SearchDoc, SearchHit } from '../../shared/search/search.types';
@@ -18,7 +19,10 @@ export type SearchMode = 'text' | 'suggest';
 
 export interface GroupedResults {
   readonly query: string;
+  /** Phone model read from the query, when CasEYE's sells cases for it. */
   readonly device: string | null;
+  /** Phone model read from the query that is not sold ("Chưa có ốp cho …"). */
+  readonly unsoldDevice: string | null;
   readonly orderCode: string | null;
   readonly templates: readonly SearchHit[];
   readonly products: readonly SearchHit[];
@@ -28,7 +32,9 @@ export interface GroupedResults {
 
 /** Shown before typing (team list, replaced later by the most searched words). */
 export const POPULAR_KEYWORDS: readonly string[] = ['Mèo', 'Hoa lá', 'Tối giản', 'Y2K', 'Typography', 'Dẻo chống sốc', 'Quà tặng', 'Phong cảnh'];
-export const POPULAR_DEVICES: readonly string[] = ['iPhone 16 Pro Max', 'iPhone 15 Pro Max', 'iPhone 15', 'Galaxy S24'];
+/** The phones CasEYE's sells (same list as Shop, Design Studio and onboarding). */
+export const POPULAR_DEVICES: readonly string[] = DEVICES.map((m) => m.name);
+const isSold = (slug: string) => DEVICES.some((m) => m.id === slug);
 export const SUGGEST_EXAMPLES: readonly string[] = [
   'Ốp tím pastel có mèo',
   'Quà sinh nhật cho bạn thích game',
@@ -98,13 +104,40 @@ export class SearchService {
     const orderCode = orderCodeIn(query);
     const device = deviceIn(query);
     const text = device ? device.rest : query;
-    const hits = text ? rankByText(this.docs(), text) : [];
+    const soldSlug = device && isSold(device.slug) ? device.slug : null;
+    const hits = soldSlug ? this.forDevice(soldSlug, text) : text ? rankByText(this.docs(), text) : [];
     const templates = hits.filter((h) => h.doc.type === 'template');
     const products = hits.filter((h) => h.doc.type === 'product');
     // Help pages only when their own words clearly match ("hủy đơn", "hoàn tiền"…), at most 2.
     // Synonym points are left out, so "hoa" (flowers) does not bring up "hóa đơn".
     const help = hits.filter((h) => h.doc.type === 'help' && h.score - h.reasons.length * 3 >= 5).slice(0, 2);
-    return { query, device: device?.name ?? null, orderCode, templates, products, help, total: templates.length + products.length + help.length };
+    const sold = !!device && isSold(device.slug);
+    return {
+      query,
+      device: sold ? device!.name : null,
+      unsoldDevice: device && !sold ? device.name : null,
+      orderCode,
+      templates,
+      products,
+      help,
+      total: templates.length + products.length + help.length,
+    };
+  }
+
+  /**
+   * Query that names a phone we sell ("Galaxy S24", "ốp mèo ip15 pro max"): only items made for that
+   * phone, ranked by the rest of the query; with nothing else typed, all of them (most popular first).
+   * Product links open on that phone (?model=).
+   */
+  private forDevice(slug: string, rest: string): SearchHit[] {
+    const pool = this.docs()
+      .filter((d) => d.type === 'help' || d.devices?.includes(slug))
+      .map((d) => (d.type === 'product' ? { ...d, queryParams: { ...d.queryParams, model: slug } } : d));
+    if (rest) return rankByText(pool, rest);
+    return pool
+      .filter((d) => d.type !== 'help')
+      .map((doc) => ({ doc, score: (doc.boost ?? 0) - (doc.outOfStock ? 2 : 0), reasons: [] }))
+      .sort((a, b) => b.score - a.score);
   }
 
   /** "Gợi ý theo mô tả" (runs in the browser, explains each suggestion). */

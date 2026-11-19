@@ -28,6 +28,11 @@ export interface SearchDoc {
   readonly palette?: Palette;
   /** Style label used as a results filter (e.g. "Pastel", "Dễ thương"). */
   readonly style?: string;
+  /**
+   * Phone models (catalog slugs, e.g. "galaxy-s24") this item is made for. Absent = not tied to a
+   * phone (accessories, help). A query that names a phone ("ốp galaxy s24") keeps only matching items.
+   */
+  readonly devices?: readonly string[];
 }
 
 export interface SearchHit {

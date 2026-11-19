@@ -2,6 +2,9 @@ import { Injectable, signal } from '@angular/core';
 import { SearchSource } from '../../core/search/search.service';
 import { paletteFromCss } from '../../shared/search/color';
 import { SearchDoc } from '../../shared/search/search.types';
+import { DEVICES } from '../../shared/devices/devices';
+
+const DEVICE_IDS = DEVICES.map((m) => m.id);
 
 /**
  * Design Studio → Tìm kiếm: design templates (opened in the template browser).
@@ -35,6 +38,8 @@ export class DesignTemplateSearchSource implements SearchSource {
               boost: t.isTrending ? 2 : t.isBlankCanvas ? 1 : 0,
               // Background colors until ColorIndex reads the artwork itself.
               palette: paletteFromCss(t.gradient),
+              // A template can be designed on any phone model the studio offers.
+              devices: DEVICE_IDS,
             }),
           ),
         ),

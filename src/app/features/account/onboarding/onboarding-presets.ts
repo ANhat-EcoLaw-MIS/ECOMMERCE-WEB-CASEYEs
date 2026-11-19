@@ -1,4 +1,5 @@
 import type { DeviceBrand, DeviceOption, StylePreset } from './models/onboarding.model';
+import { DEVICES, availableSkus, type PhoneModel } from '../../../shared/devices/devices';
 
 export const STYLE_PRESETS = [
   {
@@ -95,29 +96,40 @@ export const STYLE_PRESETS = [
   },
 ] as const satisfies readonly StylePreset[];
 
-export const DEVICE_CATALOG: Record<DeviceBrand, readonly DeviceOption[]> = {
-  apple: [
-    { id: 'iphone-16-pro-max', name: 'iPhone 16 Pro Max', spec: 'Màn hình 6.9"', sub: 'Viền siêu mỏng' },
-    { id: 'iphone-16-pro', name: 'iPhone 16 Pro', spec: 'Màn hình 6.3"', sub: 'Vừa tay hoàn hảo' },
-    { id: 'iphone-15-pro-max', name: 'iPhone 15 Pro Max', spec: 'Màn hình 6.7"', sub: 'Phổ biến nhất ★' },
-    { id: 'iphone-15-pro', name: 'iPhone 15 Pro', spec: 'Màn hình 6.1"', sub: 'Gọn gàng' },
-    { id: 'iphone-15-plus', name: 'iPhone 15 Plus', spec: 'Màn hình 6.7"', sub: 'Camera kép' },
-    { id: 'iphone-14-series', name: 'iPhone 14 Series', spec: 'Tương thích 4 mẫu', sub: 'Khớp 100%' },
-  ],
-  samsung: [
-    { id: 'galaxy-s24-ultra', name: 'Galaxy S24 Ultra', spec: 'Khung Titan phẳng', sub: 'Bút S-Pen' },
-    { id: 'galaxy-s24-plus', name: 'Galaxy S24 Plus', spec: 'Màn hình 6.7"', sub: 'Pin lớn' },
-    { id: 'galaxy-s24', name: 'Galaxy S24', spec: 'Màn hình 6.2"', sub: 'Nhỏ gọn' },
-    { id: 'galaxy-z-flip-5-6', name: 'Galaxy Z Flip 5/6', spec: 'Ốp gập 2 mảnh', sub: 'Thời trang' },
-    { id: 'galaxy-s23-ultra', name: 'Galaxy S23 Ultra', spec: 'Cụm 4 ống kính', sub: 'Bán chạy' },
-    { id: 'galaxy-a55-5g', name: 'Galaxy A55 5G', spec: 'Viền kim loại', sub: 'Phổ thông' },
-  ],
-  xiaomi: [
-    { id: 'xiaomi-14-ultra', name: 'Xiaomi 14 Ultra', spec: 'Ống kính Leica tròn', sub: 'Chuyên nhiếp ảnh' },
-    { id: 'xiaomi-14-pro', name: 'Xiaomi 14 Pro', spec: 'Viền titan cao cấp', sub: 'Màn 2K' },
-    { id: 'xiaomi-14', name: 'Xiaomi 14', spec: 'Kích thước 6.36"', sub: 'Vừa vặn' },
-    { id: 'redmi-note-13-pro-plus', name: 'Redmi Note 13 Pro+', spec: 'Màn hình cong', sub: 'Kháng nước' },
-    { id: 'xiaomi-13t-pro', name: 'Xiaomi 13T Pro', spec: 'Cụm camera vuông', sub: 'Hiệu năng' },
-    { id: 'poco-f6-pro', name: 'POCO F6 Pro', spec: 'Mặt lưng carbon', sub: 'Gaming' },
-  ],
+const BRAND_KEYS: Readonly<Record<string, DeviceBrand>> = {
+  'brand-apple': 'apple',
+  'brand-samsung': 'samsung',
+  'brand-xiaomi': 'xiaomi',
 };
+
+/** "Màn hình 6.7" Super Retina XDR" → "Màn hình 6.7"". */
+const screenSpec = (model: PhoneModel): string =>
+  model.specs?.find((s) => s.startsWith('Màn hình'))?.match(/^Màn hình [\d.,]+"/)?.[0] ?? model.brandName;
+
+function toDeviceOption(model: PhoneModel): DeviceOption {
+  const colours = new Set(availableSkus(model).map((s) => s.colorName)).size;
+  return {
+    id: model.id,
+    name: model.name,
+    spec: screenSpec(model),
+    sub: model.has3dModel ? `${colours} màu ốp · xem 3D` : `${colours} màu ốp`,
+  };
+}
+
+/**
+ * Phone models offered in onboarding: exactly the devices the Shop and Design Studio sell
+ * (PHONE_MODELS_DATA = supabase/seed/catalog.json = active rows of `phone_models`), grouped by brand.
+ */
+export const DEVICE_CATALOG: Readonly<Record<DeviceBrand, readonly DeviceOption[]>> = {
+  apple: DEVICES.filter((m) => BRAND_KEYS[m.brandId] === 'apple').map(toDeviceOption),
+  samsung: DEVICES.filter((m) => BRAND_KEYS[m.brandId] === 'samsung').map(toDeviceOption),
+  xiaomi: DEVICES.filter((m) => BRAND_KEYS[m.brandId] === 'xiaomi').map(toDeviceOption),
+};
+
+/** Every device in DEVICE_CATALOG, in catalog order. */
+export const ALL_DEVICE_OPTIONS: readonly DeviceOption[] = Object.values(DEVICE_CATALOG).flat();
+
+/** Profiles store the device name (`profiles.device_type`); older rows may hold an id. */
+export function findDeviceOption(value: string | null | undefined): DeviceOption | undefined {
+  return value ? ALL_DEVICE_OPTIONS.find((d) => d.id === value || d.name === value) : undefined;
+}

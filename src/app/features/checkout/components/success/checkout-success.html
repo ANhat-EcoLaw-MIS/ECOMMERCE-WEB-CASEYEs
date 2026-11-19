@@ -63,6 +63,10 @@
       </a>
     } @else if (checkoutService.placeOrderError(); as err) {
       <p role="alert" style="margin-top: 1rem; color: #b91c1c">Chưa tạo được đơn: {{ err }}</p>
+      <button type="button" class="btn-cta" style="margin-top: 0.5rem; display: inline-flex" (click)="retryPlaceOrder.emit()">
+        <span class="material-symbols-outlined">refresh</span>
+        Thử lại tạo đơn
+      </button>
     }
   </section>
 

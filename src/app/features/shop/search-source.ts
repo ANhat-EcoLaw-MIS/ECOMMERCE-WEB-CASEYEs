@@ -5,7 +5,8 @@ import { DEFAULT_DEVICE, DEVICES } from '../../shared/devices/devices';
 import { ACCESSORIES, DESIGNS, fromPrice, productImage } from './catalog';
 
 const BOOST: Record<string, number> = { 'BEST SELLER': 2, HOT: 2, 'NEW DROP': 1, LIMITED: 1 };
-const DEVICE_NAMES = DEVICES.map((m) => m.name).join(' ');
+/** Every design prints on every studio phone; accessories (MagSafe, straps, charms) fit them all too. */
+const DEVICE_IDS = DEVICES.map((m) => m.id);
 
 /** Mua sắm → Tìm kiếm: ready-made cases and accessories. */
 @Injectable({ providedIn: 'root' })
@@ -18,7 +19,10 @@ export class ShopSearchSource implements SearchSource {
         type: 'product',
         title: d.name,
         subtitle: d.collection,
-        text: `${d.tags.join(' ')} ${d.description} ${d.finish} ${d.caption} ${DEVICE_NAMES}`,
+        // FR-SRCH-EX-12: phone names stay out of the text (they matched every product);
+        // the phone is a filter via `devices` (FR-SRCH-05).
+        text: `${d.tags.join(' ')} ${d.description} ${d.finish} ${d.caption}`,
+        devices: DEVICE_IDS,
         style: d.style,
         image: productImage(d.id),
         link: `/shop/${d.id}`,
@@ -36,8 +40,9 @@ export class ShopSearchSource implements SearchSource {
         subtitle: `Phụ kiện · ${a.category}`,
         text: `phụ kiện ${a.category} ${a.description}`,
         image: a.image,
-        link: '/shop',
+        link: `/shop/phu-kien/${a.id}`,
         price: a.price,
+        devices: DEVICE_IDS,
         outOfStock: a.stock <= 0,
       }),
     ),

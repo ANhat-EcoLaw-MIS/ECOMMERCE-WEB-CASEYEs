@@ -5,6 +5,15 @@ import { ProfileRepository } from './profile.repository';
 import { SupabaseAuthService } from '../../../core/supabase/supabase-auth.service';
 import type { ProfileFormValue } from '../models/account.model';
 
+/** Database rule violations of `profiles`, in the words the customer sees. */
+export function profileErrorMessage(message: string): string {
+  if (message.includes('profiles_phone_key')) return 'Số điện thoại này đã được dùng cho một tài khoản khác.';
+  if (message.includes('profiles_phone_check')) return 'Số điện thoại không hợp lệ (ví dụ: 0912345678).';
+  if (message.includes('birth_date_too_young')) return 'Bạn cần đủ 13 tuổi để sử dụng tài khoản.';
+  if (message.includes('profiles_gender_check')) return 'Giới tính không hợp lệ.';
+  return message;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AccountState {
   private readonly profileRepository = inject(ProfileRepository);
@@ -67,9 +76,13 @@ export class AccountState {
       if (values.fullName.trim()) {
         updates.display_name = values.fullName.trim();
       }
+      // Stored without spaces (DB check: 0[35789]xxxxxxxx); empty means "not given".
+      if (values.phone !== undefined) updates.phone = values.phone.replace(/\s+/g, '') || null;
+      if (values.birthDate !== undefined) updates.birth_date = values.birthDate || null;
+      if (values.gender !== undefined) updates.gender = values.gender || null;
       const result = await this.profileRepository.update(currentProfile.id, updates);
       if (result.error) {
-        this._error.set(result.error.message);
+        this._error.set(profileErrorMessage(result.error.message));
         return false;
       }
       this._profile.set(result.data);
@@ -80,6 +93,22 @@ export class AccountState {
     } finally {
       this._saving.set(false);
     }
+  }
+
+  /** Account deletion request (30-day grace period, Spec FR-PM-23); null cancels it. */
+  async setDeletionRequested(requested: boolean): Promise<boolean> {
+    const currentProfile = this._profile();
+    if (!currentProfile) return false;
+    this._error.set(null);
+    const result = await this.profileRepository.update(currentProfile.id, {
+      deletion_requested_at: requested ? new Date().toISOString() : null,
+    });
+    if (result.error) {
+      this._error.set(result.error.message);
+      return false;
+    }
+    this._profile.set(result.data);
+    return true;
   }
 
   async updatePassword(password: string): Promise<boolean> {

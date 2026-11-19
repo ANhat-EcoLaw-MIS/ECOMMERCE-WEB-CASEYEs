@@ -44,12 +44,14 @@ export class Account implements OnInit {
   });
   protected readonly designCount = computed(() => this.studioState.savedDesigns().length);
   // Integration: real orders from Quản lý đơn hàng; `?tab=orders` opens the orders tab.
-  protected readonly orderCount = computed(() => this.orderFeed.orders().length);
   private readonly orderFeed = inject(CustomerOrderFeed);
+  protected readonly orderCount = computed(() => this.orderFeed.orders().length);
+  protected readonly loyaltyPoints = this.orderFeed.loyaltyPoints;
   readonly tab = input<string>();
   protected readonly onboardingBannerVisible = signal(false);
   protected readonly onboardingVisible = signal(false);
-  protected readonly deletionPending = signal(false);
+  /** Stored on the profile (deletion_requested_at), so it survives a reload. */
+  protected readonly deletionPending = computed(() => !!this.accountState.profile()?.deletion_requested_at);
 
   ngOnInit(): void {
     void this.accountState.load().then(() => {
@@ -80,8 +82,16 @@ export class Account implements OnInit {
     );
   }
 
-  protected cancelDeletion(): void {
-    this.deletionPending.set(false);
-    this.toast.show('Đã khôi phục tài khoản thành công! Lệnh xóa đã bị hủy bỏ.', 'success');
+  protected async requestDeletion(): Promise<void> {
+    const saved = await this.accountState.setDeletionRequested(true);
+    if (!saved) this.toast.show(this.accountState.error() ?? 'Không thể gửi yêu cầu xóa tài khoản.', 'info');
+  }
+
+  protected async cancelDeletion(): Promise<void> {
+    const saved = await this.accountState.setDeletionRequested(false);
+    this.toast.show(
+      saved ? 'Đã khôi phục tài khoản thành công! Lệnh xóa đã bị hủy bỏ.' : this.accountState.error() ?? 'Không thể hủy lệnh xóa.',
+      saved ? 'success' : 'info',
+    );
   }
 }

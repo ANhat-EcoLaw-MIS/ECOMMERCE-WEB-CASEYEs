@@ -131,6 +131,10 @@ export type ShippingStatus = 'pending' | 'preparing' | 'shipping' | 'delivered';
  */
 export interface CheckoutOrder {
   id: string;
+  /** Idempotency key for place_order (one order per checkout session). */
+  checkoutRef?: string;
+  /** Real code (CC-…) once Quản lý đơn hàng created the order for this session. */
+  placedOrderCode?: string;
   orderCode: string;
   transactionId: string;
   createdAt: string;

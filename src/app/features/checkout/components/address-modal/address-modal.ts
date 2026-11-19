@@ -2,6 +2,7 @@ import { Component, computed, inject, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckoutService } from '../../services/checkout.service';
+import { CheckoutAddressBook } from '../../services/checkout-address';
 
 interface AddressValidationErrors {
   fullName?: string;
@@ -351,7 +352,7 @@ export const VIETNAM_LOCATIONS: Record<string, string[]> = {
 
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="onClose()">Hủy</button>
-          <button type="button" class="btn-cta btn-cta--sm" (click)="saveAddress()">
+          <button type="button" class="btn-cta btn-cta--sm" [disabled]="saving()" (click)="saveAddress()">
             <span class="material-symbols-outlined">save</span>
             <span>Lưu & Xác nhận địa chỉ</span>
           </button>
@@ -891,12 +892,12 @@ export class AddressModal {
 
   readonly editName = signal(this.checkoutService.address().fullName);
   readonly editPhone = signal(this.checkoutService.address().phone);
-  readonly editCity = signal(this.checkoutService.address().city ?? 'TP. Hồ Chí Minh');
-  readonly editDistrict = signal(this.checkoutService.address().district ?? 'Quận 1');
-  readonly editWard = signal(this.checkoutService.address().ward ?? 'Phường Bến Nghé');
-  readonly editStreet = signal(
-    this.checkoutService.address().detailAddress ?? 'Căn hộ 12.04 Tháp B, Saigon Riverside Complex'
-  );
+  readonly editCity = signal(this.checkoutService.address().city || 'TP. Hồ Chí Minh');
+  readonly editDistrict = signal(this.checkoutService.address().district || 'Quận 1');
+  readonly editWard = signal(this.checkoutService.address().ward ?? '');
+  readonly editStreet = signal(this.checkoutService.address().detailAddress ?? '');
+  private readonly addressBook = inject(CheckoutAddressBook);
+  readonly saving = signal(false);
   readonly isMapConfirmed = signal(true);
   readonly addressErrors = signal<AddressValidationErrors>({});
 
@@ -941,7 +942,8 @@ export class AddressModal {
     this.close.emit();
   }
 
-  saveAddress(): void {
+  async saveAddress(): Promise<void> {
+    if (this.saving()) return;
     const name = this.editName().trim();
     const phone = this.editPhone().trim();
     const city = this.editCity().trim();
@@ -975,8 +977,8 @@ export class AddressModal {
     }
 
     const fullStreetAddress = `${street}, ${ward}, ${district}, ${city}`;
-
-    this.checkoutService.updateAddress({
+    const edited = {
+      ...this.checkoutService.address(),
       fullName: name,
       phone,
       city,
@@ -985,10 +987,20 @@ export class AddressModal {
       detailAddress: street,
       streetAddress: fullStreetAddress,
       isVerified: this.isMapConfirmed(),
-    });
+    };
+
+    // Saved in the customer's address book (table `addresses`), the same list as Tài khoản › Địa chỉ.
+    this.saving.set(true);
+    const result = await this.addressBook.save(edited);
+    this.saving.set(false);
+    if (result.error) {
+      this.addressErrors.set({ streetAddress: `Chưa lưu được địa chỉ: ${result.error.message}` });
+      return;
+    }
+    this.checkoutService.updateAddress({ ...result.data, isVerified: this.isMapConfirmed() });
 
     this.addressErrors.set({});
-    this.addressSaved.emit('Đã cập nhật & xác nhận địa chỉ trên bản đồ thành công!');
+    this.addressSaved.emit('Đã lưu địa chỉ vào sổ địa chỉ của bạn!');
     this.onClose();
   }
 }

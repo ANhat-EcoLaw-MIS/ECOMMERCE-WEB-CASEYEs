@@ -55,23 +55,37 @@ export const CONCEPTS: readonly Concept[] = [
   { id: 'magsafe', group: 'material', label: 'MagSafe', words: ['magsafe', 'sạc không dây', 'nam châm'] },
 ];
 
-/** Phone model aliases → catalog model name (used to read "ốp mèo ip15"). */
-export const DEVICE_ALIASES: readonly { name: string; aliases: readonly string[] }[] = [
-  { name: 'iPhone 16 Pro Max', aliases: ['iphone 16 pro max', 'ip16 pro max', 'ip 16 pro max', 'ip16pm', '16 pro max', '16pm'] },
-  { name: 'iPhone 16 Pro', aliases: ['iphone 16 pro', 'ip16 pro', 'ip 16 pro', 'ip16p', '16 pro'] },
-  { name: 'iPhone 16', aliases: ['iphone 16', 'ip16', 'ip 16'] },
-  { name: 'iPhone 15 Pro Max', aliases: ['iphone 15 pro max', 'ip15 pro max', 'ip 15 pro max', 'ip15pm', '15 pro max', '15pm'] },
-  { name: 'iPhone 15 Pro', aliases: ['iphone 15 pro', 'ip15 pro', 'ip 15 pro', 'ip15p', '15 pro'] },
-  { name: 'iPhone 15', aliases: ['iphone 15', 'ip15', 'ip 15'] },
-  { name: 'iPhone 14', aliases: ['iphone 14', 'ip14', 'ip 14'] },
-  { name: 'Galaxy S24 Ultra', aliases: ['galaxy s24 ultra', 'samsung s24 ultra', 's24 ultra', 's24u'] },
-  { name: 'Galaxy S24', aliases: ['galaxy s24', 'samsung s24', 's24'] },
-  { name: 'Galaxy S23', aliases: ['galaxy s23', 'samsung s23', 's23'] },
-  { name: 'Xiaomi 14 Ultra', aliases: ['xiaomi 14 ultra', 'mi 14 ultra', 'xiaomi 14'] },
+/**
+ * Phone model aliases → catalog slug + name (used to read "ốp mèo ip15").
+ * Phones we do not sell are listed too, only so a query like "ip16 pro max" is recognised as that
+ * phone (and not misread as the shorter "16 pro"). Whether a phone is sold comes from the catalog
+ * (DEVICES = Shop / Design Studio / active `phone_models`), never from this list.
+ */
+export const DEVICE_ALIASES: readonly { slug: string; name: string; aliases: readonly string[] }[] = [
+  { slug: 'iphone-16-pro-max', name: 'iPhone 16 Pro Max', aliases: ['iphone 16 pro max', 'ip16 pro max', 'ip 16 pro max', 'ip16pm', '16 pro max', '16pm'] },
+  { slug: 'iphone-16-pro', name: 'iPhone 16 Pro', aliases: ['iphone 16 pro', 'ip16 pro', 'ip 16 pro', 'ip16p', '16 pro'] },
+  { slug: 'iphone-16', name: 'iPhone 16', aliases: ['iphone 16', 'ip16', 'ip 16'] },
+  { slug: 'iphone-15-pro-max', name: 'iPhone 15 Pro Max', aliases: ['iphone 15 pro max', 'ip15 pro max', 'ip 15 pro max', 'ip15pm', '15 pro max', '15pm'] },
+  { slug: 'iphone-15-pro', name: 'iPhone 15 Pro', aliases: ['iphone 15 pro', 'ip15 pro', 'ip 15 pro', 'ip15p', '15 pro'] },
+  { slug: 'iphone-15', name: 'iPhone 15', aliases: ['iphone 15', 'ip15', 'ip 15'] },
+  { slug: 'iphone-14', name: 'iPhone 14', aliases: ['iphone 14', 'ip14', 'ip 14'] },
+  { slug: 'galaxy-s24-ultra', name: 'Galaxy S24 Ultra', aliases: ['galaxy s24 ultra', 'samsung s24 ultra', 's24 ultra', 's24u'] },
+  { slug: 'galaxy-s24', name: 'Galaxy S24', aliases: ['galaxy s24', 'samsung s24', 's24'] },
+  { slug: 'galaxy-s23', name: 'Galaxy S23', aliases: ['galaxy s23', 'samsung s23', 's23'] },
+  { slug: 'xiaomi-14-ultra', name: 'Xiaomi 14 Ultra', aliases: ['xiaomi 14 ultra', 'mi 14 ultra', 'xiaomi 14'] },
 ];
 
-const NORMALIZED = CONCEPTS.map((c) => ({ concept: c, words: c.words.map(normalizeVi) }));
-const NORMALIZED_DEVICES = DEVICE_ALIASES.map((d) => ({ name: d.name, aliases: d.aliases.map(normalizeVi).sort((a, b) => b.length - a.length) }));
+const NORMALIZED = CONCEPTS.map((c) => ({ concept: c, words: c.words.map(normalizeVi), original: c.words.map(lowerWords) }));
+
+/** Vietnamese diacritics (and đ). */
+const VI_MARKS = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+
+/** Lower-cased, NFC, punctuation → spaces, single-spaced (keeps accents). */
+function lowerWords(s: string): string {
+  return s.normalize('NFC').toLocaleLowerCase('vi').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+const rawWords = lowerWords;
+const NORMALIZED_DEVICES = DEVICE_ALIASES.map((d) => ({ slug: d.slug, name: d.name, aliases: d.aliases.map(normalizeVi).sort((a, b) => b.length - a.length) }));
 
 /** Whole-word phrase test on normalized text. */
 function hasPhrase(text: string, phrase: string): boolean {
@@ -81,7 +95,17 @@ function hasPhrase(text: string, phrase: string): boolean {
 /** Concepts mentioned in a text (name, tags, description or a customer's request). */
 export function conceptsIn(text: string): Concept[] {
   const t = normalizeVi(text);
-  const found = NORMALIZED.filter((c) => c.words.some((w) => hasPhrase(t, w))).map((c) => c.concept);
+  // Typing with Vietnamese accents: an accented lexicon word must match with its accents, otherwise
+  // everyday words collide once accents are stripped ("đó" → "đỏ" red, "cho" → "chó" dog, "may" → "mây").
+  // Text typed without accents still matches loosely ("meo", "mau do"), as FR-SRCH-04 requires.
+  const accented = VI_MARKS.test(text);
+  const raw = accented ? rawWords(text) : '';
+  const found = NORMALIZED.filter((c) =>
+    c.words.some((w, i) => {
+      const original = c.original[i];
+      return accented && original !== w ? hasPhrase(raw, original) : hasPhrase(t, w);
+    }),
+  ).map((c) => c.concept);
   // "xanh" alone may be green or blue; "xanh dương" / "xanh lá" picks one.
   const blue = /\bxanh (duong|bien)\b/.test(t), green = /\bxanh la\b/.test(t);
   return found.filter((c) => !(c.id === 'xanh-la' && blue && !green) && !(c.id === 'xanh-duong' && green && !blue));
@@ -91,15 +115,15 @@ export function conceptsIn(text: string): Concept[] {
  * Phone model mentioned in a query, and the query without it ("ốp mèo ip15" → iPhone 15, "ốp mèo").
  * Longest alias wins so "15 pro max" is not read as "15 pro".
  */
-export function deviceIn(text: string): { name: string; rest: string } | null {
+export function deviceIn(text: string): { slug: string; name: string; rest: string } | null {
   const t = normalizeVi(text);
-  let best: { name: string; alias: string } | null = null;
+  let best: { slug: string; name: string; alias: string } | null = null;
   for (const d of NORMALIZED_DEVICES) {
     const alias = d.aliases.find((a) => hasPhrase(t, a));
-    if (alias && (!best || alias.length > best.alias.length)) best = { name: d.name, alias };
+    if (alias && (!best || alias.length > best.alias.length)) best = { slug: d.slug, name: d.name, alias };
   }
   if (!best) return null;
-  return { name: best.name, rest: (' ' + t + ' ').replace(' ' + best.alias + ' ', ' ').trim() };
+  return { slug: best.slug, name: best.name, rest: (' ' + t + ' ').replace(' ' + best.alias + ' ', ' ').trim() };
 }
 
 /** Order code typed or pasted in the search box, e.g. "cc-261115-0001". */

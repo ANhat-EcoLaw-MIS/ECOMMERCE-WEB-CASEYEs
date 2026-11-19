@@ -29,6 +29,11 @@ export interface ProfileFormValue {
   fullName: string;
   deviceType: string;
   stylePreferences: string[];
+  /** Only the profile form sends these; onboarding leaves them unchanged. */
+  phone?: string;
+  /** yyyy-MM-dd */
+  birthDate?: string;
+  gender?: string;
 }
 
 export interface ProfileSetupPreferences {

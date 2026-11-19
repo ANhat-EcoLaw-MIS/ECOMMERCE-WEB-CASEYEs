@@ -19,6 +19,7 @@ import {
   VietQrConfig,
   Voucher,
 } from '../models/checkout.model';
+import { blankAddress } from './checkout-address';
 
 /**
  * Utility: Tính ngày giao hàng dự kiến động theo lịch thực tế (Tiếng Việt)
@@ -42,6 +43,12 @@ export function calculateDeliveryRange(startOffsetDays = 2, endOffsetDays = 4): 
   return `Dự kiến: ${startDay}, ${startDate} - ${endDay}, ${endDate}`;
 }
 
+/** Id of one checkout session; sent to place_order as checkout_ref so retries never duplicate the order. */
+export function newCheckoutRef(): string {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  return `ck-${uuid ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`}`;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -49,22 +56,15 @@ export class CheckoutService {
   private readonly STORAGE_KEY = 'caseeye_active_checkout_order';
 
   // --- Shipping Address State (Single Source of Truth) ---
-  readonly address = signal<ShippingAddress>({
-    fullName: 'Nguyễn Minh Anh',
-    phone: '0912345678',
-    streetAddress: 'Căn hộ 12.04 Tháp B, Saigon Riverside Complex, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
-    detailAddress: 'Căn hộ 12.04 Tháp B, Saigon Riverside Complex',
-    ward: 'Phường Bến Nghé',
-    district: 'Quận 1',
-    city: 'TP. Hồ Chí Minh',
-    isDefault: true,
-    isVerified: true,
+  // Filled from the customer's address book (table `addresses`) by CheckoutAddressBook; empty until then.
+  readonly address = signal<ShippingAddress>(blankAddress());
+  readonly hasAddress = computed(() => {
+    const a = this.address();
+    return !!a.fullName.trim() && !!a.phone.trim() && !!a.streetAddress.trim();
   });
 
   // --- Shipper Note ---
-  readonly shipperNote = signal<string>(
-    'Gọi trước 15 phút khi giao. Gửi sảnh lễ tân nếu không có nhà.'
-  );
+  readonly shipperNote = signal<string>('');
 
   // --- Dynamic Delivery Dates ---
   readonly estimatedDeliveryText = signal<string>(calculateDeliveryRange(2, 4));
@@ -98,11 +98,12 @@ export class CheckoutService {
 
   // --- Gift Package & Card Add-on ---
   readonly giftOption = signal<GiftPackageOption>({
-    enabled: true,
+    // Opt-in: it adds a paid line (gift-hologram, 25.000 ₫) to the real order.
+    enabled: false,
     price: 25000,
     title: 'Gói quà Hologram & Thiệp viết tay xinh xắn',
     description: 'Hộp quà ánh kim xà cừ 7 màu, ruy băng dạ quang tím pastel kèm thiệp thư do CaseEYE nắn nót viết tay.',
-    message: 'Chúc em bé tuổi mới luôn rực rỡ, xinh đẹp và nhiều may mắn nhe! From Minh Anh with love ❤️',
+    message: '',
     maxChars: 150,
   });
 
@@ -374,6 +375,29 @@ export class CheckoutService {
   readonly placedOrderCode = signal<string | null>(null);
   readonly placeOrderError = signal<string | null>(null);
 
+  /** The order of this checkout session exists in Quản lý đơn hàng: remember its code on the session. */
+  markPlaced(orderCode: string): void {
+    this.placedOrderCode.set(orderCode);
+    this.placeOrderError.set(null);
+    const order = this.activeOrder();
+    if (order) this.saveOrder({ ...order, placedOrderCode: orderCode });
+  }
+
+  /**
+   * Starts a fresh checkout session (Spec B6): a new checkout_ref and no code left over from the
+   * previous order, so the next order is really created.
+   */
+  startNewSession(): void {
+    this.activeOrder.set(null);
+    this.placedOrderCode.set(null);
+    this.placeOrderError.set(null);
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) window.sessionStorage.removeItem(this.STORAGE_KEY);
+    } catch {
+      // Storage disabled: the in-memory session is enough.
+    }
+  }
+
   private applyCartRules(): void {
     const stockOnly = this.stockOnly();
     this.shippingMethods.update((list) =>
@@ -427,6 +451,9 @@ export class CheckoutService {
 
   updateAddress(newAddress: Partial<ShippingAddress>): void {
     this.address.update((prev) => ({ ...prev, ...newAddress }));
+    // Keep the open checkout session on the same address.
+    const order = this.activeOrder();
+    if (order) this.saveOrder({ ...order, address: this.address() });
   }
 
   /**
@@ -438,6 +465,8 @@ export class CheckoutService {
       // Cập nhật lại các thông số mới nhất nếu người dùng thay đổi trước khi chốt
       const updated: CheckoutOrder = {
         ...existing,
+        // Sessions saved before checkout_ref existed get one now.
+        checkoutRef: existing.checkoutRef ?? newCheckoutRef(),
         items: this.items(),
         address: this.address(),
         shippingMethod: this.selectedShippingMethod(),
@@ -502,8 +531,10 @@ export class CheckoutService {
       },
     ];
 
+    const checkoutRef = newCheckoutRef();
     const order: CheckoutOrder = {
-      id: 'mock-order-001',
+      id: checkoutRef,
+      checkoutRef,
       orderCode,
       transactionId,
       createdAt: new Date().toISOString(),

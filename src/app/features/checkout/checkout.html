@@ -28,6 +28,7 @@
       @case ('success') {
         <app-checkout-success
           (newOrder)="onNewOrder()"
+          (retryPlaceOrder)="retryPlaceOrder()"
           (copyNotification)="showToast($event)"
         />
       }

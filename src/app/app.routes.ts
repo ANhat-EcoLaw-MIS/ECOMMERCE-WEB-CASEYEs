@@ -66,6 +66,8 @@ export const routes: Routes = [
       {
         path: 'checkout',
         title: "Thanh toán | CasEYE's",
+        // Spec B7: guests cannot create orders (they would land in the local mock store).
+        canActivate: [authGuard],
         loadChildren: () =>
           import('./features/checkout/checkout.routes').then((m) => m.CHECKOUT_ROUTES),
       },

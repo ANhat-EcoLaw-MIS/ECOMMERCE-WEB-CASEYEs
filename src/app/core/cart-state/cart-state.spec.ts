@@ -71,6 +71,15 @@ describe('CartState (per account)', () => {
     expect(cart.itemCount()).toBe(0);
   });
 
+  it('treats accessories saved as custom by older carts as stock items (Spec B4)', () => {
+    localStorage.setItem('caseye_cart_v2:alice', JSON.stringify([{ ...item('accessory-ring-holder'), custom: true }, { ...item('design:sku-a:1'), custom: true }]));
+    signIn('alice');
+    expect(cart.items().map((i) => [i.id, i.custom])).toEqual([
+      ['accessory-ring-holder', false],
+      ['design:sku-a:1', true],
+    ]);
+  });
+
   it('restores a removed line at its old position (undo)', () => {
     signIn('alice');
     cart.add(item('a'));

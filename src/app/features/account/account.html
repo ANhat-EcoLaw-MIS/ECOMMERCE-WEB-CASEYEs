@@ -16,7 +16,7 @@
         <span aria-hidden="true" class="flex size-9 items-center justify-center rounded-full bg-brand-200/50 text-brand-800">★</span>
         <div>
           <p class="text-xs font-medium text-ink-soft">Điểm CasEYE Club</p>
-          <p class="text-sm font-bold text-brand-800">350 Points</p>
+          <p class="text-sm font-bold text-brand-800">{{ loyaltyPoints() }} Points</p>
         </div>
       </div>
     </div>
@@ -134,7 +134,7 @@
           @case ('profile') { <app-profile-tab /> }
           @case ('designs') { <app-designs-tab /> }
           @case ('orders') { <app-orders-tab /> }
-          @case ('security') { <app-security-tab (deletionRequested)="deletionPending.set(true)" /> }
+          @case ('security') { <app-security-tab (deletionRequested)="requestDeletion()" /> }
           @case ('signout') { <app-signout-tab (cancelled)="activeTab.set('profile')" /> }
         }
       </section>

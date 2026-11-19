@@ -13,6 +13,8 @@ interface Prepared {
   readonly sub: string;
   readonly body: string;
   readonly allTokens: readonly string[];
+  /** Title + subtitle/style tokens: the only place a typo may match. */
+  readonly headTokens: readonly string[];
   /** Concepts from words + main colors of the picture (used by suggestions and photo search). */
   readonly concepts: ReadonlySet<string>;
   /** Concepts from words only (keyword search stays precise). */
@@ -35,6 +37,7 @@ function prepare(doc: SearchDoc): Prepared {
       sub,
       body,
       allTokens: `${title} ${sub} ${body}`.split(' ').filter(Boolean),
+      headTokens: `${title} ${sub}`.split(' ').filter(Boolean),
       textConcepts: new Set(words),
       // plus the 2 main color names seen in the picture (same names a photo gets)
       concepts: new Set([...words, ...paletteNames(doc.palette ?? []).slice(0, 2)]),
@@ -54,8 +57,9 @@ function wordScore(p: Prepared, word: string): number {
   if (inField(p.title)) return 5; // prefix of a title word
   if (inField(p.sub)) return 3;
   if (inField(p.body)) return 2;
-  // one typo on longer words
-  if (word.length >= 4 && p.allTokens.some((t) => t.length >= 4 && editDistance(t, word, 1) <= 1)) return 1.5;
+  // One typo on longer words (FR-SRCH-04), only against the title and tags: matching typos inside
+  // long descriptions let everyday words ("nhau" ≈ "nhat") hit almost every product.
+  if (word.length >= 4 && p.headTokens.some((t) => t.length >= 4 && editDistance(t, word, 1) <= 1)) return 1.5;
   return 0;
 }
 

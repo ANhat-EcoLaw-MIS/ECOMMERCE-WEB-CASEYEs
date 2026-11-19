@@ -83,6 +83,11 @@ export class CheckoutForm {
   }
 
   onSubmitOrder(): void {
+    // No saved recipient yet: ask for one instead of placing an order without an address.
+    if (!this.checkoutService.hasAddress()) {
+      this.openAddressModal.emit();
+      return;
+    }
     if (!this.checkoutService.designConfirmed()) {
       this.showTermsError.set(true);
       return;

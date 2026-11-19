@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { CatalogAccessory } from '../../catalog';
 import { ShopCart } from '../../services/shop-cart';
 import { onPhotoError, vnd } from '../../format';
@@ -6,11 +7,12 @@ import { onPhotoError, vnd } from '../../format';
 /** Accessory product card (from /products/Accessories). */
 @Component({
   selector: 'app-accessory-card',
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
     <article class="group flex h-full flex-col gap-3 rounded-card p-2 transition-colors duration-200 hover:bg-white">
-      <div class="relative aspect-[3/4] overflow-hidden rounded-card bg-white">
+      <a [routerLink]="['/shop/phu-kien', item().id]" [attr.aria-label]="'Xem ' + item().name" class="relative block aspect-[3/4] overflow-hidden rounded-card bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">
         <img
           [src]="item().image"
           [alt]="item().name"
@@ -25,10 +27,10 @@ import { onPhotoError, vnd } from '../../format';
         @if (!item().stock) {
           <span class="absolute inset-x-3 bottom-3 rounded-pill bg-ink/80 py-1.5 text-center text-xs font-semibold text-white">Tạm hết hàng</span>
         }
-      </div>
+      </a>
       <div class="flex flex-1 flex-col px-1 pb-1">
         <p class="text-[11px] font-semibold uppercase tracking-wider text-brand-600">{{ item().category }}</p>
-        <h3 class="mt-0.5 line-clamp-1 text-sm font-semibold text-ink">{{ item().name }}</h3>
+        <h3 class="mt-0.5 line-clamp-1 text-sm font-semibold text-ink"><a [routerLink]="['/shop/phu-kien', item().id]" class="hover:text-brand-800 hover:underline">{{ item().name }}</a></h3>
         <p class="mt-1 line-clamp-2 text-xs text-ink-soft">{{ item().description }}</p>
         <div class="mt-auto flex items-center justify-between gap-2 pt-3">
           <span class="text-sm font-bold text-ink">{{ vnd(item().price) }}</span>

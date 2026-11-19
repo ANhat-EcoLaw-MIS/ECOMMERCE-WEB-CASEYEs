@@ -23,11 +23,13 @@ export interface CartItem {
 const STORAGE_KEY = 'caseye_cart_v2';
 const SAVED_KEY = 'caseye_saved_v2';
 const keyFor = (base: string, owner: string | null) => (owner ? `${base}:${owner}` : base);
+/** Accessories are stock items (Spec B4); carts saved before the fix stored them as custom. */
+const isAccessoryLine = (id: string) => id.startsWith('accessory-');
 function restore(key: string): CartItem[] {
   try {
     if (typeof localStorage === 'undefined') return [];
     const value = JSON.parse(localStorage.getItem(key) ?? '[]');
-    return Array.isArray(value) ? value.filter((item) => typeof item.id === 'string' && Number.isFinite(item.unitPrice) && Number.isFinite(item.quantity)).map((item) => ({ ...item, stock: Number.isFinite(item.stock) ? item.stock : 99, custom: !!item.custom })) : [];
+    return Array.isArray(value) ? value.filter((item) => typeof item.id === 'string' && Number.isFinite(item.unitPrice) && Number.isFinite(item.quantity)).map((item) => ({ ...item, stock: Number.isFinite(item.stock) ? item.stock : 99, custom: !!item.custom && !isAccessoryLine(item.id) })) : [];
   } catch { return []; }
 }
 function persist(key: string, value: readonly CartItem[]): void {

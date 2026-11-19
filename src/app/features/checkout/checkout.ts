@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CheckoutService } from './services/checkout.service';
+import { CheckoutAddressBook } from './services/checkout-address';
 import { PaymentSimulationMode } from './models/checkout.model';
 import { CheckoutStep } from './checkout.types';
 import { CartState } from '../../core/cart-state/cart-state';
@@ -17,6 +18,21 @@ import { CheckoutSuccess } from './components/success/checkout-success';
 import { CheckoutFailed } from './components/failed/checkout-failed';
 import { AddressModal } from './components/address-modal/address-modal';
 import { DevDock } from './components/dev-dock/dev-dock';
+
+/** place_order attempts after a successful payment (1 + 2 retries, FR-P-35). */
+const PLACE_ORDER_ATTEMPTS = 3;
+const PLACE_ORDER_RETRY_MS = 800;
+
+/**
+ * Catalog row behind a cart line, from its id:
+ *   shop case  `artworkSlug:modelSlug:skuId` · accessory `accessory-…` · studio design `design:<skuId|modelId>:<ts>`.
+ */
+export function catalogRefFor(lineId: string | undefined, isCustom: boolean): { productSlug?: string; modelSlug?: string; skuId?: string } | undefined {
+  if (!lineId) return undefined;
+  const [first, second, third] = lineId.split(':');
+  if (isCustom) return first === 'design' && second?.startsWith('sku-') ? { skuId: second } : undefined;
+  return third ? { productSlug: first, modelSlug: second, skuId: third } : { productSlug: first };
+}
 
 @Component({
   selector: 'app-checkout',
@@ -39,6 +55,7 @@ export class Checkout implements OnInit {
   private readonly router = inject(Router);
   private readonly cart = inject(CartState);
   private readonly orderIntake = inject(OrderIntake);
+  private readonly addressBook = inject(CheckoutAddressBook);
   private placedForOrderId: string | null = null;
 
   // --- Step & Simulation State ---
@@ -62,10 +79,21 @@ export class Checkout implements OnInit {
     // checkout data are kept in local/session storage, so nothing is lost either way).
     void this.onboarding.current().then((status) => this.askOnboarding.set(status === 'pending'));
     // 1. Phục hồi đơn hàng từ sessionStorage nếu có (Single Source of Truth)
-    this.checkoutService.restoreFromStorage();
+    const restored = this.checkoutService.restoreFromStorage();
+    if (restored?.placedOrderCode) {
+      // Spec B6: the saved session already became an order. New items in the cart mean a new
+      // checkout (fresh checkout_ref); an empty cart means a reload of the success page.
+      if (this.cart.items().length > 0) this.checkoutService.startNewSession();
+      else this.checkoutService.placedOrderCode.set(restored.placedOrderCode);
+    }
     // Integration: the site cart (Shop + Design Studio) feeds Thanh toán.
     this.checkoutService.loadFromCart(this.cart.items());
     this.checkoutService.getOrCreateOrder();
+    // The recipient comes from the signed-in customer's address book (table `addresses`), never a mock.
+    void this.addressBook.load().then((address) => {
+      if (address) this.checkoutService.updateAddress(address);
+      if (address && !this.checkoutService.hasAddress()) this.showAddressModal.set(true);
+    });
 
     // 2. Đồng bộ trạng thái từ Query Params (?step=form|processing|success|failed)
     this.route.queryParams.subscribe((params) => {
@@ -106,19 +134,36 @@ export class Checkout implements OnInit {
     this.setStep(this.checkoutService.selectedPaymentType() === 'cod' ? 'success' : 'processing');
   }
 
-  /** Integration: hand the paid (or COD) order to Quản lý đơn hàng exactly once. */
+  /**
+   * Integration: hand the paid (or COD) order to Quản lý đơn hàng exactly once.
+   * Spec B8 / FR-P-35: the payment may already be taken, so a failed call is retried (up to 2 more
+   * times) with the same checkout_ref; place_order returns the existing order instead of a duplicate.
+   */
   private async placeOrderOnce(): Promise<void> {
     const order = this.checkoutService.activeOrder();
     if (!order || this.placedForOrderId === order.id || this.checkoutService.placedOrderCode()) return;
     this.placedForOrderId = order.id;
-    const result = await this.orderIntake.placeOrder(this.toHandoff(order));
-    if (result.error) {
-      this.checkoutService.placeOrderError.set(result.error.message);
-      return;
+    const handoff = this.toHandoff(order);
+    let message = '';
+    for (let attempt = 0; attempt < PLACE_ORDER_ATTEMPTS; attempt++) {
+      if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, PLACE_ORDER_RETRY_MS * attempt));
+      const result = await this.orderIntake.placeOrder(handoff);
+      if (!result.error) {
+        this.checkoutService.markPlaced(result.data.orderCode);
+        this.cart.items.set([]);
+        return;
+      }
+      message = result.error.message;
     }
+    // Still failing: show the error with a retry button; the same checkout_ref is reused.
+    this.placedForOrderId = null;
+    this.checkoutService.placeOrderError.set(message);
+  }
+
+  /** "Thử lại" on the success screen when the order could not be created yet. */
+  retryPlaceOrder(): void {
     this.checkoutService.placeOrderError.set(null);
-    this.checkoutService.placedOrderCode.set(result.data.orderCode);
-    this.cart.items.set([]);
+    void this.placeOrderOnce();
   }
 
   private toHandoff(order: CheckoutOrder) {
@@ -143,6 +188,9 @@ export class Checkout implements OnInit {
       paymentChannel: order.paymentMethod,
       paymentTxnRef: order.paymentMethod === 'cod' ? undefined : order.transactionId,
       discount: order.discountAmount,
+      checkoutRef: order.checkoutRef ?? order.id,
+      shipperNote: order.shipperNote || undefined,
+      giftMessage: order.giftPackage.enabled ? order.giftPackage.message || undefined : undefined,
       policyVersion: ORDER_POLICY_VERSION,
       policyAcceptedAt: this.checkoutService.consentAcceptedAt() ?? new Date().toISOString(),
       items: [
@@ -156,6 +204,7 @@ export class Checkout implements OnInit {
             quantity: i.quantity,
             unitPrice: i.price,
             imageUrl: i.imageUrl,
+            catalogRef: catalogRefFor(i.designCode, isCustom),
             design: isCustom ? { previewUrl: i.imageUrl, caption: i.name, hasUploadedImage: i.hasUploadedImage ?? false } : undefined,
           };
         }),
@@ -188,7 +237,7 @@ export class Checkout implements OnInit {
   }
 
   onNewOrder(): void {
-    this.checkoutService.placedOrderCode.set(null);
+    this.checkoutService.startNewSession();
     this.placedForOrderId = null;
     this.checkoutService.createNewOrder();
     this.setStep('form');

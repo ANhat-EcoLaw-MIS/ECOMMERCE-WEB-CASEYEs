@@ -35,7 +35,7 @@ describe('Account', () => {
           },
         },
         { provide: AccountToast, useValue: { show: () => undefined } },
-        { provide: CustomerOrderFeed, useValue: { orders: () => [] } },
+        { provide: CustomerOrderFeed, useValue: { orders: () => [], loyaltyPoints: () => 0 } },
         { provide: StudioState, useValue: { savedDesigns: () => [] } },
         { provide: ProfileRepository, useValue: {} },
       ],

@@ -9,6 +9,7 @@ import { ContentPolicyConsent } from '../models/policy-consent.model';
 import { DesignStatus } from '../models/studio-state.model';
 import { CaseMaterial } from '../models/studio-domain.model';
 import { StudioCatalogService } from './studio-catalog';
+import { SavedDesignSync } from './saved-design-sync';
 import { buildTemplateLayers } from '../constants/template-artworks';
 
 export const UNIFIED_STUDIO_PRICE = 250000;
@@ -67,21 +68,6 @@ export const BG_PRESETS = [
   'linear-gradient(160deg, #b9e4f5 0%, #7fc29b 100%)',
   'linear-gradient(180deg, #141a3d 0%, #5b4b9a 100%)',
 ];
-
-const SAVED_DESIGNS_KEY = 'caseyes_saved_designs_v3';
-
-function loadInitialSavedDesigns(): SavedDesignItem[] {
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const data = localStorage.getItem(SAVED_DESIGNS_KEY);
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {}
-  }
-  return [];
-}
 
 export interface CanvasSnapshot {
   readonly layers: CanvasLayer[];
@@ -168,17 +154,14 @@ export class StudioState {
   // Auto-save & My Designs persistence
   readonly lastSavedTime = signal<string | null>(null);
   readonly isFirstSave = signal<boolean>(true);
-  readonly savedDesigns = signal<SavedDesignItem[]>(loadInitialSavedDesigns());
+  /**
+   * "Thiết kế của tôi". Signed in: the account's rows of the `designs` table (loaded and written by
+   * SavedDesignSync). Signed out: the guest list in this browser.
+   */
+  readonly savedDesigns = signal<SavedDesignItem[]>([]);
 
   constructor() {
-    effect(() => {
-      const items = this.savedDesigns();
-      if (typeof localStorage !== 'undefined') {
-        try {
-          localStorage.setItem(SAVED_DESIGNS_KEY, JSON.stringify(items));
-        } catch {}
-      }
-    });
+    inject(SavedDesignSync).attach(this.savedDesigns);
   }
 
   // Uploaded images gallery

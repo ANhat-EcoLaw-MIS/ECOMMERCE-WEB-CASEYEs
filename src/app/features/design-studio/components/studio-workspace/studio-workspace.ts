@@ -864,7 +864,8 @@ export class StudioWorkspace implements OnInit, OnDestroy {
     const existingIndex = this.state.savedDesigns().findIndex((d) => d.name === currentName);
 
     const newDesign: SavedDesignItem = {
-      id: 'saved_' + Date.now(),
+      // Re-saving keeps the id, so the same row in the `designs` table is updated (not re-created).
+      id: existingIndex >= 0 ? this.state.savedDesigns()[existingIndex].id : 'saved_' + Date.now(),
       name: currentName,
       modelId: model.id,
       modelName: model.name,

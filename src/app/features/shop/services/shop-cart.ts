@@ -51,13 +51,13 @@ export class ShopCart {
     return true;
   }
 
-  addAccessory(item: CatalogAccessory): void {
+  addAccessory(item: CatalogAccessory, quantity = 1): void {
     if (item.stock < 1) {
       this.notifications.show({ variant: 'warning', title: 'Tạm hết hàng', message: `${item.name} hiện đã hết, bạn xem phụ kiện khác nhé.` });
       return;
     }
     if (!this.requireLogin(this.router.url)) return;
-    this.cart.add({ id: item.id, name: item.name, model: 'Phụ kiện', finish: item.category, tone: 'lilac', caption: '', unitPrice: item.price, quantity: 1, stock: item.stock, custom: true, snapshot: item.image });
+    this.cart.add({ id: item.id, name: item.name, model: 'Phụ kiện', finish: item.category, tone: 'lilac', caption: '', unitPrice: item.price, quantity: Math.max(1, Math.min(quantity, item.stock)), stock: item.stock, custom: false, snapshot: item.image });
     this.drawer.show(true);
   }
 

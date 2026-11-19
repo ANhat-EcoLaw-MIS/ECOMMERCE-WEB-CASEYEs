@@ -1,53 +1,39 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import type { ProfileSetupPreferences } from '../../models/account.model';
-import { CaseCard } from '../../onboarding/components/case-card/case-card';
-import { createMarqueeRows, type MarqueeRow } from '../../onboarding/marquee-cases';
+import { ALL_DEVICE_OPTIONS, STYLE_PRESETS, findDeviceOption } from '../../onboarding/onboarding-presets';
 
-const STYLE_OPTIONS = ['Y2K Cyberpunk', 'Goth Y2K', 'Tối giản', 'Dễ thương', 'Vintage'];
+/** Same style vocabulary as the onboarding wizard (profiles.preferences stores these labels). */
+const STYLE_OPTIONS: readonly string[] = STYLE_PRESETS.map((preset) => preset.label);
+const DEFAULT_DEVICE_NAME = ALL_DEVICE_OPTIONS[0]?.name ?? '';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CaseCard, ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule],
   selector: 'app-onboarding-modal',
   templateUrl: './onboarding-modal.html',
 })
 export class OnboardingModal {
   private readonly formBuilder = inject(FormBuilder);
-  readonly initialDevice = input('iPhone 15 Pro Max');
+  readonly initialDevice = input(DEFAULT_DEVICE_NAME);
   readonly initialStyles = input<string[]>([]);
   readonly closed = output<void>();
   readonly saved = output<ProfileSetupPreferences>();
+  /** The phone models the Shop and Design Studio sell (see DEVICE_CATALOG). */
+  protected readonly deviceOptions = ALL_DEVICE_OPTIONS;
   protected readonly styleOptions = STYLE_OPTIONS;
-  protected readonly templateRows = signal<MarqueeRow[]>([]);
-  protected readonly templatesLoading = signal(true);
-  protected readonly templatesError = signal<string | null>(null);
   protected readonly form = this.formBuilder.nonNullable.group({
-    deviceType: ['iPhone 15 Pro Max', Validators.required],
+    deviceType: [DEFAULT_DEVICE_NAME, Validators.required],
     styles: this.formBuilder.nonNullable.control<string[]>([]),
   });
 
   private readonly inputsEffect = effect(() => {
     this.form.patchValue({
-      deviceType: this.initialDevice(),
+      // A device saved earlier that is no longer sold falls back to the first one on offer.
+      deviceType: findDeviceOption(this.initialDevice())?.name ?? DEFAULT_DEVICE_NAME,
       styles: this.initialStyles(),
     });
   });
-
-  constructor() {
-    void import('../../../design-studio/components/template-browser/template-browser')
-      .then(({ TEMPLATE_CATALOG }) => {
-        this.templateRows.set(createMarqueeRows(TEMPLATE_CATALOG));
-        this.templatesLoading.set(false);
-      })
-      .catch((error: unknown) => {
-        this.templatesError.set(
-          error instanceof Error ? error.message : 'Không thể tải mẫu thiết kế.',
-        );
-        this.templatesLoading.set(false);
-      });
-  }
 
   protected close(): void {
     this.closed.emit();

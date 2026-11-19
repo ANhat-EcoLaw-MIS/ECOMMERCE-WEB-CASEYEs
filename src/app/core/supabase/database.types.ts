@@ -286,28 +286,40 @@ export type Database = {
       }
       inventory_items: {
         Row: {
+          case_type: string | null
+          color_hex: string | null
+          color_name: string | null
           created_at: string
           id: string
           kind: Database["public"]["Enums"]["inventory_kind"]
           name: string
           phone_model_id: string | null
           quantity_on_hand: number
+          sku_code: string | null
         }
         Insert: {
+          case_type?: string | null
+          color_hex?: string | null
+          color_name?: string | null
           created_at?: string
           id?: string
           kind: Database["public"]["Enums"]["inventory_kind"]
           name: string
           phone_model_id?: string | null
           quantity_on_hand?: number
+          sku_code?: string | null
         }
         Update: {
+          case_type?: string | null
+          color_hex?: string | null
+          color_name?: string | null
           created_at?: string
           id?: string
           kind?: Database["public"]["Enums"]["inventory_kind"]
           name?: string
           phone_model_id?: string | null
           quantity_on_hand?: number
+          sku_code?: string | null
         }
         Relationships: [
           {
@@ -531,6 +543,7 @@ export type Database = {
           address_line: string
           auto_complete_at: string | null
           batch_date: string | null
+          checkout_ref: string | null
           city: string
           confirm_due_at: string | null
           confirmed_at: string | null
@@ -545,6 +558,7 @@ export type Database = {
           failure_cause: string | null
           fault_override: string | null
           frozen_at: string | null
+          gift_message: string | null
           goods_total: number
           id: string
           late_voucher_issued: boolean
@@ -560,6 +574,7 @@ export type Database = {
           redelivery_used: boolean
           rejected_at: string | null
           review_queued_at: string | null
+          shipper_note: string | null
           shipping_fee: number
           shipping_tier: string
           standard_fee: number
@@ -580,6 +595,7 @@ export type Database = {
           address_line: string
           auto_complete_at?: string | null
           batch_date?: string | null
+          checkout_ref?: string | null
           city: string
           confirm_due_at?: string | null
           confirmed_at?: string | null
@@ -594,6 +610,7 @@ export type Database = {
           failure_cause?: string | null
           fault_override?: string | null
           frozen_at?: string | null
+          gift_message?: string | null
           goods_total?: number
           id?: string
           late_voucher_issued?: boolean
@@ -609,6 +626,7 @@ export type Database = {
           redelivery_used?: boolean
           rejected_at?: string | null
           review_queued_at?: string | null
+          shipper_note?: string | null
           shipping_fee?: number
           shipping_tier?: string
           standard_fee?: number
@@ -629,6 +647,7 @@ export type Database = {
           address_line?: string
           auto_complete_at?: string | null
           batch_date?: string | null
+          checkout_ref?: string | null
           city?: string
           confirm_due_at?: string | null
           confirmed_at?: string | null
@@ -643,6 +662,7 @@ export type Database = {
           failure_cause?: string | null
           fault_override?: string | null
           frozen_at?: string | null
+          gift_message?: string | null
           goods_total?: number
           id?: string
           late_voucher_issued?: boolean
@@ -658,6 +678,7 @@ export type Database = {
           redelivery_used?: boolean
           rejected_at?: string | null
           review_queued_at?: string | null
+          shipper_note?: string | null
           shipping_fee?: number
           shipping_tier?: string
           standard_fee?: number
@@ -689,9 +710,11 @@ export type Database = {
           brand: string
           created_at: string
           custom_price: number
+          has_3d_model: boolean
           id: string
           is_active: boolean
           mask_image_url: string | null
+          model_3d_url: string | null
           name: string
           slug: string
         }
@@ -699,9 +722,11 @@ export type Database = {
           brand: string
           created_at?: string
           custom_price: number
+          has_3d_model?: boolean
           id?: string
           is_active?: boolean
           mask_image_url?: string | null
+          model_3d_url?: string | null
           name: string
           slug: string
         }
@@ -709,9 +734,11 @@ export type Database = {
           brand?: string
           created_at?: string
           custom_price?: number
+          has_3d_model?: boolean
           id?: string
           is_active?: boolean
           mask_image_url?: string | null
+          model_3d_url?: string | null
           name?: string
           slug?: string
         }
@@ -758,6 +785,7 @@ export type Database = {
       }
       product_variants: {
         Row: {
+          color_sku: string | null
           created_at: string
           id: string
           inventory_item_id: string
@@ -768,6 +796,7 @@ export type Database = {
           product_id: string
         }
         Insert: {
+          color_sku?: string | null
           created_at?: string
           id?: string
           inventory_item_id: string
@@ -778,6 +807,7 @@ export type Database = {
           product_id: string
         }
         Update: {
+          color_sku?: string | null
           created_at?: string
           id?: string
           inventory_item_id?: string
@@ -820,70 +850,109 @@ export type Database = {
       }
       products: {
         Row: {
+          art_url: string | null
+          badge: string | null
+          caption: string | null
+          category: string | null
+          collection: string | null
           created_at: string
           description: string
+          finish: string | null
           gallery_urls: string[]
           id: string
           image_url: string | null
           is_active: boolean
           name: string
+          premium: number
           product_type: Database["public"]["Enums"]["product_type"]
           slug: string
+          styles: string[]
+          tags: string[]
         }
         Insert: {
+          art_url?: string | null
+          badge?: string | null
+          caption?: string | null
+          category?: string | null
+          collection?: string | null
           created_at?: string
           description?: string
+          finish?: string | null
           gallery_urls?: string[]
           id?: string
           image_url?: string | null
           is_active?: boolean
           name: string
+          premium?: number
           product_type: Database["public"]["Enums"]["product_type"]
           slug: string
+          styles?: string[]
+          tags?: string[]
         }
         Update: {
+          art_url?: string | null
+          badge?: string | null
+          caption?: string | null
+          category?: string | null
+          collection?: string | null
           created_at?: string
           description?: string
+          finish?: string | null
           gallery_urls?: string[]
           id?: string
           image_url?: string | null
           is_active?: boolean
           name?: string
+          premium?: number
           product_type?: Database["public"]["Enums"]["product_type"]
           slug?: string
+          styles?: string[]
+          tags?: string[]
         }
         Relationships: []
       }
       profiles: {
         Row: {
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
+          deletion_requested_at: string | null
           device_type: string | null
           display_name: string | null
+          gender: string | null
           id: string
           onboarding_status: string
+          phone: string | null
           preferences: string[]
           role: string
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
+          deletion_requested_at?: string | null
           device_type?: string | null
           display_name?: string | null
+          gender?: string | null
           id: string
           onboarding_status?: string
+          phone?: string | null
           preferences?: string[]
           role?: string
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
+          deletion_requested_at?: string | null
           device_type?: string | null
           display_name?: string | null
+          gender?: string | null
           id?: string
           onboarding_status?: string
+          phone?: string | null
           preferences?: string[]
           role?: string
           updated_at?: string
@@ -996,6 +1065,44 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: true
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      template_comments: {
+        Row: {
+          author_name: string
+          comment: string
+          created_at: string
+          device_model: string | null
+          id: string
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string
+          comment: string
+          created_at?: string
+          device_model?: string | null
+          id?: string
+          template_id: string
+          user_id?: string
+        }
+        Update: {
+          author_name?: string
+          comment?: string
+          created_at?: string
+          device_model?: string | null
+          id?: string
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1124,6 +1231,7 @@ export type Database = {
           address_line: string
           auto_complete_at: string | null
           batch_date: string | null
+          checkout_ref: string | null
           city: string
           confirm_due_at: string | null
           confirmed_at: string | null
@@ -1138,6 +1246,7 @@ export type Database = {
           failure_cause: string | null
           fault_override: string | null
           frozen_at: string | null
+          gift_message: string | null
           goods_total: number
           id: string
           late_voucher_issued: boolean
@@ -1153,6 +1262,7 @@ export type Database = {
           redelivery_used: boolean
           rejected_at: string | null
           review_queued_at: string | null
+          shipper_note: string | null
           shipping_fee: number
           shipping_tier: string
           standard_fee: number
@@ -1260,12 +1370,32 @@ export type Database = {
       }
       request_redelivery: { Args: { p_order_id: string }; Returns: undefined }
       require_role: { Args: { p_roles: string[] }; Returns: undefined }
+      resolve_dispute: {
+        Args: { p_customer_right: boolean; p_note?: string; p_order_id: string }
+        Returns: undefined
+      }
       restock_order: { Args: { p_order_id: string }; Returns: undefined }
+      restock_stock_items: { Args: { p_order_id: string }; Returns: undefined }
       resubmit_design: { Args: { p_order_id: string }; Returns: undefined }
       retry_transfer: { Args: { p_refund_id: string }; Returns: undefined }
       run_order_jobs: { Args: never; Returns: undefined }
+      run_order_jobs_v9: { Args: never; Returns: undefined }
       set_order_actor: {
         Args: { p_actor_type: string; p_reason: string }
+        Returns: undefined
+      }
+      sim_create_sample_order: {
+        Args: {
+          p_email: string
+          p_kind: string
+          p_payment: string
+          p_tier?: string
+        }
+        Returns: string
+      }
+      sim_run_jobs: { Args: never; Returns: undefined }
+      sim_time_travel: {
+        Args: { p_minutes: number; p_order_id: string }
         Returns: undefined
       }
       start_production: { Args: never; Returns: number }

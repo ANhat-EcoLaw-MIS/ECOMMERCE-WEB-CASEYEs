@@ -1688,7 +1688,7 @@
               </div>
 
               <div>
-                <textarea rows="2" [value]="userReviewText()" (input)="onReviewTextInput($event)"
+                <textarea rows="2" maxlength="1000" [value]="userReviewText()" (input)="onReviewTextInput($event)"
                   placeholder="Chia sẻ cảm nhận về độ thẩm mỹ, màu sắc hoặc góp ý chi tiết bạn mong muốn xuất hiện thêm trên mẫu này..."
                   class="w-full resize-none rounded-xl border border-purple-100 bg-purple-50/20 p-2.5 text-xs text-ink placeholder:text-ink-soft/45 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400/20"></textarea>
               </div>
@@ -1698,15 +1698,17 @@
                 <span class="text-[11px] font-bold text-emerald-600 animate-fade-in">
                   ✓ Cảm ơn bạn! Góp ý thẩm mỹ đã được gửi thành công.
                 </span>
+                } @else if (reviewError(); as err) {
+                <span class="text-[11px] font-bold text-danger" role="alert">{{ err }}</span>
                 } @else {
                 <span class="text-[10px] text-ink-soft">
                   Đóng góp ý kiến để giúp CasEYE hoàn thiện mẫu đẹp hơn
                 </span>
                 }
 
-                <button type="button" (click)="onSubmitUserReview()" [disabled]="!userReviewText().trim()"
+                <button type="button" (click)="onSubmitUserReview()" [disabled]="!userReviewText().trim() || reviewSending()"
                   class="rounded-full bg-brand-800 px-4 py-1.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-                  Gửi góp ý
+                  {{ reviewSending() ? 'Đang gửi…' : 'Gửi góp ý' }}
                 </button>
               </div>
             </div>

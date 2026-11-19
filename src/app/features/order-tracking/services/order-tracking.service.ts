@@ -125,7 +125,10 @@ export class OrderTrackingService implements OrderIntake {
    * Not signed in with the simulator's demo customer: the local mock data, as before.
    */
   readonly remote = computed(() => !!this.auth?.isAuthenticated());
-  readonly orders = computed(() => (this.remote() ? this.store.orders() : this.repo.state().orders));
+  // The local mock store is only read in the simulator's demo-customer mode, never for a real visitor.
+  readonly orders = computed(() =>
+    this.remote() ? this.store.orders() : this.demo.state().enabled ? this.repo.state().orders : [],
+  );
   /**
    * True once the orders for the current user are available: always for the local mock,
    * after the first Supabase fetch when signed in. Screens show a skeleton until then,
@@ -140,7 +143,8 @@ export class OrderTrackingService implements OrderIntake {
     if (!u) return DEMO_CUSTOMER;
     const meta = u.user_metadata as Record<string, unknown> | undefined;
     const name = typeof meta?.['full_name'] === 'string' ? (meta['full_name'] as string) : u.email?.split('@')[0];
-    return { id: u.id, name: name || DEMO_CUSTOMER.name, phone: DEMO_CUSTOMER.phone, email: u.email ?? DEMO_CUSTOMER.email };
+    // A real account never borrows the demo customer's contact data; the order keeps the checkout recipient.
+    return { id: u.id, name: name || u.email?.split('@')[0] || '', phone: '', email: u.email ?? '' };
   });
 
   private readonly syncRemote = effect(() => {
@@ -1175,6 +1179,11 @@ export class OrderTrackingService implements OrderIntake {
     const db = this.store.client;
     const userId = this.auth?.user()?.id;
     if (!userId) return fail({ message: 'Vui lòng đăng nhập để đặt hàng.' });
+    // Retry of a checkout that already reached the database: reuse that order (no duplicate design rows).
+    if (h.checkoutRef) {
+      const { data: existing } = await db.from('orders').select('order_code').eq('checkout_ref', h.checkoutRef).maybeSingle();
+      if (existing?.order_code) return ok({ orderCode: existing.order_code });
+    }
     const hasCustom = h.items.some((i) => i.isCustom);
     const createdAt = this.clock.now();
     const isCod = h.paymentMethod === 'COD';
@@ -1184,9 +1193,10 @@ export class OrderTrackingService implements OrderIntake {
       tier: h.shippingTier,
       transitDays: h.shipping.transitDays,
     });
-    const items: { type: 'product' | 'design'; id: string; qty: number }[] = [];
+    const items: { type: 'product' | 'design'; id: string; qty: number; sku?: string }[] = [];
     for (const it of h.items) {
       const modelName = toCatalogModelName(it.phoneModel);
+      const ref = it.catalogRef;
       if (it.isCustom) {
         const { data: model } = await db.from('phone_models').select('id').eq('name', modelName).maybeSingle();
         if (!model) return fail({ message: `Chưa có dòng máy ${it.phoneModel} trong hệ thống.` });
@@ -1196,12 +1206,23 @@ export class OrderTrackingService implements OrderIntake {
           .select('id')
           .single();
         if (error || !design) return fail({ message: 'Chưa lưu được bản thiết kế. Vui lòng thử lại.' });
-        items.push({ type: 'design', id: design.id, qty: it.quantity });
+        // The blank of the chosen studio SKU is used up (stock is counted per SKU).
+        items.push({ type: 'design', id: design.id, qty: it.quantity, ...(ref?.skuId ? { sku: ref.skuId } : {}) });
       } else {
-        const slug = it.baseSku === 'GIFT-HOLOGRAM' ? 'gift-hologram' : it.baseSku;
-        const { data: product } = await db.from('products').select('id, product_variants(id, phone_model_id, phone_models(name))').eq('slug', slug).maybeSingle();
-        const variants = ((product as { product_variants?: { id: string; phone_models: { name: string } | null }[] } | null)?.product_variants ?? []);
-        const variant = variants.find((v) => v.phone_models?.name === modelName) ?? (variants.length === 1 ? variants[0] : undefined);
+        const slug = ref?.productSlug ?? (it.baseSku === 'GIFT-HOLOGRAM' ? 'gift-hologram' : it.baseSku);
+        const { data: product } = await db
+          .from('products')
+          .select('id, product_variants(id, color_sku, is_active, phone_models(name, slug))')
+          .eq('slug', slug)
+          .maybeSingle();
+        type VariantRow = { id: string; color_sku: string | null; is_active: boolean; phone_models: { name: string; slug: string } | null };
+        const variants = ((product as { product_variants?: VariantRow[] } | null)?.product_variants ?? []).filter((v) => v.is_active);
+        // Exact SKU first (shop line id slug:model:sku), then the model, then the legacy name match.
+        const variant =
+          (ref?.skuId ? variants.find((v) => v.color_sku === ref.skuId) : undefined) ??
+          (ref?.modelSlug ? variants.find((v) => v.phone_models?.slug === ref.modelSlug) : undefined) ??
+          variants.find((v) => v.phone_models?.name === modelName) ??
+          (variants.length === 1 ? variants[0] : undefined);
         if (!variant) return fail({ message: `Sản phẩm ${it.productName} (${it.phoneModel}) chưa có trong kho.` });
         items.push({ type: 'product', id: variant.id, qty: it.quantity });
       }
@@ -1224,6 +1245,9 @@ export class OrderTrackingService implements OrderIntake {
       transit_min: h.shipping.transitDays.min,
       transit_max: h.shipping.transitDays.max,
       discount: h.discount ?? 0,
+      checkout_ref: h.checkoutRef ?? null,
+      shipper_note: h.shipperNote ?? null,
+      gift_message: h.giftMessage ?? null,
       policy_version: h.policyVersion,
       earliest_edd: edd.earliest,
       latest_edd: edd.latest,

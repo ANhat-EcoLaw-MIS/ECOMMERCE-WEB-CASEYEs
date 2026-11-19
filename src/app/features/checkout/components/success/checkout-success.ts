@@ -15,6 +15,8 @@ export class CheckoutSuccess {
 
   readonly newOrder = output<void>();
   readonly copyNotification = output<string>();
+  /** The order could not be created yet: try again with the same checkout_ref. */
+  readonly retryPlaceOrder = output<void>();
 
   async copyText(text: string, label: string): Promise<void> {
     const ok = await this.checkoutService.copyToClipboard(text);

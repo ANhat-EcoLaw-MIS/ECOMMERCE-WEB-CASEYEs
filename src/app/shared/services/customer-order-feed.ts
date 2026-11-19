@@ -21,4 +21,9 @@ export interface CustomerOrderSummary {
  */
 export abstract class CustomerOrderFeed {
   abstract readonly orders: Signal<readonly CustomerOrderSummary[]>;
+  /**
+   * CasEYE Club points shown on Tài khoản. Loyalty is an external system (Spec §0.3), so this is a
+   * stand-in computed from the customer's own completed orders: 0 for a new account.
+   */
+  abstract readonly loyaltyPoints: Signal<number>;
 }

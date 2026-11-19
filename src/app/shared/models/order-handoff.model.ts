@@ -27,6 +27,15 @@ export interface OrderHandoffItem {
   readonly quantity: number;
   readonly unitPrice: number;
   readonly imageUrl?: string;
+  /**
+   * Exact catalog row behind the line (cart line id `slug:modelSlug:skuId`, accessory slug, or the
+   * studio SKU of a custom design). Lets the order resolve the variant / blank by SKU, not by name.
+   */
+  readonly catalogRef?: {
+    readonly productSlug?: string;
+    readonly modelSlug?: string;
+    readonly skuId?: string;
+  };
   readonly design?: {
     readonly previewUrl?: string;
     readonly caption?: string;
@@ -57,4 +66,8 @@ export interface OrderHandoff {
   readonly discount?: number;
   /** ISO time the order was placed. Defaults to now. */
   readonly createdAt?: string;
+  /** Checkout session id: place_order returns the same order for the same ref (idempotent retries). */
+  readonly checkoutRef?: string;
+  readonly shipperNote?: string;
+  readonly giftMessage?: string;
 }

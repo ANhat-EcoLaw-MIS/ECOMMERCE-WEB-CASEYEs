@@ -9,6 +9,7 @@
         <p class="mt-1 text-sm text-ink-soft">
           {{ counts().all }} kết quả
           @if (r.device) { · dòng máy <b class="text-ink">{{ r.device }}</b> }
+          @else if (r.unsoldDevice) { · CasEYE's chưa có ốp cho <b class="text-ink">{{ r.unsoldDevice }}</b> }
         </p>
       } @else {
         <h1 class="mt-1 font-display text-2xl font-bold text-ink sm:text-3xl">Bạn muốn tìm gì?</h1>
