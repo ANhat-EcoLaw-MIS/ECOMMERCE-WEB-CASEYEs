@@ -34,14 +34,18 @@ export class Shop {
     return c ? ACCESSORIES.filter((a) => a.category === c) : ACCESSORIES;
   });
 
+  /**
+   * Mobile-first columns: fixed on phones, then auto-fill by a minimum card width,
+   * so wide screens get more columns instead of stretched cards.
+   */
   protected readonly gridClass = computed(() => {
     switch (this.f.view()) {
       case 'large':
-        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
+        return 'grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(21rem,1fr))]';
       case 'list':
-        return 'grid-cols-1 lg:grid-cols-2';
+        return 'grid-cols-1 lg:grid-cols-[repeat(auto-fill,minmax(32rem,1fr))]';
       default:
-        return 'grid-cols-2 md:grid-cols-3 xl:grid-cols-4';
+        return 'grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(14.5rem,1fr))]';
     }
   });
 

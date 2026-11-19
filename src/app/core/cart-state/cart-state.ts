@@ -116,6 +116,15 @@ export class CartState {
   increase(id: string): void { this.items.update((items) => items.map((item) => item.id === id ? { ...item, quantity: Math.min(99, item.quantity + 1) } : item)); }
   decrease(id: string): void { this.items.update((items) => items.map((item) => item.id === id ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item)); }
   remove(id: string): void { this.items.update((items) => items.filter((item) => item.id !== id)); }
+  /** Undo for remove(): puts the line back where it was (merges if it was re-added meanwhile). */
+  restore(item: CartItem, index: number): void {
+    this.items.update((items) => {
+      if (items.some((other) => other.id === item.id)) return items.map((o) => (o.id === item.id ? { ...o, quantity: Math.min(99, o.quantity + item.quantity) } : o));
+      const next = [...items];
+      next.splice(Math.min(index, next.length), 0, item);
+      return next;
+    });
+  }
   saveForLater(id: string): void {
     const item = this.items().find((candidate) => candidate.id === id);
     if (!item) return;

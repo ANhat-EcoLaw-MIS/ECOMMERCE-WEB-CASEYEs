@@ -2,7 +2,7 @@
   <div class="glow glow-a" aria-hidden="true"></div>
   <div class="glow glow-b" aria-hidden="true"></div>
 
-  <div class="mx-auto max-w-[1440px] px-4 lg:px-10">
+  <div class="page">
     <div appReveal class="flex flex-wrap items-end justify-between gap-6">
       <div class="max-w-2xl">
         <p class="inline-flex items-center gap-2 rounded-pill bg-white/70 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-brand-800 shadow-soft backdrop-blur">
@@ -33,7 +33,7 @@
   <!-- Rail: full-bleed, padded to line up with the container -->
   <div
     #rail
-    class="rail mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-6 pt-2"
+    class="rail page-rail mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-6 pt-2"
     (scroll)="measure()"
     role="list"
     aria-label="Mẫu thiết kế thịnh hành"
@@ -98,9 +98,23 @@
       @if (failed()) {
         <p class="px-4 text-sm text-ink-soft">Không tải được mẫu thiết kế. Vui lòng thử lại sau.</p>
       } @else {
-        @for (p of placeholders; track p) {
-          <div class="skeleton h-[420px] w-[232px] shrink-0 rounded-[28px] sm:w-[260px]" aria-hidden="true"></div>
-        }
+        <!-- Card-shaped skeletons (same size as a real card), so the rail doesn't jump when designs arrive. -->
+        <div class="flex gap-5" role="status" aria-busy="true" aria-label="Đang tải mẫu thịnh hành">
+          @for (p of placeholders; track p) {
+            <div class="flex w-[232px] shrink-0 flex-col overflow-hidden rounded-[28px] bg-white/80 shadow-soft ring-1 ring-white sm:w-[260px]">
+              <div class="grid aspect-[4/5] place-items-center bg-brand-50/70">
+                <app-skeleton w="46%" h="76%" radius="1.6rem" />
+              </div>
+              <div class="flex flex-col gap-2.5 p-4">
+                <app-skeleton w="4.5rem" h="1.1rem" radius="999px" />
+                <app-skeleton w="80%" h="1rem" />
+                <app-skeleton w="60%" h="0.75rem" />
+                <app-skeleton w="50%" h="0.75rem" />
+                <app-skeleton class="mt-2" h="2.5rem" radius="999px" />
+              </div>
+            </div>
+          }
+        </div>
       }
     }
   </div>

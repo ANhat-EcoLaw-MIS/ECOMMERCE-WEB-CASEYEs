@@ -1,3 +1,5 @@
+<!-- Top progress bar while a route (lazy chunk + guards) loads. -->
+<app-route-progress />
 <router-outlet />
 
 <!-- Global notifications: top-left, newest on top, above the header and dialogs. -->
@@ -10,4 +12,6 @@
   }
 </div>
 <app-auth-dialog/>
+<!-- Global blocking loading pop-up (LoadingOverlay service). -->
+<app-loading-host />
 <app-toast-list />

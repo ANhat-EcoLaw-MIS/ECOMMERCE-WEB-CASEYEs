@@ -3,6 +3,7 @@ import { ShellLayout } from './core/layout/shell-layout/shell-layout';
 import { AdminLayout } from './core/layout/admin-layout/admin-layout';
 import { roleGuard } from './core/auth/role-guard';
 import { authGuard } from './core/auth/auth-guard';
+import { provideStaffScope } from './core/auth/staff-scope';
 
 export const routes: Routes = [
   {
@@ -14,7 +15,9 @@ export const routes: Routes = [
   },
   {
     // Back office (staff only), separate from the customer ShellLayout.
+    // provideStaffScope(): everything under /admin runs on the staff session, not the customer's.
     path: 'admin',
+    providers: provideStaffScope(),
     children: [
       {
         path: 'dang-nhap',

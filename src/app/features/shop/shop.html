@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-[1360px] px-4 lg:px-8">
+<div class="page">
   <!-- Breadcrumb + title -->
   <nav aria-label="Breadcrumb" class="pt-5">
     <ol class="flex flex-wrap items-center gap-1.5 text-xs text-ink-soft">
@@ -44,12 +44,12 @@
 <div #listTop aria-hidden="true"></div>
 <!-- Sticky toolbar -->
 <div class="sticky top-16 z-30 border-y border-line/70 bg-surface/75 shadow-[0_8px_24px_-18px_rgb(42_29_77_/_0.35)] backdrop-blur-xl backdrop-saturate-150">
-  <div class="mx-auto max-w-[1360px] px-4 lg:px-8">
+  <div class="page">
     <app-shop-toolbar (openFilters)="filtersOpen.set(true)" />
   </div>
 </div>
 
-<div class="mx-auto max-w-[1360px] px-4 pb-20 lg:px-8">
+<div class="page pb-20">
   <!-- Grid -->
   @if (f.pageItems().length && f.sku(); as sku) {
     <ul class="mt-6 grid gap-x-3 gap-y-6 sm:gap-x-4" [class]="gridClass()">
@@ -83,7 +83,7 @@
         }
       </div>
     </div>
-    <ul class="mt-6 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 md:grid-cols-3 xl:grid-cols-5">
+    <ul class="mt-6 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]">
       @for (a of accessories(); track a.id) {
         <li><app-accessory-card [item]="a" /></li>
       }

@@ -4,6 +4,7 @@ import { CasePreview } from '../../../../shared/ui/case-preview/case-preview';
 import { DEFAULT_DEVICE } from '../../../../shared/devices/devices';
 import type { TemplateCard } from '../../../design-studio/components/template-browser/template-browser';
 import { Reveal, shuffle } from '../../shared/reveal';
+import { Skeleton } from '../../../../shared/ui/loading/skeleton';
 
 /** Always shown in the carousel. */
 const FEATURED_ID = 'tpl-creators-chibi';
@@ -15,7 +16,7 @@ const COUNT = 9;
  */
 @Component({
   selector: 'app-trending',
-  imports: [RouterLink, CasePreview, Reveal],
+  imports: [RouterLink, CasePreview, Reveal, Skeleton],
   templateUrl: './trending.html',
   styleUrl: './trending.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

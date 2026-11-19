@@ -11,6 +11,7 @@ import {
   DESIGNS,
   findDesign,
   pickSku,
+  productImage,
   productPhotos,
   variantPrice,
   variantStock,
@@ -55,6 +56,11 @@ export class ProductDetail {
   protected readonly devicesOfBrand = computed(() => DEVICES.filter((d) => d.brandId === this.device().brandId));
 
   protected readonly artwork = computed(() => artworkUrl(this.design()?.id ?? ''));
+  /**
+   * Picture for the "Mô tả" tab: the design's artwork, or (for designs without their own file)
+   * the same seeded background their case shows, so the image is never empty.
+   */
+  protected readonly descriptionImage = computed(() => productImage(this.design()?.id ?? ''));
   protected readonly photos = computed(() => (this.design() ? productPhotos(this.design()!.id) : []));
   protected readonly price = computed(() => {
     const d = this.design(), s = this.sku();
@@ -71,7 +77,7 @@ export class ProductDetail {
     if (!current) return [];
     return DESIGNS.filter((d) => d.id !== current.id)
       .sort((a, b) => Number(b.collection === current.collection) - Number(a.collection === current.collection))
-      .slice(0, 4);
+      .slice(0, 6);
   });
 
   protected readonly mode = signal<MediaMode>('2d');

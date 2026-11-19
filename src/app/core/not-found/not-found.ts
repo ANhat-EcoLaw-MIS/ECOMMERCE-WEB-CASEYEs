@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="mx-auto flex max-w-[1280px] flex-col items-center gap-6 px-4 py-24 text-center lg:px-6">
+    <section class="page flex flex-col items-center gap-6 py-24 text-center">
       <h1 class="font-display text-4xl font-extrabold tracking-tight text-ink">Không tìm thấy trang</h1>
       <p class="text-ink-soft">Trang bạn đang tìm không tồn tại hoặc đã được di chuyển.</p>
       <a routerLink="/" class="inline-flex h-12 items-center rounded-pill bg-brand-800 px-6 font-bold text-white">Về trang chủ</a>

@@ -1,4 +1,4 @@
-<main class="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+<main class="page py-8 sm:py-12">
   <header class="mb-8">
     <nav aria-label="Đường dẫn trang" class="mb-3">
       <ol class="flex items-center gap-2 text-sm text-ink-soft">
@@ -50,7 +50,22 @@
   }
 
   @if (accountState.loading()) {
-    <div aria-live="polite" class="rounded-card border border-line bg-surface-alt p-8 text-sm text-ink-soft shadow-soft">Đang tải thông tin tài khoản...</div>
+    <!-- Skeleton mirrors the loaded layout (tab menu + profile card), so nothing jumps when data arrives. -->
+    <div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-12" aria-busy="true">
+      <aside class="lg:col-span-4 xl:col-span-3">
+        <div class="mb-4 flex gap-2 overflow-hidden lg:hidden" aria-hidden="true">
+          @for (i of [0, 1, 2, 3]; track i) {
+            <app-skeleton w="8.5rem" h="2.75rem" radius="999px" />
+          }
+        </div>
+        <div class="hidden rounded-card border border-line bg-surface-alt p-3 shadow-soft lg:block">
+          <app-loading variant="skeleton" preset="list" [count]="5" label="Đang tải menu tài khoản" />
+        </div>
+      </aside>
+      <section class="lg:col-span-8 xl:col-span-9">
+        <app-loading variant="skeleton" preset="profile" label="Đang tải thông tin tài khoản" />
+      </section>
+    </div>
   } @else if (accountState.error() && !accountState.profile()) {
     <div class="rounded-card border border-danger/30 bg-danger-bg p-6 text-sm text-danger" role="alert">
       <p>{{ accountState.error() }}</p>
@@ -64,12 +79,15 @@
             @for (tab of tabs; track tab.id) {
               <button
                 [attr.aria-current]="activeTab() === tab.id ? 'page' : null"
-                [class.bg-brand-800]="activeTab() === tab.id"
+                [class.bg-brand-800]="activeTab() === tab.id && tab.id !== 'signout'"
+                [class.bg-danger]="activeTab() === tab.id && tab.id === 'signout'"
                 [class.bg-surface-alt]="activeTab() !== tab.id"
                 [class.border]="activeTab() !== tab.id"
-                [class.border-line]="activeTab() !== tab.id"
+                [class.border-line]="activeTab() !== tab.id && tab.id !== 'signout'"
+                [class]="activeTab() !== tab.id && tab.id === 'signout' ? 'border-danger/30' : ''"
                 [class.shadow-soft]="activeTab() === tab.id"
-                [class.text-ink-soft]="activeTab() !== tab.id"
+                [class.text-ink-soft]="activeTab() !== tab.id && tab.id !== 'signout'"
+                [class.text-danger]="activeTab() !== tab.id && tab.id === 'signout'"
                 [class.text-white]="activeTab() === tab.id"
                 class="flex min-h-[44px] items-center gap-2.5 rounded-pill px-4 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-400"
                 (click)="activeTab.set(tab.id)"
@@ -85,12 +103,18 @@
         <nav aria-label="Menu tài khoản" class="hidden rounded-card border border-line bg-surface-alt p-3 shadow-soft lg:block">
           <ul class="space-y-1">
             @for (tab of tabs; track tab.id) {
+              @if (tab.id === 'signout') {
+                <li aria-hidden="true" class="mx-3 my-2 border-t border-line"></li>
+              }
               <li>
                 <button
                   [attr.aria-current]="activeTab() === tab.id ? 'page' : null"
-                  [class.bg-brand-800]="activeTab() === tab.id"
+                  [class.bg-brand-800]="activeTab() === tab.id && tab.id !== 'signout'"
+                  [class.bg-danger]="activeTab() === tab.id && tab.id === 'signout'"
                   [class.text-white]="activeTab() === tab.id"
-                  [class.text-ink-soft]="activeTab() !== tab.id"
+                  [class.text-ink-soft]="activeTab() !== tab.id && tab.id !== 'signout'"
+                  [class.text-danger]="activeTab() !== tab.id && tab.id === 'signout'"
+                  [class]="activeTab() !== tab.id && tab.id === 'signout' ? 'hover:bg-danger-bg hover:text-danger' : ''"
                   class="flex min-h-[44px] w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-brand-50/50 hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-400"
                   (click)="activeTab.set(tab.id)"
                   type="button">
@@ -111,6 +135,7 @@
           @case ('designs') { <app-designs-tab /> }
           @case ('orders') { <app-orders-tab /> }
           @case ('security') { <app-security-tab (deletionRequested)="deletionPending.set(true)" /> }
+          @case ('signout') { <app-signout-tab (cancelled)="activeTab.set('profile')" /> }
         }
       </section>
     </div>

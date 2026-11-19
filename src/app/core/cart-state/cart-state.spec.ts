@@ -71,6 +71,19 @@ describe('CartState (per account)', () => {
     expect(cart.itemCount()).toBe(0);
   });
 
+  it('restores a removed line at its old position (undo)', () => {
+    signIn('alice');
+    cart.add(item('a'));
+    cart.add(item('b', 2));
+    cart.add(item('c'));
+    const removed = cart.items()[1];
+    cart.remove('b');
+    expect(cart.items().map((i) => i.id)).toEqual(['a', 'c']);
+    cart.restore(removed, 1);
+    expect(cart.items().map((i) => i.id)).toEqual(['a', 'b', 'c']);
+    expect(cart.itemCount()).toBe(4);
+  });
+
   it('closes the drawer when the user logs out', () => {
     signIn('alice');
     drawer.show();

@@ -37,7 +37,10 @@ describe('shop catalog', () => {
     expect(productImage(`${glass.id}:x:y`)).toBe('/products/Bg_Case/02_lilac_liquid_glass.png');
     expect(productPhotos(glass.id)).toEqual([]);
     expect(artworkUrl('bloom-club')).toBe('');
-    expect(DESIGNS.filter((d) => d.art).length).toBe(15);
+    expect(DESIGNS.filter((d) => d.art).length).toBe(25);
+    // i16–i25: name comes from the file name after the index.
+    expect(artworkUrl('wyvern-crystal')).toBe('/products/Bg_Case/i16_wyvern_crystal.webp');
+    expect(findDesign('sakura-silk')?.name).toBe('Sakura Silk');
     expect(new Set(DESIGNS.map((d) => d.id)).size).toBe(DESIGNS.length);
   });
 

@@ -7,6 +7,9 @@ import { OnboardingModal } from './components/onboarding-modal/onboarding-modal'
 import { OrdersTab } from './components/orders-tab/orders-tab';
 import { ProfileTab } from './components/profile-tab/profile-tab';
 import { SecurityTab } from './components/security-tab/security-tab';
+import { SignoutTab } from './components/signout-tab/signout-tab';
+import { Loading } from '../../shared/ui/loading/loading';
+import { Skeleton } from '../../shared/ui/loading/skeleton';
 import { StudioState } from '../design-studio/services/studio-state';
 import { type ProfileSetupPreferences, type TabId } from './models/account.model';
 
@@ -15,11 +18,13 @@ const TABS: { id: TabId; label: string; icon: string; count: 'designs' | 'orders
   { id: 'designs', label: 'Thiết kế của tôi', icon: '◇', count: 'designs' },
   { id: 'orders', label: 'Đơn hàng', icon: '▣', count: 'orders' },
   { id: 'security', label: 'Bảo mật & Cài đặt', icon: '⌑', count: null },
+  // The header dropdown is off on /account, so signing out lives here.
+  { id: 'signout', label: 'Đăng xuất', icon: '⎋', count: null },
 ];
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DesignsTab, OnboardingModal, OrdersTab, ProfileTab, SecurityTab],
+  imports: [DesignsTab, OnboardingModal, OrdersTab, ProfileTab, SecurityTab, SignoutTab, Loading, Skeleton],
   selector: 'app-account',
   styleUrl: './account.scss',
   templateUrl: './account.html',

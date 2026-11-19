@@ -1,14 +1,18 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import type { AuthError, Session } from '@supabase/supabase-js';
+import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from './supabase.client';
 import { Result, ok, fail } from './supabase.types';
+import type { Database } from './database.types';
 
 /** Data type of a successful SDK response; `null` for responses without data (e.g. signOut). */
 type DataOf<R> = R extends { data: infer D } ? NonNullable<D> : null;
 
-@Injectable({ providedIn: 'root' })
-export class SupabaseAuthService {
-  private readonly db = inject(SUPABASE_CLIENT);
+/**
+ * One auth session on one Supabase client. Each user role gets its own subclass bound to its own
+ * client (see STAFF_SUPABASE_CLIENT), so their sessions stay independent.
+ */
+export abstract class AuthSession {
+  protected constructor(protected readonly db: SupabaseClient<Database>) {}
 
   private readonly _session = signal<Session | null>(null);
   readonly session = this._session.asReadonly();
@@ -58,5 +62,13 @@ export class SupabaseAuthService {
     } catch (e) {
       return fail({ message: e instanceof Error ? e.message : 'Unexpected error' });
     }
+  }
+}
+
+/** Customer session (storefront, account, studio, customer order pages). Restored at startup. */
+@Injectable({ providedIn: 'root' })
+export class SupabaseAuthService extends AuthSession {
+  constructor() {
+    super(inject(SUPABASE_CLIENT));
   }
 }

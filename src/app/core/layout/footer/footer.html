@@ -1,5 +1,5 @@
 <footer class="w-full bg-brand-900 border-t border-white/10 text-white font-sans pt-12 md:pt-16 pb-8" role="contentinfo">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="page">
 
     <!-- Grid 3 cột -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 pb-10 md:pb-14">
@@ -41,12 +41,12 @@
         <h2 class="font-display font-bold text-base text-white tracking-tight mb-1">
           Menu nhanh
         </h2>
-        <ul class="space-y-2.5">
+        <ul class="space-y-0.5 sm:space-y-1">
           @for (link of quickLinks; track link.label) {
             <li>
               <a
                 [routerLink]="link.url"
-                class="inline-block text-sm text-white/70 hover:text-white hover:translate-x-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
+                class="inline-flex min-h-11 items-center text-sm text-white/70 hover:text-white sm:min-h-8 hover:translate-x-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
                 {{ link.label }}
               </a>
             </li>
@@ -59,12 +59,12 @@
         <h2 class="font-display font-bold text-base text-white tracking-tight mb-1">
           Hỗ trợ
         </h2>
-        <ul class="space-y-2.5">
+        <ul class="space-y-0.5 sm:space-y-1">
           @for (link of supportLinks; track link.label) {
             <li>
               <a
                 [routerLink]="link.url"
-                class="inline-block text-sm text-white/70 hover:text-white hover:translate-x-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
+                class="inline-flex min-h-11 items-center text-sm text-white/70 hover:text-white sm:min-h-8 hover:translate-x-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded">
                 {{ link.label }}
               </a>
             </li>

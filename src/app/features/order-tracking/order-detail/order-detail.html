@@ -1,5 +1,5 @@
 <section class="min-h-[70vh] bg-surface pb-28 lg:pb-20">
-  <div class="mx-auto max-w-[1280px] px-4 pt-4 lg:px-6 lg:pt-6">
+  <div class="page pt-4 lg:pt-6">
     <div class="flex items-center justify-between gap-3">
       <a routerLink="/order-tracking" class="inline-flex min-h-11 items-center gap-2 rounded-pill pr-3 text-sm font-semibold text-brand-800 hover:underline focus-visible:outline-2 focus-visible:outline-brand-400">
         <span aria-hidden="true">‹</span> Đơn hàng của tôi
@@ -7,7 +7,10 @@
       <app-notification-bell />
     </div>
 
-    @if (order(); as o) {
+    @if (!ready()) {
+      <!-- Orders still loading: never show "not found" for an order that is about to arrive. -->
+      <app-order-skeleton variant="detail" label="Đang tải chi tiết đơn hàng" />
+    } @else if (order(); as o) {
       <div class="mt-3 grid items-start gap-5 lg:grid-cols-12 lg:gap-6">
         <!-- ================= LEFT: what to do, where is it, what did I order ================= -->
         <div class="flex min-w-0 flex-col gap-5 lg:col-span-8">

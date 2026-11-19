@@ -1,5 +1,5 @@
 <section class="catalog relative isolate overflow-hidden py-16 lg:py-24" aria-labelledby="catalog-title">
-  <div class="mx-auto max-w-[1440px] px-4 lg:px-10">
+  <div class="page">
     <!-- Heading -->
     <div appReveal class="mx-auto max-w-3xl text-center">
       <p class="text-xs font-bold uppercase tracking-[0.25em] text-brand-600">Products catalog</p>
@@ -22,7 +22,7 @@
       </a>
     </div>
 
-    <div class="bento mt-6 grid auto-rows-[200px] grid-cols-2 gap-4 lg:auto-rows-[230px] lg:grid-cols-4 lg:gap-5">
+    <div class="bento mt-6 grid auto-rows-[200px] grid-cols-2 gap-4 lg:auto-rows-[clamp(230px,15vw,330px)] lg:grid-cols-4 lg:gap-5 2xl:gap-6">
       @for (item of best; track item.design.id; let i = $index) {
         <a
           appReveal
@@ -97,7 +97,7 @@
       </div>
     </div>
 
-    <div class="bento mt-6 grid auto-rows-[190px] grid-cols-2 gap-4 lg:auto-rows-[210px] lg:grid-cols-6 lg:gap-5">
+    <div class="bento mt-6 grid auto-rows-[190px] grid-cols-2 gap-4 lg:auto-rows-[clamp(210px,13vw,300px)] lg:grid-cols-6 lg:gap-5 2xl:gap-6">
       <!-- Ready-made cases (big) -->
       <a appReveal routerLink="/shop" class="tile type-cases group col-span-2 row-span-2 lg:col-span-3">
         <span class="fan" aria-hidden="true">

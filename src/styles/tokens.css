@@ -114,3 +114,28 @@
   --grad-glow:    radial-gradient(60% 60% at 50% 40%, rgb(165 140 244 / 0.35), transparent 70%);
   --grad-dark:    linear-gradient(160deg, #0A0A0A 0%, #2a1d4d 100%);
 }
+
+/*
+ * Page layout (mobile-first, fluid).
+ * One container for the header, footer and every page, so edges line up at any width.
+ * - Gutter grows with the screen: 16px on phones → 56px on very wide screens.
+ * - Max width is generous so wide monitors use the space instead of showing a narrow box;
+ *   grids inside add columns rather than stretching cards. Text blocks keep their own max-w-* measure.
+ */
+:root {
+  --page-gutter: clamp(1rem, 0.4rem + 2.6vw, 3.5rem);
+  --page-max: 2048px;
+}
+
+@utility page {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+/* Full-bleed rails (carousels) that should start at the page edge but scroll to the screen edge. */
+@utility page-rail {
+  padding-inline: max(var(--page-gutter), calc((100vw - var(--page-max)) / 2 + var(--page-gutter)));
+  scroll-padding-inline: max(var(--page-gutter), calc((100vw - var(--page-max)) / 2 + var(--page-gutter)));
+}

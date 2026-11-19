@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { OrderSkeleton } from '../components/order-skeleton/order-skeleton';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NotificationManager } from '../../../shared/ui/notification/notification.manager';
@@ -56,6 +57,7 @@ interface Todo {
 @Component({
   selector: 'app-order-detail',
   imports: [
+    OrderSkeleton,
     DatePipe,
     RouterLink,
     PhoneCaseMock,
@@ -92,6 +94,7 @@ export class OrderDetail {
   protected readonly fixDays = DELIVERY_CONFIG.designFixDeadlineDays;
   protected readonly todoBox = `flex flex-col gap-3 rounded-card border p-4 sm:flex-row sm:items-center sm:justify-between ${TONE_CLASSES.warning.box}`;
 
+  protected readonly ready = this.service.ready;
   protected readonly order = computed(() => {
     const o = this.service.findByCode(decodeURIComponent(this.orderCode()));
     return o && o.customerId === this.service.customer().id ? o : undefined;

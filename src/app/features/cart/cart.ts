@@ -1,12 +1,14 @@
 import { productImage, resolveProductImage } from '../shop/catalog';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { CartState } from '../../core/cart-state/cart-state';
+import { CartState, type CartItem } from '../../core/cart-state/cart-state';
+import { NotificationManager } from '../../shared/ui/notification/notification.manager';
 
 @Component({selector:'app-cart',imports:[RouterLink],changeDetection:ChangeDetectionStrategy.OnPush,styleUrl:'./cart.scss',templateUrl:'./cart.html'})
 export class Cart {
   protected readonly cart = inject(CartState);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationManager);
   protected readonly productImage = productImage;
   protected readonly resolveImage = (url: string) => resolveProductImage(url) ?? url;
   protected readonly couponInput = signal('');
@@ -25,6 +27,25 @@ export class Cart {
   protected applyCoupon():void{
     if(this.couponInput().trim().toUpperCase()==='CASEYE10'){this.appliedCoupon.set(true);this.couponMessage.set('Đã áp dụng CASEYE10 — giảm 10%');}
     else {this.appliedCoupon.set(false);this.couponMessage.set('Mã chưa hợp lệ. Bạn có thể thử CASEYE10.');}
+  }
+  /** Removes a line, with an "Hoàn tác" (undo) action in the notification. */
+  protected removeItem(item: CartItem): void {
+    const index = this.cart.items().findIndex((i) => i.id === item.id);
+    this.cart.remove(item.id);
+    this.notifications.show({
+      variant: 'functional',
+      title: 'Đã xóa khỏi giỏ hàng',
+      message: `${item.name} · ${item.model}`,
+      actionLabel: 'Hoàn tác',
+      duration: 6000,
+      onAction: () => this.cart.restore(item, index),
+    });
+  }
+
+  /** "−" at quantity 1 removes the line instead of doing nothing. */
+  protected decrease(item: CartItem): void {
+    if (item.quantity <= 1) this.removeItem(item);
+    else this.cart.decrease(item.id);
   }
   protected removeCoupon():void{this.appliedCoupon.set(false);this.couponInput.set('');this.couponMessage.set('');}
   protected checkout():void{

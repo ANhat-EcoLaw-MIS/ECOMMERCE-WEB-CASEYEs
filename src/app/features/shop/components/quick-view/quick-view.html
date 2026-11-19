@@ -20,7 +20,7 @@
         <button type="button" role="tab" [attr.aria-selected]="mode() === '3d'" (click)="mode.set('3d')" class="min-h-8 rounded-pill px-3 text-xs font-semibold text-ink-soft aria-selected:bg-brand-800 aria-selected:text-white">3D · 360°</button>
       </div>
       @if (mode() === '3d') {
-        <app-case-viewer-3d class="h-full w-full" [model]="model()" [artworkUrl]="artwork()" [seed]="design().id" [colorHex]="sku().colorHex" [caseType]="sku().caseType" />
+        <app-case-viewer-3d class="h-full w-full self-stretch justify-self-stretch" [model]="model()" [artworkUrl]="artwork()" [seed]="design().id" [colorHex]="sku().colorHex" [caseType]="sku().caseType" />
       } @else {
         <app-case-preview class="w-[42%] max-w-[220px]" [model]="model()" [artworkUrl]="artwork()" [seed]="design().id" [colorHex]="sku().colorHex" [caseType]="sku().caseType" />
       }

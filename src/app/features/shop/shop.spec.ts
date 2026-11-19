@@ -53,8 +53,8 @@ describe('Shop', () => {
     expect(f.device().id).toBe('iphone-15-pro-max');
     expect(f.color()).toBeNull();
     // Out-of-range pages clamp to the last page.
-    expect(f.pageCount()).toBe(2);
-    expect(f.page()).toBe(2);
+    expect(f.pageCount()).toBe(3);
+    expect(f.page()).toBe(3);
   });
 
   it('writes filter changes to the URL and clears the colour when the device changes', async () => {

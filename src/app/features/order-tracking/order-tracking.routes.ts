@@ -1,5 +1,8 @@
 import { Routes } from '@angular/router';
 import { customerGuard } from './order-tracking.guards';
+import { OrderTrackingService } from './services/order-tracking.service';
+import { SupabaseOrderStore } from './services/supabase-order-store';
+import { DemoOrderFactory } from './services/demo-order-factory';
 
 /** Customer pages (ShellLayout). No demo tools here: they live in the admin area. */
 export const ORDER_TRACKING_ROUTES: Routes = [
@@ -24,17 +27,27 @@ export const ORDER_TRACKING_ROUTES: Routes = [
   },
 ];
 
-/** Admin pages, mounted under /admin/order-tracking (AdminLayout + roleGuard). */
+/**
+ * Admin pages, mounted under /admin/order-tracking (AdminLayout + roleGuard).
+ * The order services are re-provided here so the admin gets its own instances, bound to the
+ * staff session/client from provideStaffScope(), instead of the customer's root instances.
+ */
 export const ORDER_TRACKING_ADMIN_ROUTES: Routes = [
   {
     path: '',
-    title: "Quản lý đơn hàng | CasEYE's Admin",
-    loadComponent: () => import('./admin/admin-orders').then((m) => m.AdminOrders),
-  },
-  {
-    path: 'simulator',
-    title: "Mô phỏng đơn hàng | CasEYE's Admin",
-    data: { mode: 'simulator' },
-    loadComponent: () => import('./demo-console/demo-console').then((m) => m.DemoConsole),
+    providers: [OrderTrackingService, SupabaseOrderStore, DemoOrderFactory],
+    children: [
+      {
+        path: '',
+        title: "Quản lý đơn hàng | CasEYE's Admin",
+        loadComponent: () => import('./admin/admin-orders').then((m) => m.AdminOrders),
+      },
+      {
+        path: 'simulator',
+        title: "Mô phỏng đơn hàng | CasEYE's Admin",
+        data: { mode: 'simulator' },
+        loadComponent: () => import('./demo-console/demo-console').then((m) => m.DemoConsole),
+      },
+    ],
   },
 ];

@@ -1,6 +1,6 @@
-import { Injectable, Injector, computed, effect, inject, signal } from '@angular/core';
-import { SUPABASE_CLIENT } from '../supabase/supabase.client';
-import { SupabaseAuthService } from '../supabase/supabase-auth.service';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
+import { STAFF_SUPABASE_CLIENT } from '../supabase/supabase.client';
+import { StaffAuthService } from './staff-auth';
 
 /** Back-office roles (BRD v8): each sees only its own actions. */
 export type StaffRole = 'Operator' | 'CSKH' | 'Admin';
@@ -16,16 +16,24 @@ const VIEW_KEY = 'caseyes.staff.view.v1';
 
 /**
  * Staff session = a real Supabase sign-in whose profiles.role is operator / cskh / admin.
+ * It runs on its own client/session (StaffAuthService), never the customer's, so signing in to
+ * /admin does not change who is signed in on the storefront.
+ *
  * An admin can do everything (M8) and switches the admin screens between the three views;
  * operator and cskh see only their own view.
  */
 @Injectable({ providedIn: 'root' })
 export class StaffSession {
-  private readonly auth = inject(SupabaseAuthService);
   private readonly injector = inject(Injector);
-  /** Created on first use, so pages that never need a staff role never touch the client. */
+  /**
+   * Staff auth and client are created on first use. Customer pages also hold a StaffSession
+   * (order tracking reads the current role), and must never create or restore the staff session.
+   */
+  private get auth(): StaffAuthService {
+    return this.injector.get(StaffAuthService);
+  }
   private get db() {
-    return this.injector.get(SUPABASE_CLIENT);
+    return this.injector.get(STAFF_SUPABASE_CLIENT);
   }
 
   /** Role stored in profiles.role for the signed-in user (null = customer or signed out). */
@@ -45,16 +53,17 @@ export class StaffSession {
   });
   readonly email = computed(() => this.auth.user()?.email ?? '');
 
-  constructor() {
-    // Re-read the role whenever the signed-in user changes.
-    effect(() => {
-      const id = this.auth.user()?.id ?? null;
-      if (id !== this.loadedFor) void this.refresh();
-    });
+  /**
+   * Reads profiles.role of the signed-in staff user (cached per user). The staff user only changes
+   * through signIn/signOut below (its session is not shared with the storefront), and the admin
+   * guard calls this on every admin navigation.
+   */
+  async refresh(): Promise<StaffRole | null> {
+    await this.auth.ready;
+    return this.readRole();
   }
 
-  /** Reads profiles.role of the signed-in user (cached per user). */
-  refresh(): Promise<StaffRole | null> {
+  private readRole(): Promise<StaffRole | null> {
     const id = this.auth.user()?.id ?? null;
     if (id === this.loadedFor && !this.pending) return Promise.resolve(this._dbRole());
     this.loadedFor = id;

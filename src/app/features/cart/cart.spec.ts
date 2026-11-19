@@ -1,55 +1,75 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
 import { provideRouter } from '@angular/router';
-
-import { CartState } from '../../core/cart-state/cart-state';
+import { SupabaseAuthService } from '../../core/supabase/supabase-auth.service';
+import { CartState, type CartItem } from '../../core/cart-state/cart-state';
+import { NotificationManager } from '../../shared/ui/notification/notification.manager';
 import { Cart } from './cart';
 
+const line = (id: string, name: string, quantity: number): CartItem => ({
+  id,
+  name,
+  model: 'iPhone 16 Pro',
+  finish: 'In UV bền màu · Tím Lilac',
+  tone: 'lilac',
+  caption: '',
+  unitPrice: 300_000,
+  quantity,
+  stock: 10,
+  custom: false,
+});
+
 describe('Cart', () => {
-  let component: Cart;
   let fixture: ComponentFixture<Cart>;
+  let cart: CartState;
+  const el = () => fixture.nativeElement as HTMLElement;
 
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [Cart],
-      providers: [provideRouter([]), { provide: SupabaseAuthService, useValue: { user: signal(null), isAuthenticated: signal(true), signOut: () => Promise.resolve({ data: null, error: null }) } }],
+      providers: [
+        provideRouter([]),
+        { provide: SupabaseAuthService, useValue: { user: signal({ id: 'u1' }), isAuthenticated: signal(true), signOut: () => Promise.resolve({ data: null, error: null }) } },
+      ],
     }).compileComponents();
-
+    cart = TestBed.inject(CartState);
+    cart.add(line('cosmic-orbit:iphone-16-pro:sku-a', 'Cosmic Orbit', 1));
+    cart.add(line('sakura-silk:iphone-16-pro:sku-b', 'Sakura Silk', 2));
     fixture = TestBed.createComponent(Cart);
-    component = fixture.componentInstance;
     await fixture.whenStable();
+    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('renders each line with a clear remove button', () => {
+    expect(el().textContent).toContain('Cosmic Orbit');
+    expect(el().querySelector('[aria-label="Xóa Cosmic Orbit khỏi giỏ hàng"]')).not.toBeNull();
+    expect(el().querySelector('[aria-label="Xóa Sakura Silk khỏi giỏ hàng"]')).not.toBeNull();
   });
 
-  it('renders the sample products and keeps the header count in sync with quantity changes', () => {
-    const cart = TestBed.inject(CartState);
+  it('removes a line from the cart page and offers undo', () => {
+    el().querySelector<HTMLButtonElement>('[aria-label="Xóa Sakura Silk khỏi giỏ hàng"]')!.click();
     fixture.detectChanges();
+    expect(cart.items().map((i) => i.name)).toEqual(['Cosmic Orbit']);
 
-    expect(cart.itemCount()).toBe(2);
-    expect(fixture.nativeElement.textContent).toContain('Giỏ hàng của bạn');
-    expect(fixture.nativeElement.textContent).toContain('Ốp Bloom in the clouds');
-
-    const increaseButton = fixture.nativeElement.querySelector(
-      '[aria-label="Tăng số lượng Ốp Bloom in the clouds"]',
-    ) as HTMLButtonElement;
-    increaseButton.click();
-    fixture.detectChanges();
-
+    const toast = TestBed.inject(NotificationManager).notifications().at(-1)!;
+    expect(toast.actionLabel).toBe('Hoàn tác');
+    TestBed.inject(NotificationManager).triggerAction(toast.id);
+    expect(cart.items().map((i) => i.name)).toEqual(['Cosmic Orbit', 'Sakura Silk']);
     expect(cart.itemCount()).toBe(3);
-    expect(fixture.nativeElement.textContent).toContain('Bạn đang có 3 sản phẩm trong giỏ.');
+  });
+
+  it('"−" at quantity 1 removes the line instead of being disabled', () => {
+    const minus = el().querySelector<HTMLButtonElement>('[aria-label="Xóa Cosmic Orbit khỏi giỏ"]')!;
+    expect(minus.disabled).toBe(false);
+    minus.click();
+    fixture.detectChanges();
+    expect(cart.items().map((i) => i.name)).toEqual(['Sakura Silk']);
   });
 
   it('shows the empty-cart state after removing every product', () => {
-    const cart = TestBed.inject(CartState);
-    cart.remove('bloom-01');
-    cart.remove('lavender-02');
-
+    for (const item of cart.items()) cart.remove(item.id);
     fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).toContain('Giỏ hàng đang trống');
+    expect(el().textContent).toContain('Giỏ hàng của bạn đang trống');
   });
 });

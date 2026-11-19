@@ -18,6 +18,7 @@ import { fold } from './domain/actions';
 import { LEGACY_TABS, ORDER_TABS, OrderTab, matchesTab } from './domain/timeline';
 import { OrderTrackingService } from './services/order-tracking.service';
 import { track } from './services/tracker';
+import { OrderSkeleton } from './components/order-skeleton/order-skeleton';
 
 const SEARCH_DEBOUNCE_MS = 300;
 const TAB_KEYS = ORDER_TABS.map((t) => t.key);
@@ -25,7 +26,7 @@ const TAB_KEYS = ORDER_TABS.map((t) => t.key);
 /** FR-OT-03 "Lịch sử đơn hàng": entry page of Quản lý đơn hàng (Profile's tab links here). */
 @Component({
   selector: 'app-order-tracking',
-  imports: [RouterLink, OrderCard, NotificationBell],
+  imports: [RouterLink, OrderCard, NotificationBell, OrderSkeleton],
   templateUrl: './order-tracking.html',
   styleUrl: './order-tracking.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,7 +49,9 @@ export class OrderTracking {
   /** What the customer typed; `query` follows it after 300 ms (P1-3). */
   protected readonly rawQuery = signal('');
   protected readonly query = signal('');
-  protected readonly loading = signal(true);
+  private readonly reloading = signal(false);
+  /** Skeleton only while orders are really on their way (no artificial delay). */
+  protected readonly loading = computed(() => this.reloading() || !this.orders.ready());
   protected readonly loadError = signal<string | null>(null);
   protected readonly customerName = computed(() => this.orders.customer().name);
 
@@ -69,13 +72,11 @@ export class OrderTracking {
   });
 
   protected readonly hasFilter = computed(() => this.activeTab() !== 'all' || this.query().trim() !== '');
-  protected readonly skeletons = [0, 1, 2];
 
   constructor() {
     const destroyRef = inject(DestroyRef);
-    // Short skeleton so the layout stays stable while data loads (P1-3).
-    const t = setTimeout(() => this.reload(), 350);
-    destroyRef.onDestroy(() => clearTimeout(t));
+    // Skeleton keeps the layout stable while data loads (P1-3); it shows only until orders arrive.
+    this.reload();
     track('order_list_viewed');
 
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -99,10 +100,10 @@ export class OrderTracking {
   }
 
   protected reload(): void {
-    this.loading.set(true);
+    this.reloading.set(true);
     const r = this.orders.load();
     this.loadError.set(r.error ? r.error.message : null);
-    this.loading.set(false);
+    this.reloading.set(false);
   }
 
   protected onSearch(event: Event): void {

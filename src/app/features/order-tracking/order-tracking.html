@@ -1,7 +1,7 @@
 <section class="min-h-[70vh] bg-surface pb-20">
   <!-- Page header -->
   <div class="bg-surface-alt">
-    <div class="mx-auto max-w-[1280px] px-4 pb-4 pt-6 lg:px-6 lg:pt-8">
+    <div class="page pb-4 pt-6 lg:pt-8">
       <nav aria-label="Breadcrumb" class="mb-3 flex items-center gap-2 text-sm text-ink-soft">
         <a routerLink="/" class="rounded transition-colors hover:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-400">Trang chủ</a>
         <span aria-hidden="true">/</span>
@@ -36,7 +36,7 @@
 
   <!-- Status tabs: sticky under the site header (h-16), horizontal scroll with snap on mobile (P1-1) -->
   <div class="sticky top-16 z-30 border-b border-line bg-surface-alt/95 backdrop-blur">
-    <div class="mx-auto max-w-[1280px] px-4 lg:px-6">
+    <div class="page">
       <div role="tablist" aria-label="Lọc theo trạng thái" class="tab-strip flex snap-x snap-mandatory gap-1 overflow-x-auto">
         @for (t of tabs; track t.key) {
           @let selected = activeTab() === t.key;
@@ -66,18 +66,10 @@
     </div>
   </div>
 
-  <div class="mx-auto max-w-[1280px] px-4 pt-6 lg:px-6" aria-live="polite">
+  <div class="page pt-6" aria-live="polite">
     @if (loading()) {
       <!-- Skeleton keeps the card layout stable while loading (P1-3) -->
-      <div class="flex flex-col gap-5" aria-busy="true" aria-label="Đang tải đơn hàng">
-        @for (s of skeletons; track s) {
-          <div class="animate-pulse overflow-hidden rounded-card border border-line bg-surface-alt motion-reduce:animate-none">
-            <div class="flex justify-between border-b border-line px-5 py-4"><div class="h-4 w-40 rounded bg-line"></div><div class="h-5 w-24 rounded-pill bg-line"></div></div>
-            <div class="flex gap-4 px-5 py-4"><div class="h-24 w-12 rounded-xl bg-line"></div><div class="flex-1 space-y-2"><div class="h-4 w-3/4 rounded bg-line"></div><div class="h-3 w-1/3 rounded bg-line"></div></div></div>
-            <div class="flex justify-end border-t border-line bg-surface px-5 py-3"><div class="h-11 w-32 rounded-pill bg-line"></div></div>
-          </div>
-        }
-      </div>
+      <app-order-skeleton [count]="3" />
     } @else if (loadError(); as message) {
       <div role="alert" class="flex flex-col items-center gap-4 rounded-card border border-line bg-surface-alt px-6 py-14 text-center shadow-soft">
         <p class="max-w-md text-ink">{{ message }}</p>

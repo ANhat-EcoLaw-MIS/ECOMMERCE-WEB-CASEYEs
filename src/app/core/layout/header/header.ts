@@ -5,6 +5,7 @@ import {filter, map} from 'rxjs';
 import {NAV_ITEMS} from './nav-items';
 import {NotificationManager} from '../../../shared/ui/notification/notification.manager';
 import {SupabaseAuthService} from '../../supabase/supabase-auth.service';
+import { injectSignOut } from '../../auth/sign-out';
 import {AuthModal} from '../../auth/auth-modal';
 import { CartState } from '../../cart-state/cart-state';
 import { CartDrawerState } from '../../cart-state/cart-drawer-state';
@@ -115,22 +116,9 @@ export class Header {
     })
   }
 
+  private readonly signOut = injectSignOut();
+
   onSignOut(): void {
-    this.auth.signOut().then((r) => {
-      if (!r.error){
-        this.router.navigate(['/'])
-        this.notifications.show({
-          variant: 'success',
-          title: 'Đăng xuất thành công',
-          message: 'Hẹn gặp lại bạn sớm nhé!',
-        })
-      } else {
-        this.notifications.show({
-          variant: "error",
-          title: "Gặp chút lỗi rồi!",
-          message: `${r.error.code}: ${r.error.message} - Hãy liên hệ với chăm sóc khách hàng để được hỗ trợ sớm nhất.`,
-        })
-      }
-      })
+    void this.signOut();
   }
 }

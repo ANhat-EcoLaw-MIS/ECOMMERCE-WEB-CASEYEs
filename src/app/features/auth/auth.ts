@@ -19,6 +19,7 @@ import { sanitizeReturnUrl } from '../../shared/utils/safe-return-url';
 import { DEMO_GOOGLE_EMAIL } from '../../shared/utils/demo-user';
 import { ProfileRepository } from '../account/services/profile.repository';
 import { NotificationManager } from '../../shared/ui/notification/notification.manager';
+import { LoadingOverlay } from '../../shared/ui/loading/loading-overlay';
 
 const TEXT: Record<Mode, { title: string; submit: string }> = {
   login: { title: 'Đăng nhập', submit: 'Đăng nhập' },
@@ -84,6 +85,7 @@ export class Auth {
   private readonly authModal = inject(AuthModal);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationManager);
+  private readonly overlay = inject(LoadingOverlay);
 
   readonly mode = input.required<Mode>(); // from route data
   readonly returnUrl = input<string>(); // ?returnUrl=/design-studio
@@ -295,6 +297,15 @@ export class Auth {
     const returnUrl = sanitizeReturnUrl(rawReturnUrl);
     if (this.embedded()) this.authModal.close();
     const signupParam = signupFlow ? '&flow=signup' : '';
+    // Covers the lazy onboarding route + its guard, so the user sees a deliberate hand-off
+    // instead of a frozen form; it closes when the onboarding page has loaded.
+    if (signupFlow) {
+      this.overlay.showUntilNavigation({
+        title: 'Đăng ký thành công!',
+        message: 'Đang chuẩn bị không gian thiết kế dành riêng cho bạn…',
+        minDuration: 1200,
+      });
+    }
     await this.router.navigateByUrl(
       `/account/onboarding?returnUrl=${encodeURIComponent(returnUrl)}${signupParam}`,
       { replaceUrl: true },

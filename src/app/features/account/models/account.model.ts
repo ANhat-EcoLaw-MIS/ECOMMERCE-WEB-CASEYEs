@@ -1,6 +1,6 @@
 import type { Database } from '../../../core/supabase/database.types';
 
-export type TabId = 'profile' | 'designs' | 'orders' | 'security';
+export type TabId = 'profile' | 'designs' | 'orders' | 'security' | 'signout';
 export type OnboardingStatus = 'pending' | 'completed' | 'skipped';
 export type Address = Database['public']['Tables']['addresses']['Row'];
 export type Profile = Omit<Database['public']['Tables']['profiles']['Row'], 'onboarding_status'> & {

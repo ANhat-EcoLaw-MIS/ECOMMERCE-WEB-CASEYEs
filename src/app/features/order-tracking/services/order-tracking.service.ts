@@ -126,6 +126,12 @@ export class OrderTrackingService implements OrderIntake {
    */
   readonly remote = computed(() => !!this.auth?.isAuthenticated());
   readonly orders = computed(() => (this.remote() ? this.store.orders() : this.repo.state().orders));
+  /**
+   * True once the orders for the current user are available: always for the local mock,
+   * after the first Supabase fetch when signed in. Screens show a skeleton until then,
+   * instead of an empty list or a false "order not found".
+   */
+  readonly ready = computed(() => !this.remote() || this.store.loaded() || !!this.store.error());
   private loadedFor: string | null = null;
 
   /** Logged-in Supabase user, or the demo customer when nobody is logged in (demo mode only). */

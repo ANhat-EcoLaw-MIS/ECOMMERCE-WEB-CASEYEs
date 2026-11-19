@@ -16,7 +16,7 @@
       <div class="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-indigo-950/20 blur-3xl"></div>
     </div>
 
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="page relative z-10">
 
       <!-- My Designs Section Header -->
       <div class="flex items-center justify-between gap-4">
@@ -328,7 +328,7 @@
   </div>
 
   @if (idea()) {
-    <div class="relative z-10 mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+    <div class="relative z-10 page pt-4">
       <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-brand-50 px-4 py-3 ring-1 ring-brand-100">
         <p class="text-sm text-ink">Ý tưởng của bạn: <b>“{{ idea() }}”</b></p>
         <div class="flex flex-wrap gap-2">
@@ -343,7 +343,7 @@
   <!-- ══════════════════════════════════════════════════════
        SECTION 1: KHO MẪU THIẾT KẾ & DÒNG MÁY HIỆN TẠI
   ══════════════════════════════════════════════════════ -->
-  <div class="relative mx-auto max-w-7xl px-4 pt-6 pb-2 sm:px-6 lg:px-8 z-10">
+  <div class="relative page pt-6 pb-2 z-10">
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-purple-100/70 pb-5">
       <div>
         <h1 class="font-display text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">
@@ -399,7 +399,7 @@
   <!-- ══════════════════════════════════════════════════════
        SECTION 2: CATEGORY FILTER TABS (Kéo mượt, chọn nhiều nút, mở rộng toàn bộ)
   ══════════════════════════════════════════════════════ -->
-  <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+  <div class="page py-4">
     <div class="flex items-center gap-2 sm:gap-3">
 
       <!-- Scrollable Track with Edge Fades when not expanded -->
@@ -508,7 +508,7 @@
   <!-- ══════════════════════════════════════════════════════
        SECTION 3: TEMPLATE GRID (Đã bỏ giá tiền, thêm mô tả & nhãn)
   ══════════════════════════════════════════════════════ -->
-  <div id="template-grid-section" class="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6 lg:px-8">
+  <div id="template-grid-section" class="page pb-20 pt-4">
     @if (hasActiveFilters()) {
     <div class="mb-4 flex items-center justify-between rounded-2xl bg-purple-50/70 border border-purple-100/80 px-4 py-2.5">
       <span class="text-xs font-medium text-ink-soft">
@@ -523,7 +523,7 @@
       </button>
     </div>
     }
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]">
 
       @for (tpl of filteredTemplates(); track tpl.id) {
       <!-- Card Container Wrapper with Chibi Peeker Animation (Hover Effect for Blank Case) -->
