@@ -45,8 +45,7 @@ export const ORDER_TRACKING_ADMIN_ROUTES: Routes = [
       {
         path: 'simulator',
         title: "Mô phỏng đơn hàng | CasEYE's Admin",
-        data: { mode: 'simulator' },
-        loadComponent: () => import('./demo-console/demo-console').then((m) => m.DemoConsole),
+        loadComponent: () => import('./admin/admin-simulator').then((m) => m.AdminSimulator),
       },
     ],
   },

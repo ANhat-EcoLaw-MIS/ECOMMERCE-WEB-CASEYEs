@@ -151,6 +151,53 @@ r = await one(`select status_detail from public.orders where id = $1`, [o4]);
 ok(r.status_detail === 'Cancelled' && (await one(`select situation from public.refund_requests where order_id = $1`, [o4]))?.situation === 'S2', 'job: design not fixed in 7 days → Cancelled + refund S2');
 ok((await as(A, `select count(*)::int n from public.list_open_orders()`)).rows[0].n >= 1, 'list_open_orders shows the pending refund');
 
+// ---------------------------------------------------------------- M9: simulation on the real data (admin ↔ customer in sync)
+await expectError(OP, `select public.sim_time_travel($1, 30)`, [o4], 'forbidden', 'M9: only Admin can move time');
+const s1 = (await as(AD, `select public.sim_create_sample_order('a@test.vn', 'stock', 'cod') id`)).rows[0].id;
+ok((await as(A, `select count(*)::int n from public.orders where id = $1`, [s1])).rows[0].n === 1, 'M9: sample order created by Admin shows for the customer');
+await expectError(OP, `select public.mark_packed($1)`, [s1], 'not_confirmed', 'M9: COD sample still in the change-of-mind window');
+await as(AD, `select public.sim_time_travel($1, 31)`, [s1]);
+await as(OP, `select public.mark_packed($1)`, [s1]);
+ok((await one(`select status_detail from public.orders where id = $1`, [s1])).status_detail === 'Ready_for_Pickup', 'M9: +31 min → COD confirmed, packed (same result on both views)');
+await as(OP, `select public.apply_carrier_event('m9-1', $1, 'In_Transit')`, [s1]);
+await as(OP, `select public.apply_carrier_event('m9-2', $1, 'Delivered')`, [s1]);
+await as(AD, `select public.sim_time_travel($1, 72 * 60 + 1)`, [s1]);
+ok((await one(`select status_detail from public.orders where id = $1`, [s1])).status_detail === 'Completed', 'M9: +72 h → job auto-completes the order');
+const s2 = (await as(AD, `select public.sim_create_sample_order('a@test.vn', 'custom', 'prepaid') id`)).rows[0].id;
+await as(OP, `select public.moderate_design($1, false, 'Bản quyền', 'Ảnh có logo')`, [s2]);
+await as(AD, `select public.sim_time_travel($1, 7 * 1440 + 10)`, [s2]);
+ok((await one(`select status_detail from public.orders where id = $1`, [s2])).status_detail === 'Cancelled', 'M9: +7 days without a fix → Cancelled + refund S2');
+// stock goods come back to stock when a failed prepaid delivery is cancelled
+const s3 = (await as(AD, `select public.sim_create_sample_order('a@test.vn', 'stock', 'prepaid') id`)).rows[0].id;
+const inv3 = (await one(`select inventory_item_id id from public.order_items where order_id = $1`, [s3])).id;
+const q3 = (await one(`select quantity_on_hand q from public.inventory_items where id = $1`, [inv3])).q;
+await as(OP, `select public.mark_packed($1)`, [s3]);
+await as(OP, `select public.apply_carrier_event('m9-3', $1, 'In_Transit')`, [s3]);
+await as(OP, `select public.apply_carrier_event('m9-4', $1, 'Delivery_Failed', 'Customer_Unreachable')`, [s3]);
+await as(OP, `select public.apply_carrier_event('m9-5', $1, 'Warehouse_Received')`, [s3]);
+await as(A, `select public.report_issue($1, 'TK-M9')`, [s3]);
+r = await one(`select status_detail, warehouse_disputed, frozen_at from public.orders where id = $1`, [s3]);
+ok(r.status_detail === 'Delivery_Failed' && r.warehouse_disputed && r.frozen_at, 'M9: dispute during the warehouse hold freezes the hold (FR-OT-EX-03)');
+await as(CS, `select public.resolve_dispute($1, true, 'Hãng xác nhận lỗi')`, [s3]);
+r = await one(`select warehouse_disputed, fault_override from public.orders where id = $1`, [s3]);
+ok(!r.warehouse_disputed && r.fault_override === 'Damaged_In_Transit', 'M9: CSKH says customer right → carrier fault');
+await as(A, `select public.cancel_after_failure($1)`, [s3]);
+ok((await one(`select quantity_on_hand q from public.inventory_items where id = $1`, [inv3])).q === q3 + 1, 'M9: cancelled failed delivery → stock goods back to stock');
+ok((await one(`select situation from public.refund_requests where order_id = $1`, [s3])).situation === 'S3a', 'M9: after the dispute the refund is S3a (100%)');
+// reprint after a complaint gives a new delivery window
+const s4 = (await as(AD, `select public.sim_create_sample_order('a@test.vn', 'custom', 'prepaid') id`)).rows[0].id;
+await as(OP, `select public.moderate_design($1, true)`, [s4]);
+await db.query(`update public.orders set batch_date = current_date - 1 where id = $1`, [s4]);
+await as(OP, `select public.start_production()`);
+await as(OP, `select public.mark_packed($1)`, [s4]);
+await as(OP, `select public.apply_carrier_event('m9-6', $1, 'In_Transit')`, [s4]);
+await as(OP, `select public.apply_carrier_event('m9-7', $1, 'Delivered')`, [s4]);
+await db.query(`update public.orders set earliest_edd = current_date - 10, latest_edd = current_date - 9 where id = $1`, [s4]);
+await as(A, `select public.report_issue($1, 'TK-M9-2')`, [s4]);
+await as(CS, `select public.apply_ticket_result($1, 'Reprint')`, [s4]);
+r = await one(`select status_detail, latest_edd >= current_date as fresh from public.orders where id = $1`, [s4]);
+ok(r.status_detail === 'In_Production' && r.fresh, 'M9: reprint → In_Production with a new delivery window');
+
 // ---------------------------------------------------------------- rollbacks keep users / profiles
 const profilesBefore = (await one(`select count(*)::int n from public.profiles`)).n;
 await db.exec(`delete from public.refund_requests; delete from public.policy_consents; delete from public.order_items; delete from public.order_status_history; delete from public.orders;`);

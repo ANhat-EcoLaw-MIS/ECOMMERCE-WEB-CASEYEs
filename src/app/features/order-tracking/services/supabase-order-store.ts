@@ -1,4 +1,5 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { SyncChannel } from './sync-channel';
 import { SUPABASE_CLIENT } from '../../../core/supabase/supabase.client';
 import { resolveProductImage } from '../../shop/catalog';
 import { Result, fail, ok } from '../../../core/supabase/supabase.types';
@@ -208,7 +209,7 @@ export function mapOrderRow(r: Row): Order {
       }),
     ),
     tickets: r['ticket_id']
-      ? [{ ticketCode: s(r['ticket_id']), issueType: 'Other' as const, description: '', evidenceNames: [], open: status === 'Return_Requested', createdAt: s(r['updated_at']) }]
+      ? [{ ticketCode: s(r['ticket_id']), issueType: (status === 'Delivery_Failed' && r['warehouse_disputed'] ? 'Dispute_Failure_Cause' : 'Other') as 'Other', description: '', evidenceNames: [], open: status === 'Return_Requested' || (status === 'Delivery_Failed' && !!r['warehouse_disputed']), createdAt: s(r['updated_at']) }]
       : [],
     vouchers: rows(r['order_vouchers']).map((v) => ({
       code: s(v['code']),
@@ -235,6 +236,28 @@ export class SupabaseOrderStore {
   /** Shared notifications of the signed-in user (M4), newest first. */
   readonly notifications = signal<readonly { id: string; userId: string; title: string; body: string; link: string; createdAt: string; readAt?: string }[]>([]);
   readonly error = signal<string | null>(null);
+  /** Last successful fetch (shown as "Đồng bộ lúc …" on the admin page). */
+  readonly syncedAt = signal<Date | null>(null);
+  private readonly sync = inject(SyncChannel);
+
+  constructor() {
+    // Admin and customer pages (other tabs, or the other instance in this tab) reload as soon as
+    // any of them changes an order, plus a light poll and a reload when the tab comes back, so the
+    // two views never drift apart.
+    this.sync.on('db', () => this.refresh());
+    const onVisible = () => document.visibilityState === 'visible' && this.refresh();
+    const timer = typeof window === 'undefined' ? null : setInterval(() => document.visibilityState === 'visible' && this.refresh(), 15_000);
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisible);
+    inject(DestroyRef).onDestroy(() => {
+      if (timer) clearInterval(timer);
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisible);
+    });
+  }
+
+  /** Reload only when a list was already loaded for the signed-in user. */
+  refresh(): void {
+    if (this.loaded()) void this.load();
+  }
 
   async load(): Promise<Result<readonly Order[]>> {
     const { data, error } = await this.db.from('orders').select(SELECT).order('created_at', { ascending: false });
@@ -246,6 +269,7 @@ export class SupabaseOrderStore {
     this._orders.set(list);
     void this.loadNotifications();
     this.loaded.set(true);
+    this.syncedAt.set(new Date());
     this.error.set(null);
     return ok(list);
   }
@@ -283,6 +307,7 @@ export class SupabaseOrderStore {
     const { data, error } = await (this.db.rpc as unknown as (f: string, a: Record<string, unknown>) => Promise<{ data: T; error: { message: string } | null }>)(fn, args);
     if (error) return fail({ message: rpcMessage(error.message) });
     await this.load();
+    this.sync.post('db');
     return ok(data);
   }
 }
@@ -299,7 +324,6 @@ const RPC_MESSAGES: Record<string, string> = {
   handled_by_other: 'Thao tác đã được xử lý bởi người khác. Danh sách đã được cập nhật.',
   reason_required: 'Vui lòng nhập lý do.',
   custom_needs_production: 'Đơn có hàng thiết kế phải qua sản xuất trước khi đóng gói.',
-  not_confirmed: 'Đơn chưa được xác nhận.',
   cannot_pack: 'Đơn không ở bước có thể đóng gói.',
   invalid_state: 'Trạng thái đơn không phù hợp với sự kiện này.',
   cod_requires_stock_only: 'Đơn có hàng thiết kế theo yêu cầu cần thanh toán trước.',
@@ -309,6 +333,18 @@ const RPC_MESSAGES: Record<string, string> = {
   invalid_account: 'Thông tin tài khoản ngân hàng chưa hợp lệ.',
   no_account: 'Khách chưa cung cấp tài khoản nhận hoàn.',
   bank_ref_required: 'Nhập mã giao dịch ngân hàng.',
+  not_confirmed: 'Đơn COD còn trong thời gian đổi ý 30 phút, chưa thao tác được.',
+  cannot_report: 'Đơn không còn trong thời hạn báo sự cố, hoặc đã có yêu cầu đang mở.',
+  cannot_redeliver: 'Đơn không giao lại được (chưa về kho, đang khiếu nại hoặc đã dùng lượt giao lại).',
+  cannot_resubmit: 'Không gửi lại được thiết kế (đã hết 2 lần sửa).',
+  cannot_confirm: 'Đơn chưa ở trạng thái Đã giao.',
+  no_open_ticket: 'Đơn không có yêu cầu hỗ trợ đang mở.',
+  invalid_resolution: 'Kết quả xử lý không hợp lệ.',
+  customer_not_found: 'Không tìm thấy tài khoản khách với email này.',
+  invalid_interval: 'Khoảng thời gian không hợp lệ.',
+  invalid_kind: 'Loại đơn mẫu không hợp lệ.',
+  product_not_found: 'Sản phẩm không còn bán.',
+  design_not_found: 'Không tìm thấy bản thiết kế.',
 };
 
 function rpcMessage(raw: string): string {
