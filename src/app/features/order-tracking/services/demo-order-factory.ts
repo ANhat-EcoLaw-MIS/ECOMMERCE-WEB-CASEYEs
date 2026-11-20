@@ -17,7 +17,7 @@ export const DEMO_TEMPLATES: Record<DemoTemplate, { label: string; items: readon
         baseSku: 'PHOI-IP15P-KINH',
         isCustom: true,
         quantity: 1,
-        unitPrice: 289_000,
+        unitPrice: 250_000,
         design: { caption: 'Summer Trip', previewUrl: '/order-tracking/summer-trip.svg', hasUploadedImage: true },
       },
     ],
@@ -31,7 +31,7 @@ export const DEMO_TEMPLATES: Record<DemoTemplate, { label: string; items: readon
         baseSku: 'PHOI-S24-TPU',
         isCustom: true,
         quantity: 1,
-        unitPrice: 259_000,
+        unitPrice: 250_000,
         design: { caption: 'Good Vibes', previewUrl: '/order-tracking/good-vibes.svg', hasUploadedImage: false },
       },
     ],
@@ -39,8 +39,8 @@ export const DEMO_TEMPLATES: Record<DemoTemplate, { label: string; items: readon
   stock: {
     label: 'Chỉ hàng có sẵn',
     items: [
-      { productName: 'Ốp lưng Clear Magnetic chống sốc', phoneModel: 'iPhone 14', baseSku: 'SAN-IP14-CLEAR', isCustom: false, quantity: 1, unitPrice: 160_000, imageUrl: '/order-tracking/clear-magnetic.svg' },
-      { productName: 'Dây đeo điện thoại ngọc trai tím', phoneModel: 'Universal', baseSku: 'SAN-DAY-NGOCTRAI', isCustom: false, quantity: 1, unitPrice: 69_000, imageUrl: '/order-tracking/pearl-strap.svg' },
+      { productName: 'Ốp lưng Clear Magnetic chống sốc', phoneModel: 'iPhone 14', baseSku: 'SAN-IP14-CLEAR', isCustom: false, quantity: 1, unitPrice: 199_000, imageUrl: '/order-tracking/clear-magnetic.svg' },
+      { productName: 'Dây đeo điện thoại ngọc trai tím', phoneModel: 'Universal', baseSku: 'SAN-DAY-NGOCTRAI', isCustom: false, quantity: 1, unitPrice: 79_000, imageUrl: '/order-tracking/pearl-strap.svg' },
     ],
   },
   mixed: {
@@ -52,10 +52,10 @@ export const DEMO_TEMPLATES: Record<DemoTemplate, { label: string; items: readon
         baseSku: 'PHOI-IP15PM-GUONG',
         isCustom: true,
         quantity: 1,
-        unitPrice: 299_000,
+        unitPrice: 250_000,
         design: { caption: 'Cosmic', previewUrl: '/order-tracking/cosmic-dream.svg', hasUploadedImage: false },
       },
-      { productName: 'Giá đỡ MagSafe tím pastel', phoneModel: 'Universal', baseSku: 'SAN-MAGSAFE-TIM', isCustom: false, quantity: 1, unitPrice: 89_000, imageUrl: '/order-tracking/magsafe-stand.svg' },
+      { productName: 'Giá đỡ MagSafe tím pastel', phoneModel: 'Universal', baseSku: 'SAN-MAGSAFE-TIM', isCustom: false, quantity: 1, unitPrice: 79_000, imageUrl: '/order-tracking/magsafe-stand.svg' },
     ],
   },
 };
@@ -78,7 +78,7 @@ export const DEMO_ADDRESSES: Record<DemoAddress, { label: string; address: strin
     label: 'Xa (vận chuyển 3–5 ngày)',
     address: '18 Phố Huế, Q. Hai Bà Trưng, Hà Nội',
     transitDays: { min: 3, max: 5 },
-    standardFee: 40_000,
+    standardFee: 25_000,
     expressFee: 0,
   },
 };

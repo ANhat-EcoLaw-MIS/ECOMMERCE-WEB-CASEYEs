@@ -218,7 +218,7 @@ export class CheckoutService {
       edge: 'Chống sốc Air-Shield tím',
       surface: 'Phủ bóng 3D bóng bẩy',
       quantity: 1,
-      price: 464000,
+      price: 250000,
       imageUrl:
         'https://lh3.googleusercontent.com/aida-public/AB6AXuD1v112R_7ZfELY_FPkjh8jGY8emF8-6Cy1lm2DeRYvh1EdMWHyHn0e2qv4O-2ecA_FIL4pQLK-G--qB8YJjeyG5oFTx0jSf_NAG_Pvuk9V0bK0z-FmL4GroZRBXDiHqrvZiLOana-QtHSbVQ4QLhF7eeoO-2KF8_DnplCN1PVNBBe1gT3sNtpXl3rntowJTicce5dKqo2oad__qC5g4YcukPN8z_LEbAqWSVmn8g',
       resolutionText: 'Đạt chuẩn 300 DPI (Cực nét)',
@@ -231,7 +231,7 @@ export class CheckoutService {
   // --- Voucher ---
   readonly voucher = signal<Voucher | null>({
     code: 'CASEFIRST',
-    discountAmount: 50000,
+    discountAmount: 20000,
     description: 'Voucher khách hàng mới',
     isApplied: true,
   });
@@ -428,7 +428,7 @@ export class CheckoutService {
     if (clean === 'CASEFIRST') {
       this.voucher.set({
         code: 'CASEFIRST',
-        discountAmount: 50000,
+        discountAmount: 20000,
         description: 'Voucher khách hàng mới',
         isApplied: true,
       });

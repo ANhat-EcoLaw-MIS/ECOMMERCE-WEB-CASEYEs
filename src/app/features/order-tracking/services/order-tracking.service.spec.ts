@@ -142,7 +142,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
     ok(service.decideCancelRequest(o.id, true, '', CSKH));
     const r = get(o.id).refunds[0];
     expect(get(o.id).status).toBe('Cancelled');
-    expect(r).toMatchObject({ situation: 'S1', status: 'Pending_Approval', amount: 314_000 });
+    expect(r).toMatchObject({ situation: 'S1', status: 'Pending_Approval', amount: 275_000 });
     expect(r.refundMethod).toBeUndefined(); // chosen in the refund progress block
     ok(service.submitRefundAccount(o.id, r.id, { method: 'Bank', bank: 'VCB', accountNo: '0123456789', holder: 'NGUYEN NHAT ANH' }));
     ok(service.approveRefund(o.id, r.id, ADMIN));
@@ -254,12 +254,12 @@ describe('OrderTrackingService scenarios (v8)', () => {
   });
 
   it('late delivery issues 10% (cap 30k) plus the Hỏa tốc surcharge, once', () => {
-    const o = create({ template: 'stock', tier: 'Express' }); // goods 229k -> 22.900, surcharge 20k
+    const o = create({ template: 'stock', tier: 'Express' }); // goods 278k -> 27.800, surcharge 20k
     ok(service.markPacked(o.id, OPERATOR));
     ok(service.applyWebhook(o.id, 'In_Transit'));
     at(new Date(2026, 10, 5, 9, 0)); // latestEDD 04/11
     ok(service.applyWebhook(o.id, 'Delivered'));
-    expect(get(o.id).vouchers.map((v) => [v.kind, v.value])).toEqual([['Late_Delivery', 22_900], ['Express_Surcharge', 20_000]]);
+    expect(get(o.id).vouchers.map((v) => [v.kind, v.value])).toEqual([['Late_Delivery', 27_800], ['Express_Surcharge', 20_000]]);
   });
 
   it('scenario 7: custom + customer fault: paid redelivery, second failure closes without refund (3c)', () => {
@@ -288,7 +288,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
     ok(service.applyWebhook(o.id, 'Delivery_Failed', { failureCause: 'Lost_In_Transit' }));
     ok(service.applyWebhook(o.id, 'Warehouse_Received'));
     ok(service.cancelAfterFailure(o.id, { method: 'Bank', bank: 'VCB', accountNo: '0123456789', holder: 'NGUYEN NHAT ANH' }, {}));
-    expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S3a', amount: 284_000 });
+    expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S3a', amount: 275_000 });
   });
 
   it('stock prepaid + customer fault: refund goods minus two-way Standard fee (3b)', () => {
@@ -298,7 +298,7 @@ describe('OrderTrackingService scenarios (v8)', () => {
     ok(service.applyWebhook(o.id, 'Delivery_Failed', { failureCause: 'Customer_Refused' }));
     ok(service.applyWebhook(o.id, 'Warehouse_Received'));
     ok(service.cancelAfterFailure(o.id, { method: 'Bank', bank: 'VCB', accountNo: '0123456789', holder: 'NGUYEN NHAT ANH' }, {}));
-    expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S3b', amount: 179_000, deductedFee: 50_000 });
+    expect(get(o.id).refunds[0]).toMatchObject({ situation: 'S3b', amount: 228_000, deductedFee: 50_000 });
   });
 
   it('stock COD + customer fault is cancelled when goods return (no hold)', () => {

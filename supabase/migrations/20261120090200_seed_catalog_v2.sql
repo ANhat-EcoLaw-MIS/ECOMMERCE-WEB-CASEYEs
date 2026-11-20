@@ -46,39 +46,39 @@ on conflict (sku_code) do update
 
 -- ---------------------------------------------------------------- artworks (ready-made cases)
 insert into public.products (slug, name, description, product_type, image_url, collection, styles, tags, badge, caption, finish, premium, art_url) values
-  ('lavender-haze', 'Lavender Haze', 'Sắc tím oải hương mờ ảo, nhẹ nhàng cho mọi ngày.', 'case', '/products/Bg_Case/01_lavender_haze.png', 'Soft Intentions', array['Pastel']::text[], array['Tím', 'Gradient', 'Minimal']::text[], 'NEW DROP', 'haze', 'In UV bền màu', 30000, '/products/Bg_Case/01_lavender_haze.png'),
-  ('lilac-liquid-glass', 'Lilac Liquid Glass', 'Hiệu ứng kính lỏng óng ánh, đổi sắc theo từng góc nhìn.', 'case', '/products/Bg_Case/02_lilac_liquid_glass.png', 'Glass & Light', array['Trừu tượng']::text[], array['Tím', 'Kính', 'Art']::text[], 'HOT', 'liquid glass', 'In UV · ánh nhũ', 70000, '/products/Bg_Case/02_lilac_liquid_glass.png'),
-  ('cosmic-orbit', 'Cosmic Orbit', 'Một quỹ đạo sao băng lướt qua bầu trời tím.', 'case', '/products/Bg_Case/03_cosmic_orbit.png', 'Cosmic Edit', array['Trừu tượng']::text[], array['Tím', 'Không gian', 'Ngôi sao']::text[], null, 'orbit', 'In UV bền màu', 50000, '/products/Bg_Case/03_cosmic_orbit.png'),
-  ('dreamy-clouds', 'Dreamy Clouds', 'Những áng mây bồng bềnh cho tâm hồn mơ mộng.', 'case', '/products/Bg_Case/04_dreamy_clouds.png', 'Soft Intentions', array['Pastel']::text[], array['Mây', 'Pastel', 'Dễ thương']::text[], null, 'clouds', 'In UV bền màu', 30000, '/products/Bg_Case/04_dreamy_clouds.png'),
-  ('violet-waves', 'Violet Waves', 'Những con sóng tím uốn lượn mềm mại.', 'case', '/products/Bg_Case/05_violet_waves.png', 'Glass & Light', array['Trừu tượng']::text[], array['Tím', 'Sóng', 'Art']::text[], null, 'waves', 'In UV · phủ nhám', 40000, '/products/Bg_Case/05_violet_waves.png'),
-  ('galaxy-glow', 'Galaxy Glow', 'Ánh sáng thiên hà rực rỡ trong lòng bàn tay.', 'case', '/products/Bg_Case/06_galaxy_glow.png', 'Cosmic Edit', array['Cá tính']::text[], array['Không gian', 'Đậm', 'Ngôi sao']::text[], 'BEST SELLER', 'glow', 'In UV · ánh nhũ', 60000, '/products/Bg_Case/06_galaxy_glow.png'),
-  ('soft-geometry', 'Soft Geometry', 'Hình khối mềm mại, tối giản mà vẫn cuốn hút.', 'case', '/products/Bg_Case/07_soft_geometry.png', 'Glass & Light', array['Tối giản']::text[], array['Hình học', 'Minimal', 'Pastel']::text[], null, 'geometry', 'In UV · phủ nhám', 30000, '/products/Bg_Case/07_soft_geometry.png'),
-  ('satin-ribbons', 'Satin Ribbons', 'Dải lụa satin mềm mượt, sang trọng và nữ tính.', 'case', '/products/Bg_Case/08_satin_ribbons.png', 'Glass & Light', array['Pastel']::text[], array['Ruy băng', 'Lụa', 'Nữ tính']::text[], null, 'ribbons', 'In UV · ánh nhũ', 60000, '/products/Bg_Case/08_satin_ribbons.png'),
-  ('botanical-shadows', 'Botanical Shadows', 'Bóng lá cây trong nắng chiều, bình yên và thư thái.', 'case', '/products/Bg_Case/09_botanical_shadows.png', 'Botanical', array['Hoa lá']::text[], array['Lá', 'Bóng nắng', 'Minimal']::text[], null, 'shadows', 'In UV bền màu', 40000, '/products/Bg_Case/09_botanical_shadows.png'),
-  ('lavender-gingham', 'Lavender Gingham', 'Họa tiết caro tím cổ điển, đáng yêu và dễ phối.', 'case', '/products/Bg_Case/10_lavender_gingham.png', 'Soft Intentions', array['Pastel']::text[], array['Caro', 'Tím', 'Vintage']::text[], null, 'gingham', 'In UV bền màu', 20000, '/products/Bg_Case/10_lavender_gingham.png'),
-  ('lavender-water-caustics', 'Lavender Water Caustics', 'Ánh sáng khúc xạ trên mặt nước tím lung linh.', 'case', '/products/Bg_Case/11_lavender_water_caustics.png', 'Glass & Light', array['Trừu tượng']::text[], array['Nước', 'Ánh sáng', 'Tím']::text[], 'LIMITED', 'caustics', 'In UV · ánh nhũ', 80000, '/products/Bg_Case/11_lavender_water_caustics.png'),
-  ('purple-botanical-blossoms', 'Purple Botanical Blossoms', 'Những đóa hoa tím nở rộ cho ngày thêm tươi mới.', 'case', '/products/Bg_Case/12_purple_botanical_blossoms.png', 'Botanical', array['Hoa lá']::text[], array['Hoa', 'Tím', 'Thiên nhiên']::text[], null, 'blossoms', 'In UV bền màu', 50000, '/products/Bg_Case/12_purple_botanical_blossoms.png'),
-  ('pastel-paper-waves', 'Pastel Paper Waves', 'Lớp giấy cắt xếp sóng pastel đầy chiều sâu.', 'case', '/products/Bg_Case/13_pastel_paper_waves.png', 'Soft Intentions', array['Pastel']::text[], array['Giấy', 'Sóng', 'Pastel']::text[], null, 'paper', 'In UV · phủ nhám', 40000, '/products/Bg_Case/13_pastel_paper_waves.png'),
-  ('stardust-lilac', 'Stardust Lilac', 'Bụi sao lấp lánh trên nền tím lilac.', 'case', '/products/Bg_Case/14_stardust_lilac.png', 'Cosmic Edit', array['Cá tính']::text[], array['Lấp lánh', 'Tím', 'Ngôi sao']::text[], 'NEW DROP', 'stardust', 'In UV · ánh nhũ', 70000, '/products/Bg_Case/14_stardust_lilac.png'),
-  ('satin-sheen', 'Satin Sheen', 'Ánh lụa satin bóng nhẹ, tinh tế và thanh lịch.', 'case', '/products/Bg_Case/15_satin_sheen.png', 'Glass & Light', array['Tối giản']::text[], array['Lụa', 'Bóng', 'Minimal']::text[], null, 'sheen', 'In UV · ánh nhũ', 50000, '/products/Bg_Case/15_satin_sheen.png'),
-  ('wyvern-crystal', 'Wyvern Crystal', 'Pha lê đỏ rực trồi lên giữa lớp nhung thẫm, mạnh mẽ và đầy bí ẩn như vảy rồng.', 'case', '/products/Bg_Case/i16_wyvern_crystal.webp', 'Jewel Tones', array['Cá tính']::text[], array['Đỏ', 'Pha lê', 'Nhung']::text[], 'NEW DROP', 'wyvern', 'In UV · ánh nhũ', 80000, '/products/Bg_Case/i16_wyvern_crystal.webp'),
-  ('silver-pearl', 'Silver Pearl', 'Ánh ngọc trai bạc dịu mát, thanh lịch cho những ngày cần một chút tinh tế.', 'case', '/products/Bg_Case/i17_silver_pearl.webp', 'Jewel Tones', array['Tối giản']::text[], array['Bạc', 'Ngọc trai', 'Sang trọng']::text[], null, 'pearl', 'In UV · ánh nhũ', 60000, '/products/Bg_Case/i17_silver_pearl.webp'),
-  ('midnight-moon', 'Midnight Moon', 'Cực quang tím chảy trên bầu trời đầy sao, soi bóng xuống mặt nước đêm cùng những bong bóng pha lê.', 'case', '/products/Bg_Case/i18_midnight_moon.webp', 'Cosmic Edit', array['Trừu tượng']::text[], array['Cực quang', 'Đêm', 'Không gian']::text[], 'HOT', 'moon', 'In UV · phủ nhám', 60000, '/products/Bg_Case/i18_midnight_moon.webp'),
-  ('summer-bloom', 'Summer Bloom', 'Sắc hoa mùa hè rực rỡ, mang năng lượng tươi mới theo bạn suốt cả ngày.', 'case', '/products/Bg_Case/i19_summer_bloom.webp', 'Botanical', array['Hoa lá']::text[], array['Hoa', 'Mùa hè', 'Tươi sáng']::text[], null, 'bloom', 'In UV bền màu', 40000, '/products/Bg_Case/i19_summer_bloom.webp'),
-  ('jasmine-dream', 'Jasmine Dream', 'Những cánh nhài trắng mỏng manh, nhẹ nhàng và thơm mát như một giấc mơ.', 'case', '/products/Bg_Case/i20_jasmine_dream.webp', 'Botanical', array['Pastel']::text[], array['Hoa nhài', 'Trắng', 'Dịu dàng']::text[], null, 'jasmine', 'In UV bền màu', 30000, '/products/Bg_Case/i20_jasmine_dream.webp'),
-  ('golden-silk', 'Golden Silk', 'Dải lụa vàng óng uốn lượn giữa những bong bóng trong veo, rạng rỡ như nắng sớm.', 'case', '/products/Bg_Case/i21_golden_silk.webp', 'Glass & Light', array['Trừu tượng']::text[], array['Vàng', 'Lụa', 'Bong bóng']::text[], 'LIMITED', 'golden', 'In UV · ánh nhũ', 70000, '/products/Bg_Case/i21_golden_silk.webp'),
-  ('fresh-iceflow', 'Fresh Iceflow', 'Làn nước xanh trong vắt lấp lánh nắng và bong bóng, mát lạnh cho những ngày oi bức.', 'case', '/products/Bg_Case/i22_fresh_iceflow.webp', 'Glass & Light', array['Tối giản']::text[], array['Xanh biển', 'Nước', 'Bong bóng']::text[], null, 'iceflow', 'In UV · phủ nhám', 50000, '/products/Bg_Case/i22_fresh_iceflow.webp'),
-  ('twilight-swirl', 'Twilight Swirl', 'Vòng xoáy hoàng hôn tím biếc, khoảnh khắc chuyển giao giữa ngày và đêm.', 'case', '/products/Bg_Case/i23_twilight_swirl.webp', 'Cosmic Edit', array['Trừu tượng']::text[], array['Hoàng hôn', 'Xoáy', 'Tím']::text[], null, 'twilight', 'In UV · ánh nhũ', 60000, '/products/Bg_Case/i23_twilight_swirl.webp'),
-  ('warm-flow', 'Warm Flow', 'Sắc cam đào ấm áp cùng cánh hoa trong suốt bay giữa mây, dịu dàng và đầy cảm xúc.', 'case', '/products/Bg_Case/i24_warm_flow.webp', 'Soft Intentions', array['Pastel']::text[], array['Cam đào', 'Hoa', 'Ấm áp']::text[], 'NEW DROP', 'warm', 'In UV bền màu', 40000, '/products/Bg_Case/i24_warm_flow.webp'),
-  ('sakura-silk', 'Sakura Silk', 'Lụa hồng anh đào mềm mại, gợi nhớ mùa xuân Nhật Bản ngọt ngào.', 'case', '/products/Bg_Case/i25_sakura_silk.webp', 'Soft Intentions', array['Hoa lá']::text[], array['Anh đào', 'Hồng', 'Lụa']::text[], 'BEST SELLER', 'sakura', 'In UV · ánh nhũ', 60000, '/products/Bg_Case/i25_sakura_silk.webp'),
-  ('lilac-dream', 'Lavender Daydream', 'Một chút mộng mơ dành riêng cho những ngày đầy cảm hứng.', 'case', '/products/lilac-dream.webp', 'Soft Intentions', array['Pastel']::text[], array['Tím', 'Minimal', 'Hoa']::text[], 'BEST SELLER', 'daydream', 'In UV bền màu', 40000, null),
-  ('midnight-eyes', 'Midnight Eyes', 'Cá tính không cần quá nhiều lời.', 'case', '/products/midnight-eyes.webp', 'After Hours', array['Cá tính']::text[], array['Tối giản', 'Đen', 'Typography']::text[], 'NEW DROP', 'eyes on you', 'In UV · phủ nhám', 70000, null),
-  ('bloom-club', 'Bloom Club', 'Những đóa hoa nhỏ mang đến năng lượng tích cực.', 'case', '/products/bloom-club.webp', 'Soft Intentions', array['Hoa lá']::text[], array['Hoa', 'Pastel', 'Dễ thương']::text[], null, 'bloom', 'In UV bền màu', 30000, null),
-  ('purple-orbit', 'Purple Orbit', 'Một quỹ đạo tím dành cho những tâm hồn tò mò.', 'case', '/products/purple-orbit.webp', 'Cosmic Edit', array['Trừu tượng']::text[], array['Tím', 'Không gian', 'Art']::text[], 'LIMITED', 'orbit', 'In UV · ánh nhũ', 90000, null),
-  ('little-love', 'Little Love Notes', 'Một lời nhắn dễ thương theo bạn mỗi ngày.', 'case', '/products/little-love.webp', 'Soft Intentions', array['Pastel']::text[], array['Dễ thương', 'Typography', 'Trắng']::text[], null, 'love more', 'In UV bền màu', 20000, null),
-  ('noir-muse', 'Noir Muse', 'Sự tinh tế khi bạn chọn khác biệt.', 'case', '/products/noir-muse.webp', 'After Hours', array['Cá tính']::text[], array['Đen', 'Minimal', 'Art']::text[], 'HOT', 'muse', 'In UV · phủ nhám', 60000, null),
-  ('cloud-nine', 'Cloud Nine', 'Nhẹ tênh như đang bước trên mây.', 'case', '/products/cloud-nine.webp', 'Cosmic Edit', array['Pastel']::text[], array['Tím', 'Dễ thương', 'Không gian']::text[], null, 'cloud 9', 'In UV bền màu', 50000, null),
-  ('mono-heart', 'Mono Heart', 'Một biểu tượng nhỏ, một cá tính rất riêng.', 'case', '/products/mono-heart.webp', 'After Hours', array['Tối giản']::text[], array['Minimal', 'Trắng', 'Typography']::text[], null, '<3', 'In UV bền màu', 10000, null)
+  ('lavender-haze', 'Lavender Haze', 'Sắc tím oải hương mờ ảo, nhẹ nhàng cho mọi ngày.', 'case', '/products/Bg_Case/01_lavender_haze.png', 'Soft Intentions', array['Pastel']::text[], array['Tím', 'Gradient', 'Minimal']::text[], 'NEW DROP', 'haze', 'In UV bền màu', 0, '/products/Bg_Case/01_lavender_haze.png'),
+  ('lilac-liquid-glass', 'Lilac Liquid Glass', 'Hiệu ứng kính lỏng óng ánh, đổi sắc theo từng góc nhìn.', 'case', '/products/Bg_Case/02_lilac_liquid_glass.png', 'Glass & Light', array['Trừu tượng']::text[], array['Tím', 'Kính', 'Art']::text[], 'HOT', 'liquid glass', 'In UV · ánh nhũ', 0, '/products/Bg_Case/02_lilac_liquid_glass.png'),
+  ('cosmic-orbit', 'Cosmic Orbit', 'Một quỹ đạo sao băng lướt qua bầu trời tím.', 'case', '/products/Bg_Case/03_cosmic_orbit.png', 'Cosmic Edit', array['Trừu tượng']::text[], array['Tím', 'Không gian', 'Ngôi sao']::text[], null, 'orbit', 'In UV bền màu', 0, '/products/Bg_Case/03_cosmic_orbit.png'),
+  ('dreamy-clouds', 'Dreamy Clouds', 'Những áng mây bồng bềnh cho tâm hồn mơ mộng.', 'case', '/products/Bg_Case/04_dreamy_clouds.png', 'Soft Intentions', array['Pastel']::text[], array['Mây', 'Pastel', 'Dễ thương']::text[], null, 'clouds', 'In UV bền màu', 0, '/products/Bg_Case/04_dreamy_clouds.png'),
+  ('violet-waves', 'Violet Waves', 'Những con sóng tím uốn lượn mềm mại.', 'case', '/products/Bg_Case/05_violet_waves.png', 'Glass & Light', array['Trừu tượng']::text[], array['Tím', 'Sóng', 'Art']::text[], null, 'waves', 'In UV · phủ nhám', 0, '/products/Bg_Case/05_violet_waves.png'),
+  ('galaxy-glow', 'Galaxy Glow', 'Ánh sáng thiên hà rực rỡ trong lòng bàn tay.', 'case', '/products/Bg_Case/06_galaxy_glow.png', 'Cosmic Edit', array['Cá tính']::text[], array['Không gian', 'Đậm', 'Ngôi sao']::text[], 'BEST SELLER', 'glow', 'In UV · ánh nhũ', 0, '/products/Bg_Case/06_galaxy_glow.png'),
+  ('soft-geometry', 'Soft Geometry', 'Hình khối mềm mại, tối giản mà vẫn cuốn hút.', 'case', '/products/Bg_Case/07_soft_geometry.png', 'Glass & Light', array['Tối giản']::text[], array['Hình học', 'Minimal', 'Pastel']::text[], null, 'geometry', 'In UV · phủ nhám', 0, '/products/Bg_Case/07_soft_geometry.png'),
+  ('satin-ribbons', 'Satin Ribbons', 'Dải lụa satin mềm mượt, sang trọng và nữ tính.', 'case', '/products/Bg_Case/08_satin_ribbons.png', 'Glass & Light', array['Pastel']::text[], array['Ruy băng', 'Lụa', 'Nữ tính']::text[], null, 'ribbons', 'In UV · ánh nhũ', 0, '/products/Bg_Case/08_satin_ribbons.png'),
+  ('botanical-shadows', 'Botanical Shadows', 'Bóng lá cây trong nắng chiều, bình yên và thư thái.', 'case', '/products/Bg_Case/09_botanical_shadows.png', 'Botanical', array['Hoa lá']::text[], array['Lá', 'Bóng nắng', 'Minimal']::text[], null, 'shadows', 'In UV bền màu', 0, '/products/Bg_Case/09_botanical_shadows.png'),
+  ('lavender-gingham', 'Lavender Gingham', 'Họa tiết caro tím cổ điển, đáng yêu và dễ phối.', 'case', '/products/Bg_Case/10_lavender_gingham.png', 'Soft Intentions', array['Pastel']::text[], array['Caro', 'Tím', 'Vintage']::text[], null, 'gingham', 'In UV bền màu', 0, '/products/Bg_Case/10_lavender_gingham.png'),
+  ('lavender-water-caustics', 'Lavender Water Caustics', 'Ánh sáng khúc xạ trên mặt nước tím lung linh.', 'case', '/products/Bg_Case/11_lavender_water_caustics.png', 'Glass & Light', array['Trừu tượng']::text[], array['Nước', 'Ánh sáng', 'Tím']::text[], 'LIMITED', 'caustics', 'In UV · ánh nhũ', 0, '/products/Bg_Case/11_lavender_water_caustics.png'),
+  ('purple-botanical-blossoms', 'Purple Botanical Blossoms', 'Những đóa hoa tím nở rộ cho ngày thêm tươi mới.', 'case', '/products/Bg_Case/12_purple_botanical_blossoms.png', 'Botanical', array['Hoa lá']::text[], array['Hoa', 'Tím', 'Thiên nhiên']::text[], null, 'blossoms', 'In UV bền màu', 0, '/products/Bg_Case/12_purple_botanical_blossoms.png'),
+  ('pastel-paper-waves', 'Pastel Paper Waves', 'Lớp giấy cắt xếp sóng pastel đầy chiều sâu.', 'case', '/products/Bg_Case/13_pastel_paper_waves.png', 'Soft Intentions', array['Pastel']::text[], array['Giấy', 'Sóng', 'Pastel']::text[], null, 'paper', 'In UV · phủ nhám', 0, '/products/Bg_Case/13_pastel_paper_waves.png'),
+  ('stardust-lilac', 'Stardust Lilac', 'Bụi sao lấp lánh trên nền tím lilac.', 'case', '/products/Bg_Case/14_stardust_lilac.png', 'Cosmic Edit', array['Cá tính']::text[], array['Lấp lánh', 'Tím', 'Ngôi sao']::text[], 'NEW DROP', 'stardust', 'In UV · ánh nhũ', 0, '/products/Bg_Case/14_stardust_lilac.png'),
+  ('satin-sheen', 'Satin Sheen', 'Ánh lụa satin bóng nhẹ, tinh tế và thanh lịch.', 'case', '/products/Bg_Case/15_satin_sheen.png', 'Glass & Light', array['Tối giản']::text[], array['Lụa', 'Bóng', 'Minimal']::text[], null, 'sheen', 'In UV · ánh nhũ', 0, '/products/Bg_Case/15_satin_sheen.png'),
+  ('wyvern-crystal', 'Wyvern Crystal', 'Pha lê đỏ rực trồi lên giữa lớp nhung thẫm, mạnh mẽ và đầy bí ẩn như vảy rồng.', 'case', '/products/Bg_Case/i16_wyvern_crystal.webp', 'Jewel Tones', array['Cá tính']::text[], array['Đỏ', 'Pha lê', 'Nhung']::text[], 'NEW DROP', 'wyvern', 'In UV · ánh nhũ', 0, '/products/Bg_Case/i16_wyvern_crystal.webp'),
+  ('silver-pearl', 'Silver Pearl', 'Ánh ngọc trai bạc dịu mát, thanh lịch cho những ngày cần một chút tinh tế.', 'case', '/products/Bg_Case/i17_silver_pearl.webp', 'Jewel Tones', array['Tối giản']::text[], array['Bạc', 'Ngọc trai', 'Sang trọng']::text[], null, 'pearl', 'In UV · ánh nhũ', 0, '/products/Bg_Case/i17_silver_pearl.webp'),
+  ('midnight-moon', 'Midnight Moon', 'Cực quang tím chảy trên bầu trời đầy sao, soi bóng xuống mặt nước đêm cùng những bong bóng pha lê.', 'case', '/products/Bg_Case/i18_midnight_moon.webp', 'Cosmic Edit', array['Trừu tượng']::text[], array['Cực quang', 'Đêm', 'Không gian']::text[], 'HOT', 'moon', 'In UV · phủ nhám', 0, '/products/Bg_Case/i18_midnight_moon.webp'),
+  ('summer-bloom', 'Summer Bloom', 'Sắc hoa mùa hè rực rỡ, mang năng lượng tươi mới theo bạn suốt cả ngày.', 'case', '/products/Bg_Case/i19_summer_bloom.webp', 'Botanical', array['Hoa lá']::text[], array['Hoa', 'Mùa hè', 'Tươi sáng']::text[], null, 'bloom', 'In UV bền màu', 0, '/products/Bg_Case/i19_summer_bloom.webp'),
+  ('jasmine-dream', 'Jasmine Dream', 'Những cánh nhài trắng mỏng manh, nhẹ nhàng và thơm mát như một giấc mơ.', 'case', '/products/Bg_Case/i20_jasmine_dream.webp', 'Botanical', array['Pastel']::text[], array['Hoa nhài', 'Trắng', 'Dịu dàng']::text[], null, 'jasmine', 'In UV bền màu', 0, '/products/Bg_Case/i20_jasmine_dream.webp'),
+  ('golden-silk', 'Golden Silk', 'Dải lụa vàng óng uốn lượn giữa những bong bóng trong veo, rạng rỡ như nắng sớm.', 'case', '/products/Bg_Case/i21_golden_silk.webp', 'Glass & Light', array['Trừu tượng']::text[], array['Vàng', 'Lụa', 'Bong bóng']::text[], 'LIMITED', 'golden', 'In UV · ánh nhũ', 0, '/products/Bg_Case/i21_golden_silk.webp'),
+  ('fresh-iceflow', 'Fresh Iceflow', 'Làn nước xanh trong vắt lấp lánh nắng và bong bóng, mát lạnh cho những ngày oi bức.', 'case', '/products/Bg_Case/i22_fresh_iceflow.webp', 'Glass & Light', array['Tối giản']::text[], array['Xanh biển', 'Nước', 'Bong bóng']::text[], null, 'iceflow', 'In UV · phủ nhám', 0, '/products/Bg_Case/i22_fresh_iceflow.webp'),
+  ('twilight-swirl', 'Twilight Swirl', 'Vòng xoáy hoàng hôn tím biếc, khoảnh khắc chuyển giao giữa ngày và đêm.', 'case', '/products/Bg_Case/i23_twilight_swirl.webp', 'Cosmic Edit', array['Trừu tượng']::text[], array['Hoàng hôn', 'Xoáy', 'Tím']::text[], null, 'twilight', 'In UV · ánh nhũ', 0, '/products/Bg_Case/i23_twilight_swirl.webp'),
+  ('warm-flow', 'Warm Flow', 'Sắc cam đào ấm áp cùng cánh hoa trong suốt bay giữa mây, dịu dàng và đầy cảm xúc.', 'case', '/products/Bg_Case/i24_warm_flow.webp', 'Soft Intentions', array['Pastel']::text[], array['Cam đào', 'Hoa', 'Ấm áp']::text[], 'NEW DROP', 'warm', 'In UV bền màu', 0, '/products/Bg_Case/i24_warm_flow.webp'),
+  ('sakura-silk', 'Sakura Silk', 'Lụa hồng anh đào mềm mại, gợi nhớ mùa xuân Nhật Bản ngọt ngào.', 'case', '/products/Bg_Case/i25_sakura_silk.webp', 'Soft Intentions', array['Hoa lá']::text[], array['Anh đào', 'Hồng', 'Lụa']::text[], 'BEST SELLER', 'sakura', 'In UV · ánh nhũ', 0, '/products/Bg_Case/i25_sakura_silk.webp'),
+  ('lilac-dream', 'Lavender Daydream', 'Một chút mộng mơ dành riêng cho những ngày đầy cảm hứng.', 'case', '/products/lilac-dream.webp', 'Soft Intentions', array['Pastel']::text[], array['Tím', 'Minimal', 'Hoa']::text[], 'BEST SELLER', 'daydream', 'In UV bền màu', 0, null),
+  ('midnight-eyes', 'Midnight Eyes', 'Cá tính không cần quá nhiều lời.', 'case', '/products/midnight-eyes.webp', 'After Hours', array['Cá tính']::text[], array['Tối giản', 'Đen', 'Typography']::text[], 'NEW DROP', 'eyes on you', 'In UV · phủ nhám', 0, null),
+  ('bloom-club', 'Bloom Club', 'Những đóa hoa nhỏ mang đến năng lượng tích cực.', 'case', '/products/bloom-club.webp', 'Soft Intentions', array['Hoa lá']::text[], array['Hoa', 'Pastel', 'Dễ thương']::text[], null, 'bloom', 'In UV bền màu', 0, null),
+  ('purple-orbit', 'Purple Orbit', 'Một quỹ đạo tím dành cho những tâm hồn tò mò.', 'case', '/products/purple-orbit.webp', 'Cosmic Edit', array['Trừu tượng']::text[], array['Tím', 'Không gian', 'Art']::text[], 'LIMITED', 'orbit', 'In UV · ánh nhũ', 0, null),
+  ('little-love', 'Little Love Notes', 'Một lời nhắn dễ thương theo bạn mỗi ngày.', 'case', '/products/little-love.webp', 'Soft Intentions', array['Pastel']::text[], array['Dễ thương', 'Typography', 'Trắng']::text[], null, 'love more', 'In UV bền màu', 0, null),
+  ('noir-muse', 'Noir Muse', 'Sự tinh tế khi bạn chọn khác biệt.', 'case', '/products/noir-muse.webp', 'After Hours', array['Cá tính']::text[], array['Đen', 'Minimal', 'Art']::text[], 'HOT', 'muse', 'In UV · phủ nhám', 0, null),
+  ('cloud-nine', 'Cloud Nine', 'Nhẹ tênh như đang bước trên mây.', 'case', '/products/cloud-nine.webp', 'Cosmic Edit', array['Pastel']::text[], array['Tím', 'Dễ thương', 'Không gian']::text[], null, 'cloud 9', 'In UV bền màu', 0, null),
+  ('mono-heart', 'Mono Heart', 'Một biểu tượng nhỏ, một cá tính rất riêng.', 'case', '/products/mono-heart.webp', 'After Hours', array['Tối giản']::text[], array['Minimal', 'Trắng', 'Typography']::text[], null, '<3', 'In UV bền màu', 0, null)
 on conflict (slug) do update
   set name        = excluded.name,
       description = excluded.description,
@@ -93,21 +93,21 @@ on conflict (slug) do update
       art_url     = excluded.art_url,
       is_active   = true;
 
--- Every artwork on every available SKU: price = SKU price + artwork premium (same as the Shop UI).
+-- Every artwork on every available SKU: price = SKU price + artwork premium, or the flat limited price (same as the Shop UI).
 -- A sold-out artwork keeps its variants but they are inactive.
 with sku (sku, price, available) as (values
-  ('sku-ip15pm-titanium', 260000, true),
-  ('sku-ip15pm-lilac', 250000, true),
-  ('sku-ip15pm-black', 240000, true),
-  ('sku-ip16p-lilac', 250000, true),
-  ('sku-ip16p-black', 230000, true),
-  ('sku-ip16p-white', 230000, true),
-  ('sku-ip16p-magsafe', 290000, true),
-  ('sku-ip15p-lilac', 240000, true),
-  ('sku-ip15p-black', 220000, true),
-  ('sku-s24-lilac', 240000, true),
-  ('sku-s24-black', 220000, true),
-  ('sku-mi14u-black', 260000, true)
+  ('sku-ip15pm-titanium', 219000, true),
+  ('sku-ip15pm-lilac', 219000, true),
+  ('sku-ip15pm-black', 219000, true),
+  ('sku-ip16p-lilac', 199000, true),
+  ('sku-ip16p-black', 199000, true),
+  ('sku-ip16p-white', 199000, true),
+  ('sku-ip16p-magsafe', 199000, true),
+  ('sku-ip15p-lilac', 199000, true),
+  ('sku-ip15p-black', 199000, true),
+  ('sku-s24-lilac', 199000, true),
+  ('sku-s24-black', 199000, true),
+  ('sku-mi14u-black', 219000, true)
 ), art (slug, active) as (values
   ('lavender-haze', true),
   ('lilac-liquid-glass', true),
@@ -144,7 +144,7 @@ with sku (sku, price, available) as (values
   ('mono-heart', false)
 )
 insert into public.product_variants (product_id, name, phone_model_id, inventory_item_id, price, color_sku, is_active)
-select p.id, m.name || ' · ' || b.color_name, m.id, b.id, sku.price + p.premium, b.sku_code, art.active and sku.available
+select p.id, m.name || ' · ' || b.color_name, m.id, b.id, case when p.badge = 'LIMITED' then 239000 else sku.price + p.premium end, b.sku_code, art.active and sku.available
 from art
 join public.products p on p.slug = art.slug
 cross join sku
@@ -193,16 +193,16 @@ on conflict (sku_code) do nothing;
 insert into public.product_variants (product_id, name, phone_model_id, inventory_item_id, price, color_sku, is_active)
 select p.id, null, null, i.id, a.price, null, true
 from (values
-  ('accessory-charging-puck', 490000),
-  ('accessory-magnetic-wallet', 390000),
-  ('accessory-ring-holder', 190000),
-  ('accessory-desk-stand', 450000),
-  ('accessory-power-bank', 690000),
-  ('accessory-beaded-wristlet', 150000),
-  ('accessory-braided-strap', 120000),
-  ('accessory-flower-charm', 89000),
-  ('accessory-plush-star', 99000),
-  ('accessory-astronaut-star', 119000)
+  ('accessory-charging-puck', 99000),
+  ('accessory-magnetic-wallet', 79000),
+  ('accessory-ring-holder', 79000),
+  ('accessory-desk-stand', 59000),
+  ('accessory-power-bank', 99000),
+  ('accessory-beaded-wristlet', 79000),
+  ('accessory-braided-strap', 79000),
+  ('accessory-flower-charm', 29000),
+  ('accessory-plush-star', 39000),
+  ('accessory-astronaut-star', 49000)
 ) a (slug, price)
 join public.products p on p.slug = a.slug
 join public.inventory_items i on i.kind = 'trade_good' and i.sku_code = a.slug

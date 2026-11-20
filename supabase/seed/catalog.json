@@ -15,7 +15,7 @@
           "caseType": "tough",
           "colorName": "Titan Tự Nhiên",
           "colorHex": "#9E9A93",
-          "price": 260000,
+          "price": 219000,
           "stockQty": 95,
           "isAvailable": true
         },
@@ -25,7 +25,7 @@
           "caseType": "tough",
           "colorName": "Tím Lilac",
           "colorHex": "#A58CF4",
-          "price": 250000,
+          "price": 219000,
           "stockQty": 80,
           "isAvailable": true
         },
@@ -35,7 +35,7 @@
           "caseType": "snap",
           "colorName": "Đen Jet Black",
           "colorHex": "#0A0A0A",
-          "price": 240000,
+          "price": 219000,
           "stockQty": 110,
           "isAvailable": true
         }
@@ -54,7 +54,7 @@
           "caseType": "tough",
           "colorName": "Tím Lilac",
           "colorHex": "#A58CF4",
-          "price": 250000,
+          "price": 199000,
           "stockQty": 85,
           "isAvailable": true
         },
@@ -64,7 +64,7 @@
           "caseType": "snap",
           "colorName": "Đen Jet Black",
           "colorHex": "#0A0A0A",
-          "price": 230000,
+          "price": 199000,
           "stockQty": 120,
           "isAvailable": true
         },
@@ -74,7 +74,7 @@
           "caseType": "snap",
           "colorName": "Trắng Sữa",
           "colorHex": "#FFFFFF",
-          "price": 230000,
+          "price": 199000,
           "stockQty": 90,
           "isAvailable": true
         },
@@ -84,7 +84,7 @@
           "caseType": "magsafe",
           "colorName": "Trong suốt MagSafe",
           "colorHex": "#ECE6FD",
-          "price": 290000,
+          "price": 199000,
           "stockQty": 45,
           "isAvailable": true
         }
@@ -103,7 +103,7 @@
           "caseType": "tough",
           "colorName": "Tím Lilac",
           "colorHex": "#A58CF4",
-          "price": 240000,
+          "price": 199000,
           "stockQty": 60,
           "isAvailable": true
         },
@@ -113,7 +113,7 @@
           "caseType": "snap",
           "colorName": "Đen Jet Black",
           "colorHex": "#0A0A0A",
-          "price": 220000,
+          "price": 199000,
           "stockQty": 80,
           "isAvailable": true
         }
@@ -132,7 +132,7 @@
           "caseType": "tough",
           "colorName": "Tím Lilac",
           "colorHex": "#A58CF4",
-          "price": 240000,
+          "price": 199000,
           "stockQty": 50,
           "isAvailable": true
         },
@@ -142,7 +142,7 @@
           "caseType": "snap",
           "colorName": "Đen Jet Black",
           "colorHex": "#0A0A0A",
-          "price": 220000,
+          "price": 199000,
           "stockQty": 70,
           "isAvailable": true
         }
@@ -161,7 +161,7 @@
           "caseType": "tough",
           "colorName": "Đen Jet Black",
           "colorHex": "#0A0A0A",
-          "price": 260000,
+          "price": 219000,
           "stockQty": 30,
           "isAvailable": true
         }
@@ -185,7 +185,7 @@
       "badge": "NEW DROP",
       "description": "Sắc tím oải hương mờ ảo, nhẹ nhàng cho mọi ngày.",
       "finish": "In UV bền màu",
-      "premium": 30000
+      "premium": 0
     },
     {
       "id": "lilac-liquid-glass",
@@ -203,7 +203,7 @@
       "badge": "HOT",
       "description": "Hiệu ứng kính lỏng óng ánh, đổi sắc theo từng góc nhìn.",
       "finish": "In UV · ánh nhũ",
-      "premium": 70000
+      "premium": 0
     },
     {
       "id": "cosmic-orbit",
@@ -221,7 +221,7 @@
       "badge": "",
       "description": "Một quỹ đạo sao băng lướt qua bầu trời tím.",
       "finish": "In UV bền màu",
-      "premium": 50000
+      "premium": 0
     },
     {
       "id": "dreamy-clouds",
@@ -239,7 +239,7 @@
       "badge": "",
       "description": "Những áng mây bồng bềnh cho tâm hồn mơ mộng.",
       "finish": "In UV bền màu",
-      "premium": 30000
+      "premium": 0
     },
     {
       "id": "violet-waves",
@@ -257,7 +257,7 @@
       "badge": "",
       "description": "Những con sóng tím uốn lượn mềm mại.",
       "finish": "In UV · phủ nhám",
-      "premium": 40000
+      "premium": 0
     },
     {
       "id": "galaxy-glow",
@@ -275,7 +275,7 @@
       "badge": "BEST SELLER",
       "description": "Ánh sáng thiên hà rực rỡ trong lòng bàn tay.",
       "finish": "In UV · ánh nhũ",
-      "premium": 60000
+      "premium": 0
     },
     {
       "id": "soft-geometry",
@@ -293,7 +293,7 @@
       "badge": "",
       "description": "Hình khối mềm mại, tối giản mà vẫn cuốn hút.",
       "finish": "In UV · phủ nhám",
-      "premium": 30000
+      "premium": 0
     },
     {
       "id": "satin-ribbons",
@@ -311,7 +311,7 @@
       "badge": "",
       "description": "Dải lụa satin mềm mượt, sang trọng và nữ tính.",
       "finish": "In UV · ánh nhũ",
-      "premium": 60000
+      "premium": 0
     },
     {
       "id": "botanical-shadows",
@@ -329,7 +329,7 @@
       "badge": "",
       "description": "Bóng lá cây trong nắng chiều, bình yên và thư thái.",
       "finish": "In UV bền màu",
-      "premium": 40000
+      "premium": 0
     },
     {
       "id": "lavender-gingham",
@@ -347,7 +347,7 @@
       "badge": "",
       "description": "Họa tiết caro tím cổ điển, đáng yêu và dễ phối.",
       "finish": "In UV bền màu",
-      "premium": 20000
+      "premium": 0
     },
     {
       "id": "lavender-water-caustics",
@@ -365,7 +365,7 @@
       "badge": "LIMITED",
       "description": "Ánh sáng khúc xạ trên mặt nước tím lung linh.",
       "finish": "In UV · ánh nhũ",
-      "premium": 80000
+      "premium": 0
     },
     {
       "id": "purple-botanical-blossoms",
@@ -383,7 +383,7 @@
       "badge": "",
       "description": "Những đóa hoa tím nở rộ cho ngày thêm tươi mới.",
       "finish": "In UV bền màu",
-      "premium": 50000
+      "premium": 0
     },
     {
       "id": "pastel-paper-waves",
@@ -401,7 +401,7 @@
       "badge": "",
       "description": "Lớp giấy cắt xếp sóng pastel đầy chiều sâu.",
       "finish": "In UV · phủ nhám",
-      "premium": 40000
+      "premium": 0
     },
     {
       "id": "stardust-lilac",
@@ -419,7 +419,7 @@
       "badge": "NEW DROP",
       "description": "Bụi sao lấp lánh trên nền tím lilac.",
       "finish": "In UV · ánh nhũ",
-      "premium": 70000
+      "premium": 0
     },
     {
       "id": "satin-sheen",
@@ -437,7 +437,7 @@
       "badge": "",
       "description": "Ánh lụa satin bóng nhẹ, tinh tế và thanh lịch.",
       "finish": "In UV · ánh nhũ",
-      "premium": 50000
+      "premium": 0
     },
     {
       "id": "wyvern-crystal",
@@ -455,7 +455,7 @@
       "badge": "NEW DROP",
       "description": "Pha lê đỏ rực trồi lên giữa lớp nhung thẫm, mạnh mẽ và đầy bí ẩn như vảy rồng.",
       "finish": "In UV · ánh nhũ",
-      "premium": 80000
+      "premium": 0
     },
     {
       "id": "silver-pearl",
@@ -473,7 +473,7 @@
       "badge": "",
       "description": "Ánh ngọc trai bạc dịu mát, thanh lịch cho những ngày cần một chút tinh tế.",
       "finish": "In UV · ánh nhũ",
-      "premium": 60000
+      "premium": 0
     },
     {
       "id": "midnight-moon",
@@ -491,7 +491,7 @@
       "badge": "HOT",
       "description": "Cực quang tím chảy trên bầu trời đầy sao, soi bóng xuống mặt nước đêm cùng những bong bóng pha lê.",
       "finish": "In UV · phủ nhám",
-      "premium": 60000
+      "premium": 0
     },
     {
       "id": "summer-bloom",
@@ -509,7 +509,7 @@
       "badge": "",
       "description": "Sắc hoa mùa hè rực rỡ, mang năng lượng tươi mới theo bạn suốt cả ngày.",
       "finish": "In UV bền màu",
-      "premium": 40000
+      "premium": 0
     },
     {
       "id": "jasmine-dream",
@@ -527,7 +527,7 @@
       "badge": "",
       "description": "Những cánh nhài trắng mỏng manh, nhẹ nhàng và thơm mát như một giấc mơ.",
       "finish": "In UV bền màu",
-      "premium": 30000
+      "premium": 0
     },
     {
       "id": "golden-silk",
@@ -545,7 +545,7 @@
       "badge": "LIMITED",
       "description": "Dải lụa vàng óng uốn lượn giữa những bong bóng trong veo, rạng rỡ như nắng sớm.",
       "finish": "In UV · ánh nhũ",
-      "premium": 70000
+      "premium": 0
     },
     {
       "id": "fresh-iceflow",
@@ -563,7 +563,7 @@
       "badge": "",
       "description": "Làn nước xanh trong vắt lấp lánh nắng và bong bóng, mát lạnh cho những ngày oi bức.",
       "finish": "In UV · phủ nhám",
-      "premium": 50000
+      "premium": 0
     },
     {
       "id": "twilight-swirl",
@@ -581,7 +581,7 @@
       "badge": "",
       "description": "Vòng xoáy hoàng hôn tím biếc, khoảnh khắc chuyển giao giữa ngày và đêm.",
       "finish": "In UV · ánh nhũ",
-      "premium": 60000
+      "premium": 0
     },
     {
       "id": "warm-flow",
@@ -599,7 +599,7 @@
       "badge": "NEW DROP",
       "description": "Sắc cam đào ấm áp cùng cánh hoa trong suốt bay giữa mây, dịu dàng và đầy cảm xúc.",
       "finish": "In UV bền màu",
-      "premium": 40000
+      "premium": 0
     },
     {
       "id": "sakura-silk",
@@ -617,7 +617,7 @@
       "badge": "BEST SELLER",
       "description": "Lụa hồng anh đào mềm mại, gợi nhớ mùa xuân Nhật Bản ngọt ngào.",
       "finish": "In UV · ánh nhũ",
-      "premium": 60000
+      "premium": 0
     },
     {
       "id": "lilac-dream",
@@ -634,7 +634,7 @@
       "badge": "BEST SELLER",
       "description": "Một chút mộng mơ dành riêng cho những ngày đầy cảm hứng.",
       "finish": "In UV bền màu",
-      "premium": 40000
+      "premium": 0
     },
     {
       "id": "midnight-eyes",
@@ -651,7 +651,7 @@
       "badge": "NEW DROP",
       "description": "Cá tính không cần quá nhiều lời.",
       "finish": "In UV · phủ nhám",
-      "premium": 70000
+      "premium": 0
     },
     {
       "id": "bloom-club",
@@ -668,7 +668,7 @@
       "badge": "",
       "description": "Những đóa hoa nhỏ mang đến năng lượng tích cực.",
       "finish": "In UV bền màu",
-      "premium": 30000
+      "premium": 0
     },
     {
       "id": "purple-orbit",
@@ -685,7 +685,7 @@
       "badge": "LIMITED",
       "description": "Một quỹ đạo tím dành cho những tâm hồn tò mò.",
       "finish": "In UV · ánh nhũ",
-      "premium": 90000
+      "premium": 0
     },
     {
       "id": "little-love",
@@ -702,7 +702,7 @@
       "badge": "",
       "description": "Một lời nhắn dễ thương theo bạn mỗi ngày.",
       "finish": "In UV bền màu",
-      "premium": 20000
+      "premium": 0
     },
     {
       "id": "noir-muse",
@@ -719,7 +719,7 @@
       "badge": "HOT",
       "description": "Sự tinh tế khi bạn chọn khác biệt.",
       "finish": "In UV · phủ nhám",
-      "premium": 60000
+      "premium": 0
     },
     {
       "id": "cloud-nine",
@@ -736,7 +736,7 @@
       "badge": "",
       "description": "Nhẹ tênh như đang bước trên mây.",
       "finish": "In UV bền màu",
-      "premium": 50000
+      "premium": 0
     },
     {
       "id": "mono-heart",
@@ -753,7 +753,7 @@
       "badge": "",
       "description": "Một biểu tượng nhỏ, một cá tính rất riêng.",
       "finish": "In UV bền màu",
-      "premium": 10000,
+      "premium": 0,
       "soldOut": true
     }
   ],
@@ -763,7 +763,7 @@
       "name": "Đế sạc từ tính",
       "category": "MagSafe",
       "description": "Đế sạc không dây hít từ, dùng cùng ốp MagSafe.",
-      "price": 490000,
+      "price": 99000,
       "stock": 14,
       "image": "/products/Accessories/01_magnetic_charging_puck.png",
       "badge": "BEST SELLER"
@@ -773,7 +773,7 @@
       "name": "Ví da từ tính",
       "category": "MagSafe",
       "description": "Ví đựng thẻ gắn từ phía sau ốp, gọn và chắc chắn.",
-      "price": 390000,
+      "price": 79000,
       "stock": 18,
       "image": "/products/Accessories/02_magnetic_wallet.png"
     },
@@ -782,7 +782,7 @@
       "name": "Nhẫn giữ từ tính",
       "category": "MagSafe",
       "description": "Nhẫn đỡ máy hít từ, xoay 360° và làm giá đỡ.",
-      "price": 190000,
+      "price": 79000,
       "stock": 25,
       "image": "/products/Accessories/03_magnetic_ring_holder.png"
     },
@@ -791,7 +791,7 @@
       "name": "Giá đỡ để bàn từ tính",
       "category": "MagSafe",
       "description": "Giá đỡ hít từ cho bàn làm việc, chỉnh được góc nghiêng.",
-      "price": 450000,
+      "price": 59000,
       "stock": 9,
       "image": "/products/Accessories/04_magnetic_desk_stand.png",
       "badge": "NEW DROP"
@@ -801,7 +801,7 @@
       "name": "Pin dự phòng từ tính",
       "category": "MagSafe",
       "description": "Pin dự phòng hít từ, mỏng nhẹ mang theo hằng ngày.",
-      "price": 690000,
+      "price": 99000,
       "stock": 11,
       "image": "/products/Accessories/05_magnetic_power_bank.png"
     },
@@ -810,7 +810,7 @@
       "name": "Dây đeo hạt Lavender",
       "category": "Dây đeo",
       "description": "Dây đeo cổ tay kết hạt tông tím oải hương.",
-      "price": 150000,
+      "price": 79000,
       "stock": 20,
       "image": "/products/Accessories/06_lavender_beaded_wristlet.png"
     },
@@ -819,7 +819,7 @@
       "name": "Dây đeo cổ tay bện",
       "category": "Dây đeo",
       "description": "Dây bện dù chắc chắn, giữ máy an toàn khi di chuyển.",
-      "price": 120000,
+      "price": 79000,
       "stock": 22,
       "image": "/products/Accessories/07_braided_phone_wrist_strap.png"
     },
@@ -828,7 +828,7 @@
       "name": "Charm hoa acrylic",
       "category": "Charm",
       "description": "Charm hoa acrylic trong trẻo để treo lên ốp.",
-      "price": 89000,
+      "price": 29000,
       "stock": 30,
       "image": "/products/Accessories/08_acrylic_flower_charm.png"
     },
@@ -837,7 +837,7 @@
       "name": "Charm ngôi sao bông",
       "category": "Charm",
       "description": "Ngôi sao bông mềm mại, đáng yêu.",
-      "price": 99000,
+      "price": 39000,
       "stock": 16,
       "image": "/products/Accessories/09_plush_star_charm.png",
       "badge": "HOT"
@@ -847,7 +847,7 @@
       "name": "Charm phi hành gia",
       "category": "Charm",
       "description": "Charm phi hành gia và ngôi sao cho người mê vũ trụ.",
-      "price": 119000,
+      "price": 49000,
       "stock": 0,
       "image": "/products/Accessories/10_astronaut_star_charm.png"
     }

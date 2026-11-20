@@ -117,7 +117,7 @@ const missing = [];
 for (const d of catalog.designs.filter((x) => !x.soldOut)) {
   for (const s of skus) {
     const v = activeVariants.find((r) => r.slug === d.id && r.model === s.model && r.sku === s.skuId);
-    if (!v || v.price !== s.price + d.premium) missing.push(`${d.id}:${s.skuId}`);
+    if (!v || v.price !== (d.badge === 'LIMITED' ? 239000 : s.price + d.premium)) missing.push(`${d.id}:${s.skuId}`);
   }
 }
 for (const a of catalog.accessories) {

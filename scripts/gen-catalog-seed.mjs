@@ -16,6 +16,8 @@ const OUT = join(ROOT, 'supabase', 'migrations', '20261120090200_seed_catalog_v2
 
 /** Price of a custom (studio) case: flat, from phone_models.custom_price (Spec FR-DES-33). */
 const CUSTOM_PRICE = 250000;
+/** Flat price of a LIMITED / collab artwork on every device (pricelist GĐ-11). */
+const LIMITED_PRICE = 239000;
 /** Rows the new catalog replaces (kept for old orders, hidden from the shop). */
 const LEGACY_ACCESSORIES = ['accessory-magsafe', 'accessory-airpods', 'accessory-strap'];
 
@@ -77,7 +79,7 @@ on conflict (slug) do update
       art_url     = excluded.art_url,
       is_active   = true;
 
--- Every artwork on every available SKU: price = SKU price + artwork premium (same as the Shop UI).
+-- Every artwork on every available SKU: price = SKU price + artwork premium, or the flat limited price (same as the Shop UI).
 -- A sold-out artwork keeps its variants but they are inactive.
 with sku (sku, price, available) as (values
 ${rows(skus.map((s) => [q(s.skuId), s.price, bool(s.isAvailable)]))}
@@ -85,7 +87,7 @@ ${rows(skus.map((s) => [q(s.skuId), s.price, bool(s.isAvailable)]))}
 ${rows(catalog.designs.map((d) => [q(d.id), bool(!d.soldOut)]))}
 )
 insert into public.product_variants (product_id, name, phone_model_id, inventory_item_id, price, color_sku, is_active)
-select p.id, m.name || ' · ' || b.color_name, m.id, b.id, sku.price + p.premium, b.sku_code, art.active and sku.available
+select p.id, m.name || ' · ' || b.color_name, m.id, b.id, case when p.badge = 'LIMITED' then ${LIMITED_PRICE} else sku.price + p.premium end, b.sku_code, art.active and sku.available
 from art
 join public.products p on p.slug = art.slug
 cross join sku
