@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject } from '@angular/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from './supabase.client';
 import type { Database } from './database.types';
@@ -62,9 +62,4 @@ export abstract class SupabaseRepository<T extends TableName> {
     const { error } = await this.db.from(this.table).delete().eq('id', id);
     return error ? fail(error) : ok(true as const);
   }
-}
-
-@Injectable({ providedIn: 'root' })
-export class TestRepository extends SupabaseRepository<'test'> {
-  protected readonly table = 'test';
 }
