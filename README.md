@@ -1,79 +1,64 @@
-# DoAnWEB
+# CasEYE's — Cửa hàng ốp lưng điện thoại thiết kế riêng
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
+Ứng dụng web thương mại điện tử cho phép khách hàng mua ốp lưng có sẵn, tự thiết kế ốp lưng trong Design Studio, đặt hàng và theo dõi đơn hàng. Dự án môn học (Đồ án WEB).
 
-## Chạy thủ công trên Windows
+## Tính năng
 
-Mở PowerShell hoặc terminal tại thư mục project `D:\Code\Project_Web`, sau đó chạy:
+- **Cửa hàng** (`/shop`): ốp lưng theo dòng máy, phụ kiện, chi tiết sản phẩm
+- **Design Studio** (`/design-studio`): thiết kế ốp lưng, lưu thiết kế, mẫu cộng đồng
+- **Giỏ hàng & Thanh toán**: giỏ hàng, địa chỉ, đặt hàng qua RPC Supabase
+- **Theo dõi đơn hàng**: trang khách hàng + không gian làm việc cho admin/nhân viên, đồng bộ trực tiếp
+- **Tài khoản**: đăng ký/đăng nhập, onboarding, hồ sơ, thiết kế đã lưu
+- **Tìm kiếm** (`/tim-kiem`) và **Hỗ trợ khách hàng**
 
-```powershell
-npm.cmd ci
-npm.cmd start
+## Công nghệ
+
+Angular 22 (standalone, signals) · Tailwind CSS 4 · SCSS · Supabase (Postgres, Auth, RLS, Storage) · Vitest
+
+## Bắt đầu
+
+```bash
+npm ci
+npm start                # http://localhost:4200
+npm run start:network    # mở cho thiết bị khác trong cùng mạng (điện thoại thật)
 ```
 
-`npm.cmd ci` chỉ cần chạy lần đầu hoặc sau khi lockfile thay đổi. Khi server báo đã sẵn sàng, mở:
+Trên Windows PowerShell, nếu gặp lỗi Execution Policy, dùng `npm.cmd` thay cho `npm`.
 
-- Trang chủ: `http://localhost:4200/`
-- Giỏ hàng: `http://localhost:4200/cart`
-
-Giữ cửa sổ terminal mở trong lúc sử dụng; nhấn `Ctrl+C` để dừng server. Nếu `npm` báo lỗi PowerShell Execution Policy, dùng `npm.cmd` như các lệnh ở trên.
-
-### Xem giao diện mobile
-
-- **Mô phỏng trên máy tính:** mở trang giỏ hàng trong Chrome hoặc Edge, nhấn `F12`, bật Device Toolbar bằng `Ctrl+Shift+M`, chọn thiết bị/chiều rộng màn hình và tải lại trang nếu cần.
-- **Mở trên điện thoại thật:** để điện thoại và máy tính cùng mạng Wi-Fi, chạy `npm.cmd run start:network`. Tìm địa chỉ IPv4 của máy tính bằng `ipconfig`, rồi mở `http://<IPv4-may-tinh>:4200/cart` trên điện thoại. Không dùng `localhost` trên điện thoại vì địa chỉ đó trỏ về chính điện thoại. Nếu không kết nối được, cho phép Node.js/port 4200 qua Windows Firewall trên mạng riêng.
-
-Ở màn hình hẹp, nội dung giỏ hàng và phần tóm tắt xếp thành một cột; phần điều hướng dùng menu mobile.
+Cấu hình Supabase nằm ở `src/environments/` (chỉ chứa publishable key; không bao giờ commit service-role key).
 
 ### Build và test
 
-```powershell
-npm.cmd run build
-npm.cmd test -- --watch=false
-```
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
 ```bash
-ng generate component component-name
+npm run build
+npm test -- --watch=false
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Cơ sở dữ liệu (Supabase)
 
-```bash
-ng generate --help
+```
+supabase/
+  migrations/   schema, RLS, RPC, seed (áp theo thứ tự timestamp)
+  rollbacks/    file .down.sql tương ứng cho từng migration
+  seed/         catalog.json — nguồn duy nhất của danh mục sản phẩm
+  tests/        kiểm tra migration
 ```
 
-## Building
+- Sinh lại migration seed: `node scripts/gen-catalog-seed.mjs` (kiểm tra: `--check`)
+- Hướng dẫn áp migration: [docs/database/apply-migrations.md](docs/database/apply-migrations.md)
 
-To build the project run:
+## Cấu trúc thư mục
 
-```bash
-ng build
+```
+src/app/
+  core/       layout, auth, giỏ hàng, supabase, tìm kiếm, hỗ trợ
+  features/   landing, shop, design-studio, cart, checkout, order-tracking, account, auth, search, customer-support
+  shared/     ui, models, services, utils, devices, policy
+public/       hình ảnh, mô hình 3D, tài nguyên template/sticker
+scripts/      công cụ sinh seed và tài nguyên
+docs/         tài liệu đặc tả và hướng dẫn (xem docs/README.md)
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Tài liệu
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Xem [docs/README.md](docs/README.md).

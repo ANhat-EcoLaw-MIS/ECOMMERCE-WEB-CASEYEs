@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {TestRepository} from '../../supabase/supabase-repository';
 
 interface FooterLink {
   label: string;
@@ -22,7 +21,6 @@ interface SocialLink {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Footer {
-  private readonly test=inject(TestRepository)
   readonly currentYear = new Date().getFullYear();
   // Menu điều hướng nhanh (Dùng placeholder '#' theo yêu cầu)
   readonly quickLinks: readonly FooterLink[] = [

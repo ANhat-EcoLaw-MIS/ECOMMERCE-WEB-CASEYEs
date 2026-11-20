@@ -11,6 +11,7 @@ describe('Placeholder', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(Placeholder);
+    fixture.componentRef.setInput('label', 'Placeholder');
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

@@ -47,3 +47,11 @@ Thumbs.db
 # Supabase
 /supabase/.temp/
 .codex/
+
+# Supabase CLI state / local artefacts
+/supabase/.branches/
+*.zip
+backup*.sql
+
+# Claude Code
+.claude/

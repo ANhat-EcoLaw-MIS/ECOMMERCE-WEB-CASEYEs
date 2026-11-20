@@ -98,11 +98,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/search/search-page').then((m) => m.SearchPage),
       },
       {
-        path: 'test',
-        title: "Kiểm thử | CasEYE's",
-        loadComponent: () => import('./core/demo/demo').then((m) => m.Demo),
-      },
-      {
         path: 'auth', // /auth/login, /auth/register, /auth/forgot-password, /auth/reset-password
         title: "Xác thực | CasEYE's",
         loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
