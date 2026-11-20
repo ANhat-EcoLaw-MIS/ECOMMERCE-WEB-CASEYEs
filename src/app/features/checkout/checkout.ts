@@ -80,14 +80,30 @@ export class Checkout implements OnInit {
     void this.onboarding.current().then((status) => this.askOnboarding.set(status === 'pending'));
     // 1. Phục hồi đơn hàng từ sessionStorage nếu có (Single Source of Truth)
     const restored = this.checkoutService.restoreFromStorage();
-    if (restored?.placedOrderCode) {
-      // Spec B6: the saved session already became an order. New items in the cart mean a new
-      // checkout (fresh checkout_ref); an empty cart means a reload of the success page.
-      if (this.cart.items().length > 0) this.checkoutService.startNewSession();
-      else this.checkoutService.placedOrderCode.set(restored.placedOrderCode);
+    // The saved session is a finished order: placed in Quản lý đơn hàng, or paid while place_order failed.
+    const finished = !!restored && (!!restored.placedOrderCode || restored.orderStatus === 'confirmed');
+    if (finished && this.route.snapshot.queryParamMap.get('step') === 'success') {
+      // Reload of the success page: show the saved order exactly as it was placed. Nothing is
+      // re-read from the cart, the form defaults or the address book, so its products never change.
+      this.checkoutService.placedOrderCode.set(restored!.placedOrderCode ?? null);
+      this.currentStep.set('success');
+      // Paid but not created yet (the error is not kept across reloads): retry with the same
+      // checkout_ref; place_order returns the existing order instead of a duplicate (FR-P-35).
+      if (!restored!.placedOrderCode) void this.placeOrderOnce();
+      this.watchStepParam();
+      return;
     }
-    // Integration: the site cart (Shop + Design Studio) feeds Thanh toán.
-    this.checkoutService.loadFromCart(this.cart.items());
+    if (finished) {
+      // Spec B6: coming back to /checkout after an order is a new checkout (fresh checkout_ref).
+      this.checkoutService.startNewSession();
+    }
+    if (this.cart.items().length > 0 && this.cart.selectedItems().length === 0) {
+      // Cart has lines but none is ticked: nothing to pay for, send the customer back to choose.
+      void this.router.navigate(['/cart']);
+      return;
+    }
+    // Integration: only the lines ticked in the cart (Shop + Design Studio) feed Thanh toán.
+    this.checkoutService.loadFromCart(this.cart.selectedItems());
     this.checkoutService.getOrCreateOrder();
     // The recipient comes from the signed-in customer's address book (table `addresses`), never a mock.
     void this.addressBook.load().then((address) => {
@@ -95,7 +111,11 @@ export class Checkout implements OnInit {
       if (address && !this.checkoutService.hasAddress()) this.showAddressModal.set(true);
     });
 
-    // 2. Đồng bộ trạng thái từ Query Params (?step=form|processing|success|failed)
+    this.watchStepParam();
+  }
+
+  /** Đồng bộ trạng thái từ Query Params (?step=form|processing|success|failed). */
+  private watchStepParam(): void {
     this.route.queryParams.subscribe((params) => {
       const step = params['step'] as CheckoutStep;
       if (step && ['form', 'processing', 'success', 'failed'].includes(step)) {
@@ -112,7 +132,8 @@ export class Checkout implements OnInit {
     if (step === 'processing') {
       this.checkoutService.updateOrderStatus('processing', 'pending', 'not_started');
     } else if (step === 'success') {
-      this.checkoutService.updateOrderStatus('confirmed', this.checkoutService.selectedPaymentType() === 'cod' ? 'pending' : 'paid', 'printing');
+      // An order that is already confirmed keeps its status and payment info (reloads, ?step links).
+      if (this.checkoutService.activeOrder()?.orderStatus !== 'confirmed') this.checkoutService.updateOrderStatus('confirmed', this.checkoutService.selectedPaymentType() === 'cod' ? 'pending' : 'paid', 'printing');
       // Only a real submit creates the order (not ?step=success links or a page reload).
       if (syncUrl) this.placeOrderOnce();
     } else if (step === 'failed') {
@@ -150,7 +171,8 @@ export class Checkout implements OnInit {
       const result = await this.orderIntake.placeOrder(handoff);
       if (!result.error) {
         this.checkoutService.markPlaced(result.data.orderCode);
-        this.cart.items.set([]);
+        // Only the paid lines leave the cart; lines the customer left unticked stay for later.
+        this.cart.removeMany(order.items.map((i) => i.designCode));
         return;
       }
       message = result.error.message;
@@ -239,6 +261,12 @@ export class Checkout implements OnInit {
   onNewOrder(): void {
     this.checkoutService.startNewSession();
     this.placedForOrderId = null;
+    // A new order is built from what is ticked in the cart now, never from the previous order.
+    if (this.cart.selectedItems().length === 0) {
+      void this.router.navigate(['/cart']);
+      return;
+    }
+    this.checkoutService.loadFromCart(this.cart.selectedItems());
     this.checkoutService.createNewOrder();
     this.setStep('form');
   }

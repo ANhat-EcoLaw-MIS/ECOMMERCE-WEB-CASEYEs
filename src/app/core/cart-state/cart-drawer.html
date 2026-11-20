@@ -7,7 +7,7 @@
       @if (cart.items().length) {
         @for (item of cart.items(); track item.id) {
           <article class="drawer-item">
-            <div class="drawer-thumbnail"><img class="drawer-product-photo" [src]="item.custom && item.snapshot ? resolveImage(item.snapshot) : productImage(item.id)" [alt]="item.name" loading="lazy" (error)="onImageError($event)"/></div>
+            <div class="drawer-thumbnail"><img class="drawer-product-photo" [src]="item.snapshot ? resolveImage(item.snapshot) : productImage(item.id)" [alt]="item.name" loading="lazy" (error)="onImageError($event)"/></div>
             <div class="drawer-item-content">
               <div class="drawer-item-row"><h3>{{item.name}}</h3><button type="button" (click)="cart.remove(item.id)" [attr.aria-label]="'Xóa '+item.name">✕</button></div>
               <p>{{item.model}} · {{item.finish}}</p>

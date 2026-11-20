@@ -168,9 +168,9 @@
         <div class="card__header">
           <h3 class="card__title">
             <span class="material-symbols-outlined">inventory_2</span>
-            Tóm Tắt Đơn Hàng Đã Đóng Băng
+            Tóm Tắt Đơn Hàng
           </h3>
-          <span class="badge badge--subtle">{{ order.items.length }} Sản phẩm Custom</span>
+          <span class="badge badge--subtle">{{ order.items.length }} Sản phẩm</span>
         </div>
 
         @for (item of order.items; track item.id) {
@@ -181,7 +181,7 @@
           </div>
           <div class="frozen-item__info">
             <div class="frozen-item__title-row">
-              <span class="badge badge--purple">Bespoke Design {{ item.designCode }}</span>
+              <span class="badge badge--purple">Tag: {{ item.tag }}</span>
               <strong class="item-price">{{ checkoutService.formatCurrency(item.price) }}</strong>
             </div>
             <h4 class="item-name">{{ item.name }}</h4>
@@ -237,7 +237,7 @@
         </div>
 
         <div class="frozen-actions">
-          <a class="btn-cta" routerLink="/shop">
+          <a class="btn-cta" routerLink="/cart">
             <span class="material-symbols-outlined">shopping_bag</span>
             Tiếp tục mua sắm
           </a>

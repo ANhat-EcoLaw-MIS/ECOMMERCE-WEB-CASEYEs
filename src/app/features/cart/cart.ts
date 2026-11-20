@@ -17,9 +17,9 @@ export class Cart {
   protected readonly checkoutMessage = signal('');
   protected readonly acceptedTerms = signal(false);
   protected readonly showTerms = signal(false);
-  protected readonly discount = computed(() => this.appliedCoupon() ? Math.round(this.cart.subtotal() * .1) : 0);
-  // Shipping is decided by Thanh toán (Checkout), not by the cart.
-  protected readonly total = computed(() => this.cart.subtotal()-this.discount());
+  protected readonly discount = computed(() => this.appliedCoupon() ? Math.round(this.cart.selectedSubtotal() * .1) : 0);
+  // Shipping is decided by Thanh toán (Checkout), not by the cart. Only ticked lines are paid for.
+  protected readonly total = computed(() => this.cart.selectedSubtotal()-this.discount());
   private readonly formatter = new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0});
   protected MathMin = Math.min;
   protected price(value:number):string{return this.formatter.format(value);}
@@ -49,9 +49,10 @@ export class Cart {
   }
   protected removeCoupon():void{this.appliedCoupon.set(false);this.couponInput.set('');this.couponMessage.set('');}
   protected checkout():void{
-    if(this.cart.hasStockIssues()){this.checkoutMessage.set('Có sản phẩm vượt số lượng phôi demo. Hãy chỉnh lại số lượng trước.');return;}
+    if(!this.cart.someSelected()){this.checkoutMessage.set('Hãy chọn ít nhất một sản phẩm để thanh toán.');return;}
+    if(this.cart.selectedHaveStockIssues()){this.checkoutMessage.set('Có sản phẩm vượt số lượng phôi demo. Hãy chỉnh lại số lượng trước.');return;}
     if(!this.acceptedTerms()){this.showTerms.set(true);this.checkoutMessage.set('Vui lòng đồng ý điều khoản sản phẩm cá nhân hóa.');return;}
-    // Integration: Thanh toán reads this cart (CartState) and creates the order.
+    // Integration: Thanh toán reads the SELECTED lines of this cart (CartState.selectedItems) and creates the order.
     void this.router.navigate(['/checkout']);
   }
 

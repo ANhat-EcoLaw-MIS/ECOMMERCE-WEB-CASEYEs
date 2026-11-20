@@ -13,3 +13,8 @@
 @media(max-width:760px){.cart-v5-remove{top:16px;transform:none}}
 
 .cart-v5-mini-actions .cart-v5-edit{font:inherit;font-size:.85rem;color:inherit;text-decoration:underline;cursor:pointer}
+
+.cart-v5-selectall{display:flex;align-items:center;gap:10px;padding:4px 15px 12px;font-size:13px;font-weight:700;color:#705d87;cursor:pointer}
+.cart-v5-selectall input,.cart-v5-check{width:18px;height:18px;accent-color:#7c5cd6;flex:none;cursor:pointer}
+.cart-v5-check{margin-top:2px}
+.cart-v5-item.unselected .cart-v5-product img,.cart-v5-item.unselected .cart-v5-unit,.cart-v5-item.unselected .cart-v5-line{opacity:.5}

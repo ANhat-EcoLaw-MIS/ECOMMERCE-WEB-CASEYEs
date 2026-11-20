@@ -69,11 +69,36 @@ export class CartState {
     source: this.owner,
     computation: (owner) => this.load(SAVED_KEY, owner),
   });
+  /**
+   * Lines the customer UNticked in the cart. Tracking the opposite keeps new lines selected by default
+   * and lets stale ids (removed lines) be ignored.
+   */
+  private readonly deselected = signal<ReadonlySet<string>>(new Set());
   readonly animationPulse = signal(0);
   readonly itemCount = computed(() => this.items().reduce((n, item) => n + item.quantity, 0));
   readonly subtotal = computed(() => this.items().reduce((n, item) => n + item.unitPrice * item.quantity, 0));
   // No shipping fee here: Thanh toán (Checkout) owns shipping fees and delivery options.
   readonly hasStockIssues = computed(() => this.items().some((item) => item.quantity > item.stock));
+
+  /** Lines that go to Thanh toán. */
+  readonly selectedItems = computed(() => this.items().filter((item) => !this.deselected().has(item.id)));
+  readonly selectedCount = computed(() => this.selectedItems().reduce((n, item) => n + item.quantity, 0));
+  readonly selectedSubtotal = computed(() => this.selectedItems().reduce((n, item) => n + item.unitPrice * item.quantity, 0));
+  readonly selectedHaveStockIssues = computed(() => this.selectedItems().some((item) => item.quantity > item.stock));
+  readonly allSelected = computed(() => this.items().length > 0 && this.selectedItems().length === this.items().length);
+  readonly someSelected = computed(() => this.selectedItems().length > 0);
+  isSelected(id: string): boolean { return !this.deselected().has(id); }
+  toggleSelected(id: string): void {
+    this.deselected.update((set) => { const next = new Set(set); if (!next.delete(id)) next.add(id); return next; });
+  }
+  setAllSelected(selected: boolean): void {
+    this.deselected.set(selected ? new Set() : new Set(this.items().map((item) => item.id)));
+  }
+  /** Removes the lines that were just ordered; unselected lines stay in the cart. */
+  removeMany(ids: readonly string[]): void {
+    const gone = new Set(ids);
+    this.items.update((items) => items.filter((item) => !gone.has(item.id)));
+  }
 
   constructor() {
     // Save each list under the current owner's key (items are already re-loaded when the owner changes).
