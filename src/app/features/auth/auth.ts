@@ -264,7 +264,7 @@ export class Auth {
         break;
       case 'reset':
         await this.auth.signOut(); // ends the session, so the user logs in with the new password
-        await this.router.navigate(['/login'], { queryParams: { done: '1' } });
+        await this.router.navigate(['/auth/login'], { queryParams: { done: '1' } });
         break;
     }
   }

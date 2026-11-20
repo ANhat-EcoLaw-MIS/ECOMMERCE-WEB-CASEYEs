@@ -11,3 +11,5 @@
 .cart-v5-remove-text{display:none}
 .cart-v5-quantity button{min-width:40px;min-height:40px;display:grid;place-items:center}
 @media(max-width:760px){.cart-v5-remove{top:16px;transform:none}}
+
+.cart-v5-mini-actions .cart-v5-edit{font:inherit;font-size:.85rem;color:inherit;text-decoration:underline;cursor:pointer}
