@@ -1,0 +1,32 @@
+-- Rollback M5: drop the new RPCs. Then re-run place_order / cancel_order (with their grants)
+-- from 20261105060407_rpc_orders.sql to restore the original versions.
+drop function if exists public.reject_refund(uuid, text);
+drop function if exists public.retry_transfer(uuid);
+drop function if exists public.mark_transfer_failed(uuid);
+drop function if exists public.complete_refund(uuid, text);
+drop function if exists public.approve_refund(uuid);
+drop function if exists public.lock_refund(uuid);
+drop function if exists public.apply_carrier_event(text, uuid, text, text);
+drop function if exists public.mark_qc_reprint(uuid);
+drop function if exists public.mark_packed(uuid);
+drop function if exists public.start_production();
+drop function if exists public.moderate_design(uuid, boolean, text, text);
+drop function if exists public.apply_ticket_result(uuid, text, text);
+drop function if exists public.decide_cancel_request(uuid, boolean, text);
+drop function if exists public.list_open_orders();
+drop function if exists public.submit_refund_account(uuid, text, text, text);
+drop function if exists public.cancel_after_failure(uuid);
+drop function if exists public.request_redelivery(uuid);
+drop function if exists public.report_issue(uuid, text);
+drop function if exists public.confirm_received(uuid);
+drop function if exists public.cancel_rejected_order(uuid);
+drop function if exists public.resubmit_design(uuid);
+drop function if exists public.withdraw_cancel_request(uuid);
+drop function if exists public.request_cancel(uuid, text, text);
+drop function if exists public.order_link(text);
+drop function if exists public.create_refund(public.orders, text);
+drop function if exists public.restock_order(uuid);
+drop function if exists public.is_customer_fault(text);
+drop function if exists public.order_on_hold(uuid);
+drop function if exists public.order_has_custom(uuid);
+drop function if exists public.lock_order(uuid, boolean);

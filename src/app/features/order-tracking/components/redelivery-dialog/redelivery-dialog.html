@@ -1,0 +1,88 @@
+<app-ot-modal [open]="open()" title="Yêu cầu giao lại" (closed)="closed.emit()">
+  <div class="flex flex-col gap-4">
+    <!-- step indicator -->
+    <ol class="flex items-center gap-2 text-xs font-semibold" aria-label="Các bước giao lại">
+      @for (s of steps(); track s.key) {
+        <li class="flex items-center gap-2" [attr.aria-current]="s.key === step() ? 'step' : null">
+          <span class="grid size-6 place-items-center rounded-full border-2"
+            [class.border-brand-800]="$index <= stepIndex()" [class.bg-brand-800]="$index < stepIndex()" [class.text-white]="$index < stepIndex()"
+            [class.text-brand-800]="$index === stepIndex()" [class.border-line]="$index > stepIndex()" [class.text-ink-soft]="$index > stepIndex()">
+            {{ $index < stepIndex() ? '✓' : $index + 1 }}
+          </span>
+          <span [class.text-ink]="$index <= stepIndex()" [class.text-ink-soft]="$index > stepIndex()">{{ s.label }}</span>
+          @if (!$last) {
+            <span aria-hidden="true" class="h-px w-4 bg-line"></span>
+          }
+        </li>
+      }
+    </ol>
+
+    <p class="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
+      {{ whoPays() }} Hàng được giữ đến <b>{{ holdUntil() }}</b>; mỗi đơn được giao lại 1 lần.
+    </p>
+
+    @switch (step()) {
+      @case ('address') {
+        <div class="rounded-xl border border-line bg-surface p-4 text-sm">
+          <p class="font-semibold text-ink">Giao tới</p>
+          <p class="text-ink">{{ order().customerName }} · {{ order().customerPhone }}</p>
+          <p class="text-ink-soft">{{ order().shippingAddress }}</p>
+          <label class="mt-3 flex min-h-11 cursor-pointer items-center gap-3">
+            <input type="checkbox" class="size-5 accent-brand-800" [checked]="addressConfirmed()" (change)="addressConfirmed.set($any($event.target).checked)" />
+            <span class="text-ink">Tôi xác nhận địa chỉ và số điện thoại nhận hàng</span>
+          </label>
+        </div>
+      }
+      @case ('fee') {
+        <div class="flex flex-col items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4 text-center sm:flex-row sm:text-left">
+          <div aria-hidden="true" class="grid size-28 shrink-0 grid-cols-9 gap-px rounded-lg bg-white p-2">
+            @for (on of qrCells; track $index) {
+              <span [class.bg-ink]="on"></span>
+            }
+          </div>
+          <div class="text-sm text-brand-900">
+            <p>Cước giao lại: <b class="font-display text-lg">{{ feeLabel() }}</b></p>
+            <p>Nội dung chuyển khoản: <b>GIAOLAI {{ order().orderCode }}</b></p>
+            <p class="mt-1 text-xs text-ink-soft">QR minh họa (thanh toán giả lập, không qua cổng bên thứ ba).</p>
+            <label class="mt-2 flex min-h-11 cursor-pointer items-center gap-3">
+              <input type="checkbox" class="size-5 accent-brand-800" [checked]="paid()" (change)="paid.set($any($event.target).checked)" />
+              <span class="text-ink">Tôi đã chuyển khoản</span>
+            </label>
+          </div>
+        </div>
+      }
+      @case ('confirm') {
+        <div class="rounded-xl border border-line bg-surface p-4 text-sm">
+          <p class="text-ink">Giao lại tới <b>{{ order().shippingAddress }}</b>.</p>
+          <p class="mt-1 text-ink-soft">Cước giao lại: <b class="text-ink">{{ fee() > 0 ? feeLabel() + ' (đã chuyển khoản)' : 'Miễn phí' }}</b>. Ngày giao dự kiến mới hiện ngay sau khi xác nhận.</p>
+        </div>
+      }
+    }
+
+    @if (error(); as message) {
+      <p role="alert" [class]="errorBox">{{ message }}</p>
+    }
+
+    <div class="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex gap-2">
+        @if (stepIndex() > 0) {
+          <button type="button" [class]="btnGhost" (click)="back()">Quay lại</button>
+        }
+        @if (canCancel()) {
+          <button type="button" [class]="btnGhost" (click)="chooseCancel()">Hủy & hoàn tiền thay vì giao lại</button>
+        }
+      </div>
+      @switch (step()) {
+        @case ('address') {
+          <button type="button" [class]="btnPrimary" [disabled]="!addressConfirmed()" (click)="next()">Tiếp tục</button>
+        }
+        @case ('fee') {
+          <button type="button" [class]="btnPrimary" [disabled]="!paid()" (click)="next()">Tiếp tục</button>
+        }
+        @case ('confirm') {
+          <button type="button" [class]="btnPrimary" [disabled]="busy()" [attr.aria-busy]="busy()" (click)="submit()">{{ busy() ? 'Đang xử lý…' : 'Xác nhận giao lại' }}</button>
+        }
+      }
+    </div>
+  </div>
+</app-ot-modal>

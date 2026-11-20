@@ -1,0 +1,20 @@
+<a
+  href="#main"
+  class="sr-only rounded-pill bg-brand-400 px-4 py-2 font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]"
+>
+  Bỏ qua điều hướng
+</a>
+
+@if (!isCanvasEditor()) {
+  <app-header [cartCount]="cartCount()" />
+  <app-search-overlay />
+}
+
+<main id="main" [class.h-screen]="isCanvasEditor()" [class.overflow-hidden]="isCanvasEditor()">
+  <router-outlet />
+</main>
+
+@if (!isCanvasEditor()) {
+  <app-footer />
+  <app-support-chat />
+}

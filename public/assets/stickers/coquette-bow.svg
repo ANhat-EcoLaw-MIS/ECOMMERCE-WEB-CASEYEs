@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="bowGrad" x1="20" y1="20" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FCE7F3"/>
+      <stop offset="60%" stop-color="#F472B6"/>
+      <stop offset="100%" stop-color="#DB2777"/>
+    </linearGradient>
+    <filter id="bowGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#DB2777" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <g filter="url(#bowGlow)">
+    <!-- White Die Cut Backing -->
+    <path d="M60 52 C45 32 15 35 15 55 C15 75 48 65 60 62 C72 65 105 75 105 55 C105 35 75 32 60 52 Z"
+          fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M54 62 L32 102 L48 98 L58 70 Z M66 62 L88 102 L72 98 L62 70 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6"/>
+    <!-- Wings -->
+    <path d="M60 54 C46 36 18 38 18 56 C18 73 48 64 60 60 Z" fill="url(#bowGrad)"/>
+    <path d="M60 54 C74 36 102 38 102 56 C102 73 72 64 60 60 Z" fill="url(#bowGrad)"/>
+    <!-- Tails -->
+    <path d="M54 60 L34 100 L48 96 L58 68 Z" fill="url(#bowGrad)"/>
+    <path d="M66 60 L86 100 L72 96 L62 68 Z" fill="url(#bowGrad)"/>
+    <!-- Knot -->
+    <circle cx="60" cy="58" r="8" fill="#F43F5E"/>
+    <circle cx="58" cy="56" r="3" fill="#FFFFFF" opacity="0.6"/>
+  </g>
+</svg>

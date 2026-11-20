@@ -1,0 +1,24 @@
+<main class="flex min-h-screen items-center justify-center bg-surface px-4 py-12">
+  <section class="w-full max-w-md rounded-card border border-line bg-surface-alt p-6 shadow-soft">
+    <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">CasEYE's · Quản trị</p>
+    <h1 class="mt-1 font-display text-2xl font-extrabold text-ink">Đăng nhập nhân viên</h1>
+    <p class="mt-2 text-sm text-ink-soft">Dùng tài khoản nhân viên đã được cấp quyền (Operator, CSKH hoặc Admin).</p>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="mt-5 flex flex-col gap-3" novalidate>
+      <label class="flex flex-col gap-1 text-sm font-medium text-ink">
+        Email
+        <input formControlName="email" type="email" autocomplete="username" class="min-h-11 rounded-xl border border-line bg-surface px-3 text-sm focus-visible:outline-2 focus-visible:outline-brand-400" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm font-medium text-ink">
+        Mật khẩu
+        <input formControlName="password" type="password" autocomplete="current-password" class="min-h-11 rounded-xl border border-line bg-surface px-3 text-sm focus-visible:outline-2 focus-visible:outline-brand-400" />
+      </label>
+      @if (error(); as e) {
+        <p role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">{{ e }}</p>
+      }
+      <button type="submit" [disabled]="busy()" class="mt-1 inline-flex min-h-11 items-center justify-center rounded-pill bg-brand-800 px-5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">
+        {{ busy() ? 'Đang đăng nhập…' : 'Đăng nhập' }}
+      </button>
+    </form>
+    <a routerLink="/" class="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-brand-800 hover:underline">← Về trang khách</a>
+  </section>
+</main>

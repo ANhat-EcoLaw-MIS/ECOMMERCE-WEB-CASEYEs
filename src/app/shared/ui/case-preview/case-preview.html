@@ -1,0 +1,41 @@
+<div
+  class="case"
+  [class.is-clear]="caseType() === 'clear'"
+  [class.is-loading]="state() === 'loading'"
+  [style.aspect-ratio]="ratio()"
+  [style.border-radius.cqw]="corner"
+  [style.background-color]="colorHex()"
+  [style.--rim]="rim() + 'cqw'"
+  [style.--case-color]="colorHex()"
+>
+  <div class="print" [style.background-image]="artwork()" [style.border-radius.cqw]="corner - rim()">
+    @if (tint(); as t) {
+      <span class="tint" [style.background]="t" aria-hidden="true"></span>
+    }
+    <!-- Extra print layers (e.g. a template's sticker), clipped to the case back. -->
+    <ng-content />
+  </div>
+
+  @if (caseType() === 'magsafe') {
+    <span class="magsafe" aria-hidden="true"></span>
+  }
+
+  <div
+    class="camera"
+    [class.is-island]="shape() === 'island'"
+    [class.is-ring]="shape() === 'ring'"
+    [class.is-column]="shape() === 'column'"
+    [style.left.%]="box().left"
+    [style.top.%]="box().top"
+    [style.width.%]="box().width"
+    [style.height.%]="shape() === 'ring' ? null : box().height"
+    [style.border-radius.cqw]="shape() === 'island' ? moduleRadius() : null"
+    aria-hidden="true"
+  >
+    @for (lens of lenses(); track $index) {
+      <span class="lens" [style.left.%]="lens.x" [style.top.%]="lens.y" [style.width.%]="lens.d"></span>
+    }
+  </div>
+
+  <span class="gloss" aria-hidden="true"></span>
+</div>

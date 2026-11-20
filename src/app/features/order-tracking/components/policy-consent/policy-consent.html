@@ -1,0 +1,28 @@
+@if (hasCustom()) {
+  <div class="rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm">
+    <label class="flex min-h-11 cursor-pointer items-start gap-3">
+      <input type="checkbox" class="mt-1 size-5 shrink-0 accent-brand-800" [checked]="checked()" (change)="set($any($event.target).checked)" required />
+      <span class="text-ink">
+        Tôi đã đọc và đồng ý <button type="button" class="font-semibold text-brand-800 underline underline-offset-2" (click)="modalOpen.set(true)">chính sách đơn hàng thiết kế theo yêu cầu</button>.
+      </span>
+    </label>
+  </div>
+  <app-ot-modal [open]="modalOpen()" title="Trước khi đặt hàng thiết kế theo yêu cầu" (closed)="modalOpen.set(false)">
+    <ul class="flex list-disc flex-col gap-2 pl-5 text-sm text-ink">
+      @for (h of highlights; track h.id) {
+        <li><b>{{ h.title }}:</b> {{ h.text }}</li>
+      }
+      <li>{{ colorNote }}</li>
+    </ul>
+    <a routerLink="/order-tracking/chinh-sach" target="_blank" class="mt-3 inline-flex min-h-9 items-center text-sm font-semibold text-brand-800 underline-offset-4 hover:underline">Xem chính sách đầy đủ ↗</a>
+    <p class="mt-1 text-xs text-ink-soft">Phiên bản {{ version }}</p>
+    <div class="mt-4 flex justify-end">
+      <button type="button" [class]="btnPrimary" (click)="acceptFromModal()">Tôi đồng ý</button>
+    </div>
+  </app-ot-modal>
+} @else {
+  <label class="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+    <input type="checkbox" class="size-5 shrink-0 accent-brand-800" [checked]="checked()" (change)="set($any($event.target).checked)" required />
+    <span class="text-ink">Tôi đồng ý <a routerLink="/order-tracking/chinh-sach" target="_blank" class="font-semibold text-brand-800 underline underline-offset-2">chính sách đơn hàng</a>.</span>
+  </label>
+}

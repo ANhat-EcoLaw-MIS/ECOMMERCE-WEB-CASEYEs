@@ -1,0 +1,88 @@
+<div class="fixed inset-0 z-[110] flex justify-start">
+  <button type="button" class="backdrop absolute inset-0 bg-ink/40 backdrop-blur-[3px]" aria-label="Đóng bộ lọc" tabindex="-1" (click)="closed.emit()"></button>
+
+  <aside
+    #panel
+    tabindex="-1"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="filter-title"
+    class="panel relative flex h-full w-full max-w-md flex-col bg-surface shadow-lift outline-none sm:rounded-r-card"
+  >
+    <header class="flex items-center justify-between gap-3 px-5 pb-3 pt-5">
+      <div>
+        <h2 id="filter-title" class="font-display text-xl font-bold text-ink">Bộ lọc</h2>
+        <p class="text-xs text-ink-soft">{{ f.activeCount() ? f.activeCount() + ' bộ lọc đang bật' : 'Chưa chọn bộ lọc nào' }}</p>
+      </div>
+      <div class="flex items-center gap-1">
+        @if (f.activeCount()) {
+          <button type="button" (click)="f.reset()" class="min-h-9 rounded-pill px-3 text-xs font-semibold text-brand-800 hover:bg-brand-50">Xóa tất cả</button>
+        }
+        <button type="button" (click)="closed.emit()" aria-label="Đóng" class="grid size-10 place-items-center rounded-full bg-white text-ink-soft shadow-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-400">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="size-5"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 space-y-4 overflow-y-auto px-5 pb-5">
+      <!-- Device -->
+      <fieldset class="rounded-card bg-white p-4 shadow-soft">
+        <legend class="sr-only">Dòng máy</legend>
+        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft" aria-hidden="true">Dòng máy</p>
+        <div class="grid grid-cols-2 gap-2">
+          @for (d of devices; track d.id) {
+            <label class="group flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border border-line p-2 text-sm text-ink transition-colors hover:border-brand-400 has-[:checked]:border-brand-800 has-[:checked]:bg-brand-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-400">
+              <input type="radio" name="filter-device" class="sr-only" [checked]="d.id === f.device().id" (change)="f.set({ model: d.id })" />
+              <span class="grid h-12 w-9 shrink-0 place-items-center rounded-xl bg-surface-container-low">
+                <app-case-preview class="w-5" [model]="d" colorHex="#0A0A0A" caseType="snap" [seed]="d.id" [alt]="''" aria-hidden="true" />
+              </span>
+              <span class="min-w-0">
+                <span class="block text-[11px] text-ink-soft">{{ d.brandName }}</span>
+                <span class="block truncate font-semibold">{{ d.name }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <!-- Colour -->
+      @if (f.colors().length > 1) {
+        <fieldset class="rounded-card bg-white p-4 shadow-soft">
+          <legend class="sr-only">Màu ốp</legend>
+          <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft" aria-hidden="true">Màu ốp</p>
+          <div class="grid grid-cols-4 gap-2">
+            @for (c of f.colors(); track c.name) {
+              <button
+                type="button"
+                (click)="f.set({ color: f.color() === c.name ? null : c.name })"
+                [attr.aria-pressed]="f.color() === c.name"
+                class="group flex flex-col items-center gap-1.5 rounded-2xl p-2 text-center text-[11px] leading-tight text-ink transition-colors hover:bg-surface-container-low aria-pressed:bg-brand-50 aria-pressed:font-semibold focus-visible:outline-2 focus-visible:outline-brand-400"
+              >
+                <span class="size-9 rounded-full ring-1 ring-black/10 ring-offset-2 transition-shadow group-aria-pressed:ring-2 group-aria-pressed:ring-brand-800" [style.background]="c.hex"></span>
+                {{ c.name }}
+              </button>
+            }
+          </div>
+        </fieldset>
+      }
+
+      <!-- Style -->
+      <fieldset class="rounded-card bg-white p-4 shadow-soft">
+        <legend class="sr-only">Phong cách</legend>
+        <p class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft" aria-hidden="true">Phong cách</p>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" (click)="f.set({ style: null })" [attr.aria-pressed]="!f.style()" class="min-h-10 rounded-pill border border-line px-4 text-sm font-medium text-ink transition-colors hover:border-brand-400 aria-pressed:border-transparent aria-pressed:bg-ink aria-pressed:text-white">Tất cả</button>
+          @for (s of styles; track s) {
+            <button type="button" (click)="f.set({ style: s })" [attr.aria-pressed]="f.style() === s" class="min-h-10 rounded-pill border border-line px-4 text-sm font-medium text-ink transition-colors hover:border-brand-400 aria-pressed:border-transparent aria-pressed:bg-ink aria-pressed:text-white">{{ s }}</button>
+          }
+        </div>
+      </fieldset>
+    </div>
+
+    <footer class="border-t border-line bg-white/80 px-5 py-4 backdrop-blur">
+      <button type="button" (click)="closed.emit()" class="min-h-12 w-full rounded-pill bg-brand-800 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">
+        Xem {{ f.results().length }} mẫu cho {{ f.device().name }}
+      </button>
+    </footer>
+  </aside>
+</div>

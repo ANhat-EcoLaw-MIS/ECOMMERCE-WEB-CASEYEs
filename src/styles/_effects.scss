@@ -1,0 +1,117 @@
+html {
+  scrollbar-gutter: stable;
+}
+
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes onboarding-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes onboarding-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-marquee-left {
+  animation: marquee-left 32s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marquee-right 34s linear infinite;
+}
+
+.animate-onboarding-float {
+  animation: onboarding-float 5s ease-in-out infinite;
+}
+
+.animate-onboarding-pulse {
+  animation: onboarding-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+dialog {
+  /* 1. Trạng thái biến mất (Exit) */
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+
+  /* Cần allow-discrete để delay việc 'display: none' cho đến khi animation kết thúc */
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out,
+    overlay 300ms ease-out,
+    display 300ms ease-out allow-discrete;
+
+  &::backdrop {
+    opacity: 0;
+    transition:
+      opacity 300ms ease-out,
+      overlay 300ms ease-out,
+      display 300ms ease-out allow-discrete;
+  }
+
+  /* 2. Trạng thái hiển thị (Active) */
+  &[open] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+
+    &::backdrop {
+      opacity: 1;
+    }
+  }
+}
+
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog, dialog::backdrop {
+    transition: none !important;
+  }
+
+  .animate-marquee-left,
+  .animate-marquee-right,
+  .animate-onboarding-float,
+  .animate-onboarding-pulse,
+  .animate-ping,
+  .animate-bounce {
+    animation: none !important;
+  }
+}

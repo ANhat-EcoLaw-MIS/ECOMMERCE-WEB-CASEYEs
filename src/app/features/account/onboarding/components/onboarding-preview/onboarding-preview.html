@@ -1,0 +1,105 @@
+<section aria-label="Bản xem trước trực tiếp" class="flex w-full flex-col items-center rounded-[2rem] border border-purple-300/30 bg-onboarding-panel/90 p-6 shadow-[0_0_35px_rgba(165,140,244,0.22)] backdrop-blur-xl md:p-8">
+  <div class="mb-5 flex w-full items-center justify-between">
+    <div class="flex items-center gap-2 rounded-full border border-purple-300/30 bg-onboarding-panel px-3 py-1 shadow-sm">
+      <span aria-hidden="true" class="size-2 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="text-xs font-bold text-white">Bản xem trước</span>
+    </div>
+    <span class="flex items-center gap-1 text-xs font-medium text-white/70">
+      <svg aria-hidden="true" class="size-4 text-brand-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3m0 12v3M3 12h3m12 0h3m-2.6-6.4-2.1 2.1M8.7 15.3l-2.1 2.1m11.8 0-2.1-2.1m-7.6-7.6L6.6 5.6M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+      </svg>
+      Mô phỏng 3D
+    </span>
+  </div>
+
+  <div class="relative my-3 h-[440px] w-64 animate-onboarding-float transition-transform duration-500 hover:rotate-0 motion-reduce:animate-none">
+    <div [class]="preset().glowClass"></div>
+    <div class="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[44px] border border-white/20 bg-onboarding-carbon p-3 shadow-2xl">
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 z-10 rounded-[44px] bg-gradient-to-tr from-white/15 via-transparent to-white/10"></div>
+
+      <div aria-hidden="true" class="absolute left-4 top-4 z-20 flex h-24 w-24 flex-col justify-between rounded-[26px] border border-white/10 bg-onboarding-deep p-2 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <span class="grid size-8 place-items-center rounded-full bg-onboarding-carbon p-1 shadow-md">
+            <span class="relative size-5 rounded-full bg-gradient-to-br from-indigo-950 to-black">
+              <span class="absolute left-1 top-1 size-1.5 rounded-full bg-white/50"></span>
+            </span>
+          </span>
+          <span class="grid size-3.5 place-items-center rounded-full bg-amber-100/20">
+            <span class="size-1.5 rounded-full bg-amber-200"></span>
+          </span>
+        </div>
+        <div class="flex items-end justify-between">
+          <span class="grid size-8 place-items-center rounded-full bg-onboarding-carbon p-1 shadow-md">
+            <span class="relative size-5 rounded-full bg-gradient-to-br from-indigo-950 to-black">
+              <span class="absolute left-1 top-1 size-1.5 rounded-full bg-white/50"></span>
+            </span>
+          </span>
+          <span class="grid size-7 place-items-center rounded-full bg-onboarding-carbon p-0.5 shadow-md">
+            <span class="size-4 rounded-full bg-gradient-to-br from-indigo-950 to-black"></span>
+          </span>
+        </div>
+      </div>
+
+      <div [class]="preset().canvasBackgroundClass">
+        <div class="z-10 flex flex-col space-y-1 pt-28">
+          <span class="w-fit rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-mono tracking-wider text-ink-soft backdrop-blur-md">
+            {{ preset().previewBadge }}
+          </span>
+          <div [class]="preset().titleGradientClass">
+            @for (line of preset().previewTitleLines; track line) {
+              <span class="block">{{ line }}</span>
+            }
+          </div>
+        </div>
+        <div aria-hidden="true" class="pointer-events-none absolute inset-0 -skew-x-12 bg-gradient-to-tr from-transparent via-white/10 to-transparent"></div>
+
+        <div class="relative z-10 flex flex-col gap-2">
+          <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/50 p-2.5 backdrop-blur-md">
+            <div class="flex min-w-0 items-center gap-2">
+              <span class="grid size-6 shrink-0 place-items-center rounded-lg bg-brand-600 text-[10px] font-bold text-white">
+                {{ initials() }}
+              </span>
+              <span class="flex min-w-0 flex-col">
+                <span class="truncate text-[10px] font-bold leading-none text-white">{{ displayName() || 'Creator' }}</span>
+                <span class="mt-0.5 text-[8px] leading-none text-brand-200">CasEYE Verified Creator</span>
+              </span>
+            </div>
+            <span aria-hidden="true" class="text-[10px]">✨</span>
+          </div>
+          <div class="flex items-center justify-between px-1 text-[9px] text-white/80">
+            <span class="max-w-[70%] truncate">{{ deviceLabel() }}</span>
+            <span>LAB · {{ year }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div aria-label="Trang trí: cộng 100 điểm" class="absolute -right-3 -top-3 flex items-center gap-1.5 rounded-full border border-purple-300/40 bg-onboarding-night px-3.5 py-1.5 shadow-glow animate-bounce motion-reduce:animate-none">
+      <span class="grid size-5 place-items-center rounded-full bg-gradient-to-r from-brand-600 to-brand-400 text-[10px] font-extrabold text-white">+100</span>
+      <span class="text-xs font-bold text-brand-200">Points</span>
+    </div>
+
+    <div class="absolute -bottom-4 -left-4 flex items-center gap-2.5 rounded-2xl border border-purple-300/30 bg-onboarding-panel/95 px-4 py-2 shadow-xl backdrop-blur-md">
+      <span aria-hidden="true" class="grid size-7 place-items-center rounded-xl bg-brand-900 text-brand-200">✦</span>
+      <span class="flex flex-col">
+        <span class="text-xs font-bold leading-tight text-white">{{ preset().label }}</span>
+        <span class="text-[10px] leading-tight text-white/70">Phong cách đang xem</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="mt-8 grid w-full grid-cols-3 border-t border-white/10 pt-4 text-center">
+    <div>
+      <span class="block text-xs font-bold text-white">01</span>
+      <span class="text-[10px] text-white/60">Độc bản</span>
+    </div>
+    <div class="border-x border-white/10">
+      <span class="block text-xs font-bold text-white">UV</span>
+      <span class="text-[10px] text-white/60">Sắc nét</span>
+    </div>
+    <div>
+      <span class="block text-xs font-bold text-white">3D</span>
+      <span class="text-[10px] text-white/60">Xem trước</span>
+    </div>
+  </div>
+</section>

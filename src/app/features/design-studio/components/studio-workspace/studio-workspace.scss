@@ -1,0 +1,324 @@
+/* ══════════════════════════════════════════════════════
+   Studio Shell – Professional Canva/Figma Layout Standard
+   Tool Rail (Left 88px full-height pillar) + Main Work Area
+══════════════════════════════════════════════════════ */
+
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.studio-layout {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ── Tool Rail (Col 1) – Continuous full-height left dock (Zero scrollbar, Image 1 standard) ── */
+.tool-rail {
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-right: 1px solid var(--color-line);
+  background: #FFFFFF;
+  padding: 12px 6px;
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  z-index: 20;
+  box-sizing: border-box;
+
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 72px;
+  padding: 8px 4px 7px;
+  border-radius: 20px;
+  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  color: #4b5563;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+
+  .tool-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent;
+    color: currentColor;
+  }
+
+  .tool-label {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+    color: currentColor;
+    transition: color 180ms ease;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(67, 48, 117, 0.06);
+    color: var(--color-brand-900);
+    transform: translateY(-1px);
+  }
+
+  &.tool-btn--active {
+    background: #433075;
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(67, 48, 117, 0.32);
+
+    .tool-icon-box {
+      color: #FFFFFF;
+    }
+
+    .tool-label {
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* ── Canvas In-Place Inline Text Editor (Canva / Figma UX with Vivid Blue '|' Caret) ── */
+.canvas-inline-textarea {
+  caret-color: #2563eb !important; /* Dấu nháy xanh | nổi bật xác định vị trí ký tự */
+  outline: 2px solid #2563eb !important;
+  outline-offset: 3px;
+  background: transparent !important;
+  resize: none !important;
+  overflow: hidden !important;
+  border: none !important;
+  padding: 0 4px !important;
+  margin: 0 !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2) !important;
+  border-radius: 4px;
+  box-sizing: border-box;
+  word-break: break-word;
+  white-space: pre-wrap;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  pointer-events: auto !important;
+
+  &::selection {
+    background: rgba(37, 99, 235, 0.28) !important;
+    color: inherit !important;
+  }
+}
+
+.studio-main-area {
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.studio-shell {
+  display: grid;
+  /* drawer(310px) | canvas(1fr) | 3d-preview(300px) */
+  grid-template-columns: 310px 1fr 300px;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+
+  @media (max-width: 1240px) {
+    grid-template-columns: 270px 1fr 270px;
+  }
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+.fr-badge {
+  display: none;
+}
+
+/* ── Tool Drawer (Col 2) ── */
+.tool-drawer {
+  border-right: 1px solid var(--color-line);
+  background: #FAF9FE;
+  padding: 16px;
+  overflow-y: auto;
+  height: 100%;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+
+  @media (max-width: 1024px) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 320px;
+    max-width: calc(100vw - 88px);
+    z-index: 40;
+    box-shadow: 6px 0 28px rgba(67, 48, 117, 0.22);
+    transform: translateX(-105%);
+    opacity: 0;
+    pointer-events: none;
+
+    &.tool-drawer--open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+.drawer-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Canvas Stage (Col 3) ── */
+.canvas-stage {
+  flex: 1 1 0%;
+  min-width: 0;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: calc(100vh - 108px);
+  padding: 96px 16px 32px;
+  overflow: clip !important;
+  user-select: none;
+  /* Studio lighting glow + subtle dot grid */
+  background-color: #fcfbfe;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(165, 140, 244, 0.18) 0%, rgba(246, 243, 254, 0.45) 45%, transparent 70%),
+    radial-gradient(#d4c8fa 1.2px, transparent 1.2px);
+  background-size: 100% 100%, 20px 20px;
+  background-position: center, 0 0;
+}
+
+#case-viewport {
+  overflow: clip !important;
+}
+
+/* ── 3D Preview Panel (Col 4) ── */
+.preview-panel {
+  background: #FAF9FE;
+  overflow-y: auto;
+  height: 100%;
+  padding: 12px 14px 20px;
+  border-left: 1px solid var(--color-line);
+
+  @media (max-width: 1024px) {
+    display: none;
+  }
+}
+
+.preview-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--color-line);
+  position: sticky;
+  top: 0;
+  background: #FAF9FE;
+  z-index: 2;
+}
+
+/* ── Inspector (Col 5) ── */
+.inspector-panel {
+  background: var(--color-surface-alt);
+  overflow-y: auto;
+  max-height: calc(100vh - 108px);
+  height: 100%;
+  padding-bottom: 16px;
+}
+
+.insp-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  margin-bottom: 4px;
+}
+
+/* ── Bottom Action Bar ── */
+.studio-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  padding: 0 20px;
+  border-top: 1px solid var(--color-line);
+  background: #FFFFFF;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+  flex-shrink: 0;
+  z-index: 30;
+}
+
+/* ── Animations ── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 180ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
+}

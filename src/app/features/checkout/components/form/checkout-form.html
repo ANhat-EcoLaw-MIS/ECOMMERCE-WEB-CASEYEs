@@ -1,0 +1,702 @@
+<div class="checkout-grid">
+  <!-- Cột trái: Thông tin giao nhận & Thanh toán (8 cols) -->
+  <div class="checkout-main">
+    <!-- 1. THÔNG TIN GIAO NHẬN -->
+    <section class="card card--shipping">
+      <div class="card__header">
+        <div class="card__title-group">
+          <div class="card__icon-badge">
+            <span class="material-symbols-outlined">local_shipping</span>
+          </div>
+          <h2 class="card__title">1. Thông tin giao nhận hàng</h2>
+        </div>
+        <button type="button" class="btn-link" (click)="openAddressModal.emit()">
+          <span class="material-symbols-outlined">edit_location</span>
+          <span>Đổi địa chỉ</span>
+        </button>
+      </div>
+
+      <!-- Thẻ địa chỉ -->
+      @if (!checkoutService.hasAddress()) {
+        <div class="address-box">
+          <p class="address-box__street">
+            <span class="material-symbols-outlined">add_location_alt</span>
+            <span>Bạn chưa có địa chỉ giao hàng. Thêm địa chỉ để đặt hàng — địa chỉ sẽ được lưu vào sổ địa chỉ của bạn.</span>
+          </p>
+          <button type="button" class="btn-link" (click)="openAddressModal.emit()">
+            <span class="material-symbols-outlined">add</span>
+            <span>Thêm địa chỉ</span>
+          </button>
+        </div>
+      } @else {
+      <div class="address-box">
+        <div class="address-box__details">
+          <div class="address-box__recipient">
+            <span class="recipient-name">{{ checkoutService.address().fullName }}</span>
+            @if (checkoutService.address().isDefault) {
+              <span class="badge badge--subtle">Mặc định</span>
+            }
+            <span class="recipient-phone">{{ checkoutService.address().phone }}</span>
+          </div>
+          <p class="address-box__street">
+            <span class="material-symbols-outlined">pin_drop</span>
+            <span>{{ checkoutService.address().streetAddress }}</span>
+          </p>
+        </div>
+        @if (checkoutService.address().isVerified) {
+          <div class="badge badge--success">
+            <span class="material-symbols-outlined">verified</span>
+            <span>Đã định vị chính xác</span>
+          </div>
+        }
+      </div>
+      }
+
+      <!-- Ghi chú cho shipper -->
+      <div class="form-group">
+        <label class="form-label" for="shipperNote">
+          <span>Ghi chú cho shipper</span>
+          <span class="form-label__hint">(Không bắt buộc)</span>
+        </label>
+        <div class="input-with-icon">
+          <span class="material-symbols-outlined input-icon">sticky_note_2</span>
+          <input
+            id="shipperNote"
+            type="text"
+            class="form-control"
+            placeholder="Ví dụ: Gọi trước 15 phút khi giao..."
+            [ngModel]="checkoutService.shipperNote()"
+            (ngModelChange)="onShipperNoteChange($event)"
+          />
+        </div>
+      </div>
+
+      <!-- Phương thức vận chuyển -->
+      <div class="shipping-section">
+        <div class="shipping-section__header">
+          <span class="shipping-section__label">
+            <span class="material-symbols-outlined">local_shipping</span>
+            <span>Phương thức vận chuyển</span>
+          </span>
+          <span class="badge badge--purple">1 khả dụng</span>
+        </div>
+
+        <div class="shipping-options-grid">
+          @for (method of checkoutService.shippingMethods(); track method.id) {
+            @if (method.available) {
+              <div
+                class="shipping-card"
+                [class.shipping-card--selected]="checkoutService.selectedShippingId() === method.id"
+                (click)="onShippingSelect(method.id)"
+              >
+                <div class="shipping-card__top">
+                  <div class="shipping-card__info">
+                    <div class="check-circle" [class.check-circle--active]="checkoutService.selectedShippingId() === method.id">
+                      <span class="material-symbols-outlined">done</span>
+                    </div>
+                    <div>
+                      <div class="shipping-card__name">
+                        <span>{{ method.name }}</span>
+                        <span class="badge badge--pill">{{ method.badge }}</span>
+                      </div>
+                      <p class="shipping-card__estimate">{{ method.estimatedDelivery }}</p>
+                    </div>
+                  </div>
+                  <span class="shipping-card__price">{{ checkoutService.formatCurrency(method.price) }}</span>
+                </div>
+                <p class="shipping-card__desc">
+                  <span class="material-symbols-outlined">inventory_2</span>
+                  <span>{{ method.description }}</span>
+                </p>
+              </div>
+            } @else {
+              <div class="shipping-card shipping-card--disabled">
+                <div class="shipping-card__top">
+                  <div class="shipping-card__info">
+                    <div class="check-circle check-circle--locked">
+                      <span class="material-symbols-outlined">lock</span>
+                    </div>
+                    <div>
+                      <div class="shipping-card__name">
+                        <span>{{ method.name }}</span>
+                        <span class="badge badge--danger">{{ method.badge }}</span>
+                      </div>
+                      <p class="shipping-card__estimate">{{ method.estimatedDelivery }}</p>
+                    </div>
+                  </div>
+                  <span class="shipping-card__price">{{ checkoutService.formatCurrency(method.price) }}</span>
+                </div>
+                <p class="shipping-card__warning">
+                  <span class="material-symbols-outlined">info</span>
+                  <span>{{ method.description }}</span>
+                </p>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Gói quà Hologram & Thiệp viết tay -->
+      <div class="gift-banner">
+        <div class="gift-banner__info">
+          <div class="gift-banner__thumb">
+            <img
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDD8HpbiSmakY9Kk3OAe6vlYtijiMheKWLGrvgFyFmfUBVLAQc0itY5rjnr27q80fkaRPRlsM4w2LITQPW6lc2JHKK3tJksyTBWglcWdxTJuVZOa2cx7JBs4n6y3Ots-dZt_6hv_2I-YwV3yvNqEV_C-qFXcfO1um84nui6f_HlpXuyoz9TaN783Kl36Zq8X88qtbBQ4p5ydcALT4CJDBgT-2RAHWFAbxo6Wu9zmA"
+              alt="Gói quà Hologram"
+            />
+            <span class="gift-banner__sparkle">✨</span>
+          </div>
+          <div class="gift-banner__text">
+            <div class="gift-banner__title-row">
+              <span class="gift-banner__title">{{ checkoutService.giftOption().title }}</span>
+              <span class="gift-banner__price">+{{ checkoutService.formatCurrency(checkoutService.giftOption().price) }}</span>
+            </div>
+            <p class="gift-banner__desc">{{ checkoutService.giftOption().description }}</p>
+          </div>
+        </div>
+
+        <label class="switch">
+          <input
+            type="checkbox"
+            [checked]="checkoutService.giftOption().enabled"
+            (change)="onGiftToggle(!checkoutService.giftOption().enabled)"
+          />
+          <span class="switch__slider"></span>
+        </label>
+      </div>
+
+      <!-- Textarea thiệp viết tay -->
+      @if (checkoutService.giftOption().enabled) {
+        <div class="gift-message-box">
+          <div class="gift-message-box__header">
+            <label class="form-label" for="giftMsg">
+              <span class="material-symbols-outlined">edit_note</span>
+              <span>Nội dung thiệp chúc mừng</span>
+            </label>
+            <span class="char-count">{{ checkoutService.giftOption().message.length }} / {{ checkoutService.giftOption().maxChars }} ký tự</span>
+          </div>
+          <textarea
+            id="giftMsg"
+            rows="2"
+            class="form-control resize-none"
+            placeholder="Nhập lời nhắn gửi tặng người thương..."
+            [ngModel]="checkoutService.giftOption().message"
+            (ngModelChange)="onGiftMessageInput($event)"
+          ></textarea>
+        </div>
+      }
+    </section>
+
+    <!-- 2. PHƯƠNG THỨC THANH TOÁN -->
+    <section class="card card--payment">
+      <div class="card__header">
+        <div class="card__title-group">
+          <div class="card__icon-badge">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
+          </div>
+          <h2 class="card__title">2. Chọn phương thức thanh toán</h2>
+        </div>
+      </div>
+
+      <div class="payment-stack">
+        <!-- Option 1: VietQR Pro -->
+        <div
+          class="payment-option"
+          [class.payment-option--active]="checkoutService.selectedPaymentType() === 'vietqr'"
+          (click)="onPaymentSelect('vietqr')"
+        >
+          <div class="payment-option__main">
+            <div class="payment-option__left">
+              <div class="check-circle" [class.check-circle--active]="checkoutService.selectedPaymentType() === 'vietqr'">
+                <span class="material-symbols-outlined">done</span>
+              </div>
+              <div>
+                <div class="payment-option__title-row">
+                  <span class="payment-option__title">Chuyển khoản VietQR Pro (Khuyên dùng)</span>
+                  <span class="badge badge--recommended">Khuyên dùng • Tốc độ cao</span>
+                </div>
+                <p class="payment-option__desc">Quét mã QR từ mọi ứng dụng ngân hàng và ví điện tử, tự động khớp đơn 3s</p>
+              </div>
+            </div>
+            <span class="badge badge--partner">Napas 247</span>
+          </div>
+
+          <!-- Khối chi tiết VietQR -->
+          @if (checkoutService.selectedPaymentType() === 'vietqr') {
+            <div class="vietqr-box" (click)="$event.stopPropagation()">
+              <div class="vietqr-grid">
+                <!-- Cột mã QR -->
+                <div class="vietqr-graphic-card">
+                  <div class="qr-canvas">
+                    <div class="qr-canvas__header">
+                      <span class="brand-code">VIETQR.IO</span>
+                      <span class="live-dot"><span class="dot-pulse"></span>Live</span>
+                    </div>
+                    <div class="qr-svg-holder">
+                      <svg class="qr-svg" viewBox="0 0 100 100" fill="currentColor">
+                        <rect class="qr-dark" x="5" y="5" width="28" height="28" rx="3"></rect>
+                        <rect fill="white" x="10" y="10" width="18" height="18"></rect>
+                        <rect class="qr-dark" x="14" y="14" width="10" height="10"></rect>
+                        <rect class="qr-dark" x="67" y="5" width="28" height="28" rx="3"></rect>
+                        <rect fill="white" x="72" y="10" width="18" height="18"></rect>
+                        <rect class="qr-dark" x="76" y="14" width="10" height="10"></rect>
+                        <rect class="qr-dark" x="5" y="67" width="28" height="28" rx="3"></rect>
+                        <rect fill="white" x="10" y="72" width="18" height="18"></rect>
+                        <rect class="qr-dark" x="14" y="76" width="10" height="10"></rect>
+                        <rect class="qr-accent" x="38" y="8" width="6" height="6"></rect>
+                        <rect class="qr-dark" x="48" y="12" width="8" height="8"></rect>
+                        <rect class="qr-accent" x="38" y="24" width="10" height="6"></rect>
+                        <rect class="qr-dark" x="8" y="38" width="6" height="10"></rect>
+                        <rect class="qr-accent" x="22" y="44" width="8" height="8"></rect>
+                        <rect class="qr-dark" x="42" y="42" width="16" height="16" rx="4"></rect>
+                        <rect class="qr-dark" x="68" y="40" width="12" height="6"></rect>
+                        <rect class="qr-accent" x="85" y="46" width="8" height="8"></rect>
+                        <rect class="qr-dark" x="44" y="68" width="8" height="12"></rect>
+                        <rect class="qr-accent" x="60" y="76" width="16" height="8"></rect>
+                        <rect class="qr-dark" x="82" y="70" width="10" height="10"></rect>
+                        <rect class="qr-dark" x="56" y="60" width="8" height="8"></rect>
+                      </svg>
+                      <div class="qr-center-logo">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </div>
+                    </div>
+                    <div class="qr-canvas__footer">Quét bằng Mobile Banking</div>
+                  </div>
+                  <span class="vietqr-speed-note">
+                    <span class="material-symbols-outlined">bolt</span>
+                    Tự động duyệt sau 3-5 giây
+                  </span>
+                </div>
+
+                <!-- Cột STK & Cú pháp -->
+                <div class="vietqr-info-list">
+                  <div class="info-row">
+                    <div>
+                      <span class="info-label">Ngân hàng thụ hưởng</span>
+                      <div class="info-value font-bold text-primary">
+                        <span class="dot-indicator"></span>
+                        {{ checkoutService.vietQrConfig().bankName }}
+                      </div>
+                    </div>
+                    <span class="branch-tag">{{ checkoutService.vietQrConfig().branch }}</span>
+                  </div>
+
+                  <div class="info-row">
+                    <div>
+                      <span class="info-label">Số tài khoản</span>
+                      <div class="info-value font-mono">{{ checkoutService.vietQrConfig().accountNumber }}</div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-copy"
+                      (click)="copyText(checkoutService.vietQrConfig().accountNumber, 'Số tài khoản')"
+                    >
+                      <span class="material-symbols-outlined">content_copy</span>
+                      <span>Sao chép</span>
+                    </button>
+                  </div>
+
+                  <div class="info-row">
+                    <div>
+                      <span class="info-label">Chủ tài khoản</span>
+                      <div class="info-value uppercase">{{ checkoutService.vietQrConfig().accountHolder }}</div>
+                    </div>
+                    <span class="material-symbols-outlined status-verified">verified</span>
+                  </div>
+
+                  <div class="info-row info-row--highlight">
+                    <div>
+                      <span class="info-label info-label--accent">Nội dung chuyển khoản (Bắt buộc)</span>
+                      <div class="info-value font-mono text-highlight">{{ checkoutService.vietQrConfig().transferSyntax }}</div>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-copy-cta"
+                      (click)="copyText(checkoutService.vietQrConfig().transferSyntax, 'Cú pháp chuyển khoản')"
+                    >
+                      <span class="material-symbols-outlined">copy_all</span>
+                      <span>Copy cú pháp</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Option 2: NHÓM VÍ ĐIỆN TỬ (MoMo, ZaloPay, ShopeePay) -->
+        <div
+          class="payment-option"
+          [class.payment-option--active]="checkoutService.selectedPaymentType() === 'e_wallet'"
+          (click)="onPaymentSelect('e_wallet')"
+        >
+          <div class="payment-option__main">
+            <div class="payment-option__left">
+              <div class="check-circle" [class.check-circle--active]="checkoutService.selectedPaymentType() === 'e_wallet'">
+                <span class="material-symbols-outlined">done</span>
+              </div>
+              <div class="wallet-group-icon">
+                <span class="material-symbols-outlined">account_balance_wallet</span>
+              </div>
+              <div>
+                <div class="payment-option__title-row">
+                  <span class="payment-option__title">Ví điện tử</span>
+                  <span class="badge badge--pill">MoMo • ZaloPay • ShopeePay</span>
+                </div>
+                <p class="payment-option__desc">Thanh toán nhanh chóng và thuận tiện thông qua ví điện tử bạn đang sử dụng.</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined chevron-icon" [class.chevron-icon--open]="checkoutService.selectedPaymentType() === 'e_wallet'">
+              expand_more
+            </span>
+          </div>
+
+          <!-- Danh sách lựa chọn ví con (chỉ mở khi chọn nhóm Ví điện tử) -->
+          @if (checkoutService.selectedPaymentType() === 'e_wallet') {
+            <div class="ewallet-sub-grid" (click)="$event.stopPropagation()">
+              @for (w of checkoutService.eWalletOptions(); track w.id) {
+                <div
+                  class="ewallet-card"
+                  [class.ewallet-card--active]="checkoutService.selectedEWallet() === w.id"
+                  (click)="onEWalletSelect(w.id)"
+                >
+                  <div class="ewallet-card__top">
+                    <div class="ewallet-badge-logo" [style.background-color]="w.color" [style.color]="w.textColor">
+                      {{ w.shortName }}
+                    </div>
+                    <div class="ewallet-radio" [class.ewallet-radio--checked]="checkoutService.selectedEWallet() === w.id">
+                      <span class="radio-inner"></span>
+                    </div>
+                  </div>
+                  <h4 class="ewallet-card__name">{{ w.name }}</h4>
+                  <p class="ewallet-card__desc">{{ w.description }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Option 3: Thẻ quốc tế -->
+        <div
+          class="payment-option payment-option--simple"
+          [class.payment-option--active]="checkoutService.selectedPaymentType() === 'card'"
+          (click)="onPaymentSelect('card')"
+        >
+          <div class="payment-option__left">
+            <div class="check-circle" [class.check-circle--active]="checkoutService.selectedPaymentType() === 'card'">
+              <span class="material-symbols-outlined">done</span>
+            </div>
+            <div class="card-icon">
+              <span class="material-symbols-outlined">credit_card</span>
+            </div>
+            <div>
+              <div class="payment-option__title">Thẻ Quốc Tế (Visa, Mastercard, JCB)</div>
+              <p class="payment-option__desc">Cổng thanh toán quốc tế bảo mật OnePay chuẩn 3D-Secure</p>
+            </div>
+          </div>
+          <div class="card-badges">
+            <span class="card-tag">VISA</span>
+            <span class="card-tag">MC</span>
+          </div>
+        </div>
+
+        <!-- Option 4: COD. Integration (BRD v8): allowed only when the cart has no custom design -->
+        @if (checkoutService.stockOnly()) {
+        <div
+          class="payment-option payment-option--simple"
+          [class.payment-option--active]="checkoutService.selectedPaymentType() === 'cod'"
+          (click)="checkoutService.setPaymentMethod('cod')"
+        >
+          <div class="payment-option__left">
+            <div class="check-circle" [class.check-circle--active]="checkoutService.selectedPaymentType() === 'cod'">
+              <span class="material-symbols-outlined">done</span>
+            </div>
+            <div class="cod-icon">
+              <span class="material-symbols-outlined">local_atm</span>
+            </div>
+            <div>
+              <div class="payment-option__title">Thanh toán khi nhận hàng (COD)</div>
+              <p class="payment-option__desc">Trả tiền mặt cho shipper khi nhận hàng</p>
+            </div>
+          </div>
+        </div>
+        } @else {
+        <div class="payment-option payment-option--disabled">
+          <div class="payment-option__left">
+            <div class="check-circle check-circle--locked">
+              <span class="material-symbols-outlined">lock</span>
+            </div>
+            <div class="cod-icon">
+              <span class="material-symbols-outlined">local_atm</span>
+            </div>
+            <div>
+              <div class="payment-option__title text-muted">
+                <span>Thanh toán khi nhận hàng (COD)</span>
+                <span class="badge badge--danger">Tạm khóa</span>
+              </div>
+              <p class="payment-option__desc">Không khả dụng cho đơn hàng có sản phẩm Custom cá nhân hóa</p>
+            </div>
+          </div>
+          <div class="alert-box alert-box--warning">
+            <span class="material-symbols-outlined">info</span>
+            <span>Đơn có sản phẩm in theo yêu cầu cần thanh toán trước 100% để xưởng chế tác khuôn in UV độc bản.</span>
+          </div>
+        </div>
+        }
+      </div>
+    </section>
+
+    <!-- Huy hiệu cam kết & bảo hành -->
+    <div class="trust-badges-grid">
+      <div class="trust-badge">
+        <span class="material-symbols-outlined trust-badge__icon">verified_user</span>
+        <div>
+          <h4 class="trust-badge__title">Bảo hành 30 ngày</h4>
+          <p class="trust-badge__desc">1 đổi 1 mọi lỗi xước bong tróc</p>
+        </div>
+      </div>
+      <div class="trust-badge">
+        <span class="material-symbols-outlined trust-badge__icon">palette</span>
+        <div>
+          <h4 class="trust-badge__title">Chuẩn màu 99%</h4>
+          <p class="trust-badge__desc">Công nghệ in UV Mimaki Nhật Bản</p>
+        </div>
+      </div>
+      <div class="trust-badge">
+        <span class="material-symbols-outlined trust-badge__icon">qr_code_2</span>
+        <div>
+          <h4 class="trust-badge__title">Giao hỏa tốc</h4>
+          <p class="trust-badge__desc">Đóng hộp chống va đập 4 góc</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cột phải: Tóm tắt đơn hàng (Sticky 4 cols) -->
+  <aside class="checkout-sidebar">
+    <div class="summary-card">
+      <div class="summary-card__header">
+        <h3 class="summary-card__title">Tóm tắt đơn hàng</h3>
+        <span class="badge badge--purple">{{ checkoutService.items().length }} sản phẩm</span>
+      </div>
+
+      <!-- Danh sách sản phẩm -->
+      @for (item of checkoutService.items(); track item.id) {
+        <div class="item-snapshot">
+          <div class="item-snapshot__main">
+            <div class="item-snapshot__thumb">
+              <img [src]="item.imageUrl" [alt]="item.name" />
+              <span class="item-snapshot__tag3d">
+                <span class="material-symbols-outlined">view_in_ar</span> 3D
+              </span>
+            </div>
+            <div class="item-snapshot__info">
+              <div class="item-snapshot__top-row">
+                <span class="item-snapshot__tag">{{ item.tag }}</span>
+                <span class="item-snapshot__price">{{ checkoutService.formatCurrency(item.price) }}</span>
+              </div>
+              <h4 class="item-snapshot__name">{{ item.name }}</h4>
+              <div class="item-snapshot__specs">
+                <p>• Thiết bị: <strong>{{ item.device }}</strong></p>
+                <p>• Chất liệu: <span>{{ item.material }}</span></p>
+                <p class="lead-time">
+                  <span class="material-symbols-outlined">schedule</span>
+                  <span>{{ item.leadTime }}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="resolution-badge">
+            <span class="resolution-badge__text">
+              <span class="material-symbols-outlined">high_quality</span>
+              Độ phân giải: {{ item.resolutionText }}
+            </span>
+            <span class="resolution-badge__val">{{ item.resolutionPercent }}%</span>
+          </div>
+        </div>
+      }
+
+      <!-- Quà tặng kèm -->
+      <div class="perk-box">
+        <div class="perk-box__icon">
+          <span class="material-symbols-outlined">stars</span>
+        </div>
+        <div class="perk-box__content">
+          <div class="perk-box__title-row">
+            <span class="perk-box__title">Quà tặng đính kèm</span>
+            <span class="perk-box__price">0₫</span>
+          </div>
+          <p class="perk-box__desc">Bộ Sticker Hologram CaseEYE's Galactic Edition...</p>
+        </div>
+      </div>
+
+      <!-- Mã giảm giá -->
+      <div class="voucher-box">
+        <label class="form-label font-bold" for="voucherInput">Mã giảm giá CaseEYE</label>
+        @if (checkoutService.voucher() && checkoutService.voucher()!.isApplied) {
+          <div class="voucher-applied-row">
+            <div class="voucher-applied-badge">
+              <span class="material-symbols-outlined">sell</span>
+              <span class="voucher-code">{{ checkoutService.voucher()!.code }}</span>
+            </div>
+            <span class="btn-voucher-applied">Đã áp dụng</span>
+          </div>
+          <div class="voucher-summary">
+            <span class="voucher-discount-text">
+              <span class="material-symbols-outlined">check_circle</span>
+              {{ checkoutService.voucher()!.description }}:
+              <strong>-{{ checkoutService.formatCurrency(checkoutService.voucher()!.discountAmount) }}</strong>
+            </span>
+            <button type="button" class="btn-remove-voucher" (click)="removeVoucher()">Gỡ bỏ</button>
+          </div>
+        } @else {
+          <div class="voucher-input-row">
+            <input
+              id="voucherInput"
+              type="text"
+              class="form-control uppercase"
+              placeholder="Nhập mã (ví dụ: CASEFIRST)"
+              [ngModel]="voucherInput()"
+              (ngModelChange)="voucherInput.set($event)"
+            />
+            <button type="button" class="btn-apply" (click)="applyVoucherCode()">Áp dụng</button>
+          </div>
+          @if (voucherError()) {
+            <p class="form-error">{{ voucherError() }}</p>
+          }
+        }
+      </div>
+
+      <!-- Chi tiết tính tiền -->
+      <div class="price-breakdown">
+        <div class="price-row">
+          <span>Tạm tính ({{ checkoutService.items().length }} ốp lưng)</span>
+          <span class="font-bold">{{ checkoutService.formatCurrency(checkoutService.subtotal()) }}</span>
+        </div>
+        <div class="price-row">
+          <span>Phí vận chuyển ({{ checkoutService.selectedShippingMethod().name }})</span>
+          <span>{{ checkoutService.formatCurrency(checkoutService.shippingFee()) }}</span>
+        </div>
+        @if (checkoutService.giftOption().enabled) {
+          <div class="price-row">
+            <span>Gói quà Hologram & Thiệp viết tay</span>
+            <span>{{ checkoutService.formatCurrency(checkoutService.giftFee()) }}</span>
+          </div>
+        }
+        @if (checkoutService.discountAmount() > 0) {
+          <div class="price-row price-row--discount">
+            <span>Ưu đãi voucher ({{ checkoutService.voucher()?.code }})</span>
+            <span>-{{ checkoutService.formatCurrency(checkoutService.discountAmount()) }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Tổng thanh toán -->
+      <div class="total-row">
+        <div>
+          <span class="total-label">Tổng thanh toán</span>
+          <span class="total-vat">(Đã bao gồm thuế GTGT 8%)</span>
+        </div>
+        <div class="total-amount-box">
+          <span class="total-price">{{ checkoutService.formattedTotal() }}</span>
+          @if (checkoutService.discountAmount() > 0) {
+            <span class="savings-tag">Tiết kiệm {{ checkoutService.formatCurrency(checkoutService.discountAmount()) }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Cam kết hàng in độc bản -->
+      <div
+        class="consent-box"
+        [class.consent-box--error]="showTermsError()"
+        (click)="onTermsToggle()"
+      >
+        <div class="check-box" [class.check-box--checked]="checkoutService.designConfirmed()">
+          @if (checkoutService.designConfirmed()) {
+            <span class="material-symbols-outlined">check</span>
+          }
+        </div>
+        <p class="consent-text">
+          @if (checkoutService.hasCustom()) {
+            Tôi xác nhận thiết kế in trên ốp đã chính xác dòng máy (<strong>{{ checkoutService.items()[0]?.device }}</strong>) và đồng ý với điều khoản sản xuất hàng in độc bản theo yêu cầu.
+          } @else {
+            Tôi đã đọc và đồng ý với chính sách đơn hàng.
+          }
+          <a [routerLink]="policyPath" target="_blank" rel="noopener" (click)="$event.stopPropagation()">Xem chính sách đơn hàng</a>
+          (phiên bản {{ policyVersion }}).
+        </p>
+      </div>
+
+      <!-- Lỗi terms inline -->
+      @if (showTermsError()) {
+        <div class="terms-error-message">
+          <span class="material-symbols-outlined">warning</span>
+          <span>Vui lòng tích chọn xác nhận thiết kế in để tiếp tục đặt hàng!</span>
+        </div>
+      }
+
+      <!-- Nút đặt hàng -->
+      <button
+        type="button"
+        class="btn-cta"
+        [disabled]="isSubmitting()"
+        (click)="onSubmitOrder()"
+      >
+        @if (isSubmitting()) {
+          <span class="material-symbols-outlined spinner">progress_activity</span>
+          <span>Đang tạo đơn hàng an toàn...</span>
+        } @else {
+          <span>XÁC NHẬN & ĐẶT HÀNG ({{ checkoutService.formattedTotal() }})</span>
+        }
+      </button>
+
+      <div class="satisfaction-note">
+        <span class="material-symbols-outlined">electric_bolt</span>
+        <span>{{ checkoutService.estimatedDeliveryText() }}</span>
+      </div>
+    </div>
+
+    <!-- Hỗ trợ kỹ thuật -->
+    <div class="support-card">
+      <div class="support-card__left">
+        <div class="support-card__avatar">
+          <span class="material-symbols-outlined">support_agent</span>
+        </div>
+        <div>
+          <div class="support-card__title">Cần hỗ trợ chỉnh file in?</div>
+          <div class="support-card__sub">Kỹ thuật viên duyệt file 24/7</div>
+        </div>
+      </div>
+      <a href="https://zalo.me" target="_blank" rel="noopener noreferrer" class="btn-zalo">
+        Chat Zalo
+      </a>
+    </div>
+  </aside>
+</div>
+
+<!-- Mobile Sticky Bar -->
+<div class="mobile-sticky-bar">
+  <div class="mobile-sticky-bar__left">
+    <span class="mobile-sticky-bar__label">Tổng thanh toán</span>
+    <div class="mobile-sticky-bar__price-group">
+      <span class="mobile-sticky-bar__price">{{ checkoutService.formattedTotal() }}</span>
+      @if (checkoutService.discountAmount() > 0) {
+        <span class="mobile-sticky-bar__badge">Đã giảm {{ checkoutService.formatCurrency(checkoutService.discountAmount()) }}</span>
+      }
+    </div>
+  </div>
+  <button
+    type="button"
+    class="btn-cta btn-cta--mobile"
+    [disabled]="isSubmitting()"
+    (click)="onSubmitOrder()"
+  >
+    @if (isSubmitting()) {
+      <span class="material-symbols-outlined spinner">progress_activity</span>
+    } @else {
+      <span>Đặt hàng ngay</span>
+      <span class="material-symbols-outlined">arrow_forward</span>
+    }
+  </button>
+</div>

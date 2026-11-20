@@ -1,0 +1,39 @@
+<article class="case-card" [attr.aria-label]="case().name + ', ' + case().styleLabel">
+  <div class="case-shell">
+    <div class="case-face" [style.background]="case().gradient">
+      @if (case().backgroundImage) {
+        <img
+          [src]="case().backgroundImage"
+          alt=""
+          class="case-background"
+          loading="lazy"
+          decoding="async"
+          width="120"
+          height="220"
+        />
+      }
+      @if (case().elementImage) {
+        <img
+          [src]="case().elementImage"
+          [alt]="case().name"
+          class="case-artwork"
+          loading="lazy"
+          decoding="async"
+          width="120"
+          height="220"
+        />
+      }
+      <div aria-hidden="true" class="camera-island">
+        <span class="camera-lens camera-lens-primary"></span>
+        <span class="camera-lens camera-lens-secondary"></span>
+        <span class="camera-lens camera-lens-tertiary"></span>
+        <span class="camera-flash"></span>
+      </div>
+      <div aria-hidden="true" class="case-gloss"></div>
+    </div>
+  </div>
+  <div class="case-caption">
+    <span>{{ case().styleLabel }}</span>
+    <strong>{{ case().name }}</strong>
+  </div>
+</article>

@@ -1,1 +1,104 @@
-<p>shop works!</p>
+<div class="page">
+  <!-- Breadcrumb + title -->
+  <nav aria-label="Breadcrumb" class="pt-5">
+    <ol class="flex flex-wrap items-center gap-1.5 text-xs text-ink-soft">
+      <li><a routerLink="/" class="hover:text-ink hover:underline">Trang chủ</a></li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/shop" class="hover:text-ink hover:underline">Cửa hàng</a></li>
+      <li aria-hidden="true">›</li>
+      <li aria-current="page" class="font-medium text-ink">{{ f.device().name }}</li>
+    </ol>
+  </nav>
+
+  <div class="mt-2 flex flex-wrap items-end justify-between gap-2">
+    <h1 class="font-display text-2xl font-bold text-ink sm:text-3xl">Ốp lưng {{ f.device().name }}</h1>
+    <p class="text-sm text-ink-soft" aria-live="polite">{{ f.results().length }} mẫu thiết kế</p>
+  </div>
+
+  <!-- Device chips -->
+  <app-device-chip-row class="mt-4" [selected]="f.device()" (select)="selectDevice($event)" />
+
+  <!-- Device intro -->
+  <section class="mx-auto mt-6 max-w-3xl pb-6 text-center">
+    <h2 class="font-display text-xl font-bold text-ink">{{ f.device().name }}</h2>
+    <p class="mt-2 text-sm leading-relaxed text-ink-soft">
+      Thiết kế độc quyền CasEYE's in trên phôi ốp chuẩn kích thước {{ f.device().name }}
+      ({{ f.device().printWidthMm }} × {{ f.device().printHeightMm }} mm), ôm khít cụm camera và bảo vệ viền máy.
+    </p>
+    @if (introOpen() && f.device().specs?.length) {
+      <ul class="mt-3 flex flex-wrap justify-center gap-2">
+        @for (spec of f.device().specs; track spec) {
+          <li class="rounded-pill bg-brand-50 px-3 py-1 text-xs font-medium text-brand-800">{{ spec }}</li>
+        }
+      </ul>
+    }
+    @if (f.device().specs?.length) {
+      <button type="button" (click)="introOpen.set(!introOpen())" [attr.aria-expanded]="introOpen()" class="mt-3 min-h-9 rounded-pill px-3 text-sm font-semibold text-brand-800 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-brand-400">
+        {{ introOpen() ? 'Thu gọn' : 'Xem thêm' }}
+      </button>
+    }
+  </section>
+</div>
+
+<!-- Scroll target: the toolbar's resting position. -->
+<div #listTop aria-hidden="true"></div>
+<!-- Sticky toolbar -->
+<div class="sticky top-16 z-30 border-y border-line/70 bg-surface/75 shadow-[0_8px_24px_-18px_rgb(42_29_77_/_0.35)] backdrop-blur-xl backdrop-saturate-150">
+  <div class="page">
+    <app-shop-toolbar (openFilters)="filtersOpen.set(true)" />
+  </div>
+</div>
+
+<div class="page pb-20">
+  <!-- Grid -->
+  @if (f.pageItems().length && f.sku(); as sku) {
+    <ul class="mt-6 grid gap-x-3 gap-y-6 sm:gap-x-4" [class]="gridClass()">
+      @for (design of f.pageItems(); track design.id + '|' + renderKey(); let i = $index) {
+        <li class="card-enter" [style.animation-delay.ms]="i * 45">
+          <app-product-card [design]="design" [model]="f.device()" [sku]="sku" [view]="f.view()" (quickView)="quick.set(design)" />
+        </li>
+      }
+    </ul>
+    <app-pagination class="mt-10 block" [page]="f.page()" [count]="f.pageCount()" (go)="goToPage($event)" />
+  } @else {
+    <div class="mx-auto mt-16 max-w-md text-center">
+      <p class="text-4xl" aria-hidden="true">◌</p>
+      <h2 class="mt-3 font-display text-xl font-bold text-ink">Chưa có mẫu phù hợp</h2>
+      <p class="mt-2 text-sm text-ink-soft">Thử bỏ bớt bộ lọc hoặc chọn dòng máy khác nhé.</p>
+      <button type="button" (click)="f.reset()" class="mt-5 min-h-11 rounded-pill bg-brand-800 px-6 text-sm font-semibold text-white hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400">Xóa bộ lọc</button>
+    </div>
+  }
+
+  <!-- Accessories -->
+  <section id="accessories" class="mt-20 scroll-mt-36" aria-labelledby="accessories-title">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">Make it yours</p>
+        <h2 id="accessories-title" class="mt-1 font-display text-2xl font-bold text-ink">Phụ kiện phối cùng</h2>
+      </div>
+      <div role="group" aria-label="Lọc phụ kiện" class="flex flex-wrap gap-2">
+        <button type="button" (click)="accessoryCategory.set(null)" [attr.aria-pressed]="!accessoryCategory()" class="min-h-10 rounded-pill border border-line bg-white px-4 text-sm font-medium text-ink hover:border-brand-400 aria-pressed:border-brand-800 aria-pressed:bg-brand-800 aria-pressed:text-white">Tất cả</button>
+        @for (c of accessoryCategories; track c) {
+          <button type="button" (click)="accessoryCategory.set(c)" [attr.aria-pressed]="accessoryCategory() === c" class="min-h-10 rounded-pill border border-line bg-white px-4 text-sm font-medium text-ink hover:border-brand-400 aria-pressed:border-brand-800 aria-pressed:bg-brand-800 aria-pressed:text-white">{{ c }}</button>
+        }
+      </div>
+    </div>
+    <ul class="mt-6 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]">
+      @for (a of accessories(); track a.id) {
+        <li><app-accessory-card [item]="a" /></li>
+      }
+    </ul>
+  </section>
+
+  <!-- Studio CTA -->
+  <app-studio-cta class="mt-20" [device]="f.device()" />
+</div>
+
+@if (filtersOpen()) {
+  <app-filter-drawer (closed)="filtersOpen.set(false)" />
+}
+@if (quick(); as design) {
+  @if (f.sku(); as sku) {
+    <app-quick-view [design]="design" [model]="f.device()" [initialSku]="sku" (closed)="quick.set(null)" />
+  }
+}

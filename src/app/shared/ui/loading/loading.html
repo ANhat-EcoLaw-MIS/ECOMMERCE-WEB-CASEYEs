@@ -1,0 +1,132 @@
+@if (visible()) {
+  @switch (variant()) {
+    <!-- ───────── Spinner ───────── -->
+    @case ('spinner') {
+      <span class="inline-flex items-center gap-2.5">
+        <span class="spinner" aria-hidden="true"></span>
+        @if (label()) {
+          <span class="text-sm font-medium text-ink-soft">{{ label() }}</span>
+        }
+      </span>
+    }
+
+    <!-- ───────── Dots ───────── -->
+    @case ('dots') {
+      <span class="inline-flex items-center gap-2.5">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        @if (label()) {
+          <span class="text-sm font-medium text-ink-soft">{{ label() }}</span>
+        }
+      </span>
+    }
+
+    <!-- ───────── Indeterminate bar ───────── -->
+    @case ('bar') {
+      @if (percent() !== null) {
+        <span class="bar bar--value" aria-hidden="true"><span [style.width.%]="percent()"></span></span>
+      } @else {
+        <span class="bar" aria-hidden="true"><span></span></span>
+      }
+    }
+
+    <!-- ───────── Overlay pop-up (prefer the LoadingOverlay service) ───────── -->
+    @case ('overlay') {
+      <div class="overlay">
+        <div class="overlay-card" tabindex="-1">
+          <span class="orbit" aria-hidden="true">
+            <span class="orbit-ring"></span>
+            <span class="orbit-core"></span>
+          </span>
+          <p class="mt-5 font-display text-lg font-bold text-ink">{{ label() || 'Đang xử lý…' }}</p>
+          @if (message()) {
+            <p class="mt-1.5 max-w-xs text-sm leading-relaxed text-ink-soft">{{ message() }}</p>
+          }
+          <span class="bar mt-6 w-40" aria-hidden="true"><span></span></span>
+        </div>
+      </div>
+    }
+
+    <!-- ───────── Skeleton presets ───────── -->
+    @case ('skeleton') {
+      @switch (preset()) {
+        @case ('profile') {
+          <div class="rounded-card border border-line bg-surface-alt p-6 shadow-soft sm:p-8">
+            <div class="flex items-center justify-between gap-4 border-b border-line pb-6">
+              <div class="flex-1 space-y-2.5">
+                <app-skeleton w="12rem" h="1.5rem" />
+                <app-skeleton w="70%" h="0.85rem" />
+              </div>
+              <app-skeleton w="9rem" h="1.75rem" radius="999px" />
+            </div>
+            <div class="my-6 flex items-center gap-4">
+              <app-skeleton w="5rem" h="5rem" circle />
+              <div class="flex-1 space-y-2.5">
+                <app-skeleton w="10rem" h="1.1rem" />
+                <app-skeleton w="14rem" h="0.85rem" />
+              </div>
+            </div>
+            <div class="grid gap-6 sm:grid-cols-2">
+              @for (i of [0, 1, 2, 3]; track i) {
+                <div class="space-y-2">
+                  <app-skeleton w="35%" h="0.8rem" />
+                  <app-skeleton h="2.75rem" radius="0.75rem" />
+                </div>
+              }
+            </div>
+            <div class="mt-8 flex justify-end gap-3 border-t border-line pt-6">
+              <app-skeleton w="8rem" h="2.75rem" radius="999px" />
+              <app-skeleton w="11rem" h="2.75rem" radius="999px" />
+            </div>
+          </div>
+        }
+        @case ('form') {
+          <div class="space-y-5">
+            @for (i of items(); track i) {
+              <div class="space-y-2">
+                <app-skeleton w="30%" h="0.8rem" />
+                <app-skeleton h="2.75rem" radius="0.75rem" />
+              </div>
+            }
+          </div>
+        }
+        @case ('card') {
+          <div class="rounded-card border border-line bg-surface-alt p-5 shadow-soft">
+            <app-skeleton h="10rem" radius="1rem" />
+            <div class="mt-4 space-y-2.5">
+              <app-skeleton w="70%" h="1rem" />
+              <app-skeleton w="45%" h="0.85rem" />
+            </div>
+          </div>
+        }
+        @case ('grid') {
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+            @for (i of items(); track i) {
+              <div class="space-y-3">
+                <app-skeleton h="auto" radius="1.25rem" class="aspect-square" />
+                <app-skeleton w="75%" h="0.9rem" />
+                <app-skeleton w="40%" h="0.8rem" />
+              </div>
+            }
+          </div>
+        }
+        @case ('list') {
+          <div class="space-y-2">
+            @for (i of items(); track i) {
+              <div class="flex items-center gap-3 rounded-xl px-3 py-2.5">
+                <app-skeleton w="1.5rem" h="1.5rem" radius="0.5rem" />
+                <app-skeleton [w]="i % 2 ? '55%' : '70%'" h="0.9rem" />
+              </div>
+            }
+          </div>
+        }
+        @default {
+          <div class="space-y-2.5">
+            @for (i of items(); track i) {
+              <app-skeleton [w]="$last ? '60%' : '100%'" h="0.9rem" />
+            }
+          </div>
+        }
+      }
+    }
+  }
+}

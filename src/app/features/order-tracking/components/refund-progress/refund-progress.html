@@ -1,0 +1,74 @@
+@let r = refund();
+<article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft" aria-labelledby="refund-title">
+  <div class="flex flex-wrap items-baseline justify-between gap-2">
+    <h2 id="refund-title" class="font-display text-lg font-bold text-ink">Tiến độ hoàn tiền</h2>
+    <p class="font-display text-lg font-bold text-brand-800">{{ formatVnd(r.amount) }}</p>
+  </div>
+  <p class="text-sm text-ink-soft">
+    {{ situationLabel() }}@if (r.deductedFee > 0) { · đã trừ cước hai chiều {{ formatVnd(r.deductedFee) }} }
+  </p>
+
+  @if (r.status === 'Rejected') {
+    <p role="status" class="mt-4" [class]="dangerBox">Yêu cầu hoàn tiền bị từ chối: {{ r.rejectReason }}</p>
+  } @else {
+    <ol class="mt-4 flex flex-col gap-3">
+      @for (s of steps(); track s.key) {
+        <li class="flex items-start gap-3" [attr.aria-current]="s.state === 'current' ? 'step' : null">
+          <span
+            aria-hidden="true"
+            class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-2 text-[11px] font-bold"
+            [class.border-brand-800]="s.state !== 'upcoming'"
+            [class.bg-brand-800]="s.state === 'done'"
+            [class.text-white]="s.state === 'done'"
+            [class.text-brand-800]="s.state === 'current'"
+            [class.border-line]="s.state === 'upcoming'"
+            [class.text-ink-soft]="s.state === 'upcoming'"
+          >
+            {{ s.state === 'done' ? '✓' : $index + 1 }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold" [class.text-ink]="s.state !== 'upcoming'" [class.text-ink-soft]="s.state === 'upcoming'">
+              {{ s.label }}
+              <span class="sr-only">({{ s.state === 'done' ? 'xong' : s.state === 'current' ? 'đang ở bước này' : 'chưa tới' }})</span>
+            </p>
+            @switch (s.key) {
+              @case ('choose') {
+                @if (r.refundMethod === 'Bank' && r.status !== 'Refund_Pending_Retry') {
+                  <p class="text-xs text-ink-soft">Chuyển khoản · {{ r.refundBank }} ****{{ r.refundAccountNo?.slice(-4) }}</p>
+                }
+              }
+              @case ('transfer') {
+                @if (s.state === 'current') {
+                  @if (r.status === 'Processing') {
+                    <p class="text-xs text-ink-soft">Nội dung chuyển khoản “HOAN {{ order().orderCode }}”. {{ etaText }}</p>
+                  } @else {
+                    <p class="text-xs text-ink-soft">Đang xử lý.</p>
+                  }
+                }
+              }
+              @case ('done') {
+                @if (s.state === 'done') {
+                  @if (r.bankRef) {
+                    <p class="text-xs text-ink-soft">Mã giao dịch <span class="font-mono text-ink">{{ r.bankRef }}</span>{{ r.resolvedAt ? ' · ' : '' }}{{ r.resolvedAt | date: 'dd/MM/yyyy' }}</p>
+                  }
+                }
+              }
+            }
+          </div>
+        </li>
+      }
+    </ol>
+  }
+
+  @if (needsChoice()) {
+    <div class="mt-4">
+      @if (r.status === 'Refund_Pending_Retry') {
+        <p role="status" class="mb-3" [class]="warnBox">Chuyển khoản chưa thành công. Vui lòng kiểm tra và nhập lại thông tin tài khoản.</p>
+      } @else {
+        <p class="mb-3 text-sm text-ink">Nhập tài khoản ngân hàng để nhận tiền hoàn.@if (r.escalatedAt) { CSKH sẽ liên hệ để hỗ trợ bạn. }</p>
+      }
+      <app-refund-choice-form [payerName]="order().payerName" [amountLabel]="formatVnd(r.amount)" [allowLater]="false" (choiceChange)="choice.set($event)" />
+      <button type="button" [class]="btnPrimary" class="mt-3 w-full" [disabled]="!choice() || busy()" (click)="submit()">Lưu thông tin nhận hoàn</button>
+    </div>
+  }
+</article>

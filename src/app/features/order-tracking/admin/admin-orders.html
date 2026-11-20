@@ -1,0 +1,421 @@
+<section class="mx-auto max-w-[1600px] px-4 py-5 lg:px-6">
+  <!-- Page header -->
+  <header class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">Quản lý đơn hàng · {{ isAdmin() ? 'Admin (mọi vai trò)' : role() }}</p>
+      <h1 class="font-display text-2xl font-extrabold text-ink">Việc cần làm</h1>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 text-xs text-ink-soft" role="status">
+        <span class="size-2 rounded-full bg-emerald-500" aria-hidden="true"></span>
+        Đồng bộ với trang khách{{ syncedAt() ? ' · ' + (syncedAt() | date: 'HH:mm:ss') : '' }}
+      </span>
+      <button type="button" [class]="btnGhost" (click)="refresh()">Tải lại</button>
+      <label class="relative w-full sm:w-72">
+        <span class="sr-only">Tìm đơn</span>
+        <input [class]="field" class="pl-9" placeholder="Tìm mã đơn, tên hoặc email khách" [value]="search()" (input)="search.set($any($event.target).value)" />
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-soft"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+      </label>
+    </div>
+  </header>
+
+  @if (flash(); as f) {
+    <p role="status" class="mt-3 flex items-start justify-between gap-3 rounded-xl border px-4 py-2.5 text-sm" [class]="f.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-rose-200 bg-rose-50 text-rose-900'">
+      <span>{{ f.ok ? '✓' : '!' }} {{ f.text }}</span>
+      <button type="button" class="text-xs font-semibold underline" (click)="flash.set(null)">Đóng</button>
+    </p>
+  }
+
+  <!-- Workspaces: one tab per team; the columns below show only that team's work -->
+  <div role="tablist" aria-label="Khu vực làm việc" class="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+    @for (g of groups(); track g.owner) {
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="workspace().owner === g.owner"
+        (click)="openWorkspace(g.owner)"
+        class="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all"
+        [class]="workspace().owner === g.owner ? 'border-brand-800 bg-brand-800 text-white shadow-soft' : 'border-line bg-surface-alt text-ink hover:border-brand-300 hover:bg-brand-50'"
+      >
+        <span class="min-w-0">
+          <span class="block truncate font-display text-base font-bold">{{ g.tab }}</span>
+          <span class="block truncate text-xs" [class]="workspace().owner === g.owner ? 'text-white/75' : 'text-ink-soft'">{{ g.who }}{{ !can(g.owner) ? ' · chỉ xem' : '' }}</span>
+        </span>
+        <span class="shrink-0 rounded-pill px-2.5 py-0.5 text-sm font-bold tabular-nums"
+          [class]="workspace().owner === g.owner ? 'bg-white text-brand-900' : tabCounts()[g.owner] ? (g.owner === 'All' ? 'bg-amber-100 text-amber-900' : 'bg-rose-600 text-white') : 'bg-line text-ink-soft'"
+          [attr.aria-label]="tabCounts()[g.owner] + (g.owner === 'All' ? ' đơn trễ hẹn' : ' việc cần làm')">{{ tabCounts()[g.owner] }}</span>
+      </button>
+    }
+  </div>
+
+  <div class="mt-4 grid items-start gap-4 lg:grid-cols-[14rem_minmax(0,21rem)_minmax(0,1fr)]">
+    <!-- 1. Queues of the workspace -->
+    <nav [attr.aria-label]="'Hàng chờ ' + workspace().tab" class="rounded-card border border-line bg-surface-alt p-2 shadow-soft lg:sticky lg:top-4">
+      <p class="px-2 pb-2 pt-1 text-[11px] font-bold uppercase tracking-widest text-ink-soft">{{ workspace().title }}</p>
+      <ul class="flex flex-col gap-0.5">
+        @for (q of workspace().queues; track q.key) {
+          <li>
+            <button
+              type="button"
+              (click)="openQueue(q.key)"
+              [attr.aria-current]="!search() && queue().key === q.key ? 'page' : null"
+              class="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl px-3 text-left text-sm transition-colors"
+              [class]="!search() && queue().key === q.key ? 'bg-brand-100 font-semibold text-brand-900 ring-1 ring-brand-300' : 'text-ink hover:bg-brand-50'"
+            >
+              <span class="truncate">{{ q.label }}</span>
+              <span class="min-w-6 rounded-pill px-1.5 text-center text-xs font-semibold tabular-nums"
+                [class]="counts()[q.key] && workspace().owner !== 'All' ? 'bg-rose-600 text-white' : 'bg-line text-ink-soft'">{{ counts()[q.key] }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- 2. Orders of the queue -->
+    <div class="overflow-hidden rounded-card border border-line bg-surface-alt shadow-soft lg:sticky lg:top-4">
+      <div class="border-b border-line px-4 py-3">
+        <p class="flex items-center justify-between gap-2 font-semibold text-ink">
+          <span class="truncate">{{ search() ? 'Kết quả tìm “' + search() + '”' : queue().label }}</span>
+          <span class="shrink-0 text-xs font-normal text-ink-soft">{{ rows().length }} đơn</span>
+        </p>
+        @if (!search()) {
+          <p class="mt-0.5 text-xs text-ink-soft">{{ queue().hint }}</p>
+        } @else {
+          <button type="button" class="mt-1 text-xs font-semibold text-brand-800 underline" (click)="search.set('')">Xóa tìm kiếm</button>
+        }
+      </div>
+      @if (queue().key === 'confirm' && !search()) {
+        <div class="flex items-center justify-between gap-2 border-b border-line bg-brand-50 px-4 py-2.5">
+          <p class="text-xs text-brand-900">Mẻ sản xuất tự chạy lúc 16:00 ngày làm việc.</p>
+          <button type="button" class="text-xs font-bold text-brand-800 underline disabled:opacity-50" [disabled]="busy() || !can('Operator')" (click)="startProduction()">Chốt mẻ ngay</button>
+        </div>
+      }
+      <ul class="max-h-[68vh] overflow-y-auto p-2" (keydown.arrowdown)="$event.preventDefault(); step(1)" (keydown.arrowup)="$event.preventDefault(); step(-1)">
+        @for (o of rows(); track o.id) {
+          @let on = selected()?.id === o.id;
+          <li class="py-0.5">
+            <button type="button" [id]="'ot-row-' + o.id" (click)="selectedId.set(o.id)"
+              class="relative flex w-full flex-col gap-1.5 overflow-hidden rounded-xl py-3 pl-5 pr-3 text-left transition-colors"
+              [class]="on ? 'bg-brand-50 ring-2 ring-brand-600' : 'ring-1 ring-transparent hover:bg-surface hover:ring-line'"
+              [attr.aria-current]="on || null">
+              <span aria-hidden="true" class="absolute inset-y-0 left-0 w-1.5" [class]="on ? 'bg-brand-700' : 'bg-transparent'"></span>
+              <span class="flex items-center justify-between gap-2">
+                <span class="font-semibold" [class]="on ? 'text-brand-900' : 'text-ink'">{{ o.orderCode }}</span>
+                <app-status-badge [status]="o.status" [label]="label(o)" />
+              </span>
+              <span class="flex flex-wrap items-center gap-1.5 text-xs text-ink-soft">
+                <span class="rounded-pill bg-surface px-2 py-0.5 font-semibold ring-1 ring-line">{{ kind(o) }}</span>
+                <span>{{ o.paymentMethod === 'COD' ? 'COD' : 'Đã thanh toán' }}</span>
+                <span>· {{ o.customerName }}</span>
+                <span>· {{ waited(o.updatedAt) }} trước</span>
+              </span>
+              @if (late(o) || request(o) || ticket(o)) {
+                <span class="flex flex-wrap gap-1.5 text-xs">
+                  @if (late(o); as l) {
+                    <span class="rounded-pill bg-rose-50 px-2 py-0.5 font-semibold text-rose-800">{{ l.label }}</span>
+                  }
+                  @if (request(o)) {
+                    <span class="rounded-pill bg-amber-50 px-2 py-0.5 font-semibold text-amber-800">Có yêu cầu hủy</span>
+                  }
+                  @if (ticket(o)) {
+                    <span class="rounded-pill bg-sky-50 px-2 py-0.5 font-semibold text-sky-800">Có khiếu nại</span>
+                  }
+                </span>
+              }
+              @if (on) {
+                <span class="hidden items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-brand-700 lg:flex">Đang xem <span aria-hidden="true">→</span></span>
+              }
+            </button>
+          </li>
+        } @empty {
+          <li class="px-4 py-12 text-center text-sm text-ink-soft">{{ search() ? 'Không tìm thấy đơn.' : 'Không còn việc trong hàng chờ này 🎉' }}</li>
+        }
+      </ul>
+    </div>
+
+    <!-- 3. Selected order -->
+    <div class="min-w-0">
+      @if (selected(); as o) {
+        <article class="overflow-hidden rounded-card border-2 border-brand-600 bg-surface-alt shadow-soft">
+          <!-- Which order this is -->
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-brand-800 px-5 py-2 text-white">
+            <p class="text-xs font-semibold uppercase tracking-widest">
+              Đang xem{{ selectedIndex() >= 0 ? ' · ' + (selectedIndex() + 1) + '/' + rows().length + ' trong “' + (search() ? 'kết quả tìm' : queue().label) + '”' : '' }}
+            </p>
+            @if (selectedIndex() >= 0) {
+              <span class="flex gap-1">
+                <button type="button" class="rounded-pill px-2.5 py-1 text-xs font-semibold hover:bg-white/15 disabled:opacity-40" [disabled]="selectedIndex() <= 0" (click)="step(-1)">↑ Đơn trước</button>
+                <button type="button" class="rounded-pill px-2.5 py-1 text-xs font-semibold hover:bg-white/15 disabled:opacity-40" [disabled]="selectedIndex() >= rows().length - 1" (click)="step(1)">Đơn sau ↓</button>
+              </span>
+            }
+          </div>
+          @if (selectedLeftQueue() && !search()) {
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm text-emerald-900">
+              <span>Đơn đã chuyển khỏi “{{ queue().label }}” sau thao tác vừa rồi.</span>
+              @if (rows().length) {
+                <button type="button" class="text-xs font-bold underline" (click)="selectedId.set(rows()[0].id)">Xử lý đơn kế tiếp</button>
+              }
+            </div>
+          }
+          <!-- Header -->
+          <div class="flex flex-wrap items-start justify-between gap-3 border-b border-line p-5">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="font-display text-2xl font-extrabold text-ink">{{ o.orderCode }}</h2>
+                <app-status-badge [status]="o.status" [label]="label(o)" />
+                <span class="rounded-pill bg-surface px-2 py-0.5 text-xs font-semibold ring-1 ring-line">{{ kind(o) }}</span>
+              </div>
+              <p class="mt-1 text-sm text-ink-soft">{{ o.customerName }} · {{ o.customerEmail }} · đặt {{ o.createdAt | date: 'HH:mm dd/MM' }}</p>
+              <p class="text-sm text-ink-soft">
+                {{ o.paymentMethod === 'COD' ? 'COD' : 'Đã thanh toán' }} · {{ formatVnd(o.goodsTotal + o.shipping.fee - (o.discount ?? 0)) }} ·
+                {{ o.shippingTier === 'Express' ? 'Hỏa tốc' : 'Tiêu chuẩn' }} · giao dự kiến {{ formatShortDate(o.earliestEDD) }}–{{ formatShortDate(o.latestEDD) }}
+              </p>
+            </div>
+            <a [routerLink]="['/order-tracking', o.orderCode]" target="_blank" class="inline-flex min-h-10 items-center rounded-pill px-3 text-sm font-semibold text-brand-800 ring-1 ring-brand-200 hover:bg-brand-50">Mở trang khách ↗</a>
+          </div>
+
+          <!-- What the customer sees -->
+          <div class="border-b border-line p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-ink-soft">Khách đang thấy</p>
+            <div class="mt-2"><app-order-timeline [order]="o" /></div>
+          </div>
+
+          <!-- Next step -->
+          <section class="border-b border-line p-5" aria-label="Bước tiếp theo">
+            <p class="text-xs font-bold uppercase tracking-widest text-ink-soft">Bước tiếp theo</p>
+            <div class="mt-3 flex flex-col gap-3">
+              <!-- Cancel request (CSKH) has priority: the order is held -->
+              @if (request(o); as r) {
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm font-semibold text-amber-900">Khách yêu cầu hủy · {{ reasonLabels[r.reason] }}{{ r.note ? ' – “' + r.note + '”' : '' }}</p>
+                    <span class="rounded-pill bg-white px-2 py-0.5 text-[11px] font-bold text-amber-900">CSKH</span>
+                  </div>
+                  <p class="mt-1 text-xs text-amber-900">Hạn phản hồi {{ r.slaDueAt | date: 'HH:mm dd/MM' }}{{ requestOverdue(o) ? ' · QUÁ HẠN' : '' }}. Đơn đang bị giữ: không duyệt, không sản xuất, không đóng gói.</p>
+                  <div class="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                    <input [class]="field" placeholder="Lý do (bắt buộc khi từ chối)" [value]="note()" (input)="note.set($any($event.target).value)" />
+                    <button type="button" [class]="btnPrimary" [disabled]="busy() || !can('CSKH')" (click)="decideCancel(o, true)">Chấp nhận hủy, hoàn 100%</button>
+                    <button type="button" [class]="btnSecondary" [disabled]="busy() || !can('CSKH')" (click)="decideCancel(o, false)">Từ chối</button>
+                  </div>
+                </div>
+              }
+
+              @switch (o.status) {
+                @case ('Pending_Review') {
+                  @if (!request(o)) {
+                    <div class="rounded-2xl bg-surface p-4">
+                      <div class="flex items-center justify-between gap-2"><p class="text-sm font-semibold text-ink">Duyệt bản thiết kế final{{ reviewOverdue(o) ? ' · quá 24 giờ' : '' }}</p><span class="rounded-pill bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800">Operator</span></div>
+                      <p class="mt-1 text-xs text-ink-soft">Khách đã gửi {{ o.designResubmitCount }}/2 lần sửa.</p>
+                      <div class="mt-3 flex flex-wrap gap-2">
+                        <button type="button" [class]="btnPrimary" [disabled]="busy() || !can('Operator')" (click)="approve(o)">Duyệt, chờ mẻ sản xuất</button>
+                      </div>
+                      <div class="mt-3 grid gap-2 sm:grid-cols-[12rem_1fr_auto]">
+                        <select [class]="field" [value]="violation()" (change)="violation.set($any($event.target).value)" aria-label="Nhóm vi phạm">
+                          @for (g of violationGroups; track g) { <option [value]="g">{{ g }}</option> }
+                        </select>
+                        <input [class]="field" placeholder="Lý do gửi khách (bắt buộc)" [value]="note()" (input)="note.set($any($event.target).value)" />
+                        <button type="button" [class]="btnSecondary" [disabled]="busy() || !can('Operator')" (click)="reject(o)">Yêu cầu sửa</button>
+                      </div>
+                    </div>
+                  }
+                }
+                @case ('Action_Required') {
+                  <p class="rounded-2xl bg-surface p-4 text-sm text-ink">Chờ khách sửa thiết kế (đã gửi lại {{ o.designResubmitCount }}/2 lần). Khách cũng có thể hủy và nhận hoàn 100%. Quá 7 ngày không phản hồi, hệ thống tự hủy.</p>
+                }
+                @case ('Pending_Confirmation') {
+                  @if (!request(o)) {
+                    <div class="rounded-2xl bg-surface p-4">
+                      <div class="flex items-center justify-between gap-2"><p class="text-sm font-semibold text-ink">{{ o.hasCustomItem ? 'Chờ mẻ sản xuất' : 'Đóng gói hàng có sẵn' }}</p><span class="rounded-pill bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800">Operator</span></div>
+                      @if (codLocked(o)) {
+                        <p class="mt-1 text-sm text-ink-soft">Đơn COD còn trong 30 phút đổi ý (tới {{ o.confirmDueAt | date: 'HH:mm' }}). Khách vẫn tự hủy được nên chưa đóng gói.</p>
+                      } @else if (o.hasCustomItem) {
+                        <p class="mt-1 text-sm text-ink-soft">
+                          @if (!slot(o)) { Vào mẻ 16:00 {{ batchDay(o) }}. Hệ thống tự chạy đúng giờ. } @else { Đã tới hoặc trễ mẻ sản xuất. }
+                        </p>
+                        @if (slot(o)) {
+                          <button type="button" [class]="btnPrimary" class="mt-3" [disabled]="busy() || !can('Operator')" (click)="startProduction()">Đưa vào sản xuất</button>
+                        }
+                      } @else {
+                        <button type="button" [class]="btnPrimary" class="mt-3" [disabled]="busy() || !can('Operator')" (click)="pack(o)">Đã lấy hàng, đóng gói xong</button>
+                      }
+                    </div>
+                  }
+                }
+                @case ('In_Production') {
+                  <div class="rounded-2xl bg-surface p-4">
+                    <div class="flex items-center justify-between gap-2"><p class="text-sm font-semibold text-ink">Kiểm tra chất lượng{{ o.qcReprintCount ? ' · in lại lần ' + o.qcReprintCount : '' }}</p><span class="rounded-pill bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800">Operator</span></div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button type="button" [class]="btnPrimary" [disabled]="busy() || !can('Operator')" (click)="pack(o)">Đạt · Đóng gói{{ o.items.length > 1 && o.hasCustomItem ? ' chung một kiện' : '' }}</button>
+                      <button type="button" [class]="btnSecondary" [disabled]="busy() || !can('Operator')" (click)="reprint(o)">Lỗi in · In lại (+1 ngày làm việc)</button>
+                    </div>
+                  </div>
+                }
+                @case ('Ready_for_Pickup') {
+                  <p class="rounded-2xl bg-surface p-4 text-sm text-ink">Đã đóng gói, chờ đơn vị vận chuyển lấy hàng. Trạng thái tiếp theo đến từ webhook của hãng.</p>
+                }
+                @case ('In_Transit') {
+                  <p class="rounded-2xl bg-surface p-4 text-sm text-ink">Đang giao. Chờ webhook “Giao thành công” hoặc “Giao thất bại” từ hãng.</p>
+                }
+                @case ('Delivered') {
+                  <p class="rounded-2xl bg-surface p-4 text-sm text-ink">Đã giao lúc {{ o.deliveredAt | date: 'HH:mm dd/MM' }}. Chờ khách bấm “Đã nhận được hàng”; nếu không, tự hoàn tất lúc {{ o.autoCompleteAt | date: 'HH:mm dd/MM' }}.</p>
+                }
+                @case ('Delivery_Failed') {
+                  <div class="rounded-2xl bg-surface p-4 text-sm">
+                    <p class="font-semibold text-ink">Giao thất bại: {{ failure(o) }} ({{ party(o) }})</p>
+                    @if (o.warehouseHold; as h) {
+                      <p class="mt-1 text-ink-soft">Hàng ở kho tới {{ h.expiresAt | date: 'HH:mm dd/MM' }}{{ h.disputed ? ' · đang tạm dừng vì khách khiếu nại nguyên nhân' : '' }}. Khách chọn giao lại{{ o.redeliveryUsed ? ' (đã dùng lượt giao lại)' : '' }} hoặc hủy.</p>
+                    } @else {
+                      <p class="mt-1 text-ink-soft">Hàng đang chuyển về kho. Khách chỉ chọn được giao lại hoặc hủy sau khi hàng về kho.</p>
+                    }
+                  </div>
+                }
+                @case ('Completed') {
+                  <p class="rounded-2xl bg-surface p-4 text-sm text-ink">Đơn đã hoàn tất. Khách vẫn báo sự cố được trong 7 ngày kể từ khi giao.</p>
+                }
+                @case ('Cancelled') {
+                  <p class="rounded-2xl bg-surface p-4 text-sm text-ink">Đơn đã hủy.{{ o.refunds.length ? ' Xem tiến độ hoàn tiền bên dưới.' : ' Không phát sinh hoàn tiền.' }}</p>
+                }
+                @case ('Refunded') {
+                  <p class="rounded-2xl bg-surface p-4 text-sm text-ink">Khiếu nại được chấp nhận hoàn tiền. Xem tiến độ chuyển khoản bên dưới.</p>
+                }
+              }
+
+              <!-- Open ticket (CSKH) -->
+              @if (ticket(o); as t) {
+                <div class="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="text-sm font-semibold text-sky-900">{{ t.issueType === 'Dispute_Failure_Cause' ? 'Khách không đồng ý nguyên nhân giao thất bại' : 'Khách báo sự cố' }} · {{ t.ticketCode }}</p>
+                    <span class="rounded-pill bg-white px-2 py-0.5 text-[11px] font-bold text-sky-900">CSKH</span>
+                  </div>
+                  @if (t.description) { <p class="mt-1 text-sm text-sky-900">“{{ t.description }}”</p> }
+                  <input [class]="field" class="mt-3" placeholder="Ghi chú gửi khách" [value]="note()" (input)="note.set($any($event.target).value)" />
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    @if (t.issueType === 'Dispute_Failure_Cause') {
+                      <button type="button" [class]="btnPrimary" [disabled]="busy() || !can('CSKH')" (click)="resolveDispute(o, true)">Khách đúng · chuyển lỗi vận chuyển</button>
+                      <button type="button" [class]="btnSecondary" [disabled]="busy() || !can('CSKH')" (click)="resolveDispute(o, false)">Giữ nguyên nguyên nhân</button>
+                    } @else {
+                      <button type="button" [class]="btnPrimary" [disabled]="busy() || !can('CSKH')" (click)="resolveTicket(o, 'Reprint')">In lại / gửi lại</button>
+                      <button type="button" [class]="btnSecondary" [disabled]="busy() || !can('CSKH')" (click)="resolveTicket(o, 'Voucher')">Voucher đền bù</button>
+                      <button type="button" [class]="btnSecondary" [disabled]="busy() || !can('CSKH')" (click)="resolveTicket(o, 'Refund')">Hoàn tiền 100%</button>
+                      <button type="button" [class]="btnGhost" [disabled]="busy() || !can('CSKH')" (click)="resolveTicket(o, 'Rejected')">Từ chối</button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Refunds (Admin) -->
+              @for (r of o.refunds; track r.id) {
+                <div class="rounded-2xl border border-line bg-surface p-4 text-sm">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="font-semibold text-ink">Hoàn {{ formatVnd(r.amount) }}{{ r.deductedFee ? ' (đã trừ ' + formatVnd(r.deductedFee) + ')' : '' }} · {{ r.situation }}</span>
+                    <span class="flex items-center gap-2"><span class="rounded-pill px-2.5 py-1 text-xs font-semibold" [class]="refundTone(r)">{{ refundLabel(r) }}</span><span class="rounded-pill bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800">Admin</span></span>
+                  </div>
+                  @if (r.refundMethod === 'Bank') {
+                    <p class="mt-1 text-ink-soft">{{ r.refundBank }} · {{ r.refundAccountNo }} · {{ r.refundAccountHolder }} <span class="text-xs">(người thanh toán: {{ o.payerName }})</span></p>
+                  } @else if (r.status === 'Pending_Approval') {
+                    <p class="mt-1 text-ink-soft">Chờ khách nhập tài khoản nhận hoàn trong trang đơn hàng.{{ r.escalatedAt ? ' Đã chuyển CSKH liên hệ.' : '' }}</p>
+                  }
+                  <div class="mt-3 flex flex-wrap items-center gap-2">
+                    @if (r.status === 'Pending_Approval' && r.refundMethod) {
+                      <button type="button" [class]="btnPrimary" [disabled]="busy() || !can('Admin')" (click)="approveRefund(o, r)">Duyệt hoàn tiền</button>
+                      <input [class]="field" class="w-52" placeholder="Lý do từ chối" [value]="note()" (input)="note.set($any($event.target).value)" />
+                      <button type="button" [class]="btnGhost" [disabled]="busy() || !can('Admin')" (click)="rejectRefund(o, r)">Từ chối</button>
+                    }
+                    @if (r.status === 'Processing' || r.status === 'Refund_Pending_Manual') {
+                      <span class="text-xs text-ink-soft">Nội dung CK “HOAN {{ o.orderCode }}”</span>
+                      <input [class]="field" class="w-44" placeholder="Mã giao dịch ngân hàng" [value]="bankRef()" (input)="bankRef.set($any($event.target).value)" />
+                      <button type="button" [class]="btnPrimary" [disabled]="busy() || !can('Admin')" (click)="completeRefund(o, r)">Đã chuyển khoản</button>
+                    }
+                    @if (r.status === 'Processing') {
+                      <button type="button" [class]="btnGhost" [disabled]="busy() || !can('Admin')" (click)="transferFailed(o, r)">Chuyển khoản lỗi</button>
+                    }
+                    @if (r.status === 'Refund_Pending_Retry') {
+                      <button type="button" [class]="btnSecondary" [disabled]="busy() || !can('Admin')" (click)="retryTransfer(o, r)">Chuyển khoản lại</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+
+          <!-- Simulation (Admin only) -->
+          @if (isAdmin()) {
+            <section class="border-b border-line bg-amber-50/60 p-5" aria-label="Mô phỏng">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-bold uppercase tracking-widest text-amber-900">Mô phỏng · chỉ dùng khi demo</p>
+                <span class="text-[11px] text-amber-900">Ghi thẳng vào cơ sở dữ liệu, trang khách cập nhật ngay</span>
+              </div>
+              <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <div>
+                  <p class="text-xs font-semibold text-ink">Đơn vị vận chuyển</p>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    @for (e of carrierEvents(o); track e.type) {
+                      <button type="button" [class]="btnSecondary" [disabled]="busy()" (click)="carrier(o, e.type)">{{ e.label }}</button>
+                    }
+                    @if (o.status === 'In_Transit') {
+                      <select [class]="field" class="w-60" [value]="cause()" (change)="cause.set($any($event.target).value)" aria-label="Nguyên nhân giao thất bại">
+                        @for (c of failureCauses; track c.key) { <option [value]="c.key">{{ c.label }}</option> }
+                      </select>
+                      <button type="button" [class]="btnSecondary" [disabled]="busy()" (click)="carrier(o, 'Delivery_Failed')">Giao thất bại</button>
+                    }
+                    @if (!carrierEvents(o).length && o.status !== 'In_Transit') {
+                      <p class="text-xs text-ink-soft">Không có sự kiện vận chuyển cho trạng thái này.</p>
+                    }
+                  </div>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-ink">Tua thời gian cho đơn này</p>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    @for (j of timeJumps(o); track j.label) {
+                      <button type="button" class="min-h-9 rounded-pill bg-white px-3 text-xs font-semibold text-amber-900 ring-1 ring-amber-300 hover:bg-amber-100 disabled:opacity-50" [disabled]="busy()" (click)="travel(o, j.minutes, j.label)">{{ j.label }}</button>
+                    }
+                  </div>
+                </div>
+              </div>
+            </section>
+          }
+
+          <!-- Items + address -->
+          <div class="grid gap-4 border-b border-line p-5 md:grid-cols-2">
+            <ul class="flex flex-col gap-2">
+              @for (i of o.items; track i.id) {
+                <li class="flex gap-3 rounded-xl border border-line p-3">
+                  @if (i.design?.previewUrl ?? i.imageUrl; as src) {
+                    <img [src]="src" [alt]="i.productName" class="h-24 w-12 shrink-0 rounded-lg object-cover ring-1 ring-line" />
+                  }
+                  <div class="min-w-0 text-sm">
+                    <p class="font-semibold text-ink">{{ i.productName }}</p>
+                    <p class="text-ink-soft">{{ i.phoneModel }} · x{{ i.quantity }} · {{ formatVnd(i.unitPrice) }}</p>
+                    <p class="text-xs text-ink-soft">{{ i.isCustom ? 'Thiết kế theo yêu cầu' + (i.design?.hasUploadedImage ? ' · có ảnh khách tải lên' : '') : 'Hàng có sẵn' }}</p>
+                  </div>
+                </li>
+              }
+            </ul>
+            <div class="text-sm text-ink-soft">
+              <p class="font-semibold text-ink">Giao tới</p>
+              <p>{{ o.customerName }} · {{ o.customerPhone }}</p>
+              <p>{{ o.shippingAddress }}</p>
+              @if (o.shipment; as s) { <p class="mt-2">Vận đơn {{ s.carrier }} · {{ s.trackingCode }}</p> }
+            </div>
+          </div>
+
+          <!-- History -->
+          <div class="p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-ink-soft">Lịch sử ({{ o.logs.length }})</p>
+            <ol class="mt-2 flex flex-col gap-1.5 text-sm">
+              @for (l of newestLogs(o); track l.id) {
+                <li class="flex gap-3">
+                  <span class="w-24 shrink-0 tabular-nums text-xs text-ink-soft">{{ l.createdAt | date: 'dd/MM HH:mm' }}</span>
+                  <span class="w-20 shrink-0 text-xs font-semibold text-brand-800">{{ actorLabel(l.actorType) }}</span>
+                  <span class="text-ink">{{ l.reason }}</span>
+                </li>
+              }
+            </ol>
+          </div>
+        </article>
+      } @else {
+        <div class="rounded-card border border-dashed border-line p-10 text-center text-sm text-ink-soft">Chọn một đơn để xem chi tiết.</div>
+      }
+    </div>
+  </div>
+</section>

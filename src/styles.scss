@@ -1,3 +1,47 @@
 /* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
 @import "./styles/tokens.css";
+@import "./styles/mixins.scss";
+@import "./styles/effects.scss";
+@media print {
+  // 1. Hide interactive and layout elements
+  button, .sidebar, .no-print {
+    display: none !important;
+  }
+
+  // 2. Reset the canvas for paper
+  body, html {
+    background-color: white !important;
+    color: black !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  // 3. Expand content areas and strip shadows
+  .container, .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  // 4. Smart page breaking rules
+  h1, h2, h3, img, table, .card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}
+/* CasEYE's micro-interactions: blink on add-to-bag. */
+@keyframes caseye-blink-odd {0%,20%,45%,75%,100%{transform:scaleY(1)} 28%,35%,67%{transform:scaleY(.08)}}
+@keyframes caseye-blink-even {0%,20%,45%,75%,100%{transform:scaleY(1)} 28%,35%,67%{transform:scaleY(.08)}}
+@keyframes caseye-bag-pop-odd {0%,100%{transform:scale(1)}40%{transform:scale(1.25)}70%{transform:scale(.9)}}
+@keyframes caseye-bag-pop-even {0%,100%{transform:scale(1)}40%{transform:scale(1.25)}70%{transform:scale(.9)}}
+app-header img[style*="caseye-blink"]{animation-duration:.75s;animation-timing-function:ease-in-out;animation-iteration-count:1;transform-origin:center}
+#caseye-cart-icon{animation-duration:.75s;animation-timing-function:ease-in-out;animation-iteration-count:1}
+@media(prefers-reduced-motion:reduce){app-header img,#caseye-cart-icon{animation:none!important}}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="satGrad" x1="30" y1="30" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C084FC"/>
+      <stop offset="100%" stop-color="#433075"/>
+    </linearGradient>
+    <filter id="satGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#433075" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#satGlow)">
+    <circle cx="60" cy="60" r="34" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="8"/>
+    <ellipse cx="60" cy="60" rx="55" ry="16" fill="none" stroke="#FFFFFF" stroke-width="12" transform="rotate(-20 60 60)"/>
+    <!-- Planet Base -->
+    <circle cx="60" cy="60" r="30" fill="url(#satGrad)"/>
+    <!-- Ring -->
+    <ellipse cx="60" cy="60" rx="52" ry="14" fill="none" stroke="#FDE047" stroke-width="6" transform="rotate(-20 60 60)"/>
+    <!-- Twinkle Stars -->
+    <path d="M25 25 L27 31 L33 33 L27 35 L25 41 L23 35 L17 33 L23 31 Z" fill="#FFFFFF"/>
+    <path d="M95 85 L96 89 L100 90 L96 91 L95 95 L94 91 L90 90 L94 89 Z" fill="#FDE047"/>
+  </g>
+</svg>

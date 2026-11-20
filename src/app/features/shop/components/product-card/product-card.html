@@ -1,0 +1,121 @@
+<article
+  class="group relative flex h-full gap-4 rounded-card p-2 transition-colors duration-200 hover:bg-white"
+  [class.flex-col]="view() !== 'list'"
+  [class.flex-row]="view() === 'list'"
+  [class.items-center]="view() === 'list'"
+>
+  <!-- Media -->
+  <div
+    class="relative grid shrink-0 place-items-center overflow-hidden rounded-card bg-surface-container-low"
+    [class]="mediaClass()"
+  >
+    <a [routerLink]="link()" [queryParams]="linkParams()" class="absolute inset-0 z-0" [attr.aria-label]="'Xem ' + design().name" tabindex="-1"></a>
+
+    <app-case-preview
+      class="pointer-events-none relative transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.03] motion-reduce:transition-none"
+      [class]="caseClass()"
+      [model]="model()"
+      [artworkUrl]="artwork()"
+      [colorHex]="sku().colorHex"
+      [caseType]="sku().caseType"
+      [seed]="design().id"
+      [alt]="design().name + ' cho ' + model().name + ', ' + sku().colorName"
+    />
+
+    <!-- Wishlist sits on the image so the text below gets the full card width (phones). -->
+    <button
+      type="button"
+      (click)="shopCart.toggleFavorite(design().id)"
+      [attr.aria-pressed]="favorite()"
+      [attr.aria-label]="(favorite() ? 'Bỏ yêu thích ' : 'Yêu thích ') + design().name"
+      class="absolute right-2 top-2 z-20 grid size-10 place-items-center rounded-full bg-white/90 text-ink-soft shadow-soft backdrop-blur transition-colors hover:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-400 sm:right-3 sm:top-3"
+      [class.text-brand-800]="favorite()"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" class="size-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [attr.fill]="favorite() ? 'currentColor' : 'none'">
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z" />
+      </svg>
+    </button>
+
+    @if (design().badge) {
+      <span class="absolute left-2 top-2 z-20 rounded-pill bg-white px-2 py-1 text-[9px] sm:left-3 sm:top-3 sm:px-2.5 sm:text-[10px] font-bold tracking-wider text-brand-800 shadow-soft">{{ design().badge }}</span>
+    }
+    @if (!stock()) {
+      <span class="absolute inset-x-3 bottom-3 z-20 rounded-pill bg-ink/80 py-1.5 text-center text-xs font-semibold text-white">Tạm hết hàng</span>
+    } @else if (view() !== 'list') {
+      <button
+        type="button"
+        (click)="quickView.emit()"
+        class="absolute inset-x-3 bottom-3 z-20 hidden min-h-10 translate-y-2 sm:block rounded-pill bg-white/95 text-sm font-semibold text-brand-800 opacity-0 shadow-soft backdrop-blur transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 focus-visible:translate-y-0 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-brand-400 motion-reduce:transition-none"
+      >
+        Xem nhanh
+      </button>
+    }
+  </div>
+
+  <!-- Info -->
+  <div class="flex min-w-0 flex-1 flex-col px-1 pb-1">
+    <a
+      [routerLink]="link()"
+      [queryParams]="linkParams()"
+      class="line-clamp-2 text-sm font-semibold leading-5 text-ink hover:text-brand-800 hover:underline focus-visible:outline-2 focus-visible:outline-brand-400"
+      [class]="view() === 'grid' ? '' : view() === 'list' ? 'min-h-0 sm:text-base' : 'sm:text-base'"
+    >
+      {{ design().name }}
+    </a>
+    <p class="mt-0.5 line-clamp-1 text-xs text-ink-soft">{{ model().name }} · {{ sku().colorName }}</p>
+    @if (view() === 'list') {
+      <p class="mt-2 line-clamp-2 text-sm text-ink-soft">{{ design().description }}</p>
+    }
+
+    <div class="mt-auto flex items-center gap-2 pt-2">
+      <span class="text-sm font-bold text-ink">{{ vnd(price()) }}</span>
+      @if (swatches().length > 1) {
+        <span class="hidden items-center gap-1 min-[400px]:flex" aria-label="Màu ốp có sẵn">
+          @for (s of swatches(); track s.skuId) {
+            <span
+              class="size-2.5 rounded-full ring-1 ring-black/10 sm:size-3"
+              [class.ring-2]="s.colorName === sku().colorName"
+              [class.ring-brand-400]="s.colorName === sku().colorName"
+              [style.background]="s.colorHex"
+              [attr.title]="s.colorName"
+            ></span>
+          }
+        </span>
+      }
+      @if (view() !== 'list') {
+        <button
+          type="button"
+          [disabled]="!stock()"
+          (click)="add($event)"
+          [attr.aria-label]="'Thêm ' + design().name + ' vào giỏ'"
+          class="ml-auto grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-800 transition-colors hover:bg-brand-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-brand-400"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5">
+            <path d="M6 7h12l-1 13H7L6 7Z" />
+            <path d="M9 7a3 3 0 0 1 6 0M12 11v5M9.5 13.5h5" />
+          </svg>
+        </button>
+      }
+    </div>
+
+    @if (view() === 'list') {
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          [disabled]="!stock()"
+          (click)="add($event)"
+          class="min-h-11 rounded-pill bg-brand-800 px-4 text-sm font-semibold text-white hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+        >
+          Thêm vào giỏ
+        </button>
+        <button
+          type="button"
+          (click)="quickView.emit()"
+          class="min-h-11 rounded-pill border border-line px-4 text-sm font-semibold text-ink hover:bg-surface-container-low focus-visible:outline-2 focus-visible:outline-brand-400"
+        >
+          Xem nhanh
+        </button>
+      </div>
+    }
+  </div>
+</article>

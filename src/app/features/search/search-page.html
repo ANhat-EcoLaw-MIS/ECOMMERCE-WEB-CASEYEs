@@ -1,0 +1,93 @@
+@let r = results();
+<section class="page py-8">
+  <!-- Heading -->
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-ink-soft">Tìm kiếm</p>
+      @if (r.query) {
+        <h1 class="mt-1 font-display text-2xl font-bold text-ink sm:text-3xl">Kết quả cho “{{ r.query }}”</h1>
+        <p class="mt-1 text-sm text-ink-soft">
+          {{ counts().all }} kết quả
+          @if (r.device) { · dòng máy <b class="text-ink">{{ r.device }}</b> }
+          @else if (r.unsoldDevice) { · CasEYE's chưa có ốp cho <b class="text-ink">{{ r.unsoldDevice }}</b> }
+        </p>
+      } @else {
+        <h1 class="mt-1 font-display text-2xl font-bold text-ink sm:text-3xl">Bạn muốn tìm gì?</h1>
+      }
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" (click)="editSearch()" class="min-h-11 rounded-full bg-surface px-4 text-sm font-semibold text-ink ring-1 ring-line hover:ring-brand-400">Sửa tìm kiếm</button>
+      <button type="button" (click)="suggest()" class="min-h-11 rounded-full bg-brand-50 px-4 text-sm font-semibold text-brand-800 ring-1 ring-brand-200 hover:ring-brand-400">✨ Gợi ý theo mô tả</button>
+    </div>
+  </div>
+
+  @if (r.orderCode) {
+    <a [routerLink]="['/order-tracking', r.orderCode]" class="mt-5 flex min-h-12 items-center gap-3 rounded-2xl bg-brand-50 px-4 text-sm font-semibold text-brand-900 ring-1 ring-brand-100 hover:ring-brand-400">
+      <span aria-hidden="true">📦</span> Mở đơn {{ r.orderCode }}
+    </a>
+  }
+
+  @if (r.help.length) {
+    <div class="mt-5 flex flex-wrap gap-2">
+      @for (h of r.help; track h.doc.id) {
+        <a [routerLink]="h.doc.link" [queryParams]="h.doc.queryParams" [fragment]="h.doc.fragment" class="inline-flex min-h-10 items-center gap-2 rounded-full bg-surface px-4 text-sm text-ink ring-1 ring-line hover:ring-brand-400">
+          <span aria-hidden="true">💬</span> {{ h.doc.title }}
+        </a>
+      }
+    </div>
+  }
+
+  @if (counts().all) {
+    <!-- Tabs + sort -->
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-line">
+      <div class="flex gap-1" role="tablist" aria-label="Loại kết quả">
+        @for (t of [{ id: 'all', label: 'Tất cả' }, { id: 'template', label: 'Mẫu thiết kế' }, { id: 'product', label: 'Ốp có sẵn' }]; track t.id) {
+          <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" (click)="setTab($any(t.id))"
+            class="-mb-px min-h-11 border-b-2 px-3 text-sm font-semibold transition-colors"
+            [class]="tab() === t.id ? 'border-brand-800 text-brand-900' : 'border-transparent text-ink-soft hover:text-ink'">
+            {{ t.label }} <span class="text-xs font-normal">({{ $any(counts())[t.id] }})</span>
+          </button>
+        }
+      </div>
+      <label class="flex items-center gap-2 pb-2 text-sm text-ink-soft">
+        Sắp xếp
+        <select [value]="sort()" (change)="setSort($any($event.target).value)" class="min-h-10 rounded-full border border-line bg-surface px-3 text-sm text-ink">
+          <option value="relevance">Phù hợp nhất</option>
+          <option value="price-asc">Giá thấp → cao</option>
+          <option value="price-desc">Giá cao → thấp</option>
+        </select>
+      </label>
+    </div>
+
+    @if (styles().length > 1) {
+      <div class="mt-4 flex flex-wrap gap-2" aria-label="Lọc theo phong cách">
+        @for (s of styles(); track s) {
+          <button type="button" [attr.aria-pressed]="style() === s" (click)="toggleStyle(s)"
+            class="min-h-9 rounded-full px-3 text-sm transition-colors"
+            [class]="style() === s ? 'bg-brand-800 text-white' : 'bg-surface text-ink ring-1 ring-line hover:ring-brand-400'">
+            {{ s }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (shown().length) {
+      <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        @for (h of shown(); track h.doc.id) {
+          <app-search-card [hit]="h" />
+        }
+      </div>
+    } @else {
+      <p class="mt-6 text-sm text-ink-soft">Không còn kết quả với bộ lọc này.</p>
+    }
+  } @else if (r.query && !r.orderCode && !r.help.length) {
+    <div class="mt-8 rounded-3xl bg-(image:--grad-soft) p-6 sm:p-8">
+      <p class="font-display text-xl font-bold text-ink">Chưa có mẫu khớp “{{ r.query }}”.</p>
+      <p class="mt-2 max-w-xl text-sm text-ink-soft">Thử từ khóa ngắn hơn, mô tả bằng lời để được gợi ý, hoặc tự thiết kế chiếc ốp theo ý tưởng này.</p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button type="button" (click)="suggest()" class="min-h-11 rounded-full bg-surface-alt px-5 text-sm font-semibold text-brand-800 ring-1 ring-brand-200 hover:ring-brand-400">✨ Gợi ý theo mô tả</button>
+        <button type="button" (click)="designFromIdea()" class="min-h-11 rounded-full bg-brand-800 px-5 text-sm font-semibold text-white hover:bg-brand-600">Tự thiết kế với ý tưởng này</button>
+      </div>
+    </div>
+  }
+</section>

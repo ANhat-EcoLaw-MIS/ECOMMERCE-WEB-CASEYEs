@@ -1,0 +1,240 @@
+@if (design(); as d) {
+  <div class="page pb-20 pt-5">
+    <nav aria-label="Breadcrumb">
+      <ol class="flex flex-wrap items-center gap-1.5 text-xs text-ink-soft">
+        <li><a routerLink="/" class="hover:text-ink hover:underline">Trang chủ</a></li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/shop" [queryParams]="{ model: device().id }" class="hover:text-ink hover:underline">Ốp lưng {{ device().name }}</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page" class="font-medium text-ink">{{ d.name }}</li>
+      </ol>
+    </nav>
+
+    <section class="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)] lg:gap-12" aria-label="Chi tiết sản phẩm">
+      <!-- Media -->
+      <div class="lg:sticky lg:top-24 lg:self-start">
+        <div class="relative overflow-hidden rounded-card bg-surface-container-low">
+          <div role="tablist" aria-label="Chế độ xem" class="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 rounded-pill bg-white/90 p-1 shadow-soft backdrop-blur">
+            <button type="button" role="tab" [attr.aria-selected]="mode() === '2d'" (click)="mode.set('2d')" class="min-h-9 rounded-pill px-4 text-sm font-semibold text-ink-soft aria-selected:bg-brand-800 aria-selected:text-white">2D</button>
+            <button type="button" role="tab" [attr.aria-selected]="mode() === '3d'" (click)="mode.set('3d')" class="min-h-9 rounded-pill px-4 text-sm font-semibold text-ink-soft aria-selected:bg-brand-800 aria-selected:text-white">3D · 360°</button>
+            @if (photos().length) {
+              <button type="button" role="tab" [attr.aria-selected]="mode() === 'photos'" (click)="mode.set('photos')" class="min-h-9 rounded-pill px-4 text-sm font-semibold text-ink-soft aria-selected:bg-brand-800 aria-selected:text-white">Ảnh</button>
+            }
+          </div>
+
+          <!-- pt-14 keeps the 2D/3D switch clear of the case on small screens (the 3D viewer reserves its own space). -->
+          <div
+            class="grid aspect-square max-h-[min(720px,80vh)] w-full place-items-center sm:aspect-[5/4]"
+            [class]="mode() === '3d' ? '' : 'pb-4 pt-14 sm:pb-6 sm:pt-16'"
+          >
+            @switch (mode()) {
+              @case ('3d') {
+                @if (sku(); as s) {
+                  <app-case-viewer-3d class="h-full w-full self-stretch justify-self-stretch" [model]="device()" [artworkUrl]="artwork()" [seed]="d.id" [colorHex]="s.colorHex" [caseType]="s.caseType" />
+                }
+              }
+              @case ('photos') {
+                <div class="relative h-full w-full">
+                  <img [src]="photos()[photoIndex()]" [alt]="d.name + ' – ảnh ' + (photoIndex() + 1)" class="absolute inset-0 h-full w-full object-cover" (error)="onPhotoError($event)" />
+                  <div class="absolute inset-x-4 bottom-4 flex items-center justify-between">
+                    <button type="button" (click)="showPhoto(photoIndex() - 1)" aria-label="Ảnh trước" class="grid size-10 place-items-center rounded-full bg-white/90 text-xl text-ink shadow-soft hover:bg-white">‹</button>
+                    <span class="rounded-pill bg-white/90 px-3 py-1 text-xs text-ink">{{ photoIndex() + 1 }} / {{ photos().length }}</span>
+                    <button type="button" (click)="showPhoto(photoIndex() + 1)" aria-label="Ảnh sau" class="grid size-10 place-items-center rounded-full bg-white/90 text-xl text-ink shadow-soft hover:bg-white">›</button>
+                  </div>
+                </div>
+              }
+              @default {
+                @if (sku(); as s) {
+                  <app-case-preview class="w-[30%] max-w-[260px] sm:w-[32%]" [model]="device()" [artworkUrl]="artwork()" [seed]="d.id" [colorHex]="s.colorHex" [caseType]="s.caseType" [alt]="d.name + ' cho ' + device().name + ', ' + s.colorName" />
+                }
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Thumbnails: 2D variants + photos -->
+        <div class="mt-3 flex gap-2 overflow-x-auto pb-1">
+          @for (s of colorSkus(device()); track s.skuId) {
+            <button
+              type="button"
+              (click)="selectSku(s); mode.set('2d')"
+              [attr.aria-pressed]="mode() === '2d' && s.colorName === sku()?.colorName"
+              [attr.aria-label]="'Xem màu ' + s.colorName"
+              class="grid size-20 shrink-0 place-items-center rounded-xl border border-line bg-surface-container-low hover:border-brand-400 aria-pressed:border-2 aria-pressed:border-brand-800"
+            >
+              <app-case-preview class="w-7" [model]="device()" [artworkUrl]="artwork()" [seed]="d.id" [colorHex]="s.colorHex" [caseType]="s.caseType" [alt]="''" aria-hidden="true" />
+            </button>
+          }
+          @for (photo of photos(); track photo; let i = $index) {
+            <button
+              type="button"
+              (click)="mode.set('photos'); showPhoto(i)"
+              [attr.aria-pressed]="mode() === 'photos' && photoIndex() === i"
+              [attr.aria-label]="'Ảnh ' + (i + 1)"
+              class="size-20 shrink-0 overflow-hidden rounded-xl border border-line hover:border-brand-400 aria-pressed:border-2 aria-pressed:border-brand-800"
+            >
+              <img [src]="photo" alt="" loading="lazy" class="h-full w-full object-cover" (error)="onPhotoError($event)" />
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Buy box -->
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wider text-brand-600">{{ d.collection }}</p>
+        <div class="mt-1 flex items-start justify-between gap-3">
+          <h1 class="font-display text-3xl font-bold text-ink sm:text-4xl">{{ d.name }}</h1>
+          <button
+            type="button"
+            (click)="shopCart.toggleFavorite(d.id)"
+            [attr.aria-pressed]="favorite()"
+            [attr.aria-label]="favorite() ? 'Bỏ yêu thích' : 'Yêu thích'"
+            class="grid size-11 shrink-0 place-items-center rounded-full border border-line text-ink-soft hover:text-brand-800 aria-pressed:text-brand-800 focus-visible:outline-2 focus-visible:outline-brand-400"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" class="size-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [attr.fill]="favorite() ? 'currentColor' : 'none'">
+              <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z" />
+            </svg>
+          </button>
+        </div>
+        <p class="mt-2 text-sm leading-relaxed text-ink-soft">{{ d.description }}</p>
+        <p class="mt-4 text-2xl font-bold text-ink">{{ vnd(price()) }}</p>
+
+        <div class="mt-6 space-y-5 border-t border-line pt-6">
+          <!-- Device -->
+          <fieldset>
+            <legend class="mb-2 text-sm font-semibold text-ink">Dòng máy</legend>
+            <div class="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2">
+              <label class="relative">
+                <span class="sr-only">Hãng</span>
+                <select (change)="selectBrand($event)" class="min-h-11 w-full appearance-none rounded-xl border border-line bg-white pl-3 pr-8 text-sm text-ink focus-visible:outline-2 focus-visible:outline-brand-400">
+                  @for (b of brands; track b.id) {
+                    <option [value]="b.id" [selected]="b.id === device().brandId">{{ b.name }}</option>
+                  }
+                </select>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-ink-soft"><path d="m6 9 6 6 6-6" /></svg>
+              </label>
+              <label class="relative">
+                <span class="sr-only">Mẫu máy</span>
+                <select (change)="onDevice($event)" class="min-h-11 w-full appearance-none rounded-xl border border-line bg-white pl-3 pr-8 text-sm text-ink focus-visible:outline-2 focus-visible:outline-brand-400">
+                  @for (m of devicesOfBrand(); track m.id) {
+                    <option [value]="m.id" [selected]="m.id === device().id">{{ m.name }}</option>
+                  }
+                </select>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-ink-soft"><path d="m6 9 6 6 6-6" /></svg>
+              </label>
+            </div>
+          </fieldset>
+
+          @if (sku(); as s) {
+            <app-variant-picker [model]="device()" [sku]="s" (skuChange)="selectSku($event)" />
+          }
+
+          <!-- Quantity + stock -->
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center rounded-pill border border-line" role="group" aria-label="Số lượng">
+              <button type="button" (click)="step(-1)" [disabled]="quantity() <= 1" aria-label="Giảm" class="grid size-11 place-items-center text-lg text-ink disabled:opacity-30">−</button>
+              <span class="w-8 text-center text-sm font-semibold" aria-live="polite">{{ quantity() }}</span>
+              <button type="button" (click)="step(1)" [disabled]="quantity() >= stock()" aria-label="Tăng" class="grid size-11 place-items-center text-lg text-ink disabled:opacity-30">+</button>
+            </div>
+            <p class="text-sm" [class.text-success]="stock()" [class.text-danger]="!stock()">
+              {{ stock() ? 'Còn ' + stock() + ' sản phẩm (giả lập)' : 'Tạm hết hàng' }}
+            </p>
+          </div>
+
+          <div class="grid gap-2">
+            <button
+              type="button"
+              [disabled]="!stock()"
+              (click)="add($event)"
+              class="min-h-12 rounded-pill bg-brand-800 text-sm font-semibold text-white shadow-soft hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+            >
+              Thêm vào giỏ · {{ vnd(price() * quantity()) }}
+            </button>
+          </div>
+
+          <ul class="grid grid-cols-2 gap-2 rounded-card bg-brand-50 p-4 text-xs font-medium text-brand-800">
+            <li>◈ Viền nâng bảo vệ camera</li>
+            <li>✧ {{ d.finish }}</li>
+            <li>✦ Khít chuẩn {{ device().name }}</li>
+            <li>♡ Thiết kế độc quyền CasEYE's</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info tabs -->
+    <section class="mt-14">
+      <div role="tablist" aria-label="Thông tin sản phẩm" class="flex gap-6 border-b border-line">
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'description'" (click)="tab.set('description')" class="-mb-px border-b-2 border-transparent py-3 text-sm font-semibold text-ink-soft aria-selected:border-brand-800 aria-selected:text-ink">Mô tả</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'specs'" (click)="tab.set('specs')" class="-mb-px border-b-2 border-transparent py-3 text-sm font-semibold text-ink-soft aria-selected:border-brand-800 aria-selected:text-ink">Thông số</button>
+        <button type="button" role="tab" [attr.aria-selected]="tab() === 'reviews'" (click)="tab.set('reviews')" class="-mb-px border-b-2 border-transparent py-3 text-sm font-semibold text-ink-soft aria-selected:border-brand-800 aria-selected:text-ink">Đánh giá</button>
+      </div>
+      <div role="tabpanel" class="py-6">
+        @switch (tab()) {
+          @case ('specs') {
+            <dl class="grid gap-x-10 sm:grid-cols-2">
+              <div class="flex justify-between gap-4 border-b border-line py-3 text-sm"><dt class="font-medium text-ink">Dòng máy</dt><dd class="text-ink-soft">{{ device().name }}</dd></div>
+              <div class="flex justify-between gap-4 border-b border-line py-3 text-sm"><dt class="font-medium text-ink">Màu ốp</dt><dd class="text-ink-soft">{{ sku()?.colorName ?? '—' }}</dd></div>
+              <div class="flex justify-between gap-4 border-b border-line py-3 text-sm"><dt class="font-medium text-ink">Kích thước in</dt><dd class="text-ink-soft">{{ device().printWidthMm }} × {{ device().printHeightMm }} mm</dd></div>
+              <div class="flex justify-between gap-4 border-b border-line py-3 text-sm"><dt class="font-medium text-ink">Kỹ thuật in</dt><dd class="text-ink-soft">{{ d.finish }}</dd></div>
+              <div class="flex justify-between gap-4 border-b border-line py-3 text-sm"><dt class="font-medium text-ink">Mã SKU</dt><dd class="text-ink-soft">{{ sku()?.skuCode ?? '—' }}</dd></div>
+              @for (spec of device().specs ?? []; track spec) {
+                <div class="flex justify-between gap-4 border-b border-line py-3 text-sm"><dt class="font-medium text-ink">Máy</dt><dd class="text-ink-soft">{{ spec }}</dd></div>
+              }
+            </dl>
+          }
+          @case ('reviews') {
+            <p class="text-sm text-ink-soft">Chưa có đánh giá xác thực trong bản demo. Đánh giá sẽ hiển thị khi tích hợp module đơn hàng.</p>
+          }
+          @default {
+            <div class="grid items-center gap-8 md:grid-cols-[1.2fr_1fr]">
+              <div>
+                <h2 class="font-display text-xl font-bold text-ink">Về {{ d.name }}</h2>
+                <p class="mt-2 text-sm leading-relaxed text-ink-soft">{{ d.description }} Mỗi chiếc ốp được in trên phôi chuẩn {{ device().name }}, ôm khít cụm camera và viền máy.</p>
+                <ul class="mt-4 space-y-1.5 text-sm text-ink">
+                  <li>✓ Bảo vệ viền và cụm camera</li>
+                  <li>✓ Họa tiết in bền màu, không bong tróc</li>
+                  <li>✓ Dễ tháo lắp và vệ sinh</li>
+                </ul>
+              </div>
+              @if (photos().length > 1) {
+                <img [src]="photos()[1]" [alt]="'Cận cảnh ' + d.name" loading="lazy" class="aspect-[4/3] w-full rounded-card object-cover" (error)="onPhotoError($event)" />
+              } @else {
+                <img [src]="descriptionImage()" [alt]="'Họa tiết ' + d.name" loading="lazy" class="aspect-[4/3] w-full rounded-card object-cover" (error)="onPhotoError($event)" />
+              }
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <!-- Accessories -->
+    <section class="mt-10 border-t border-line pt-10">
+      <h2 class="font-display text-xl font-bold text-ink">Phụ kiện phối cùng</h2>
+      <ul class="mt-5 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 sm:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
+        @for (a of accessories; track a.id) {
+          <li><app-accessory-card [item]="a" /></li>
+        }
+      </ul>
+    </section>
+
+    <!-- Related -->
+    @if (sku(); as s) {
+      <section class="mt-10 border-t border-line pt-10">
+        <h2 class="font-display text-xl font-bold text-ink">Bạn cũng có thể thích</h2>
+        <ul class="mt-5 grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 sm:grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
+          @for (item of related(); track item.id) {
+            <li (click)="scrollTop()">
+              <app-product-card [design]="item" [model]="device()" [sku]="s" (quickView)="openDesign(item.id)" />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+} @else {
+  <section class="mx-auto max-w-md px-4 py-24 text-center">
+    <h1 class="font-display text-2xl font-bold text-ink">Không tìm thấy sản phẩm</h1>
+    <a routerLink="/shop" class="mt-5 inline-flex min-h-11 items-center rounded-pill bg-brand-800 px-6 text-sm font-semibold text-white hover:bg-brand-600">← Trở lại cửa hàng</a>
+  </section>
+}

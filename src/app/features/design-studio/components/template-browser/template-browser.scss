@@ -1,0 +1,93 @@
+// Template Browser Custom Effects, 3D WebGL & Cloudscape Animations
+
+.cloud-bubble {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.4) 70%, transparent 100%);
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.dreamy-gradient-bg {
+  background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 25%, #e0e7ff 55%, #f8f7ff 80%, #ffffff 100%);
+}
+
+.card-cloud-bg {
+  background: linear-gradient(145deg, #fce7f3 0%, #ede9fe 40%, #e0e7ff 75%, #f5f3ff 100%);
+}
+
+.preview-case-shadow {
+  box-shadow: 0 16px 36px -8px rgba(67, 48, 117, 0.28), 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.case-bezel {
+  border: 2.5px solid #141416;
+  border-radius: 26px;
+}
+
+.mini-case-bezel {
+  border: 1.5px solid #18181b;
+  border-radius: 12px;
+}
+
+// 3D Model Viewer styling
+model-viewer {
+  --poster-color: transparent;
+  outline: none !important;
+  cursor: grab;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// 3D Tilt & Floating Animation for 2D Fallback
+@keyframes floatCase {
+  0%, 100% {
+    transform: translateY(0px) rotateY(-6deg) rotateX(3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotateY(6deg) rotateX(-3deg);
+  }
+}
+
+.animate-float-case {
+  animation: floatCase 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+// Sparkle pulse
+@keyframes sparklePulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.animate-sparkle {
+  animation: sparklePulse 3s ease-in-out infinite;
+}
+
+// Chibi Peeker Animation for "Ốp Lưng Trắng Tiêu Chuẩn"
+.chibi-peeker {
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@media (hover: none) {
+  .chibi-peeker {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chibi-peeker {
+    transition: none !important;
+    animation: none !important;
+  }
+}

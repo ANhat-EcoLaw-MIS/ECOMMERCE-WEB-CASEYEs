@@ -1,19 +1,17 @@
-<a
-  href="#main"
-  class="sr-only rounded-pill bg-brand-400 px-4 py-2 font-semibold text-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60]"
->
-  Bỏ qua điều hướng
-</a>
+<!-- Top progress bar while a route (lazy chunk + guards) loads. -->
+<app-route-progress />
+<router-outlet />
 
-<app-header [cartCount]="cartCount()" (searchRequested)="onSearchRequested()" />
-
-<main id="main">
-  <router-outlet />
-</main>
-
-<!-- Footer: mockup, to be built by the team -->
-<footer class="bg-brand-900 py-12">
-  <div class="mx-auto max-w-[1280px] px-4 lg:px-6">
-    <app-placeholder label="Footer" hint="Support links, about, newsletter sign-up, socials" minHeight="10rem" />
-  </div>
-</footer>
+<!-- Global notifications: top-left, newest on top, above the header and dialogs. -->
+<div class="pointer-events-none fixed left-4 top-4 z-[1000] flex flex-col-reverse gap-2 sm:left-5 sm:top-5" aria-label="Thông báo">
+  @for (notification of notificationManager.notifications(); track notification.id) {
+    <app-notification
+      [payload]="notification"
+      (actionClicked)="notificationManager.triggerAction($event)"
+      (dismissed)="notificationManager.remove($event)" />
+  }
+</div>
+<app-auth-dialog/>
+<!-- Global blocking loading pop-up (LoadingOverlay service). -->
+<app-loading-host />
+<app-toast-list />

@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+
+/* Horizontal tab strip scrolls on small screens without showing a scrollbar. */
+.tab-strip {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

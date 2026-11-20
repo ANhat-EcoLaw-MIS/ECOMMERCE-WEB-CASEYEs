@@ -1,0 +1,77 @@
+<app-ot-modal [open]="open()" [title]="title()" (closed)="closed.emit()">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+    <!-- Order summary so the customer knows exactly what they cancel -->
+    <div class="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+      <p class="font-semibold text-ink">Đơn {{ order().orderCode }} · {{ total() }}</p>
+      <p class="truncate text-ink-soft">
+        @for (item of order().items; track item.id) {
+          {{ item.productName }}{{ $last ? '' : ', ' }}
+        }
+      </p>
+    </div>
+
+    @switch (mode()) {
+      @case ('cod') {
+        <p class="text-sm text-ink-soft">Đơn thanh toán khi nhận hàng nên bạn hủy hoàn toàn miễn phí.</p>
+      }
+      @case ('request') {
+        <p class="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
+          CSKH sẽ phản hồi trước <b>{{ slaText() }}</b>. Trong thời gian này đơn được tạm giữ, chưa in và chưa đóng gói. Bạn có thể rút lại yêu cầu khi chưa có kết quả.
+        </p>
+      }
+      @case ('rejected') {
+        <p class="text-sm text-ink-soft">Bản thiết kế chưa phù hợp chính sách nội dung. Khi hủy, bạn được hoàn <b class="text-ink">100%</b>.</p>
+      }
+      @case ('failed') {
+        <p class="text-sm text-ink-soft">Lần giao chưa thành công: <b class="text-ink">{{ faultText() }}</b>.</p>
+        @if (refund(); as r) {
+          <p class="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-900">
+            Số tiền hoàn: <b>{{ amountLabel() }}</b>
+            @if (r.deductedFee > 0) {
+              <span class="block text-xs">Đã trừ cước vận chuyển hai chiều {{ formatVnd(r.deductedFee) }} theo chính sách.</span>
+            }
+          </p>
+        } @else {
+          <p class="text-sm text-ink-soft">Đơn chưa thanh toán nên không có khoản hoàn tiền.</p>
+        }
+      }
+    }
+
+    @if (needsReason()) {
+      <fieldset>
+        <legend [class]="label">Lý do hủy <span class="text-brand-800">*</span></legend>
+        <div class="mt-1 flex flex-col gap-1">
+          @for (r of reasons; track r.key) {
+            <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-3 transition-colors hover:bg-surface"
+              [class.border-brand-800]="reason() === r.key" [class.bg-brand-50]="reason() === r.key" [class.border-line]="reason() !== r.key">
+              <input type="radio" formControlName="reason" [value]="r.key" class="size-4 accent-brand-800" />
+              <span class="text-sm text-ink">{{ r.label }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+      @if (reason() === 'Other' || mode() === 'request') {
+        <label>
+          <span [class]="label">Ghi chú {{ reason() === 'Other' ? '' : '(không bắt buộc)' }}</span>
+          <textarea formControlName="note" rows="2" [class]="field" placeholder="Bạn có thể cho shop biết thêm"></textarea>
+        </label>
+      }
+    }
+
+    @if (needsRefundChoice()) {
+      <app-refund-choice-form [payerName]="order().payerName" [amountLabel]="amountLabel()" (choiceChange)="refundChoice.set($event)" />
+      <p class="text-xs text-ink-soft">Tiền hoàn được chuyển khoản vào tài khoản của bạn sau khi shop xác nhận.</p>
+    }
+
+    @if (error(); as message) {
+      <p role="alert" [class]="errorBox">{{ message }}</p>
+    }
+
+    <div class="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-between">
+      <button type="submit" [class]="btnConfirm" [disabled]="!canSubmit()" [attr.aria-busy]="busy()">
+        {{ busy() ? 'Đang xử lý…' : confirmLabel() }}
+      </button>
+      <button type="button" [class]="btnPrimary" (click)="closed.emit()">Giữ đơn</button>
+    </div>
+  </form>
+</app-ot-modal>

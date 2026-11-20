@@ -1,0 +1,83 @@
+<button
+  type="button"
+  class="chat-fab"
+  (click)="chat.toggle()"
+  [attr.aria-expanded]="chat.open()"
+  aria-controls="support-chat-popup"
+  aria-label="Mở chat hỗ trợ"
+>
+  <img class="chat-eye-icon" src="/brand_signature/support-headset.svg" alt="" />
+  <span class="chat-fab__label">Chat hỗ trợ</span>
+  @if (chat.unread()) {
+    <span class="chat-fab__badge">{{ chat.unread() }}</span>
+  }
+</button>
+
+@if (chat.open()) {
+  <div class="chat-backdrop" (click)="chat.close()"></div>
+  <section id="support-chat-popup" class="chat-panel" aria-label="Hộp chat hỗ trợ">
+    <header class="chat-panel__header">
+      <div>
+        <p class="chat-panel__eyebrow">CASEYE'S SUPPORT</p>
+        <h2>Chat với CSKH</h2>
+        <span>Đang hoạt động · phản hồi trong giờ hành chính</span>
+      </div>
+      <button type="button" (click)="chat.close()" aria-label="Đóng chat">✕</button>
+    </header>
+
+    <div class="chat-panel__body">
+      <div class="chat-session-tools">
+        <button type="button" (click)="chat.summarize()" [disabled]="chat.summarizing()">{{ chat.summarizing() ? 'Đang tóm tắt…' : '✦ Tóm tắt vấn đề' }}</button>
+        <button type="button" class="end-chat" (click)="requestEnd()">Kết thúc & xóa chat</button>
+      </div>
+      @if (chat.summary()) {
+        <div class="chat-summary" role="status">
+          <strong>{{ chat.summaryMode() === 'ai' ? 'Tóm tắt bằng AI' : 'Tóm tắt tự động (demo)' }}</strong>
+          <p>{{ chat.summary() }}</p>
+        </div>
+      }
+      @if (chat.status()) { <p class="chat-summary-note" role="status">{{ chat.status() }}</p> }
+      @if (confirmingEnd()) {
+        <div class="chat-end-confirm">
+          <strong>Vấn đề của bạn đã được giải quyết?</strong>
+          <p>Khi xác nhận, toàn bộ tin nhắn trong phiên hiện tại và phần tóm tắt sẽ bị xóa khỏi bộ nhớ giao diện. Không thể khôi phục.</p>
+          <div><button type="button" (click)="cancelEnd()">Tiếp tục chat</button><button type="button" (click)="completeEnd()">Đã giải quyết · Xóa</button></div>
+        </div>
+      }
+      @if (!auth.isAuthenticated()) {
+        <div class="chat-panel__notice">
+          <strong>Đăng nhập để liên kết với đơn hàng</strong>
+          <p>Đây là chat thử nghiệm trong bộ nhớ trình duyệt. Việc đồng bộ hội thoại với đơn hàng và ticket cần backend của nhóm.</p>
+          <a routerLink="/auth/login" class="chat-login-link">Đăng nhập ngay ↗</a>
+        </div>
+      }
+
+      <div class="chat-messages">
+        @for (message of chat.messages(); track message.id) {
+          <article class="chat-message" [class.from-customer]="message.from === 'customer'" [class.from-system]="message.from === 'system'">
+            <p>{{ message.text }}</p>
+            <time>{{ message.time }}</time>
+          </article>
+        }
+      </div>
+
+      <div class="chat-quick-replies">
+        @for (item of chat.quickReplies(); track item) {
+          <button type="button" (click)="useQuickReply(item)">{{ item }}</button>
+        }
+      </div>
+    </div>
+
+    <footer class="chat-panel__footer">
+      <input
+        type="text"
+        [value]="draft()"
+        (input)="updateDraft($event)"
+        (keydown.enter)="submit()"
+        placeholder="Nhắn CasEYE's về đơn hàng, khiếu nại, hỗ trợ..."
+        aria-label="Nhập tin nhắn hỗ trợ"
+      />
+      <button type="button" (click)="submit()">Gửi</button>
+    </footer>
+  </section>
+}

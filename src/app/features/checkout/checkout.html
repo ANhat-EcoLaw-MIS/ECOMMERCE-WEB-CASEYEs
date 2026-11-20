@@ -1,0 +1,87 @@
+<div class="checkout-page">
+  <!-- Toast notification -->
+  @if (toastMessage()) {
+    <div class="toast-notification" role="status" aria-live="polite">
+      <span class="material-symbols-outlined toast-icon">check_circle</span>
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <!-- Dynamic Checkout View Container -->
+  <main class="checkout-container">
+    @switch (currentStep()) {
+      @case ('form') {
+        <app-checkout-form
+          (openAddressModal)="showAddressModal.set(true)"
+          (orderSubmitted)="onOrderSubmitted()"
+          (copyNotification)="showToast($event)"
+        />
+      }
+      @case ('processing') {
+        <app-checkout-processing
+          [simulationMode]="simulationMode()"
+          (backToForm)="setStep('form')"
+          (reconciliationDone)="onReconciliationDone($event)"
+          (copyNotification)="showToast($event)"
+        />
+      }
+      @case ('success') {
+        <app-checkout-success
+          (newOrder)="onNewOrder()"
+          (retryPlaceOrder)="retryPlaceOrder()"
+          (copyNotification)="showToast($event)"
+        />
+      }
+      @case ('failed') {
+        <app-checkout-failed
+          #failedComp
+          (retry)="onRetryFromFailed()"
+          (editOrder)="setStep('form')"
+          (copyNotification)="showToast($event)"
+        />
+      }
+    }
+  </main>
+
+  <!-- Modal đổi địa chỉ nhận hàng (6 trường validated) -->
+  @if (showAddressModal()) {
+    <app-address-modal
+      (close)="showAddressModal.set(false)"
+      (addressSaved)="showToast($event)"
+    />
+  }
+
+  <!-- Onboarding prompt: the customer decides, checkout data is kept -->
+  @if (askOnboarding()) {
+    <div class="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-4 sm:items-center" role="presentation">
+      <section role="dialog" aria-modal="true" aria-labelledby="onboarding-title" class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <p class="text-xs font-semibold uppercase tracking-widest text-brand-600">Hồ sơ của bạn</p>
+        <h2 id="onboarding-title" class="mt-1 text-xl font-bold text-ink">Thiết lập hồ sơ trước khi thanh toán?</h2>
+        <p class="mt-2 text-sm text-ink-soft">
+          Sắp tới bạn sẽ được chuyển sang trang thiết lập hồ sơ (dòng máy, phong cách yêu thích) để CasEYE’s gợi ý mẫu hợp hơn.
+          Giỏ hàng và thông tin thanh toán của bạn vẫn được giữ nguyên.
+        </p>
+        <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" (click)="skipOnboarding()" [disabled]="onboardingBusy()"
+            class="min-h-11 rounded-full border border-line px-5 text-sm font-semibold text-ink hover:bg-surface disabled:opacity-60">
+            Để sau, tiếp tục thanh toán
+          </button>
+          <button type="button" (click)="goToOnboarding()"
+            class="min-h-11 rounded-full bg-brand-800 px-5 text-sm font-semibold text-white hover:bg-brand-600">
+            Thiết lập ngay
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+
+  <!-- Floating Dev & Demo Dock (Nút icon tối giản góc phải dưới, popover ẩn mặc định) -->
+  <app-dev-dock
+    [currentStep]="currentStep()"
+    [simulationMode]="simulationMode()"
+    (stepChange)="setStep($event)"
+    (modeChange)="simulationMode.set($event)"
+    (forceOutcome)="onForceOutcome($event)"
+    (expireTimer)="onExpireTimer()"
+  />
+</div>

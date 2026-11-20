@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-
-import { PhoneCaseMock } from '../../../../shared/ui/phone-case-mock/phone-case-mock';
+import { ButtonComponent } from '../../../../shared/ui/button/button';
 
 @Component({
   selector: 'app-hero',
-  imports: [RouterLink, PhoneCaseMock],
+  standalone: true,
+  imports: [RouterLink, ButtonComponent],
   templateUrl: './hero.html',
   styleUrl: './hero.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

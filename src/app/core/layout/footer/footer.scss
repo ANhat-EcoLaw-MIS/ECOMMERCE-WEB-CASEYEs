@@ -1,0 +1,47 @@
+// ==========================================================================
+// Footer Custom Effects & Animations
+// Các thuộc tính cơ bản (layout, spacing, typography) đã dùng Tailwind v4.
+// ==========================================================================
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Micro-interaction nâng nhẹ icon mạng xã hội khi hover
+.social-btn-hover {
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 48, 117, 0.08);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Hiệu ứng nhịp tim đập nhẹ cho icon tim
+.heart-pulse {
+  animation: pulse-heart 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-heart {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+
+// Tôn trọng cài đặt giảm chuyển động của hệ điều hành (WCAG 2.1 AA)
+@media (prefers-reduced-motion: reduce) {
+  .heart-pulse {
+    animation: none;
+  }
+
+  .social-btn-hover {
+    transition: none !important;
+    transform: none !important;
+  }
+}

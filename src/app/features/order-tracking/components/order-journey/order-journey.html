@@ -1,0 +1,61 @@
+<article class="rounded-card border border-line bg-surface-alt p-5 shadow-soft sm:p-6" aria-labelledby="journey-title">
+  <h2 id="journey-title" class="font-display text-lg font-bold text-ink">Hành trình đơn hàng</h2>
+
+  @if (route(); as r) {
+    <!-- Where is my parcel (mock carrier tracking) -->
+    <div class="mt-4 rounded-2xl bg-(image:--grad-soft) p-4 ring-1 ring-brand-100">
+      <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span class="font-semibold text-ink">{{ r.carrier }}</span>
+        <button type="button" (click)="copy(r.code)" class="inline-flex min-h-9 items-center gap-1.5 rounded-pill bg-surface-alt px-3 font-mono text-xs text-ink ring-1 ring-line hover:ring-brand-400" [attr.aria-label]="'Sao chép mã vận đơn ' + r.code">
+          {{ r.code }}
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-3.5"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+        </button>
+      </div>
+      <ol class="relative mt-5 grid grid-cols-4" aria-label="Vị trí kiện hàng">
+        <span aria-hidden="true" class="absolute left-[12.5%] right-[12.5%] top-3 h-1 rounded-full bg-brand-100"></span>
+        <span aria-hidden="true" class="absolute left-[12.5%] top-3 h-1 rounded-full bg-brand-600 transition-[width] duration-700 motion-reduce:transition-none" [style.width.%]="r.reached * 25"></span>
+        @for (stop of r.stops; track $index) {
+          <li class="relative flex flex-col items-center gap-2 text-center" [attr.aria-current]="$index === r.reached ? 'location' : null">
+            @if ($index === r.reached) {
+              <span class="grid size-7 place-items-center rounded-full bg-brand-800 text-white shadow-glow">
+                @if ($last) {
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="m5 12 5 5L20 7" /></svg>
+                } @else {
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" /><circle cx="7" cy="17.5" r="1.5" /><circle cx="17" cy="17.5" r="1.5" /></svg>
+                }
+              </span>
+            } @else {
+              <span class="mt-1 size-5 rounded-full ring-4 ring-surface-alt" [class.bg-brand-600]="$index < r.reached" [class.bg-brand-100]="$index > r.reached"></span>
+            }
+            <span class="text-xs" [class.font-semibold]="$index === r.reached" [class.text-ink]="$index <= r.reached" [class.text-ink-soft]="$index > r.reached">{{ stop }}</span>
+          </li>
+        }
+      </ol>
+    </div>
+  }
+
+  <ol class="mt-5 flex flex-col">
+    @for (e of visible(); track e.at + e.title) {
+      <li class="relative flex gap-4 pb-5 last:pb-0 before:absolute before:left-[5px] before:top-4 before:bottom-0 before:w-px before:bg-line last:before:hidden">
+        <span aria-hidden="true" class="relative z-10 mt-1.5 size-[11px] shrink-0 rounded-full ring-4 ring-surface-alt" [class]="dot(e.tone)" [class.scale-125]="$first"></span>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm" [class.font-semibold]="$first" [class.text-ink]="$first" [class.text-ink-soft]="!$first">
+            {{ e.title }}
+            @if (e.fromCarrier) {
+              <span class="ml-1 rounded-pill bg-sky-50 px-1.5 py-0.5 align-middle text-[10px] font-semibold text-sky-800">Vận chuyển</span>
+            }
+          </p>
+          @if (e.detail) {
+            <p class="text-xs text-ink-soft">{{ e.detail }}</p>
+          }
+        </div>
+        <time class="shrink-0 text-right text-xs tabular-nums text-ink-soft" [attr.datetime]="e.at">{{ e.at | date: 'HH:mm' }}<br />{{ e.at | date: 'dd/MM' }}</time>
+      </li>
+    }
+  </ol>
+  @if (hiddenCount() > 0) {
+    <button type="button" (click)="expanded.set(!expanded())" [attr.aria-expanded]="expanded()" class="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand-800 hover:underline">
+      {{ expanded() ? 'Thu gọn' : 'Xem toàn bộ hành trình (' + events().length + ')' }}
+    </button>
+  }
+</article>

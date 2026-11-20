@@ -1,0 +1,87 @@
+<section class="relative flex w-full flex-col items-center overflow-hidden pb-16 pt-10 md:pb-20 md:pt-14">
+  <div class="z-10 mx-auto max-w-4xl space-y-4 px-4 text-center">
+    <div
+      class="inline-flex cursor-default items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-4 py-1.5 text-xs font-semibold text-brand-800 shadow-sm backdrop-blur-md"
+    >
+      <span class="relative flex size-2">
+        <span class="absolute inline-flex size-full animate-ping rounded-full bg-brand-400 opacity-75"></span>
+        <span class="relative inline-flex size-2 rounded-full bg-brand-600"></span>
+      </span>
+      <span>CasEYE's Creator Onboarding · Phiên bản {{ year }}</span>
+    </div>
+
+    <h1 class="font-display text-3xl font-extrabold leading-[1.15] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+      Chào mừng bạn gia nhập<br />
+      cộng đồng sáng tạo
+      <span class="bg-gradient-to-r from-white via-brand-200 to-purple-400 bg-clip-text font-black text-transparent underline decoration-brand-400 decoration-4 underline-offset-4">
+        CasEYE's!
+      </span>
+    </h1>
+
+    <p class="mx-auto max-w-2xl font-body text-base leading-relaxed text-white/80 md:text-lg">
+      Khám phá hàng triệu khả năng biến hóa chiếc ốp lưng của bạn thành tác phẩm độc bản.
+      Định hình gu thẩm mỹ riêng ngay từ những cú chạm đầu tiên.
+    </p>
+
+    <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+      <div class="inline-flex items-center gap-2 rounded-2xl border border-purple-200/80 bg-white/90 px-4 py-2 text-xs font-semibold text-brand-800 shadow-md backdrop-blur-md">
+        <svg aria-hidden="true" class="size-4 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Zm7 12 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" />
+        </svg>
+        <span>Hơn 50.000+ mẫu thiết kế đang chờ bạn tùy biến</span>
+      </div>
+      <div class="inline-flex items-center gap-2 rounded-2xl border border-brand-100 bg-brand-50 px-3 py-2 text-xs text-ink-soft">
+        <svg aria-hidden="true" class="size-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        <span>In UV Nhật Bản 2400 DPI</span>
+      </div>
+    </div>
+
+    <button
+      class="mt-2 inline-flex min-h-12 items-center gap-2 rounded-pill bg-gradient-to-r from-brand-600 to-brand-400 px-6 py-3 font-display text-sm font-bold text-white shadow-glow transition hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-200 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      type="button"
+      [disabled]="disabled()"
+      [class.cursor-not-allowed]="disabled()"
+      [class.opacity-60]="disabled()"
+      (click)="requestContinue()"
+    >
+      <span>Bắt đầu cá nhân hóa</span>
+      <svg aria-hidden="true" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7-7 7-7-7" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="relative mt-10 flex w-full flex-col gap-6 overflow-hidden py-4">
+    <div class="pointer-events-none absolute inset-y-0 left-0 z-20 w-24 bg-gradient-to-r from-onboarding-veil via-onboarding-veil/80 to-transparent md:w-48"></div>
+    <div class="pointer-events-none absolute inset-y-0 right-0 z-20 w-24 bg-gradient-to-l from-onboarding-veil via-onboarding-veil/80 to-transparent md:w-48"></div>
+
+    @if (marqueeError(); as error) {
+      <p class="px-4 text-center text-sm text-white/80" role="status">Không thể tải mẫu thiết kế: {{ error }}</p>
+    }
+    @for (row of marqueeRows(); track row.id) {
+      <div class="flex select-none overflow-hidden py-2">
+        <div
+          class="flex w-max shrink-0 items-center gap-8"
+          [class.animate-marquee-left]="row.direction === 'left'"
+          [class.animate-marquee-right]="row.direction === 'right'"
+        >
+          @for (item of row.cases; track item.id) {
+            <app-case-card [case]="item" />
+          }
+        </div>
+        <div
+          aria-hidden="true"
+          class="flex w-max shrink-0 items-center gap-8"
+          [class.animate-marquee-left]="row.direction === 'left'"
+          [class.animate-marquee-right]="row.direction === 'right'"
+        >
+          @for (item of row.cases; track item.id) {
+            <app-case-card [case]="item" />
+          }
+        </div>
+      </div>
+    }
+  </div>
+</section>
